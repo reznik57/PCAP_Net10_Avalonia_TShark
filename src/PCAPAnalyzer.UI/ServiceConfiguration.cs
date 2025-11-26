@@ -134,6 +134,12 @@ namespace PCAPAnalyzer.UI
             // Logging (provide NullLogger for services expecting ILogger<T>)
             services.AddSingleton(typeof(Microsoft.Extensions.Logging.ILogger<>), typeof(NullLogger<>));
 
+            // Port Database Service (Singleton - static port definitions)
+            services.AddSingleton<IPortDatabase, PortDatabaseService>();
+
+            // Session Analysis Cache Service (Singleton - shared in-memory cache)
+            services.AddSingleton<ISessionAnalysisCache, SessionAnalysisCacheService>();
+
             // Memory Cache (Singleton - shared across services)
             services.AddSingleton<IMemoryCache>(provider =>
             {
@@ -313,8 +319,9 @@ namespace PCAPAnalyzer.UI
             services.AddSingleton<IAnalysisCoordinator>(provider =>
             {
                 var orchestrator = provider.GetRequiredService<AnalysisOrchestrator>();
+                var sessionCache = provider.GetRequiredService<ISessionAnalysisCache>();
                 var cacheService = provider.GetService<PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService>();
-                return new AnalysisCoordinatorService(orchestrator, cacheService);
+                return new AnalysisCoordinatorService(orchestrator, sessionCache, cacheService);
             });
 
             // Analysis Cache Service (Singleton - persistent SQLite cache for PCAP analysis results)

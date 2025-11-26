@@ -88,6 +88,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     private readonly AnalysisOrchestrator? _orchestrator; // ✅ PRELOAD ARCHITECTURE: Central coordinator
     private readonly IAnalysisCoordinator? _analysisCoordinator; // ✅ PHASE 3: New coordinator for tab population
     private readonly IPacketStatisticsCalculator _packetStatsCalculator; // ✅ PHASE 5: Extracted statistics calculations
+    private readonly ISessionAnalysisCache _sessionCache; // ✅ DI: Session analysis cache
     // REMOVED: _filterBuilder field - now inherited from SmartFilterableTab base class
     private readonly SemaphoreSlim _dashboardUpdateGate = new(1, 1);
     private readonly DispatcherTimer _updateTimer;
@@ -191,7 +192,8 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             App.Services?.GetService<AnalysisOrchestrator>(),
             App.Services?.GetService<IReportGeneratorService>(),
             App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService(),
-            App.Services?.GetService<IAnalysisCoordinator>()) // ✅ PHASE 3: Coordinator for tab population
+            App.Services?.GetService<IAnalysisCoordinator>(), // ✅ PHASE 3: Coordinator for tab population
+            sessionCache: App.Services?.GetService<ISessionAnalysisCache>() ?? new SessionAnalysisCacheService()) // ✅ DI: Session cache
     {
         // ✅ C2 REFACTOR: Base constructor called with filterBuilder
         // ✅ DI REFACTOR: Now uses App.Services with fallbacks for testability
@@ -210,7 +212,8 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         IReportGeneratorService? reportService = null,
         ISmartFilterBuilder? filterBuilder = null,
         IAnalysisCoordinator? analysisCoordinator = null,
-        IPacketStatisticsCalculator? packetStatsCalculator = null) // ✅ PHASE 5: Statistics calculator
+        IPacketStatisticsCalculator? packetStatsCalculator = null, // ✅ PHASE 5: Statistics calculator
+        ISessionAnalysisCache? sessionCache = null) // ✅ DI: Session cache
         : base(filterBuilder ?? App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService()) // ✅ C2 REFACTOR: Call base constructor with filterBuilder via DI
     {
         _tsharkService = tsharkService ?? throw new ArgumentNullException(nameof(tsharkService));
@@ -221,6 +224,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         _packetStatsCalculator = packetStatsCalculator ?? App.Services?.GetService<IPacketStatisticsCalculator>() ?? new PacketStatisticsCalculator();
         _orchestrator = orchestrator; // ✅ PRELOAD ARCHITECTURE: Optional for backwards compatibility
         _analysisCoordinator = analysisCoordinator; // ✅ PHASE 3: Store coordinator for tab population
+        _sessionCache = sessionCache ?? App.Services?.GetService<ISessionAnalysisCache>() ?? new SessionAnalysisCacheService(); // ✅ DI: Session cache with fallback
 
         // ✅ DIAGNOSTIC: Log orchestrator injection status
         DebugLogger.Log($"[MainWindowViewModel] Orchestrator injected: {_orchestrator != null}");
@@ -525,7 +529,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     private void OnFileCleared(object? sender, EventArgs e)
     {
         // ✅ PRELOAD ARCHITECTURE: Clear session cache and reclaim memory
-        SessionAnalysisCache.Clear();
+        _sessionCache.Clear();
         DebugLogger.Log("[OnFileCleared] Session cache cleared - memory reclaimed");
 
         UIState.UpdateStatus("No file selected", "#4ADE80");
@@ -572,7 +576,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             }
 
             // Clear session cache
-            SessionAnalysisCache.Clear();
+            _sessionCache.Clear();
 
             // Run orchestrator analysis (ONLY path)
             await RunPreloadAnalysisAsync(FileManager.CurrentFile);
@@ -600,7 +604,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         try
         {
             // Clear old session cache
-            SessionAnalysisCache.Clear();
+            _sessionCache.Clear();
             DebugLogger.Log("[RunPreloadAnalysis] Session cache cleared");
 
             // ✅ FIX: Set IsAnalyzing to true to show progress panel
@@ -641,7 +645,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [ORCHESTRATOR] ========== ANALYSIS COMPLETE ({elapsed:F2}s) ==========");
             DebugLogger.Log($"[ORCHESTRATOR] Total Packets: {result.TotalPackets:N0}");
             DebugLogger.Log($"[ORCHESTRATOR] Memory Usage: {result.EstimatedMemoryGB:F2}GB");
-            DebugLogger.Log($"[ORCHESTRATOR] Cache Status: {(SessionAnalysisCache.Get() != null ? "CACHED" : "NOT CACHED")}");
+            DebugLogger.Log($"[ORCHESTRATOR] Cache Status: {(_sessionCache.Get() != null ? "CACHED" : "NOT CACHED")}");
 
             // Set total packets for UI display
             TotalPackets = result.TotalPackets;
@@ -705,13 +709,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             await PopulateTabsLegacyAsync(result);
         }
 
-        // FileAnalysisViewModel - Populate quick stats (not an ITabPopulationTarget)
-        if (FileAnalysisViewModel != null)
-        {
-            var fileAnalysisStart = DateTime.Now;
-            await PopulateFileAnalysisQuickStatsAsync(result);
-            DebugLogger.Log($"[PopulateViewModels] ✓ FileAnalysis quick stats populated in {(DateTime.Now - fileAnalysisStart).TotalMilliseconds:F0}ms");
-        }
+        // FileAnalysisViewModel - Quick stats already updated by UpdateQuickStatsFromResult in RunPreloadAnalysisAsync
 
         var elapsed = (DateTime.Now - startTime).TotalMilliseconds;
         DebugLogger.Log($"[PopulateViewModels] ✓✓ ALL TABS POPULATED in {elapsed:F0}ms (via coordinator)");
@@ -749,34 +747,6 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         }
     }
 
-    /// <summary>
-    /// Populate FileAnalysisViewModel quick stats from orchestrator result
-    /// </summary>
-    private async Task PopulateFileAnalysisQuickStatsAsync(AnalysisResult result)
-    {
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            if (FileAnalysisViewModel == null) return;
-
-            var quickStats = FileAnalysisViewModel.QuickStats;
-
-            // Calculate quick stats from result
-            quickStats.TotalPackets = result.TotalPackets;
-            quickStats.TotalTrafficMB = result.TotalBytes / (1024.0 * 1024.0);
-            quickStats.ProcessingRate = result.AnalysisDuration.TotalSeconds > 0
-                ? (long)(result.TotalPackets / result.AnalysisDuration.TotalSeconds)
-                : 0;
-            quickStats.UniqueIPs = result.Statistics.AllUniqueIPs.Count;
-            quickStats.UniqueProtocols = result.Statistics.ProtocolStats.Count;
-            quickStats.UniquePorts = result.Statistics.UniquePortCount;
-            quickStats.Countries = result.Statistics.CountryStatistics.Count;
-            quickStats.Threats = result.Threats.Count;
-            quickStats.Conversations = result.Statistics.TopConversations?.Count ?? 0;
-            quickStats.Anomalies = result.Threats.Count(t => t.Type.Contains("Anomaly", StringComparison.OrdinalIgnoreCase));
-
-            DebugLogger.Log($"[FileAnalysisViewModel] Quick stats updated: {quickStats.TotalPackets:N0} packets, {quickStats.TotalTrafficMB:F2} MB, {quickStats.ProcessingRate:N0} pps");
-        });
-    }
 
     /// <summary>
     /// Event handler for FileAnalysisViewModel analysis completion.
@@ -2098,65 +2068,6 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [UpdateDashboardAsync] Garbage collection completed in {gcElapsed:F0}ms");
     }
 
-    /// <summary>
-    /// Handles lazy loading when user switches tabs.
-    /// Delegates to AnalysisCoordinator for centralized tab loading logic.
-    /// </summary>
-    private async Task HandleTabSelectionAsync(int tabIndex)
-    {
-        DebugLogger.Log($"[MainWindowViewModel] Tab changed to index {tabIndex}");
-
-        // Check if coordinator handles lazy loading for this tab
-        if (_analysisCoordinator == null || !_analysisCoordinator.RequiresLazyLoading(tabIndex))
-        {
-            return;
-        }
-
-        // CRITICAL: Offload work to background thread to prevent UI blocking
-        await Task.Run(async () =>
-        {
-            try
-            {
-                var packets = PacketManager.GetFilteredPackets().ToList();
-                DebugLogger.Log($"[MainWindowViewModel] Loaded {packets.Count:N0} packets for lazy tab loading");
-
-                // Delegate to coordinator for centralized tab loading
-                await _analysisCoordinator.HandleTabSelectionAsync(tabIndex, packets);
-            }
-            catch (Exception ex)
-            {
-                DebugLogger.Log($"[MainWindowViewModel] Error during tab lazy loading: {ex.Message}");
-            }
-        }).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    /// Computes SHA256 hash of file for cache validation
-    /// </summary>
-    private static async Task<string> ComputeFileHashAsync(string filePath)
-    {
-        try
-        {
-            var fileInfo = new System.IO.FileInfo(filePath);
-            if (!fileInfo.Exists)
-            {
-                return string.Empty;
-            }
-
-            // Hash based on file path + size + last modified (same as AnalysisCacheService)
-            var hashInput = $"{filePath}|{fileInfo.Length}|{fileInfo.LastWriteTimeUtc:O}";
-            using var sha256 = System.Security.Cryptography.SHA256.Create();
-            var hashBytes = sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(hashInput));
-            var fileHash = BitConverter.ToString(hashBytes).Replace("-", "", StringComparison.Ordinal).ToLowerInvariant();
-
-            return await Task.FromResult(fileHash);
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[MainWindowViewModel] Error computing file hash: {ex.Message}");
-            return string.Empty;
-        }
-    }
 
     // ==================== COMPATIBILITY LAYER ====================
     // Provides backward-compatible properties and methods that delegate to component ViewModels.

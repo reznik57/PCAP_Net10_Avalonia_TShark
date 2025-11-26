@@ -391,17 +391,18 @@ public partial class EnhancedFilterViewModel : ObservableObject
         {
             "RFC1918" => new PacketFilter
             {
-                CustomPredicate = p => IsRFC1918(p.SourceIP) || IsRFC1918(p.DestinationIP),
+                CustomPredicate = p => NetworkFilterHelper.IsRFC1918(p.SourceIP) || NetworkFilterHelper.IsRFC1918(p.DestinationIP),
                 Description = "RFC1918 Private IP"
             },
             "PublicIP" => new PacketFilter
             {
-                CustomPredicate = p => !IsPrivateIP(p.SourceIP) || !IsPrivateIP(p.DestinationIP),
+                CustomPredicate = p => !(NetworkFilterHelper.IsRFC1918(p.SourceIP) || NetworkFilterHelper.IsLoopback(p.SourceIP) || NetworkFilterHelper.IsLinkLocal(p.SourceIP)) ||
+                                      !(NetworkFilterHelper.IsRFC1918(p.DestinationIP) || NetworkFilterHelper.IsLoopback(p.DestinationIP) || NetworkFilterHelper.IsLinkLocal(p.DestinationIP)),
                 Description = "Public IP"
             },
             "APIPA" => new PacketFilter
             {
-                CustomPredicate = p => IsAPIPA(p.SourceIP) || IsAPIPA(p.DestinationIP),
+                CustomPredicate = p => NetworkFilterHelper.IsLinkLocal(p.SourceIP) || NetworkFilterHelper.IsLinkLocal(p.DestinationIP),
                 Description = "APIPA (169.254.x.x)"
             },
             "IPv4" => new PacketFilter
@@ -416,67 +417,69 @@ public partial class EnhancedFilterViewModel : ObservableObject
             },
             "Loopback" => new PacketFilter
             {
-                CustomPredicate = p => IsLoopback(p.SourceIP) || IsLoopback(p.DestinationIP),
+                CustomPredicate = p => NetworkFilterHelper.IsLoopback(p.SourceIP) || NetworkFilterHelper.IsLoopback(p.DestinationIP),
                 Description = "Loopback"
             },
             "LinkLocal" => new PacketFilter
             {
-                CustomPredicate = p => IsLinkLocal(p.SourceIP) || IsLinkLocal(p.DestinationIP),
+                CustomPredicate = p => NetworkFilterHelper.IsLinkLocal(p.SourceIP) || NetworkFilterHelper.IsLinkLocal(p.DestinationIP),
                 Description = "Link-local"
             },
             "Multicast" => new PacketFilter
             {
-                CustomPredicate = p => IsMulticast(p.DestinationIP),
+                CustomPredicate = p => NetworkFilterHelper.IsMulticast(p.DestinationIP),
                 Description = "Multicast"
             },
             "Broadcast" => new PacketFilter
             {
-                CustomPredicate = p => IsBroadcast(p.DestinationIP),
+                CustomPredicate = p => NetworkFilterHelper.IsBroadcast(p.DestinationIP),
                 Description = "Broadcast"
             },
             "Anycast" => new PacketFilter
             {
-                CustomPredicate = p => IsAnycast(p.DestinationIP),
+                CustomPredicate = p => NetworkFilterHelper.IsAnycast(p.DestinationIP),
                 Description = "Anycast"
             },
             "InsecureProtocols" => new PacketFilter
             {
-                CustomPredicate = p => IsInsecureProtocol(p),
+                CustomPredicate = p => NetworkFilterHelper.IsInsecureProtocol(p.L7Protocol ?? p.Protocol.ToString()),
                 Description = "Insecure Protocols"
             },
             "Anomalies" => new PacketFilter
             {
-                CustomPredicate = p => HasAnomaly(p),
+                CustomPredicate = p => false, // Placeholder - anomaly detection done by AnomalyService
                 Description = "Anomalies"
             },
             "Suspicious" => new PacketFilter
             {
-                CustomPredicate = p => IsSuspicious(p),
+                CustomPredicate = p => false, // Placeholder - suspicious traffic detection done by ThreatService
                 Description = "Suspicious Traffic"
             },
             "TCPIssues" => new PacketFilter
             {
-                CustomPredicate = p => HasTCPIssues(p),
+                CustomPredicate = p => false, // Placeholder - TCP issues detected by NetworkAnalyzer
                 Description = "TCP Issues"
             },
             "DNSAnomalies" => new PacketFilter
             {
-                CustomPredicate = p => HasDNSAnomalies(p),
+                CustomPredicate = p => false, // Placeholder - DNS anomalies detected by DNSAnalyzer
                 Description = "DNS Anomalies"
             },
             "PortScans" => new PacketFilter
             {
-                CustomPredicate = p => IsPortScan(p),
+                CustomPredicate = p => false, // Placeholder - port scans detected by PortScanDetector
                 Description = "Port Scans"
             },
             "PrivateToPublic" => new PacketFilter
             {
-                CustomPredicate = p => IsPrivateIP(p.SourceIP) && !IsPrivateIP(p.DestinationIP),
+                CustomPredicate = p => (NetworkFilterHelper.IsRFC1918(p.SourceIP) || NetworkFilterHelper.IsLoopback(p.SourceIP) || NetworkFilterHelper.IsLinkLocal(p.SourceIP)) &&
+                                      !(NetworkFilterHelper.IsRFC1918(p.DestinationIP) || NetworkFilterHelper.IsLoopback(p.DestinationIP) || NetworkFilterHelper.IsLinkLocal(p.DestinationIP)),
                 Description = "Private → Public"
             },
             "PublicToPrivate" => new PacketFilter
             {
-                CustomPredicate = p => !IsPrivateIP(p.SourceIP) && IsPrivateIP(p.DestinationIP),
+                CustomPredicate = p => !(NetworkFilterHelper.IsRFC1918(p.SourceIP) || NetworkFilterHelper.IsLoopback(p.SourceIP) || NetworkFilterHelper.IsLinkLocal(p.SourceIP)) &&
+                                      (NetworkFilterHelper.IsRFC1918(p.DestinationIP) || NetworkFilterHelper.IsLoopback(p.DestinationIP) || NetworkFilterHelper.IsLinkLocal(p.DestinationIP)),
                 Description = "Public → Private"
             },
             "JumboFrames" => new PacketFilter
@@ -636,49 +639,7 @@ public partial class EnhancedFilterViewModel : ObservableObject
     }
 
     // ==================== IP ADDRESS HELPER METHODS ====================
-    // Delegate to centralized NetworkFilterHelper for consistency
-
-    private bool IsRFC1918(string ip) => NetworkFilterHelper.IsRFC1918(ip);
-    private bool IsPrivateIP(string ip) =>
-        NetworkFilterHelper.IsRFC1918(ip) || NetworkFilterHelper.IsLoopback(ip) || NetworkFilterHelper.IsLinkLocal(ip);
-    private bool IsAPIPA(string ip) => NetworkFilterHelper.IsLinkLocal(ip);
-    private bool IsLoopback(string ip) => NetworkFilterHelper.IsLoopback(ip);
-    private bool IsLinkLocal(string ip) => NetworkFilterHelper.IsLinkLocal(ip);
-    private bool IsMulticast(string ip) => NetworkFilterHelper.IsMulticast(ip);
-    private bool IsBroadcast(string ip) => NetworkFilterHelper.IsBroadcast(ip);
-    private bool IsAnycast(string ip) => NetworkFilterHelper.IsAnycast(ip);
-    private bool IsInsecureProtocol(PacketInfo packet) =>
-        NetworkFilterHelper.IsInsecureProtocol(packet.L7Protocol ?? packet.Protocol.ToString());
-
-    private bool HasAnomaly(PacketInfo packet)
-    {
-        // Placeholder for anomaly detection
-        return false;
-    }
-
-    private bool IsSuspicious(PacketInfo packet)
-    {
-        // Placeholder for suspicious traffic detection
-        return false;
-    }
-
-    private bool HasTCPIssues(PacketInfo packet)
-    {
-        // Placeholder for TCP issues detection
-        return false;
-    }
-
-    private bool HasDNSAnomalies(PacketInfo packet)
-    {
-        // Placeholder for DNS anomalies detection
-        return false;
-    }
-
-    private bool IsPortScan(PacketInfo packet)
-    {
-        // Placeholder for port scan detection
-        return false;
-    }
+    // All IP/protocol helpers inline NetworkFilterHelper calls to reduce indirection
 
     // ==================== ADDITIONAL FILTER COMMANDS ====================
 
@@ -706,7 +667,7 @@ public partial class EnhancedFilterViewModel : ObservableObject
     private void ApplyTcpIssuesFilter()
     {
         _filterService.ApplyCustomFilter(
-            p => HasTCPIssues(p),
+            p => false, // Placeholder - TCP issues detected by NetworkAnalyzer
             "TCP Issues"
         );
     }
@@ -715,7 +676,7 @@ public partial class EnhancedFilterViewModel : ObservableObject
     private void ApplyDnsAnomaliesFilter()
     {
         _filterService.ApplyCustomFilter(
-            p => HasDNSAnomalies(p),
+            p => false, // Placeholder - DNS anomalies detected by DNSAnalyzer
             "DNS Anomalies"
         );
     }
@@ -724,7 +685,7 @@ public partial class EnhancedFilterViewModel : ObservableObject
     private void ApplyPortScanFilter()
     {
         _filterService.ApplyCustomFilter(
-            p => IsPortScan(p),
+            p => false, // Placeholder - port scans detected by PortScanDetector
             "Port Scans"
         );
     }
@@ -772,7 +733,7 @@ public partial class EnhancedFilterViewModel : ObservableObject
     private void ApplyLinkLocalFilter()
     {
         _filterService.ApplyCustomFilter(
-            p => IsLinkLocal(p.SourceIP) || IsLinkLocal(p.DestinationIP),
+            p => NetworkFilterHelper.IsLinkLocal(p.SourceIP) || NetworkFilterHelper.IsLinkLocal(p.DestinationIP),
             "Link-local"
         );
     }
@@ -781,7 +742,7 @@ public partial class EnhancedFilterViewModel : ObservableObject
     private void ApplyLoopbackFilter()
     {
         _filterService.ApplyCustomFilter(
-            p => IsLoopback(p.SourceIP) || IsLoopback(p.DestinationIP),
+            p => NetworkFilterHelper.IsLoopback(p.SourceIP) || NetworkFilterHelper.IsLoopback(p.DestinationIP),
             "Loopback"
         );
     }
@@ -790,7 +751,7 @@ public partial class EnhancedFilterViewModel : ObservableObject
     private void ApplySuspiciousTrafficFilter()
     {
         _filterService.ApplyCustomFilter(
-            p => IsSuspicious(p),
+            p => false, // Placeholder - suspicious traffic detection done by ThreatService
             "Suspicious Traffic"
         );
     }
@@ -799,7 +760,8 @@ public partial class EnhancedFilterViewModel : ObservableObject
     private void ApplyPrivateToPublicFilter()
     {
         _filterService.ApplyCustomFilter(
-            p => IsPrivateIP(p.SourceIP) && !IsPrivateIP(p.DestinationIP),
+            p => (NetworkFilterHelper.IsRFC1918(p.SourceIP) || NetworkFilterHelper.IsLoopback(p.SourceIP) || NetworkFilterHelper.IsLinkLocal(p.SourceIP)) &&
+                 !(NetworkFilterHelper.IsRFC1918(p.DestinationIP) || NetworkFilterHelper.IsLoopback(p.DestinationIP) || NetworkFilterHelper.IsLinkLocal(p.DestinationIP)),
             "Private → Public"
         );
     }
@@ -808,7 +770,8 @@ public partial class EnhancedFilterViewModel : ObservableObject
     private void ApplyPublicToPrivateFilter()
     {
         _filterService.ApplyCustomFilter(
-            p => !IsPrivateIP(p.SourceIP) && IsPrivateIP(p.DestinationIP),
+            p => !(NetworkFilterHelper.IsRFC1918(p.SourceIP) || NetworkFilterHelper.IsLoopback(p.SourceIP) || NetworkFilterHelper.IsLinkLocal(p.SourceIP)) &&
+                 (NetworkFilterHelper.IsRFC1918(p.DestinationIP) || NetworkFilterHelper.IsLoopback(p.DestinationIP) || NetworkFilterHelper.IsLinkLocal(p.DestinationIP)),
             "Public → Private"
         );
     }

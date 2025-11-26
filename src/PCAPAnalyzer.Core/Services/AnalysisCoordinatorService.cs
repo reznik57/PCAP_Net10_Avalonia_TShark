@@ -27,6 +27,7 @@ public class AnalysisCoordinatorService : IAnalysisCoordinator
 {
     private readonly AnalysisOrchestrator _orchestrator;
     private readonly IAnalysisCacheService? _cacheService;
+    private readonly ISessionAnalysisCache _sessionCache;
     private readonly List<ITabPopulationTarget> _tabs = new();
 
     /// <summary>
@@ -40,9 +41,11 @@ public class AnalysisCoordinatorService : IAnalysisCoordinator
 
     public AnalysisCoordinatorService(
         AnalysisOrchestrator orchestrator,
+        ISessionAnalysisCache sessionCache,
         IAnalysisCacheService? cacheService = null)
     {
         _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
+        _sessionCache = sessionCache ?? throw new ArgumentNullException(nameof(sessionCache));
         _cacheService = cacheService;
     }
 
@@ -62,7 +65,7 @@ public class AnalysisCoordinatorService : IAnalysisCoordinator
         try
         {
             // Clear session cache for fresh analysis
-            SessionAnalysisCache.Clear();
+            _sessionCache.Clear();
             DebugLogger.Log("[AnalysisCoordinator] Session cache cleared");
 
             // Run orchestrator analysis

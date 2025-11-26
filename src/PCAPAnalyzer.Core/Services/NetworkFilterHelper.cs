@@ -273,6 +273,25 @@ namespace PCAPAnalyzer.Core.Services
             if (string.IsNullOrWhiteSpace(protocol))
                 return false;
 
+            // Secure protocols that should NOT be flagged
+            string[] secureProtocols = {
+                "HTTPS",
+                "SSH",
+                "TLS",
+                "FTPS",
+                "SFTP",
+                "IMAPS",
+                "POP3S",
+                "SMTPS",
+                "SNMPv3",
+                "LDAPS"
+            };
+
+            // Check if it's a secure protocol first
+            if (secureProtocols.Any(p =>
+                protocol.Equals(p, StringComparison.OrdinalIgnoreCase)))
+                return false;
+
             string[] insecureProtocols = {
                 "HTTP",
                 "FTP",
@@ -289,7 +308,7 @@ namespace PCAPAnalyzer.Core.Services
                 "RDP" // When not using Network Level Authentication
             };
 
-            return insecureProtocols.Any(p => 
+            return insecureProtocols.Any(p =>
                 protocol.Contains(p, StringComparison.OrdinalIgnoreCase));
         }
 

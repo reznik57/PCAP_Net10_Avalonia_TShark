@@ -34,17 +34,20 @@ namespace PCAPAnalyzer.Core.Orchestration
         private readonly IStatisticsService _statisticsService;
         private readonly IUnifiedAnomalyDetectionService _anomalyService;
         private readonly IGeoIPService _geoIPService;
+        private readonly ISessionAnalysisCache _sessionCache;
 
         public AnalysisOrchestrator(
             ITSharkService tsharkService,
             IStatisticsService statisticsService,
             IUnifiedAnomalyDetectionService anomalyService,
-            IGeoIPService geoIPService)
+            IGeoIPService geoIPService,
+            ISessionAnalysisCache sessionCache)
         {
             _tsharkService = tsharkService ?? throw new ArgumentNullException(nameof(tsharkService));
             _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService));
             _anomalyService = anomalyService ?? throw new ArgumentNullException(nameof(anomalyService));
             _geoIPService = geoIPService ?? throw new ArgumentNullException(nameof(geoIPService));
+            _sessionCache = sessionCache ?? throw new ArgumentNullException(nameof(sessionCache));
         }
 
         /// <summary>
@@ -130,7 +133,7 @@ namespace PCAPAnalyzer.Core.Orchestration
                 };
 
                 // Cache for instant tab switching
-                SessionAnalysisCache.Set(result);
+                _sessionCache.Set(result);
 
                 coordinator.ReportFinalizing(50, "Cached analysis results");
 
