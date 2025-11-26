@@ -137,6 +137,9 @@ namespace PCAPAnalyzer.UI
             // Port Database Service (Singleton - static port definitions)
             services.AddSingleton<IPortDatabase, PortDatabaseService>();
 
+            // Protocol Security Evaluator Service (Singleton - stateless security evaluation)
+            services.AddSingleton<IProtocolSecurityEvaluator, ProtocolSecurityEvaluatorService>();
+
             // Session Analysis Cache Service (Singleton - shared in-memory cache)
             services.AddSingleton<ISessionAnalysisCache, SessionAnalysisCacheService>();
 
