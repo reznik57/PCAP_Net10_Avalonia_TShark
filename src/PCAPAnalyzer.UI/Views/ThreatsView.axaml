@@ -437,7 +437,7 @@
                                 </Grid>
                             </Border>
                             <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
-                                <ItemsControl ItemsSource="{Binding TopAffectedPortsByCount}" Margin="0,8,0,8">
+                                <ItemsControl ItemsSource="{Binding Statistics.TopAffectedPortsByCount}" Margin="0,8,0,8">
                                     <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -478,7 +478,7 @@
                                 </Grid>
                             </Border>
                             <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
-                                <ItemsControl ItemsSource="{Binding TopAffectedPortsBySeverity}" Margin="0,8,0,8">
+                                <ItemsControl ItemsSource="{Binding Statistics.TopAffectedPortsBySeverity}" Margin="0,8,0,8">
                                     <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -524,7 +524,7 @@
                                 </Grid>
                             </Border>
                             <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
-                                <ItemsControl ItemsSource="{Binding TopSourceIPs}" Margin="0,8,0,8">
+                                <ItemsControl ItemsSource="{Binding Statistics.TopSourceIPs}" Margin="0,8,0,8">
                                     <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -565,7 +565,7 @@
                                 </Grid>
                             </Border>
                             <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
-                                <ItemsControl ItemsSource="{Binding TopDestinationIPs}" Margin="0,8,0,8">
+                                <ItemsControl ItemsSource="{Binding Statistics.TopDestinationIPs}" Margin="0,8,0,8">
                                     <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>

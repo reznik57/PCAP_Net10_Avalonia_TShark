@@ -140,31 +140,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         /// </summary>
         public ObservableCollection<ActiveQuickFilterChip> ActiveQuickFilterChips { get; } = new();
 
-        // ==================== SIDE-BY-SIDE TABLE DATA ====================
-
-        /// <summary>
-        /// Top affected ports by threat count.
-        /// </summary>
-        [ObservableProperty]
-        private ObservableCollection<AffectedPortViewModel> _topAffectedPortsByCount = new();
-
-        /// <summary>
-        /// Top affected ports by severity score.
-        /// </summary>
-        [ObservableProperty]
-        private ObservableCollection<AffectedPortViewModel> _topAffectedPortsBySeverity = new();
-
-        /// <summary>
-        /// Top source IPs by threat count.
-        /// </summary>
-        [ObservableProperty]
-        private ObservableCollection<AffectedIPViewModel> _topSourceIPs = new();
-
-        /// <summary>
-        /// Top destination IPs by threat count.
-        /// </summary>
-        [ObservableProperty]
-        private ObservableCollection<AffectedIPViewModel> _topDestinationIPs = new();
+        // Side-by-side table data now managed by Statistics component
 
         // ==================== FILTERABLE TAB IMPLEMENTATION ====================
 
@@ -1098,119 +1074,8 @@ namespace PCAPAnalyzer.UI.ViewModels
             // Update pagination using the new wrapper
             SecurityThreatsPagination.SetItems(securityThreatItems);
 
-            // Update side-by-side table data
-            UpdateTableData();
-        }
-
-        /// <summary>
-        /// Updates the side-by-side table data from current threats.
-        /// </summary>
-        private void UpdateTableData()
-        {
-            var threats = _allThreats;
-            if (!threats.Any()) return;
-
-            // Top Affected Ports by Threat Count
-            var portsByCount = threats
-                .Where(t => t.Port > 0)
-                .GroupBy(t => new { t.Port, t.Protocol })
-                .Select(g => new AffectedPortViewModel
-                {
-                    Port = g.Key.Port,
-                    Protocol = g.Key.Protocol ?? "TCP",
-                    ServiceName = GetServiceName(g.Key.Port),
-                    ThreatCount = g.Count(),
-                    SeverityScore = g.Average(t => (int)t.Severity)
-                })
-                .OrderByDescending(p => p.ThreatCount)
-                .Take(10)
-                .ToList();
-
-            var totalPortThreats = portsByCount.Sum(p => p.ThreatCount);
-            for (int i = 0; i < portsByCount.Count; i++)
-            {
-                portsByCount[i].Rank = i + 1;
-                portsByCount[i].Percentage = totalPortThreats > 0
-                    ? (portsByCount[i].ThreatCount / (double)totalPortThreats) * 100
-                    : 0;
-            }
-            TopAffectedPortsByCount = new ObservableCollection<AffectedPortViewModel>(portsByCount);
-
-            // Top Affected Ports by Severity Score
-            var portsBySeverity = threats
-                .Where(t => t.Port > 0)
-                .GroupBy(t => new { t.Port, t.Protocol })
-                .Select(g => new AffectedPortViewModel
-                {
-                    Port = g.Key.Port,
-                    Protocol = g.Key.Protocol ?? "TCP",
-                    ServiceName = GetServiceName(g.Key.Port),
-                    ThreatCount = g.Count(),
-                    SeverityScore = g.Max(t => (int)t.Severity) + g.Average(t => (int)t.Severity)
-                })
-                .OrderByDescending(p => p.SeverityScore)
-                .Take(10)
-                .ToList();
-
-            var maxSeverityScore = portsBySeverity.Count > 0 ? portsBySeverity.Max(p => p.SeverityScore) : 1;
-            for (int i = 0; i < portsBySeverity.Count; i++)
-            {
-                portsBySeverity[i].Rank = i + 1;
-                portsBySeverity[i].Percentage = maxSeverityScore > 0
-                    ? (portsBySeverity[i].SeverityScore / maxSeverityScore) * 100
-                    : 0;
-            }
-            TopAffectedPortsBySeverity = new ObservableCollection<AffectedPortViewModel>(portsBySeverity);
-
-            // Top Source IPs
-            var sourceIPs = threats
-                .Where(t => t.AffectedIPs?.Any() == true)
-                .SelectMany(t => t.AffectedIPs!.Take(1).Select(ip => new { IP = ip, Threat = t }))
-                .GroupBy(x => x.IP)
-                .Select(g => new AffectedIPViewModel
-                {
-                    Address = g.Key,
-                    Country = "--", // TODO: GeoIP lookup if available
-                    ThreatCount = g.Count()
-                })
-                .OrderByDescending(ip => ip.ThreatCount)
-                .Take(10)
-                .ToList();
-
-            var totalSourceThreats = sourceIPs.Sum(ip => ip.ThreatCount);
-            for (int i = 0; i < sourceIPs.Count; i++)
-            {
-                sourceIPs[i].Rank = i + 1;
-                sourceIPs[i].Percentage = totalSourceThreats > 0
-                    ? (sourceIPs[i].ThreatCount / (double)totalSourceThreats) * 100
-                    : 0;
-            }
-            TopSourceIPs = new ObservableCollection<AffectedIPViewModel>(sourceIPs);
-
-            // Top Destination IPs (using second IP from AffectedIPs if available)
-            var destIPs = threats
-                .Where(t => t.AffectedIPs?.Count >= 2)
-                .SelectMany(t => t.AffectedIPs!.Skip(1).Take(1).Select(ip => new { IP = ip, Threat = t }))
-                .GroupBy(x => x.IP)
-                .Select(g => new AffectedIPViewModel
-                {
-                    Address = g.Key,
-                    Country = "--",
-                    ThreatCount = g.Count()
-                })
-                .OrderByDescending(ip => ip.ThreatCount)
-                .Take(10)
-                .ToList();
-
-            var totalDestThreats = destIPs.Sum(ip => ip.ThreatCount);
-            for (int i = 0; i < destIPs.Count; i++)
-            {
-                destIPs[i].Rank = i + 1;
-                destIPs[i].Percentage = totalDestThreats > 0
-                    ? (destIPs[i].ThreatCount / (double)totalDestThreats) * 100
-                    : 0;
-            }
-            TopDestinationIPs = new ObservableCollection<AffectedIPViewModel>(destIPs);
+            // Update side-by-side table data (delegated to Statistics component)
+            Statistics.UpdateTableData(_allThreats);
         }
 
         /// <summary>
@@ -1233,27 +1098,6 @@ namespace PCAPAnalyzer.UI.ViewModels
                 _ => threats.OrderByDescending(t => t.Severity).ThenByDescending(t => t.RiskScore).ToList()
             };
         }
-
-        private static string GetServiceName(int port) => port switch
-        {
-            20 or 21 => "FTP",
-            22 => "SSH",
-            23 => "Telnet",
-            25 => "SMTP",
-            53 => "DNS",
-            80 => "HTTP",
-            110 => "POP3",
-            143 => "IMAP",
-            443 => "HTTPS",
-            445 => "SMB",
-            993 => "IMAPS",
-            995 => "POP3S",
-            3306 => "MySQL",
-            3389 => "RDP",
-            5432 => "PostgreSQL",
-            8080 => "HTTP-Alt",
-            _ => "Unknown"
-        };
 
         private void UpdateInsecurePortsList()
         {
@@ -1438,7 +1282,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         {
             await ExportTableToCsvAsync("threats_ports_by_count.csv",
                 new[] { "Rank", "Port", "Protocol", "Service", "Percentage", "ThreatCount" },
-                TopAffectedPortsByCount.Select(p => new[] { p.Rank.ToString(), p.Port.ToString(), p.Protocol, p.ServiceName, $"{p.Percentage:F1}%", p.ThreatCount.ToString() }));
+                Statistics.TopAffectedPortsByCount.Select(p => new[] { p.Rank.ToString(), p.Port.ToString(), p.Protocol, p.ServiceName, $"{p.Percentage:F1}%", p.ThreatCount.ToString() }));
         }
 
         /// <summary>
@@ -1449,7 +1293,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         {
             await ExportTableToCsvAsync("threats_ports_by_severity.csv",
                 new[] { "Rank", "Port", "Protocol", "Service", "Percentage", "SeverityScore" },
-                TopAffectedPortsBySeverity.Select(p => new[] { p.Rank.ToString(), p.Port.ToString(), p.Protocol, p.ServiceName, $"{p.Percentage:F1}%", $"{p.SeverityScore:F1}" }));
+                Statistics.TopAffectedPortsBySeverity.Select(p => new[] { p.Rank.ToString(), p.Port.ToString(), p.Protocol, p.ServiceName, $"{p.Percentage:F1}%", $"{p.SeverityScore:F1}" }));
         }
 
         /// <summary>
@@ -1460,7 +1304,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         {
             await ExportTableToCsvAsync("threats_source_ips.csv",
                 new[] { "Rank", "Address", "Country", "Percentage", "ThreatCount" },
-                TopSourceIPs.Select(ip => new[] { ip.Rank.ToString(), ip.Address, ip.Country, $"{ip.Percentage:F1}%", ip.ThreatCount.ToString() }));
+                Statistics.TopSourceIPs.Select(ip => new[] { ip.Rank.ToString(), ip.Address, ip.Country, $"{ip.Percentage:F1}%", ip.ThreatCount.ToString() }));
         }
 
         /// <summary>
@@ -1471,7 +1315,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         {
             await ExportTableToCsvAsync("threats_dest_ips.csv",
                 new[] { "Rank", "Address", "Country", "Percentage", "ThreatCount" },
-                TopDestinationIPs.Select(ip => new[] { ip.Rank.ToString(), ip.Address, ip.Country, $"{ip.Percentage:F1}%", ip.ThreatCount.ToString() }));
+                Statistics.TopDestinationIPs.Select(ip => new[] { ip.Rank.ToString(), ip.Address, ip.Country, $"{ip.Percentage:F1}%", ip.ThreatCount.ToString() }));
         }
 
         /// <summary>

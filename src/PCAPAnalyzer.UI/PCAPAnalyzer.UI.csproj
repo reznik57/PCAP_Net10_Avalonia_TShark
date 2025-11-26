@@ -14,7 +14,8 @@
     <!-- CA rules (CA1063, CA1816, CA2213) now documented in .editorconfig -->
     <AvaloniaXamlErrorOnUnresolvedTypes>false</AvaloniaXamlErrorOnUnresolvedTypes>
     <!-- AVLN2000: LiveCharts types are resolved at runtime - see .editorconfig for details -->
-    <NoWarn>$(NoWarn);AVLN2000</NoWarn>
+    <!-- CA1002: List<T> used intentionally in internal ViewModels for performance -->
+    <NoWarn>$(NoWarn);AVLN2000;CA1002</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
