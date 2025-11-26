@@ -17,13 +17,6 @@ namespace PCAPAnalyzer.Core.Services
         Task<GeoLocation?> GetLocationAsync(string ipAddress);
 
         /// <summary>
-        /// DEPRECATED: Gets geographic location synchronously (blocks calling thread).
-        /// Use GetLocationAsync() instead to avoid blocking.
-        /// </summary>
-        [Obsolete("Use GetLocationAsync() instead to avoid blocking the calling thread.")]
-        GeoLocation? GetLocation(string ipAddress);
-
-        /// <summary>
         /// Analyzes network traffic and groups by country.
         /// </summary>
         /// <param name="packets">Packet collection to analyze</param>

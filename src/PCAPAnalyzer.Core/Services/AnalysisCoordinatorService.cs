@@ -20,6 +20,7 @@ namespace PCAPAnalyzer.Core.Services;
 /// Responsibilities:
 /// - Run analysis via AnalysisOrchestrator
 /// - Populate all registered tabs from cached results
+/// - Handle lazy tab loading on tab selection
 /// - Notify completion/failure via events
 /// </summary>
 public class AnalysisCoordinatorService : IAnalysisCoordinator
@@ -27,6 +28,12 @@ public class AnalysisCoordinatorService : IAnalysisCoordinator
     private readonly AnalysisOrchestrator _orchestrator;
     private readonly IAnalysisCacheService? _cacheService;
     private readonly List<ITabPopulationTarget> _tabs = new();
+
+    /// <summary>
+    /// Tab indices that support lazy loading. Configure based on your tab order.
+    /// Default: Security Threats (3), Voice/QoS (4)
+    /// </summary>
+    private readonly HashSet<int> _lazyLoadTabs = new() { 3, 4 };
 
     public event EventHandler<CoordinatorCompletedEventArgs>? AnalysisCompleted;
     public event EventHandler<CoordinatorFailedEventArgs>? AnalysisFailed;
@@ -128,5 +135,77 @@ public class AnalysisCoordinatorService : IAnalysisCoordinator
         _tabs.Clear();
         _tabs.AddRange(tabs.Where(t => t != null));
         DebugLogger.Log($"[AnalysisCoordinator] Registered {_tabs.Count} tabs: {string.Join(", ", _tabs.Select(t => t.TabName))}");
+    }
+
+    /// <inheritdoc />
+    public bool RequiresLazyLoading(int tabIndex)
+    {
+        return _lazyLoadTabs.Contains(tabIndex);
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> HandleTabSelectionAsync(int tabIndex, IReadOnlyList<PacketInfo> packets)
+    {
+        if (!RequiresLazyLoading(tabIndex))
+        {
+            return false;
+        }
+
+        DebugLogger.Log($"[AnalysisCoordinator] Tab {tabIndex} selected - checking lazy load status");
+
+        // Find the tab by index mapping
+        var tab = GetTabByIndex(tabIndex);
+        if (tab == null)
+        {
+            DebugLogger.Log($"[AnalysisCoordinator] No tab registered for index {tabIndex}");
+            return false;
+        }
+
+        // Check if already loaded (via ILazyLoadableTab interface)
+        if (tab is ILazyLoadableTab lazyTab)
+        {
+            if (lazyTab.IsDataLoaded)
+            {
+                DebugLogger.Log($"[AnalysisCoordinator] {tab.TabName} already loaded - skipping");
+                return false;
+            }
+
+            DebugLogger.Log($"[AnalysisCoordinator] Starting lazy load for {tab.TabName}");
+            var sw = Stopwatch.StartNew();
+
+            try
+            {
+                lazyTab.IsLoading = true;
+                await lazyTab.LoadDataAsync(packets);
+                DebugLogger.Log($"[AnalysisCoordinator] ✓ {tab.TabName} lazy loaded in {sw.ElapsedMilliseconds}ms");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                DebugLogger.Critical($"[AnalysisCoordinator] ✗ {tab.TabName} lazy load failed: {ex.Message}");
+                lazyTab.IsLoading = false;
+                return false;
+            }
+        }
+
+        DebugLogger.Log($"[AnalysisCoordinator] {tab.TabName} doesn't implement ILazyLoadableTab");
+        return false;
+    }
+
+    /// <summary>
+    /// Map tab index to registered tab. Override in derived class if tab order changes.
+    /// Default mapping: 0=PacketAnalysis, 1=Dashboard, 2=CountryTraffic, 3=Threats, 4=VoiceQoS
+    /// </summary>
+    private ITabPopulationTarget? GetTabByIndex(int tabIndex)
+    {
+        // Find tab by name based on index
+        return tabIndex switch
+        {
+            3 => _tabs.FirstOrDefault(t => t.TabName.Contains("Threat", StringComparison.OrdinalIgnoreCase) ||
+                                           t.TabName.Contains("Security", StringComparison.OrdinalIgnoreCase)),
+            4 => _tabs.FirstOrDefault(t => t.TabName.Contains("Voice", StringComparison.OrdinalIgnoreCase) ||
+                                           t.TabName.Contains("QoS", StringComparison.OrdinalIgnoreCase)),
+            _ => null
+        };
     }
 }

@@ -1,9 +1,13 @@
 using System;
+using System.IO;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using PCAPAnalyzer.Core.Caching;
 using PCAPAnalyzer.Core.Configuration;
+using PCAPAnalyzer.Core.Configuration.Options;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Interfaces.Statistics;
 using PCAPAnalyzer.Core.Orchestration;
@@ -36,6 +40,13 @@ namespace PCAPAnalyzer.UI
         {
             var services = new ServiceCollection();
 
+            // Build configuration from JSON files
+            var configuration = BuildConfiguration();
+            services.AddSingleton<IConfiguration>(configuration);
+
+            // Register Configuration Options (IOptions<T> pattern)
+            RegisterConfigurationOptions(services, configuration);
+
             // Register Core Services
             RegisterCoreServices(services);
 
@@ -49,6 +60,60 @@ namespace PCAPAnalyzer.UI
             RegisterViewModels(services);
 
             return services.BuildServiceProvider();
+        }
+
+        /// <summary>
+        /// Build configuration from JSON files in config/ directory.
+        /// </summary>
+        private static IConfiguration BuildConfiguration()
+        {
+            var configPath = Path.Combine(AppContext.BaseDirectory, "config");
+
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(configPath);
+
+            // Add each config file if it exists (optional - won't fail if missing)
+            AddJsonFileIfExists(builder, configPath, "ports.json");
+            AddJsonFileIfExists(builder, configPath, "countries.json");
+            AddJsonFileIfExists(builder, configPath, "timeouts.json");
+            AddJsonFileIfExists(builder, configPath, "protocols.json");
+
+            return builder.Build();
+        }
+
+        private static void AddJsonFileIfExists(IConfigurationBuilder builder, string configPath, string fileName)
+        {
+            var filePath = Path.Combine(configPath, fileName);
+            if (File.Exists(filePath))
+            {
+                builder.AddJsonFile(fileName, optional: true, reloadOnChange: false);
+                DebugLogger.Log($"[ServiceConfiguration] ✅ Loaded config: {fileName}");
+            }
+            else
+            {
+                DebugLogger.Log($"[ServiceConfiguration] ⚠️  Config not found (using defaults): {fileName}");
+            }
+        }
+
+        /// <summary>
+        /// Register configuration options using IOptions<T> pattern.
+        /// Binds JSON config files to strongly-typed Options classes.
+        /// </summary>
+        private static void RegisterConfigurationOptions(IServiceCollection services, IConfiguration configuration)
+        {
+            // Port Configuration (config/ports.json)
+            services.Configure<PortConfiguration>(configuration);
+
+            // Country Configuration (config/countries.json)
+            services.Configure<CountryConfiguration>(configuration);
+
+            // Timeout Configuration (config/timeouts.json)
+            services.Configure<TimeoutConfiguration>(configuration);
+
+            // Protocol Configuration (config/protocols.json)
+            services.Configure<ProtocolConfiguration>(configuration);
+
+            DebugLogger.Log("[ServiceConfiguration] ✅ Configuration options registered");
         }
 
         /// <summary>
@@ -116,6 +181,7 @@ namespace PCAPAnalyzer.UI
 
             // Statistics Helper Services (Singleton - stateless calculations via DI)
             services.AddSingleton<IStatisticsCalculator, StatisticsCalculator>();
+            services.AddSingleton<IPacketStatisticsCalculator, PacketStatisticsCalculator>();
             services.AddSingleton<ITimeSeriesGenerator, TimeSeriesGeneratorService>();
             services.AddSingleton<IGeoIPEnricher>(provider =>
             {
@@ -125,7 +191,8 @@ namespace PCAPAnalyzer.UI
             services.AddSingleton<IThreatDetector>(provider =>
             {
                 var timeSeriesGen = provider.GetRequiredService<ITimeSeriesGenerator>();
-                return new ThreatDetector(timeSeriesGen);
+                var protocolOptions = provider.GetRequiredService<IOptions<ProtocolConfiguration>>();
+                return new ThreatDetector(timeSeriesGen, protocolOptions);
             });
 
             // Statistics Service (Base implementation - Singleton)
@@ -173,13 +240,6 @@ namespace PCAPAnalyzer.UI
             // Filter Copy: Use ITabFilterService.CopyFilterFrom(sourceTab) for cross-tab filter copying
             services.AddTransient<ITabFilterService>(provider =>
                 new TabFilterService("Unknown", provider.GetRequiredService<IFilterServiceCore>()));
-
-            // Legacy Global Filter Service (Singleton - shared state)
-            // ⚠️  DEPRECATED: Kept for backward compatibility, will be removed in future release
-            // Use ITabFilterService for new code
-            // Note: Gets its own dedicated FilterServiceCore instance (not shared with TabFilterService instances)
-            services.AddSingleton<IGlobalFilterService>(provider =>
-                new GlobalFilterService(new FilterServiceCore()));
 
             // Insecure Port Detector
             services.AddSingleton<IInsecurePortDetector, InsecurePortDetector>();

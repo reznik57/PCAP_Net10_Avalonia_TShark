@@ -26,7 +26,7 @@ namespace PCAPAnalyzer.UI.ViewModels;
 /// ViewModel for Voice/QoS traffic analysis tab.
 /// Displays QoS-marked traffic, connections with high latency, and connections with high jitter.
 /// </summary>
-public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ITabPopulationTarget
+public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyLoadableTab
 {
     private readonly ITabFilterService? _filterService;
     private readonly PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService? _cacheService;

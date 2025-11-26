@@ -88,6 +88,8 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             {
                 try
                 {
+                    // CA2000 suppressed: Providers are stored in _providers list and disposed via Dispose()
+#pragma warning disable CA2000
                     IGeoIPProvider? provider = providerConfig.ProviderType switch
                     {
                         ProviderType.Mmdb => new MmdbGeoIPProvider(),
@@ -95,6 +97,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
                         ProviderType.Api => new ApiGeoIPProvider(providerConfig, _logger),
                         _ => null
                     };
+#pragma warning restore CA2000
 
                     if (provider != null)
                     {
@@ -278,18 +281,6 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             }
         }
 
-        /// <summary>
-        /// DEPRECATED: Use GetLocationAsync() instead to avoid blocking.
-        /// Synchronous wrapper that blocks on async method - required by IGeoIPService interface for backward compatibility.
-        /// </summary>
-        [Obsolete("Use GetLocationAsync() instead to avoid blocking the calling thread.")]
-        public GeoLocation? GetLocation(string ipAddress)
-        {
-            // INTENTIONALLY BLOCKING: Required by IGeoIPService interface for legacy compatibility
-            // This method blocks the calling thread. Use GetLocationAsync() in new code.
-            return GetLocationAsync(ipAddress).GetAwaiter().GetResult();
-        }
-
         // Suppress complexity warning - method complexity is justified for performance-optimized parallel processing
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "CA1502:Avoid excessive complexity", Justification = "Parallel processing logic requires branching for thread-local aggregation and merging")]
         public async Task<Dictionary<string, CountryTrafficStatistics>> AnalyzeCountryTrafficAsync(IEnumerable<PacketInfo> packets, object? progressStage = null)
@@ -373,7 +364,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             var ipList = uniqueIPs.ToList();
 
             // Process in parallel batches (50 concurrent lookups at a time for optimal throughput)
-            var semaphore = new System.Threading.SemaphoreSlim(50);
+            using var semaphore = new System.Threading.SemaphoreSlim(50);
             var lookupTasks = ipList.Select(async ip =>
             {
                 await semaphore.WaitAsync();

@@ -210,7 +210,7 @@ public class ProtocolDeepDiveService
                 currentLayer = new ProtocolLayer { Name = name, Fields = new List<ProtocolField>() };
                 indent = 0;
             }
-            else if (line.StartsWith("Frame "))
+            else if (line.StartsWith("Frame ", StringComparison.Ordinal))
             {
                 // Frame info layer
                 if (currentLayer != null)

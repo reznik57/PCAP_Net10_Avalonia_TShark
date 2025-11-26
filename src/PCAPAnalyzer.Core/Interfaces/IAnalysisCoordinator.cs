@@ -45,6 +45,22 @@ public interface IAnalysisCoordinator
     /// Event raised when analysis fails (for UI error handling)
     /// </summary>
     event EventHandler<CoordinatorFailedEventArgs>? AnalysisFailed;
+
+    /// <summary>
+    /// Handle lazy loading when user switches tabs.
+    /// Loads data on-demand for tabs that weren't preloaded.
+    /// </summary>
+    /// <param name="tabIndex">Index of the selected tab</param>
+    /// <param name="packets">Current packet collection for analysis</param>
+    /// <returns>True if tab was loaded, false if already loaded or not a lazy-load tab</returns>
+    Task<bool> HandleTabSelectionAsync(int tabIndex, IReadOnlyList<PacketInfo> packets);
+
+    /// <summary>
+    /// Check if a specific tab needs lazy loading.
+    /// </summary>
+    /// <param name="tabIndex">Index of the tab to check</param>
+    /// <returns>True if tab requires lazy loading</returns>
+    bool RequiresLazyLoading(int tabIndex);
 }
 
 /// <summary>

@@ -17,6 +17,7 @@ using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Orchestration;
 using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.Core.Services.GeoIP;
+using PCAPAnalyzer.Core.Services.Statistics;
 using PCAPAnalyzer.TShark;
 using PCAPAnalyzer.UI.Interfaces;
 using PCAPAnalyzer.UI.Models;
@@ -86,6 +87,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     private readonly YaraService _yaraService;
     private readonly AnalysisOrchestrator? _orchestrator; // ✅ PRELOAD ARCHITECTURE: Central coordinator
     private readonly IAnalysisCoordinator? _analysisCoordinator; // ✅ PHASE 3: New coordinator for tab population
+    private readonly IPacketStatisticsCalculator _packetStatsCalculator; // ✅ PHASE 5: Extracted statistics calculations
     // REMOVED: _filterBuilder field - now inherited from SmartFilterableTab base class
     private readonly SemaphoreSlim _dashboardUpdateGate = new(1, 1);
     private readonly DispatcherTimer _updateTimer;
@@ -207,7 +209,8 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         AnalysisOrchestrator? orchestrator = null,
         IReportGeneratorService? reportService = null,
         ISmartFilterBuilder? filterBuilder = null,
-        IAnalysisCoordinator? analysisCoordinator = null) // ✅ PHASE 3: New coordinator parameter
+        IAnalysisCoordinator? analysisCoordinator = null,
+        IPacketStatisticsCalculator? packetStatsCalculator = null) // ✅ PHASE 5: Statistics calculator
         : base(filterBuilder ?? App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService()) // ✅ C2 REFACTOR: Call base constructor with filterBuilder via DI
     {
         _tsharkService = tsharkService ?? throw new ArgumentNullException(nameof(tsharkService));
@@ -215,6 +218,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         _geoIpService = geoIpService ?? throw new ArgumentNullException(nameof(geoIpService), "GeoIPService must be provided via DI");
         _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService), "StatisticsService must be provided via DI");
         _anomalyService = anomalyService ?? new UnifiedAnomalyDetectionService();
+        _packetStatsCalculator = packetStatsCalculator ?? App.Services?.GetService<IPacketStatisticsCalculator>() ?? new PacketStatisticsCalculator();
         _orchestrator = orchestrator; // ✅ PRELOAD ARCHITECTURE: Optional for backwards compatibility
         _analysisCoordinator = analysisCoordinator; // ✅ PHASE 3: Store coordinator for tab population
 
@@ -1466,119 +1470,59 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
     /// <summary>
     /// Calculate unique IP addresses (source + destination combined) for total and filtered packets.
+    /// Delegates to IPacketStatisticsCalculator for actual computation.
     /// </summary>
     private (int Total, int Filtered) CalculateUniqueIPs()
     {
-        try
-        {
-            if (PacketManager == null)
-                return (0, 0);
-
-            var allPackets = PacketManager.CachedDashboardPackets;
-            if (allPackets == null || allPackets.Count == 0)
-                return (0, 0);
-
-            var totalIPs = allPackets
-                .SelectMany(p => new[] { p.SourceIP, p.DestinationIP })
-                .Where(ip => !string.IsNullOrEmpty(ip))
-                .Distinct()
-                .Count();
-
-            if (!PacketManager.IsFilterActive)
-                return (totalIPs, 0);
-
-            var filteredPackets = PacketManager.GetFilteredPackets().ToList();
-            var filteredIPs = filteredPackets
-                .SelectMany(p => new[] { p.SourceIP, p.DestinationIP })
-                .Where(ip => !string.IsNullOrEmpty(ip))
-                .Distinct()
-                .Count();
-
-            return (totalIPs, filteredIPs);
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[STATS] Error calculating unique IPs: {ex.Message}");
+        if (PacketManager?.CachedDashboardPackets == null || PacketManager.CachedDashboardPackets.Count == 0)
             return (0, 0);
-        }
+
+        var totalIPs = _packetStatsCalculator.CalculateUniqueIPs(PacketManager.CachedDashboardPackets);
+
+        if (!PacketManager.IsFilterActive)
+            return (totalIPs, 0);
+
+        var filteredPackets = PacketManager.GetFilteredPackets().ToList();
+        var filteredIPs = _packetStatsCalculator.CalculateUniqueIPs(filteredPackets);
+        return (totalIPs, filteredIPs);
     }
 
     /// <summary>
     /// Calculate unique destination ports for total and filtered packets.
+    /// Delegates to IPacketStatisticsCalculator for actual computation.
     /// </summary>
     private (int Total, int Filtered) CalculateDestinationPorts()
     {
-        try
-        {
-            if (PacketManager == null)
-                return (0, 0);
-
-            var allPackets = PacketManager.CachedDashboardPackets;
-            if (allPackets == null || allPackets.Count == 0)
-                return (0, 0);
-
-            var totalPorts = allPackets
-                .Where(p => p.DestinationPort > 0)
-                .Select(p => p.DestinationPort)
-                .Distinct()
-                .Count();
-
-            if (!PacketManager.IsFilterActive)
-                return (totalPorts, 0);
-
-            var filteredPackets = PacketManager.GetFilteredPackets().ToList();
-            var filteredPorts = filteredPackets
-                .Where(p => p.DestinationPort > 0)
-                .Select(p => p.DestinationPort)
-                .Distinct()
-                .Count();
-
-            return (totalPorts, filteredPorts);
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[STATS] Error calculating destination ports: {ex.Message}");
+        if (PacketManager?.CachedDashboardPackets == null || PacketManager.CachedDashboardPackets.Count == 0)
             return (0, 0);
-        }
+
+        var totalPorts = _packetStatsCalculator.CalculateUniqueDestinationPorts(PacketManager.CachedDashboardPackets);
+
+        if (!PacketManager.IsFilterActive)
+            return (totalPorts, 0);
+
+        var filteredPackets = PacketManager.GetFilteredPackets().ToList();
+        var filteredPorts = _packetStatsCalculator.CalculateUniqueDestinationPorts(filteredPackets);
+        return (totalPorts, filteredPorts);
     }
 
     /// <summary>
     /// Calculate TCP conversations (unique 4-tuple: SrcIP + DstIP + SrcPort + DstPort) for total and filtered packets.
+    /// Delegates to IPacketStatisticsCalculator for actual computation.
     /// </summary>
     private (int Total, int Filtered) CalculateTCPConversations()
     {
-        try
-        {
-            if (PacketManager == null)
-                return (0, 0);
-
-            var allPackets = PacketManager.CachedDashboardPackets;
-            if (allPackets == null || allPackets.Count == 0)
-                return (0, 0);
-
-            var totalConversations = allPackets
-                .Where(p => p.Protocol == Core.Models.Protocol.TCP)
-                .Select(p => $"{p.SourceIP}:{p.SourcePort}→{p.DestinationIP}:{p.DestinationPort}")
-                .Distinct()
-                .Count();
-
-            if (!PacketManager.IsFilterActive)
-                return (totalConversations, 0);
-
-            var filteredPackets = PacketManager.GetFilteredPackets().ToList();
-            var filteredConversations = filteredPackets
-                .Where(p => p.Protocol == Core.Models.Protocol.TCP)
-                .Select(p => $"{p.SourceIP}:{p.SourcePort}→{p.DestinationIP}:{p.DestinationPort}")
-                .Distinct()
-                .Count();
-
-            return (totalConversations, filteredConversations);
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[STATS] Error calculating TCP conversations: {ex.Message}");
+        if (PacketManager?.CachedDashboardPackets == null || PacketManager.CachedDashboardPackets.Count == 0)
             return (0, 0);
-        }
+
+        var totalConversations = _packetStatsCalculator.CalculateTCPConversations(PacketManager.CachedDashboardPackets);
+
+        if (!PacketManager.IsFilterActive)
+            return (totalConversations, 0);
+
+        var filteredPackets = PacketManager.GetFilteredPackets().ToList();
+        var filteredConversations = _packetStatsCalculator.CalculateTCPConversations(filteredPackets);
+        return (totalConversations, filteredConversations);
     }
 
     /// <summary>
@@ -2156,76 +2100,32 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
     /// <summary>
     /// Handles lazy loading when user switches tabs.
-    /// Loads data on-demand for Threats and Voice/QoS tabs.
-    /// CRITICAL: Sets loading state immediately, then runs work on background thread.
+    /// Delegates to AnalysisCoordinator for centralized tab loading logic.
     /// </summary>
     private async Task HandleTabSelectionAsync(int tabIndex)
     {
         DebugLogger.Log($"[MainWindowViewModel] Tab changed to index {tabIndex}");
 
-        // Tab indices (adjust based on your actual tab order):
-        // 0 = Packet Analysis
-        // 1 = Dashboard
-        // 2 = Country Traffic
-        // 3 = Security Threats
-        // 4 = Voice/QoS
-
-        // Set loading state IMMEDIATELY on UI thread (before any async work)
-        if (tabIndex == 3 && ThreatsViewModel != null)
+        // Check if coordinator handles lazy loading for this tab
+        if (_analysisCoordinator == null || !_analysisCoordinator.RequiresLazyLoading(tabIndex))
         {
-            if (!ThreatsViewModel.IsDataLoaded)
-            {
-                ThreatsViewModel.IsLoading = true;
-                DebugLogger.Log($"[MainWindowViewModel] Threats tab selected - starting background load");
-            }
-            else
-            {
-                DebugLogger.Log($"[MainWindowViewModel] Threats tab selected - data already loaded");
-                return;
-            }
-        }
-        else if (tabIndex == 4 && VoiceQoSViewModel != null)
-        {
-            if (!VoiceQoSViewModel.IsDataLoaded)
-            {
-                VoiceQoSViewModel.IsLoading = true;
-                DebugLogger.Log($"[MainWindowViewModel] Voice/QoS tab selected - starting background load");
-            }
-            else
-            {
-                DebugLogger.Log($"[MainWindowViewModel] Voice/QoS tab selected - data already loaded");
-                return;
-            }
-        }
-        else
-        {
-            return; // Not a lazy-loaded tab
+            return;
         }
 
-        // CRITICAL: Offload ALL work to background thread to prevent UI blocking
+        // CRITICAL: Offload work to background thread to prevent UI blocking
         await Task.Run(async () =>
         {
             try
             {
-                // This expensive operation now runs on background thread
                 var packets = PacketManager.GetFilteredPackets().ToList();
-                DebugLogger.Log($"[MainWindowViewModel] Loaded {packets.Count:N0} packets on background thread");
+                DebugLogger.Log($"[MainWindowViewModel] Loaded {packets.Count:N0} packets for lazy tab loading");
 
-                if (tabIndex == 3 && ThreatsViewModel != null)
-                {
-                    await ThreatsViewModel.LoadDataAsync(packets);
-                }
-                else if (tabIndex == 4 && VoiceQoSViewModel != null)
-                {
-                    await VoiceQoSViewModel.LoadDataAsync(packets);
-                }
+                // Delegate to coordinator for centralized tab loading
+                await _analysisCoordinator.HandleTabSelectionAsync(tabIndex, packets);
             }
             catch (Exception ex)
             {
-                DebugLogger.Log($"[MainWindowViewModel] Error during background loading: {ex.Message}");
-                // Reset loading state on error
-                if (tabIndex == 3 && ThreatsViewModel != null) ThreatsViewModel.IsLoading = false;
-                if (tabIndex == 4 && VoiceQoSViewModel != null) VoiceQoSViewModel.IsLoading = false;
+                DebugLogger.Log($"[MainWindowViewModel] Error during tab lazy loading: {ex.Message}");
             }
         }).ConfigureAwait(false);
     }

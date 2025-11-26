@@ -24,7 +24,7 @@ using PCAPAnalyzer.UI.Constants;
 namespace PCAPAnalyzer.UI.ViewModels
 {
     [SuppressMessage("Maintainability", "CA1506:Avoid excessive class coupling", Justification = "Threats ViewModel requires coordination of security services, anomaly detection, and visualization components - this is necessary for comprehensive threat analysis")]
-    public partial class ThreatsViewModel : SmartFilterableTab, ITabPopulationTarget
+    public partial class ThreatsViewModel : SmartFilterableTab, ILazyLoadableTab
     {
         private readonly IInsecurePortDetector _insecurePortDetector;
         private readonly IUnifiedAnomalyDetectionService _anomalyService;

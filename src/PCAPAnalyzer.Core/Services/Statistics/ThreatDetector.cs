@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Extensions.Options;
+using PCAPAnalyzer.Core.Configuration.Options;
 using PCAPAnalyzer.Core.Interfaces.Statistics;
 using PCAPAnalyzer.Core.Models;
 
@@ -9,14 +11,22 @@ namespace PCAPAnalyzer.Core.Services.Statistics
     /// <summary>
     /// Heuristic-based threat detection service.
     /// Implements IThreatDetector for DI injection and testability.
+    /// Uses IOptions&lt;ProtocolConfiguration&gt; for configurable suspicious protocol list.
     /// </summary>
     public class ThreatDetector : IThreatDetector
     {
         private readonly ITimeSeriesGenerator _timeSeriesGenerator;
+        private readonly ProtocolConfiguration _protocolConfig;
 
-        public ThreatDetector(ITimeSeriesGenerator timeSeriesGenerator)
+        /// <summary>
+        /// Creates a new ThreatDetector with configurable protocol settings.
+        /// </summary>
+        /// <param name="timeSeriesGenerator">Time series generator for DDoS detection.</param>
+        /// <param name="protocolOptions">Protocol configuration from IOptions pattern (optional).</param>
+        public ThreatDetector(ITimeSeriesGenerator timeSeriesGenerator, IOptions<ProtocolConfiguration>? protocolOptions = null)
         {
             _timeSeriesGenerator = timeSeriesGenerator ?? throw new ArgumentNullException(nameof(timeSeriesGenerator));
+            _protocolConfig = protocolOptions?.Value ?? new ProtocolConfiguration();
         }
 
         public List<SecurityThreat> DetectPortScanning(List<PacketInfo> packets)
@@ -75,7 +85,8 @@ namespace PCAPAnalyzer.Core.Services.Statistics
         public List<SecurityThreat> DetectSuspiciousProtocols(List<PacketInfo> packets)
         {
             var threats = new List<SecurityThreat>();
-            var suspiciousProtocols = new[] { "TELNET", "FTP", "HTTP" };
+            // Use configurable suspicious protocols from IOptions<ProtocolConfiguration>
+            var suspiciousProtocols = _protocolConfig.SuspiciousProtocols;
 
             var unencryptedTraffic = packets
                 .Where(p => suspiciousProtocols.Contains(p.Protocol.ToString().ToUpper()))

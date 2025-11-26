@@ -1,0 +1,27 @@
+{
+  "ProtocolColors": {
+    "TCP": "#3B82F6",
+    "UDP": "#10B981",
+    "ICMP": "#F59E0B",
+    "HTTP": "#8B5CF6",
+    "HTTPS": "#EC4899",
+    "DNS": "#14B8A6",
+    "SSH": "#F97316",
+    "FTP": "#EF4444",
+    "SMTP": "#6366F1",
+    "Other": "#6B7280"
+  },
+  "SecurityRatings": {
+    "HTTPS": 5,
+    "SSH": 5,
+    "TLS": 5,
+    "DNS": 3,
+    "TCP": 3,
+    "UDP": 3,
+    "HTTP": 1,
+    "FTP": 1,
+    "TELNET": 0,
+    "ICMP": 2
+  },
+  "SuspiciousProtocols": ["TELNET", "FTP", "HTTP"]
+}

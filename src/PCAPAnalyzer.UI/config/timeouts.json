@@ -1,0 +1,13 @@
+{
+  "TSharkProcessMs": 120000,
+  "GeoIPLookupMs": 5000,
+  "GeoIPTimeoutByPacketCount": {
+    "250000": 12,
+    "1000000": 20,
+    "2000000": 30
+  },
+  "RenderDelayMs": 100,
+  "ExportStatusClearMs": 5000,
+  "AnalysisCacheExpirationDays": 30,
+  "ProgressReportIntervalMs": 500
+}

@@ -1,14 +1,10 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Jobs;
-using Microsoft.Extensions.Logging.Abstractions;
 using PCAPAnalyzer.Core.Models.Capture;
-using PCAPAnalyzer.Core.Services.Capture;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace PCAPAnalyzer.PerformanceTests;
@@ -22,8 +18,6 @@ namespace PCAPAnalyzer.PerformanceTests;
 [MinColumn, MaxColumn, MeanColumn, MedianColumn]
 public class LiveCaptureBenchmarks
 {
-    private LiveCaptureService? _captureService;
-    private NetworkInterfaceManager? _interfaceManager;
     private string _testOutputDir = string.Empty;
 
     [Params(1000, 10000, 50000, 100000)]
@@ -34,20 +28,11 @@ public class LiveCaptureBenchmarks
     {
         _testOutputDir = Path.Combine(Path.GetTempPath(), $"pcap_bench_{Guid.NewGuid():N}");
         Directory.CreateDirectory(_testOutputDir);
-
-        _interfaceManager = new NetworkInterfaceManager(NullLogger<NetworkInterfaceManager>.Instance);
-        _captureService = new LiveCaptureService(
-            NullLogger<LiveCaptureService>.Instance,
-            _interfaceManager,
-            "mock_tshark" // Will be mocked
-        );
     }
 
     [GlobalCleanup]
     public void Cleanup()
     {
-        _captureService?.Dispose();
-
         if (Directory.Exists(_testOutputDir))
         {
             try

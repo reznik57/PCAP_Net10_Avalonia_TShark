@@ -13,12 +13,10 @@ namespace PCAPAnalyzer.Tests
     public class FilterVerification
     {
         private readonly ITSharkService _tsharkService;
-        private readonly IGlobalFilterService _filterService;
-        
+
         public FilterVerification()
         {
             _tsharkService = new TSharkService();
-            _filterService = new GlobalFilterService();
         }
         
         public async Task RunFilterTests(string pcapFilePath)
