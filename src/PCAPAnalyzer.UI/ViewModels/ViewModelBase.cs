@@ -1,5 +1,6 @@
 using System;
 using System.Reactive.Concurrency;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -14,7 +15,7 @@ namespace PCAPAnalyzer.UI.ViewModels
     public abstract class ViewModelBase : ObservableObject
     {
         /// <summary>
-        /// Thread-safe property update that ensures UI thread execution
+        /// Thread-safe property update that ensures UI thread execution (fire-and-forget, non-blocking)
         /// Usage: SetPropertyThreadSafe(() => MyProperty = value);
         /// </summary>
         protected void SetPropertyThreadSafe(Action propertyUpdate)
@@ -25,9 +26,26 @@ namespace PCAPAnalyzer.UI.ViewModels
                 propertyUpdate();
                 return;
             }
-            
-            // If not on UI thread, marshal to UI thread
-            Dispatcher.UIThread.InvokeAsync(propertyUpdate).Wait();
+
+            // If not on UI thread, marshal to UI thread (non-blocking)
+            Dispatcher.UIThread.Post(propertyUpdate);
+        }
+
+        /// <summary>
+        /// Thread-safe property update that ensures UI thread execution (awaitable)
+        /// Usage: await SetPropertyThreadSafeAsync(() => MyProperty = value);
+        /// </summary>
+        protected async Task SetPropertyThreadSafeAsync(Action propertyUpdate)
+        {
+            // If we're on UI thread, proceed normally
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                propertyUpdate();
+                return;
+            }
+
+            // If not on UI thread, marshal to UI thread and await
+            await Dispatcher.UIThread.InvokeAsync(propertyUpdate);
         }
         
         /// <summary>
@@ -46,7 +64,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         }
         
         /// <summary>
-        /// Ensures the action runs on the UI thread and waits for completion
+        /// Ensures the action runs on the UI thread and waits for completion (fire-and-forget, non-blocking)
         /// </summary>
         protected void RunOnUIThreadSync(Action action)
         {
@@ -56,7 +74,22 @@ namespace PCAPAnalyzer.UI.ViewModels
             }
             else
             {
-                Dispatcher.UIThread.InvokeAsync(action).Wait();
+                Dispatcher.UIThread.Post(action);
+            }
+        }
+
+        /// <summary>
+        /// Ensures the action runs on the UI thread and waits for completion (awaitable)
+        /// </summary>
+        protected async Task RunOnUIThreadSyncAsync(Action action)
+        {
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                action();
+            }
+            else
+            {
+                await Dispatcher.UIThread.InvokeAsync(action);
             }
         }
         

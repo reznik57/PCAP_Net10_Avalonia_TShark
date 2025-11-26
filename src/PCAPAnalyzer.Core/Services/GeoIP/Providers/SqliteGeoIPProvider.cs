@@ -15,12 +15,13 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
     /// Extracted from EnhancedGeoIPService with improved error handling and performance.
     /// Supports IP range lookups with confidence scoring and metadata.
     /// </summary>
-    public class SqliteGeoIPProvider : IGeoIPProvider
+    public class SqliteGeoIPProvider : IGeoIPProvider, IDisposable
     {
         private readonly ILogger? _logger;
         private readonly string _databasePath;
         private bool _isReady;
-        private readonly object _lock = new();
+        private readonly SemaphoreSlim _initLock = new(1, 1);
+        private bool _disposed;
 
         public string ProviderName => "SQLite Database";
 
@@ -48,51 +49,52 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
                 "PCAPAnalyzer", "GeoIP", "geoip.db");
         }
 
-        public Task<bool> InitializeAsync()
+        public async Task<bool> InitializeAsync()
         {
-            if (_isReady) return Task.FromResult(true);
+            if (_isReady) return true;
 
-            lock (_lock)
+            await _initLock.WaitAsync();
+            try
             {
-                if (_isReady) return Task.FromResult(true);
+                // Double-check after acquiring lock
+                if (_isReady) return true;
 
-                try
+                _logger?.LogInformation("[{Provider}] Starting initialization...", ProviderName);
+
+                // Create directory if it doesn't exist
+                var directory = Path.GetDirectoryName(_databasePath);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 {
-                    _logger?.LogInformation("[{Provider}] Starting initialization...", ProviderName);
-
-                    // Create directory if it doesn't exist
-                    var directory = Path.GetDirectoryName(_databasePath);
-                    if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-                    {
-                        Directory.CreateDirectory(directory);
-                        _logger?.LogInformation("[{Provider}] Created directory: {Directory}", ProviderName, directory);
-                    }
-
-                    // Initialize database schema - run synchronously within lock
-                    var initTask = InitializeDatabaseSchema();
-                    initTask.GetAwaiter().GetResult();
-
-                    // Check if database has data - run synchronously within lock
-                    var checkTask = CheckDatabaseHasData();
-                    var hasData = checkTask.GetAwaiter().GetResult();
-                    if (hasData)
-                    {
-                        _isReady = true;
-                        _logger?.LogInformation("[{Provider}] Successfully initialized with existing data", ProviderName);
-                    }
-                    else
-                    {
-                        _logger?.LogWarning("[{Provider}] Database is empty. Call ImportData to populate.", ProviderName);
-                        _isReady = true; // Still mark as ready, but lookups will return null
-                    }
-
-                    return Task.FromResult(true);
+                    Directory.CreateDirectory(directory);
+                    _logger?.LogInformation("[{Provider}] Created directory: {Directory}", ProviderName, directory);
                 }
-                catch (Exception ex)
+
+                // Initialize database schema
+                await InitializeDatabaseSchema();
+
+                // Check if database has data
+                var hasData = await CheckDatabaseHasData();
+                if (hasData)
                 {
-                    _logger?.LogError(ex, "[{Provider}] Initialization failed", ProviderName);
-                    return Task.FromResult(false);
+                    _isReady = true;
+                    _logger?.LogInformation("[{Provider}] Successfully initialized with existing data", ProviderName);
                 }
+                else
+                {
+                    _logger?.LogWarning("[{Provider}] Database is empty. Call ImportData to populate.", ProviderName);
+                    _isReady = true; // Still mark as ready, but lookups will return null
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "[{Provider}] Initialization failed", ProviderName);
+                return false;
+            }
+            finally
+            {
+                _initLock.Release();
             }
         }
 
@@ -375,6 +377,16 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
             catch { /* Return 0 for invalid IP - safe fallback */ }
 
             return 0;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _initLock?.Dispose();
+            _disposed = true;
+            _logger?.LogInformation("[{Provider}] Disposed resources", ProviderName);
         }
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 
@@ -52,7 +53,7 @@ public class StreamAnalyzer
     /// <summary>
     /// Analyzes complete stream including TCP state, bandwidth, timing, and protocol detection.
     /// </summary>
-    public StreamAnalysisResult AnalyzeStream(IReadOnlyList<PacketInfo> packets, string streamKey)
+    public async Task<StreamAnalysisResult> AnalyzeStreamAsync(IReadOnlyList<PacketInfo> packets, string streamKey)
     {
         if (packets.Count == 0)
         {
@@ -70,7 +71,7 @@ public class StreamAnalyzer
             Bandwidth = CalculateBandwidthMetrics(packets),
             Timing = AnalyzeTimingMetrics(packets),
             Protocol = DetectApplicationProtocol(packets),
-            Security = AnalyzeSecurityIndicators(referencePacket),
+            Security = await AnalyzeSecurityIndicatorsAsync(referencePacket),
             Directional = AnalyzeDirectionalMetrics(packets, referencePacket)
         };
     }
@@ -78,7 +79,7 @@ public class StreamAnalyzer
     /// <summary>
     /// Analyzes complete stream with a specific current packet for positional context.
     /// </summary>
-    public StreamAnalysisResult AnalyzeStream(IReadOnlyList<PacketInfo> packets, string streamKey, PacketInfo currentPacket)
+    public async Task<StreamAnalysisResult> AnalyzeStreamAsync(IReadOnlyList<PacketInfo> packets, string streamKey, PacketInfo currentPacket)
     {
         if (packets.Count == 0)
         {
@@ -95,7 +96,7 @@ public class StreamAnalyzer
             Bandwidth = CalculateBandwidthMetrics(packets),
             Timing = AnalyzeTimingMetrics(packets),
             Protocol = DetectApplicationProtocol(packets),
-            Security = AnalyzeSecurityIndicators(currentPacket),
+            Security = await AnalyzeSecurityIndicatorsAsync(currentPacket),
             Directional = AnalyzeDirectionalMetrics(packets, currentPacket)
         };
     }
@@ -315,7 +316,7 @@ public class StreamAnalyzer
     /// <summary>
     /// Analyzes security indicators for stream endpoints including port and GeoIP risks.
     /// </summary>
-    private SecurityIndicators? AnalyzeSecurityIndicators(PacketInfo referencePacket)
+    private async Task<SecurityIndicators?> AnalyzeSecurityIndicatorsAsync(PacketInfo referencePacket)
     {
         if (_portDetector == null && _geoIPService == null)
             return null;
@@ -327,8 +328,8 @@ public class StreamAnalyzer
         var dstPortSecurity = AnalyzePort(referencePacket.DestinationPort, warnings, "Destination");
 
         // Analyze GeoIP
-        var srcGeo = AnalyzeGeoIP(referencePacket.SourceIP, warnings, "Source");
-        var dstGeo = AnalyzeGeoIP(referencePacket.DestinationIP, warnings, "Destination");
+        var srcGeo = await AnalyzeGeoIPAsync(referencePacket.SourceIP, warnings, "Source");
+        var dstGeo = await AnalyzeGeoIPAsync(referencePacket.DestinationIP, warnings, "Destination");
 
         // Calculate overall risk
         var overallRisk = CalculateOverallRisk(srcPortSecurity, dstPortSecurity, srcGeo, dstGeo);
@@ -387,7 +388,7 @@ public class StreamAnalyzer
     /// <summary>
     /// Analyzes GeoIP information for security risks.
     /// </summary>
-    private GeoSecurityInfo? AnalyzeGeoIP(string ip, List<string> warnings, string direction)
+    private async Task<GeoSecurityInfo?> AnalyzeGeoIPAsync(string ip, List<string> warnings, string direction)
     {
         if (_geoIPService == null)
             return null;
@@ -406,11 +407,11 @@ public class StreamAnalyzer
             };
         }
 
-        // Use async method with blocking wait (sync API requirement)
+        // Use async method properly
         GeoLocation? geoInfo = null;
         try
         {
-            geoInfo = _geoIPService.GetLocationAsync(ip).GetAwaiter().GetResult();
+            geoInfo = await _geoIPService.GetLocationAsync(ip);
         }
         catch
         {

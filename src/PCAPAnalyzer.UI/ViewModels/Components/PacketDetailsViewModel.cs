@@ -672,7 +672,7 @@ public partial class PacketDetailsViewModel : ObservableObject
             }
 
             // Analyze stream
-            var analysis = _streamAnalyzer.AnalyzeStream(streamPackets, streamKey);
+            var analysis = await _streamAnalyzer.AnalyzeStreamAsync(streamPackets, streamKey);
 
             // Cache result
             _streamCache[streamKey] = analysis;

@@ -54,9 +54,19 @@ namespace PCAPAnalyzer.Core.Services.Statistics
         /// </summary>
         public CacheMetricsSnapshot Metrics => _metrics.GetSnapshot();
 
+        /// <summary>
+        /// Synchronous wrapper for CalculateStatisticsAsync. This method uses Task.Run to avoid blocking
+        /// the calling thread while waiting for async operations.
+        ///
+        /// WARNING: Prefer using CalculateStatisticsAsync directly when possible to avoid thread pool overhead.
+        /// This method exists solely for IStatisticsService interface compatibility.
+        /// </summary>
         public NetworkStatistics CalculateStatistics(IEnumerable<PacketInfo> packets)
         {
-            // Synchronous wrapper - runs async version on thread pool
+            // Uses Task.Run to avoid sync-over-async blocking. The inner async method needs to:
+            // 1. Acquire semaphore asynchronously
+            // 2. Call async inner service methods
+            // This pattern prevents deadlocks by running the async code on the thread pool.
             return Task.Run(() => CalculateStatisticsAsync(packets)).GetAwaiter().GetResult();
         }
 

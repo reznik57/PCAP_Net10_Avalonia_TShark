@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -26,7 +27,7 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
         }
 
         /// <summary>
-        /// Execute an action on the UI thread and wait for completion
+        /// Execute an action on the UI thread and wait for completion (fire-and-forget, non-blocking)
         /// </summary>
         protected void InvokeOnUIThread(Action action)
         {
@@ -36,7 +37,22 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
             }
             else
             {
-                Dispatcher.UIThread.InvokeAsync(action).Wait();
+                Dispatcher.UIThread.Post(action);
+            }
+        }
+
+        /// <summary>
+        /// Execute an action on the UI thread and wait for completion (awaitable)
+        /// </summary>
+        protected async Task InvokeOnUIThreadAsync(Action action)
+        {
+            if (Dispatcher.UIThread.CheckAccess())
+            {
+                action();
+            }
+            else
+            {
+                await Dispatcher.UIThread.InvokeAsync(action);
             }
         }
     }
