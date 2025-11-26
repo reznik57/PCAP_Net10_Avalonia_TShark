@@ -137,7 +137,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 
                 if (HasTCPPackets)
                 {
-                    AnalyzeTCPPackets(tcpPackets);
+                    _ = AnalyzeTCPPacketsAsync(tcpPackets);
                 }
 
                 StatusMessage = $"Showing {FilteredPacketCount} of {TotalPacketCount} packets";
@@ -241,13 +241,15 @@ namespace PCAPAnalyzer.UI.ViewModels
             }
         }
 
-        private async void AnalyzeTCPPackets(List<PacketInfo> tcpPackets)
+        private async Task AnalyzeTCPPacketsAsync(List<PacketInfo> tcpPackets)
         {
-            TCPAnomalies.Clear();
-            TCPStreams.Clear();
+            try
+            {
+                TCPAnomalies.Clear();
+                TCPStreams.Clear();
 
-            // Detect TCP anomalies using unified service
-            var allAnomalies = await _anomalyService.DetectAllAnomaliesAsync(tcpPackets);
+                // Detect TCP anomalies using unified service
+                var allAnomalies = await _anomalyService.DetectAllAnomaliesAsync(tcpPackets);
             var anomalies = allAnomalies
                 .Where(a => a.Category == AnomalyCategory.TCP)
                 .Take(20);
@@ -292,6 +294,11 @@ namespace PCAPAnalyzer.UI.ViewModels
                 });
                 vm.OnViewDetails = ShowStreamDetails;
                 TCPStreams.Add(vm);
+            }
+            }
+            catch (Exception ex)
+            {
+                DebugLogger.Log($"[EnhancedPacketDetailViewModel] Error analyzing TCP packets: {ex.Message}");
             }
         }
 

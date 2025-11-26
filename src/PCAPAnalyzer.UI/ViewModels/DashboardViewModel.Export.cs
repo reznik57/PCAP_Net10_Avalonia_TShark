@@ -182,7 +182,7 @@ public partial class DashboardViewModel
             await _csvExportService.ExportToCsvAsync(exportData, filePath, columnMappings);
 
             ShowExportStatus($"Successfully exported to {System.IO.Path.GetFileName(filePath)}", isError: false);
-            AutoClearExportStatus();
+            _ = AutoClearExportStatusAsync();
         }
         catch (Exception ex)
         {
@@ -257,7 +257,7 @@ public partial class DashboardViewModel
             await _csvExportService.ExportToCsvAsync(exportData, filePath, columnMappings);
 
             ShowExportStatus($"Successfully exported to {System.IO.Path.GetFileName(filePath)}", isError: false);
-            AutoClearExportStatus();
+            _ = AutoClearExportStatusAsync();
         }
         catch (Exception ex)
         {
@@ -332,7 +332,7 @@ public partial class DashboardViewModel
             await _csvExportService.ExportToCsvAsync(exportData, filePath, columnMappings);
 
             ShowExportStatus($"Successfully exported to {System.IO.Path.GetFileName(filePath)}", isError: false);
-            AutoClearExportStatus();
+            _ = AutoClearExportStatusAsync();
         }
         catch (Exception ex)
         {
@@ -360,7 +360,7 @@ public partial class DashboardViewModel
         _exportStatusCts = null;
     }
 
-    private async void AutoClearExportStatus()
+    private async Task AutoClearExportStatusAsync()
     {
         // Cancel any existing auto-clear
         _exportStatusCts?.Cancel();

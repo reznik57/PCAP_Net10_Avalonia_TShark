@@ -565,7 +565,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
             ExportStatusMessage = $"🔍 Filtered by: {connection.SourceDisplay} ↔ {connection.DestinationDisplay}";
             ExportStatusColor = "#3B82F6";
-            AutoClearExportStatus();
+            _ = AutoClearExportStatusAsync();
         }
     }
 

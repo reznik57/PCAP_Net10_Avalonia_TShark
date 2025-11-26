@@ -175,7 +175,8 @@ public sealed class HexDataService
             if (await Task.WhenAny(exitTask, Task.Delay(60000, cancellationToken)) != exitTask)
             {
                 _logger.LogWarning("TShark timeout for frame {Frame} - killing process", frameNumber);
-                try { process.Kill(); } catch { }
+                try { process.Kill(); }
+                catch (Exception ex) { _logger.LogDebug(ex, "Failed to kill TShark process for frame {Frame}", frameNumber); }
                 return Array.Empty<byte>();
             }
 
