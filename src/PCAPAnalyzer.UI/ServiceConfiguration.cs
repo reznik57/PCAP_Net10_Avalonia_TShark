@@ -143,6 +143,9 @@ namespace PCAPAnalyzer.UI
             // Session Analysis Cache Service (Singleton - shared in-memory cache)
             services.AddSingleton<ISessionAnalysisCache, SessionAnalysisCacheService>();
 
+            // Network Filter Helper Service (Singleton - stateless IP classification)
+            services.AddSingleton<INetworkFilterHelper, NetworkFilterHelperService>();
+
             // Memory Cache (Singleton - shared across services)
             services.AddSingleton<IMemoryCache>(provider =>
             {
