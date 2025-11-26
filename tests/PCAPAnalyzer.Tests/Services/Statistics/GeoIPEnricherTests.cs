@@ -23,11 +23,9 @@ public class GeoIPEnricherTests
     [Fact]
     public void Constructor_WithNullGeoIPService_ThrowsArgumentNullException()
     {
-        // Act
-        Action act = () => new GeoIPEnricher(null!);
-
-        // Assert
-        act.Should().Throw<ArgumentNullException>()
+        // Act & Assert
+        FluentActions.Invoking(() => new GeoIPEnricher(null!))
+            .Should().Throw<ArgumentNullException>()
             .WithMessage("*geoIPService*");
     }
 

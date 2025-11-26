@@ -30,11 +30,9 @@ public class ThreatDetectorTests
     [Fact]
     public void Constructor_WithNullTimeSeriesGenerator_ThrowsArgumentNullException()
     {
-        // Act
-        Action act = () => new ThreatDetector(null!);
-
-        // Assert
-        act.Should().Throw<ArgumentNullException>()
+        // Act & Assert
+        FluentActions.Invoking(() => new ThreatDetector(null!))
+            .Should().Throw<ArgumentNullException>()
             .WithMessage("*timeSeriesGenerator*");
     }
 
