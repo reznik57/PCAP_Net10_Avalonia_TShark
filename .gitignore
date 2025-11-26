@@ -67,6 +67,11 @@ packages/
 *.so
 *.dylib
 
+# Exception: Native runtime dependencies needed for distribution
+!native/*.dll
+!native/*.so
+!native/*.dylib
+
 # IDE files
 .idea/
 *.swp
