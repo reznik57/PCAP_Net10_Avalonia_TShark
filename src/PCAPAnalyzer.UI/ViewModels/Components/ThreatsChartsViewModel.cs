@@ -144,7 +144,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
                 Name = "Threats by Severity",
                 DataLabelsPaint = new SolidColorPaint(SKColors.White)
                 {
-                    SKFontStyle = new SKFontStyle(SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
+                    SKTypeface = SKTypeface.FromFamilyName(null, SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
                 },
                 DataLabelsSize = 12,
                 DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
