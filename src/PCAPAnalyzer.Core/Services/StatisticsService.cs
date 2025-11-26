@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using PCAPAnalyzer.Core.Interfaces.Statistics;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Orchestration;
 using PCAPAnalyzer.Core.Services.Statistics;
@@ -24,6 +25,10 @@ namespace PCAPAnalyzer.Core.Services
         private readonly IInsecurePortDetector _insecurePortDetector;
         private readonly IGeoIPService _geoIPService;
         private readonly IPacketSizeAnalyzer _packetSizeAnalyzer;
+        private readonly IStatisticsCalculator _statisticsCalculator;
+        private readonly IGeoIPEnricher _geoIPEnricher;
+        private readonly IThreatDetector _threatDetector;
+        private readonly ITimeSeriesGenerator _timeSeriesGenerator;
 
         private readonly Dictionary<int, string> _wellKnownPorts = new()
         {
@@ -50,12 +55,20 @@ namespace PCAPAnalyzer.Core.Services
         };
 
         public StatisticsService(
+            IGeoIPService geoIPService,
+            IStatisticsCalculator statisticsCalculator,
+            IGeoIPEnricher geoIPEnricher,
+            IThreatDetector threatDetector,
+            ITimeSeriesGenerator timeSeriesGenerator,
             IInsecurePortDetector? insecurePortDetector = null,
-            IGeoIPService? geoIPService = null,
             IPacketSizeAnalyzer? packetSizeAnalyzer = null)
         {
+            _geoIPService = geoIPService ?? throw new ArgumentNullException(nameof(geoIPService));
+            _statisticsCalculator = statisticsCalculator ?? throw new ArgumentNullException(nameof(statisticsCalculator));
+            _geoIPEnricher = geoIPEnricher ?? throw new ArgumentNullException(nameof(geoIPEnricher));
+            _threatDetector = threatDetector ?? throw new ArgumentNullException(nameof(threatDetector));
+            _timeSeriesGenerator = timeSeriesGenerator ?? throw new ArgumentNullException(nameof(timeSeriesGenerator));
             _insecurePortDetector = insecurePortDetector ?? new InsecurePortDetector();
-            _geoIPService = geoIPService ?? throw new ArgumentNullException(nameof(geoIPService), "GeoIPService must be provided via DI");
             _packetSizeAnalyzer = packetSizeAnalyzer ?? new PacketSizeAnalyzer();
         }
 
@@ -78,8 +91,8 @@ namespace PCAPAnalyzer.Core.Services
                     LastPacketTime = packetList.Max(p => p.Timestamp)
                 };
 
-                // Delegate to helper classes
-                stats.ProtocolStats = StatisticsCalculators.CalculateProtocolStatistics(packetList, _protocolColors);
+                // Use injected calculator service
+                stats.ProtocolStats = _statisticsCalculator.CalculateProtocolStatistics(packetList, _protocolColors);
 
                 stats.AllUniqueIPs = new HashSet<string>();
                 foreach (var packet in packetList)
@@ -90,29 +103,29 @@ namespace PCAPAnalyzer.Core.Services
                         stats.AllUniqueIPs.Add(packet.DestinationIP);
                 }
 
-                stats.TopSources = StatisticsCalculators.CalculateTopEndpoints(packetList, true);
-                stats.TopDestinations = StatisticsCalculators.CalculateTopEndpoints(packetList, false);
+                stats.TopSources = _statisticsCalculator.CalculateTopEndpoints(packetList, true);
+                stats.TopDestinations = _statisticsCalculator.CalculateTopEndpoints(packetList, false);
 
-                var (topConversations, totalConversationCount) = StatisticsCalculators.CalculateTopConversations(packetList);
+                var (topConversations, totalConversationCount) = _statisticsCalculator.CalculateTopConversations(packetList);
                 stats.TopConversations = topConversations;
                 stats.TotalConversationCount = totalConversationCount;
 
-                var (topPorts, uniquePortCount) = StatisticsCalculators.CalculateTopPortsWithCount(packetList, _wellKnownPorts);
+                var (topPorts, uniquePortCount) = _statisticsCalculator.CalculateTopPortsWithCount(packetList, _wellKnownPorts);
                 stats.TopPorts = topPorts;
                 stats.UniquePortCount = uniquePortCount;
 
-                stats.ServiceStats = StatisticsCalculators.CalculateServiceStatistics(packetList, _wellKnownPorts);
+                stats.ServiceStats = _statisticsCalculator.CalculateServiceStatistics(packetList, _wellKnownPorts);
 
                 // Detect threats first for time series
                 stats.DetectedThreats = DetectThreats(packetList);
 
                 // Generate time series with pre-detected threats
-                var timeSeries = TimeSeriesGenerator.GenerateTimeSeriesWithMetrics(packetList, TimeSpan.FromSeconds(1), stats.DetectedThreats);
-                stats.ThroughputTimeSeries = timeSeries.throughputSeries;
-                stats.PacketsPerSecondTimeSeries = timeSeries.packetsSeries;
-                stats.AnomaliesPerSecondTimeSeries = timeSeries.anomaliesSeries;
+                var timeSeries = _timeSeriesGenerator.GenerateTimeSeriesWithMetrics(packetList, TimeSpan.FromSeconds(1), stats.DetectedThreats);
+                stats.ThroughputTimeSeries = timeSeries.ThroughputSeries;
+                stats.PacketsPerSecondTimeSeries = timeSeries.PacketsSeries;
+                stats.AnomaliesPerSecondTimeSeries = timeSeries.AnomaliesSeries;
 
-                stats.ThreatsPerSecondTimeSeries = TimeSeriesGenerator.GenerateTrafficThreatsTimeSeries(
+                stats.ThreatsPerSecondTimeSeries = _timeSeriesGenerator.GenerateTrafficThreatsTimeSeries(
                     packetList,
                     stats.FirstPacketTime,
                     stats.LastPacketTime,
@@ -202,9 +215,9 @@ namespace PCAPAnalyzer.Core.Services
 
                     // Parallel endpoint enrichment
                     await Task.WhenAll(
-                        GeoIPEnrichmentHelper.UpdateEndpointCountriesAsync(stats.TopSources, _geoIPService),
-                        GeoIPEnrichmentHelper.UpdateEndpointCountriesAsync(stats.TopDestinations, _geoIPService),
-                        GeoIPEnrichmentHelper.UpdateConversationCountriesAsync(stats.TopConversations, _geoIPService)
+                        _geoIPEnricher.UpdateEndpointCountriesAsync(stats.TopSources),
+                        _geoIPEnricher.UpdateEndpointCountriesAsync(stats.TopDestinations),
+                        _geoIPEnricher.UpdateConversationCountriesAsync(stats.TopConversations)
                     );
 
                     stats.IsGeoIPEnriched = true;
@@ -235,10 +248,10 @@ namespace PCAPAnalyzer.Core.Services
             if (packetCollection.Count == 0)
                 return statistics;
 
-            var totalUniqueIPs = GeoIPEnrichmentHelper.ExtractUniqueIPs(packetCollection);
+            var totalUniqueIPs = _geoIPEnricher.ExtractUniqueIPs(packetCollection);
             DebugLogger.Log($"[GeoIP Enrichment] Processing {totalUniqueIPs:N0} unique IPs...");
 
-            GeoIPEnrichmentHelper.ReportInitialProgress(progress, totalUniqueIPs);
+            _geoIPEnricher.ReportInitialProgress(progress, totalUniqueIPs);
 
             var enrichmentStopwatch = System.Diagnostics.Stopwatch.StartNew();
 
@@ -386,8 +399,8 @@ namespace PCAPAnalyzer.Core.Services
         {
             var packetList = packets?.ToList() ?? new List<PacketInfo>();
             var threats = DetectThreats(packetList);
-            var result = TimeSeriesGenerator.GenerateTimeSeriesWithMetrics(packetList, interval, threats);
-            return result.throughputSeries;
+            var result = _timeSeriesGenerator.GenerateTimeSeriesWithMetrics(packetList, interval, threats);
+            return result.ThroughputSeries;
         }
 
         public List<SecurityThreat> DetectThreats(IEnumerable<PacketInfo> packets)
@@ -432,11 +445,11 @@ namespace PCAPAnalyzer.Core.Services
                 }
             }
 
-            // Delegate to helper classes
-            threats.AddRange(ThreatDetectionHelper.DetectPortScanning(packetList));
-            threats.AddRange(ThreatDetectionHelper.DetectSuspiciousProtocols(packetList));
-            threats.AddRange(ThreatDetectionHelper.DetectAnomalousTraffic(packetList));
-            threats.AddRange(ThreatDetectionHelper.DetectPotentialDDoS(packetList));
+            // Use injected threat detector service
+            threats.AddRange(_threatDetector.DetectPortScanning(packetList));
+            threats.AddRange(_threatDetector.DetectSuspiciousProtocols(packetList));
+            threats.AddRange(_threatDetector.DetectAnomalousTraffic(packetList));
+            threats.AddRange(_threatDetector.DetectPotentialDDoS(packetList));
 
             return threats;
         }

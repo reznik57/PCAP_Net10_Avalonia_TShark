@@ -2,18 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using PCAPAnalyzer.Core.Interfaces.Statistics;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Utilities;
 
 namespace PCAPAnalyzer.Core.Services.Statistics
 {
     /// <summary>
-    /// Pure calculation helpers for statistics computation.
-    /// Extracted from StatisticsService to reduce file size.
+    /// Pure calculation service for statistics computation.
+    /// Implements IStatisticsCalculator for DI injection and testability.
     /// </summary>
-    internal static class StatisticsCalculators
+    public class StatisticsCalculator : IStatisticsCalculator
     {
-        public static Dictionary<string, ProtocolStatistics> CalculateProtocolStatistics(
+        public Dictionary<string, ProtocolStatistics> CalculateProtocolStatistics(
             List<PacketInfo> packets,
             Dictionary<string, string> protocolColors)
         {
@@ -27,7 +28,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                         PacketCount = g.Count(),
                         ByteCount = g.Sum(static p => (long)p.Length),
                         Percentage = (double)g.Count() / packets.Count * 100,
-                        Color = protocolColors.ContainsKey(g.Key.ToString()) ? protocolColors[g.Key.ToString()] : protocolColors["Other"]
+                        Color = protocolColors.TryGetValue(g.Key.ToString(), out var color) ? color : protocolColors.GetValueOrDefault("Other", "#808080")
                     })
                     .OrderByDescending(p => p.PacketCount)
                     .Take(10)
@@ -37,12 +38,12 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             }
             catch (Exception ex)
             {
-                DebugLogger.Log($"[StatisticsCalculators] Error calculating protocol statistics: {ex.Message}");
+                DebugLogger.Log($"[StatisticsCalculator] Error calculating protocol statistics: {ex.Message}");
                 return new Dictionary<string, ProtocolStatistics>();
             }
         }
 
-        public static List<EndpointStatistics> CalculateTopEndpoints(List<PacketInfo> packets, bool isSource)
+        public List<EndpointStatistics> CalculateTopEndpoints(List<PacketInfo> packets, bool isSource)
         {
             var endpoints = packets
                 .GroupBy(p => isSource ? p.SourceIP : p.DestinationIP)
@@ -63,7 +64,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             return endpoints;
         }
 
-        public static (List<ConversationStatistics> topConversations, int totalCount) CalculateTopConversations(List<PacketInfo> packets)
+        public (List<ConversationStatistics> TopConversations, int TotalCount) CalculateTopConversations(List<PacketInfo> packets)
         {
             var allConversations = packets
                 .Where(p => p.SourcePort > 0 && p.DestinationPort > 0)
@@ -96,7 +97,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             return (topConversations, totalCount);
         }
 
-        public static (List<PortStatistics> topPorts, int uniqueCount) CalculateTopPortsWithCount(
+        public (List<PortStatistics> TopPorts, int UniqueCount) CalculateTopPortsWithCount(
             List<PacketInfo> packets,
             Dictionary<int, string> wellKnownPorts)
         {
@@ -149,7 +150,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                 {
                     Port = kv.Key.Port,
                     Protocol = kv.Key.Protocol.ToString(),
-                    Service = wellKnownPorts.ContainsKey(kv.Key.Port) ? wellKnownPorts[kv.Key.Port] : $"Port {kv.Key.Port}",
+                    Service = wellKnownPorts.TryGetValue(kv.Key.Port, out var svc) ? svc : $"Port {kv.Key.Port}",
                     PacketCount = kv.Value.Count,
                     ByteCount = kv.Value.Bytes,
                     Percentage = packets.Count > 0 ? (double)kv.Value.Count / packets.Count * 100 : 0,
@@ -172,7 +173,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             return (topPorts.OrderByDescending(p => p.PacketCount).Take(30).ToList(), uniquePortCount);
         }
 
-        public static Dictionary<string, ServiceStatistics> CalculateServiceStatistics(
+        public Dictionary<string, ServiceStatistics> CalculateServiceStatistics(
             List<PacketInfo> packets,
             Dictionary<int, string> wellKnownPorts)
         {
@@ -207,7 +208,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             return services;
         }
 
-        public static bool IsInternalIP(string ipAddress)
+        public bool IsInternalIP(string ipAddress)
         {
             if (IPAddress.TryParse(ipAddress, out var ip))
             {

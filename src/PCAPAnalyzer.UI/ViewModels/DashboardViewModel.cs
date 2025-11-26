@@ -243,7 +243,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     public DashboardViewModel()
         : this(
-            App.Services?.GetService<IStatisticsService>() ?? new StatisticsService(),
+            App.Services?.GetRequiredService<IStatisticsService>() ?? throw new InvalidOperationException("IStatisticsService not registered"),
             App.Services?.GetService<IUnifiedAnomalyDetectionService>() ?? new UnifiedAnomalyDetectionService(),
             new TabFilterService("Dashboard", new FilterServiceCore()),
             App.Services?.GetService<ICsvExportService>(),

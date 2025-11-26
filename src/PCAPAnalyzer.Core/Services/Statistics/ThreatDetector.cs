@@ -1,17 +1,25 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PCAPAnalyzer.Core.Interfaces.Statistics;
 using PCAPAnalyzer.Core.Models;
 
 namespace PCAPAnalyzer.Core.Services.Statistics
 {
     /// <summary>
-    /// Threat detection helpers for statistics computation.
-    /// Extracted from StatisticsService to reduce file size.
+    /// Heuristic-based threat detection service.
+    /// Implements IThreatDetector for DI injection and testability.
     /// </summary>
-    internal static class ThreatDetectionHelper
+    public class ThreatDetector : IThreatDetector
     {
-        public static List<SecurityThreat> DetectPortScanning(List<PacketInfo> packets)
+        private readonly ITimeSeriesGenerator _timeSeriesGenerator;
+
+        public ThreatDetector(ITimeSeriesGenerator timeSeriesGenerator)
+        {
+            _timeSeriesGenerator = timeSeriesGenerator ?? throw new ArgumentNullException(nameof(timeSeriesGenerator));
+        }
+
+        public List<SecurityThreat> DetectPortScanning(List<PacketInfo> packets)
         {
             var threats = new List<SecurityThreat>();
 
@@ -64,7 +72,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             return threats;
         }
 
-        public static List<SecurityThreat> DetectSuspiciousProtocols(List<PacketInfo> packets)
+        public List<SecurityThreat> DetectSuspiciousProtocols(List<PacketInfo> packets)
         {
             var threats = new List<SecurityThreat>();
             var suspiciousProtocols = new[] { "TELNET", "FTP", "HTTP" };
@@ -101,7 +109,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             return threats;
         }
 
-        public static List<SecurityThreat> DetectAnomalousTraffic(List<PacketInfo> packets)
+        public List<SecurityThreat> DetectAnomalousTraffic(List<PacketInfo> packets)
         {
             var threats = new List<SecurityThreat>();
 
@@ -136,7 +144,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             return threats;
         }
 
-        public static List<SecurityThreat> DetectPotentialDDoS(List<PacketInfo> packets)
+        public List<SecurityThreat> DetectPotentialDDoS(List<PacketInfo> packets)
         {
             var threats = new List<SecurityThreat>();
             var timeWindow = TimeSpan.FromSeconds(10);
@@ -153,7 +161,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                 .Select(g => new
                 {
                     Destination = g.Key,
-                    PacketsPerWindow = TimeSeriesGenerator.CalculateMaxPacketsPerWindow(g.ToList(), timeWindow, startTime, endTime),
+                    PacketsPerWindow = _timeSeriesGenerator.CalculateMaxPacketsPerWindow(g.ToList(), timeWindow, startTime, endTime),
                     FirstPacketTime = g.Min(p => p.Timestamp),
                     Packets = g.ToList()
                 })

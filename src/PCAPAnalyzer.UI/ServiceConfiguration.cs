@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using PCAPAnalyzer.Core.Caching;
 using PCAPAnalyzer.Core.Configuration;
 using PCAPAnalyzer.Core.Interfaces;
+using PCAPAnalyzer.Core.Interfaces.Statistics;
 using PCAPAnalyzer.Core.Orchestration;
 using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.Core.Services.Caching;
@@ -113,13 +114,31 @@ namespace PCAPAnalyzer.UI
                 return service;
             });
 
+            // Statistics Helper Services (Singleton - stateless calculations via DI)
+            services.AddSingleton<IStatisticsCalculator, StatisticsCalculator>();
+            services.AddSingleton<ITimeSeriesGenerator, TimeSeriesGeneratorService>();
+            services.AddSingleton<IGeoIPEnricher>(provider =>
+            {
+                var geoIPService = provider.GetRequiredService<IGeoIPService>();
+                return new GeoIPEnricher(geoIPService);
+            });
+            services.AddSingleton<IThreatDetector>(provider =>
+            {
+                var timeSeriesGen = provider.GetRequiredService<ITimeSeriesGenerator>();
+                return new ThreatDetector(timeSeriesGen);
+            });
+
             // Statistics Service (Base implementation - Singleton)
             services.AddSingleton(provider =>
             {
-                var detector = provider.GetRequiredService<IInsecurePortDetector>();
                 var geo = provider.GetRequiredService<IGeoIPService>();
+                var statsCalc = provider.GetRequiredService<IStatisticsCalculator>();
+                var geoEnrich = provider.GetRequiredService<IGeoIPEnricher>();
+                var threatDet = provider.GetRequiredService<IThreatDetector>();
+                var timeSeries = provider.GetRequiredService<ITimeSeriesGenerator>();
+                var detector = provider.GetRequiredService<IInsecurePortDetector>();
                 var packetSizeAnalyzer = provider.GetRequiredService<IPacketSizeAnalyzer>();
-                return new StatisticsService(detector, geo, packetSizeAnalyzer);
+                return new StatisticsService(geo, statsCalc, geoEnrich, threatDet, timeSeries, detector, packetSizeAnalyzer);
             });
 
             // Cached Statistics Service (Decorator with enterprise-grade caching - Singleton)

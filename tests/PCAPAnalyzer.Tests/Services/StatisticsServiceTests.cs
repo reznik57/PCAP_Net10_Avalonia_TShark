@@ -1,8 +1,10 @@
 using FluentAssertions;
 using Moq;
 using PCAPAnalyzer.Core.Interfaces;
+using PCAPAnalyzer.Core.Interfaces.Statistics;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
+using PCAPAnalyzer.Core.Services.Statistics;
 using PCAPAnalyzer.Tests.Helpers;
 
 namespace PCAPAnalyzer.Tests.Services;
@@ -13,6 +15,10 @@ public class StatisticsServiceTests
     private readonly Mock<IInsecurePortDetector> _mockPortDetector;
     private readonly Mock<IGeoIPService> _mockGeoIP;
     private readonly Mock<IPacketSizeAnalyzer> _mockSizeAnalyzer;
+    private readonly IStatisticsCalculator _statisticsCalculator;
+    private readonly IGeoIPEnricher _geoIPEnricher;
+    private readonly IThreatDetector _threatDetector;
+    private readonly ITimeSeriesGenerator _timeSeriesGenerator;
     private readonly StatisticsService _service;
 
     public StatisticsServiceTests()
@@ -22,7 +28,12 @@ public class StatisticsServiceTests
         _mockGeoIP = _mockFactory.CreateGeoIPService();
         _mockSizeAnalyzer = new Mock<IPacketSizeAnalyzer>();
 
-        // ✅ TIMING FIX: Updated mocks to handle new optional stage parameters
+        // Create real implementations of the new services for testing
+        _statisticsCalculator = new StatisticsCalculator();
+        _timeSeriesGenerator = new TimeSeriesGeneratorService();
+        _geoIPEnricher = new GeoIPEnricher(_mockGeoIP.Object);
+        _threatDetector = new ThreatDetector(_timeSeriesGenerator);
+
         // Setup default mocks for async methods that return empty collections
         _mockGeoIP.Setup(x => x.AnalyzeCountryTrafficAsync(It.IsAny<IEnumerable<PacketInfo>>(), It.IsAny<object?>()))
             .ReturnsAsync(new Dictionary<string, CountryTrafficStatistics>());
@@ -32,8 +43,12 @@ public class StatisticsServiceTests
             .ReturnsAsync(new List<CountryRiskProfile>());
 
         _service = new StatisticsService(
-            _mockPortDetector.Object,
             _mockGeoIP.Object,
+            _statisticsCalculator,
+            _geoIPEnricher,
+            _threatDetector,
+            _timeSeriesGenerator,
+            _mockPortDetector.Object,
             _mockSizeAnalyzer.Object);
     }
 

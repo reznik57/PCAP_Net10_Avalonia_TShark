@@ -213,7 +213,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         _tsharkService = tsharkService ?? throw new ArgumentNullException(nameof(tsharkService));
         _insecurePortDetector = insecurePortDetector ?? new InsecurePortDetector();
         _geoIpService = geoIpService ?? throw new ArgumentNullException(nameof(geoIpService), "GeoIPService must be provided via DI");
-        _statisticsService = statisticsService ?? new StatisticsService(_insecurePortDetector, _geoIpService);
+        _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService), "StatisticsService must be provided via DI");
         _anomalyService = anomalyService ?? new UnifiedAnomalyDetectionService();
         _orchestrator = orchestrator; // ✅ PRELOAD ARCHITECTURE: Optional for backwards compatibility
         _analysisCoordinator = analysisCoordinator; // ✅ PHASE 3: Store coordinator for tab population

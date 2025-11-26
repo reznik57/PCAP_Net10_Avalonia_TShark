@@ -1,18 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PCAPAnalyzer.Core.Interfaces.Statistics;
 using PCAPAnalyzer.Core.Models;
 
 namespace PCAPAnalyzer.Core.Services.Statistics
 {
     /// <summary>
-    /// Time series generation helpers for statistics computation.
-    /// Extracted from StatisticsService to reduce file size.
+    /// Time series generation service for traffic visualization.
+    /// Implements ITimeSeriesGenerator for DI injection and testability.
     /// </summary>
-    internal static class TimeSeriesGenerator
+    public class TimeSeriesGeneratorService : ITimeSeriesGenerator
     {
-        public static (List<TimeSeriesDataPoint> throughputSeries, List<TimeSeriesDataPoint> packetsSeries, List<TimeSeriesDataPoint> anomaliesSeries)
-            GenerateTimeSeriesWithMetrics(IEnumerable<PacketInfo> packets, TimeSpan interval, List<SecurityThreat> securityThreats)
+        public (List<TimeSeriesDataPoint> ThroughputSeries,
+                List<TimeSeriesDataPoint> PacketsSeries,
+                List<TimeSeriesDataPoint> AnomaliesSeries)
+            GenerateTimeSeriesWithMetrics(
+                IEnumerable<PacketInfo> packets,
+                TimeSpan interval,
+                List<SecurityThreat> securityThreats)
         {
             var packetList = packets.OrderBy(p => p.Timestamp).ToList();
             if (!packetList.Any())
@@ -77,7 +83,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             return (throughputSeries, packetsSeries, anomaliesSeries);
         }
 
-        public static List<TimeSeriesDataPoint> GenerateTrafficThreatsTimeSeries(
+        public List<TimeSeriesDataPoint> GenerateTrafficThreatsTimeSeries(
             List<PacketInfo> packets,
             DateTime startTime,
             DateTime endTime,
@@ -111,10 +117,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             return series;
         }
 
-        /// <summary>
-        /// Counts traffic-based threat indicators in a set of packets.
-        /// </summary>
-        public static int CountNetworkAnomalies(List<PacketInfo> packets)
+        public int CountNetworkAnomalies(List<PacketInfo> packets)
         {
             if (packets == null || packets.Count == 0)
                 return 0;
@@ -140,7 +143,11 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             return count;
         }
 
-        public static int CalculateMaxPacketsPerWindow(List<PacketInfo> packets, TimeSpan window, DateTime start, DateTime end)
+        public int CalculateMaxPacketsPerWindow(
+            List<PacketInfo> packets,
+            TimeSpan window,
+            DateTime start,
+            DateTime end)
         {
             if (!packets.Any())
                 return 0;
@@ -153,7 +160,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                 var windowEnd = currentTime.Add(window);
                 var count = packets.Count(p => p.Timestamp >= currentTime && p.Timestamp < windowEnd);
                 maxCount = Math.Max(maxCount, count);
-                currentTime = currentTime.AddSeconds(window.TotalSeconds / 2);
+                currentTime = currentTime.AddSeconds(window.TotalSeconds / 2); // 50% overlap
             }
 
             return maxCount;
