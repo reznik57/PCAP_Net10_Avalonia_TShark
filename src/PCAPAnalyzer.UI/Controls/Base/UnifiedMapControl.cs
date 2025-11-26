@@ -18,17 +18,15 @@ namespace PCAPAnalyzer.UI.Controls.Base
     {
         #region Fields
 
-#pragma warning disable CA1051 // Do not declare visible instance fields - Protected fields are part of the inheritance contract for derived map controls
-        protected readonly DispatcherTimer AnimationTimer;
-#pragma warning restore CA1051
+        private readonly DispatcherTimer _animationTimer;
 #pragma warning disable CA5394 // Do not use insecure randomness - Used only for UI particle effects and animation jitter, not security
-#pragma warning disable CA1051 // Do not declare visible instance fields - Protected fields are part of the inheritance contract for derived map controls
-        protected readonly Random Random = new();
-#pragma warning restore CA1051
+        private readonly Random _random = new();
 #pragma warning restore CA5394
-#pragma warning disable CA1051 // Do not declare visible instance fields - Protected fields are part of the inheritance contract for derived map controls
-        protected readonly List<MapParticle> Particles = new();
-#pragma warning restore CA1051
+        private readonly List<MapParticle> _particles = new();
+
+        protected DispatcherTimer AnimationTimer => _animationTimer;
+        protected Random Random => _random;
+        protected List<MapParticle> Particles => _particles;
 
         protected double AnimationPhase { get; set; }
         protected Point PanOffset { get; set; } = new(0, 0);
@@ -161,11 +159,11 @@ namespace PCAPAnalyzer.UI.Controls.Base
         protected UnifiedMapControl()
         {
             // Setup animation timer
-            AnimationTimer = new DispatcherTimer
+            _animationTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(1000.0 / FrameRate)
             };
-            AnimationTimer.Tick += OnAnimationTick;
+            _animationTimer.Tick += OnAnimationTick;
 
             // Start animation if enabled
             if (ShowAnimations)

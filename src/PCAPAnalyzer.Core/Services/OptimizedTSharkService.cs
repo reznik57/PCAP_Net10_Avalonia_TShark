@@ -205,9 +205,7 @@ namespace PCAPAnalyzer.Core.Services
                         CurrentOperation = $"Processing at {rate:N0} packets/sec",
                         Metrics = new Dictionary<string, double>
                         {
-#pragma warning disable CA1836 // Prefer IsEmpty over Count when available - Dictionary doesn't have IsEmpty property
-                            ["CacheHitRate"] = _geoCache.Count > 0 ? (_geoCache.Count * 100.0 / Math.Max(1, processed)) : 0,
-#pragma warning restore CA1836
+                            ["CacheHitRate"] = !_geoCache.IsEmpty ? (_geoCache.Count * 100.0 / Math.Max(1, processed)) : 0,
                             ["MemoryMB"] = GC.GetTotalMemory(false) / 1024.0 / 1024.0,
                             ["ThreadsActive"] = Process.GetCurrentProcess().Threads.Count
                         }

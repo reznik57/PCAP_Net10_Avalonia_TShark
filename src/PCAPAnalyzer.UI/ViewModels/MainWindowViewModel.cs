@@ -71,7 +71,6 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     // ==================== SERVICES ====================
 
     private readonly ITSharkService _tsharkService;
-    private readonly IGlobalFilterService _filterService; // DEPRECATED: Legacy compatibility only
 
     // Tab-specific filter services (isolated per tab)
     private readonly ITabFilterService _packetAnalysisFilterService;
@@ -182,7 +181,6 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     public MainWindowViewModel()
         : this(
             App.Services?.GetService<ITSharkService>() ?? new TSharkService(NullLogger<TSharkService>.Instance),
-            App.Services?.GetService<IGlobalFilterService>() ?? new GlobalFilterService(new FilterServiceCore()),
             App.Services?.GetService<IInsecurePortDetector>() ?? new InsecurePortDetector(),
             App.Services?.GetService<IStatisticsService>(),
             App.Services?.GetService<IUnifiedAnomalyDetectionService>(),
@@ -201,7 +199,6 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "CA1502:Avoid excessive complexity", Justification = "Main ViewModel constructor requires sequential initialization of many interdependent services")]
     public MainWindowViewModel(
         ITSharkService tsharkService,
-        IGlobalFilterService filterService,
         IInsecurePortDetector insecurePortDetector,
         IStatisticsService? statisticsService,
         IUnifiedAnomalyDetectionService? anomalyService,
@@ -214,7 +211,6 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         : base(filterBuilder ?? App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService()) // ✅ C2 REFACTOR: Call base constructor with filterBuilder via DI
     {
         _tsharkService = tsharkService ?? throw new ArgumentNullException(nameof(tsharkService));
-        _filterService = filterService ?? throw new ArgumentNullException(nameof(filterService));
         _insecurePortDetector = insecurePortDetector ?? new InsecurePortDetector();
         _geoIpService = geoIpService ?? throw new ArgumentNullException(nameof(geoIpService), "GeoIPService must be provided via DI");
         _statisticsService = statisticsService ?? new StatisticsService(_insecurePortDetector, _geoIpService);
@@ -1219,8 +1215,8 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             DebugLogger.Log($"[{step6Start:HH:mm:ss.fff}] [UpdateDashboardAsync] STEP 6: Updating supplementary views (Country, Map, Threats, VoiceQoS)...");
             Analysis.ReportTabProgress(Analysis.GetDashboardStageKey(), 90, "Updating charts and maps...");
             var enrichedStatistics = DashboardViewModel?.CurrentStatistics ?? statistics;
-            var packetsForViews = (_filterService?.IsFilterActive == true)
-                ? _filterService.GetFilteredPackets(allPackets).ToList()
+            var packetsForViews = (_packetAnalysisFilterService?.IsFilterActive == true)
+                ? _packetAnalysisFilterService.GetFilteredPackets(allPackets).ToList()
                 : allPackets.ToList();
 
             await UpdateSupplementaryViewsAsync(statistics, packetsForViews);

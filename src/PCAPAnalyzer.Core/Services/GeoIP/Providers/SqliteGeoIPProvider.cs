@@ -48,17 +48,13 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
                 "PCAPAnalyzer", "GeoIP", "geoip.db");
         }
 
-        // Note: This method is intentionally async without await to support interface contract
-        // while using synchronous lock pattern for thread safety
-#pragma warning disable CS1998 // Async method lacks 'await' operators
-        public async Task<bool> InitializeAsync()
-#pragma warning restore CS1998
+        public Task<bool> InitializeAsync()
         {
-            if (_isReady) return true;
+            if (_isReady) return Task.FromResult(true);
 
             lock (_lock)
             {
-                if (_isReady) return true;
+                if (_isReady) return Task.FromResult(true);
 
                 try
                 {
@@ -90,12 +86,12 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
                         _isReady = true; // Still mark as ready, but lookups will return null
                     }
 
-                    return true;
+                    return Task.FromResult(true);
                 }
                 catch (Exception ex)
                 {
                     _logger?.LogError(ex, "[{Provider}] Initialization failed", ProviderName);
-                    return false;
+                    return Task.FromResult(false);
                 }
             }
         }

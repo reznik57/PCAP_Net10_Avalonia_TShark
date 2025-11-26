@@ -21,10 +21,6 @@ namespace PCAPAnalyzer.Core.Services.Cache
     {
         private const string ANALYSIS_VERSION = "1.0"; // Increment when analysis logic changes
 
-#pragma warning disable CA1823 // Reserved for future cache size limit enforcement
-        private const int MAX_CACHE_SIZE_MB = 5000; // 5GB max cache size (reserved for future auto-cleanup)
-#pragma warning restore CA1823
-
         private readonly string _dbPath;
         private readonly string _connectionString;
         private readonly SemaphoreSlim _dbLock = new(1, 1);

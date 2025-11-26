@@ -406,13 +406,11 @@ public class StreamAnalyzer
             };
         }
 
-        // Use synchronous lookup (deprecated but available)
+        // Use async method with blocking wait (sync API requirement)
         GeoLocation? geoInfo = null;
         try
         {
-#pragma warning disable CS0618 // Using deprecated sync method for performance in stream analysis
-            geoInfo = _geoIPService.GetLocation(ip);
-#pragma warning restore CS0618
+            geoInfo = _geoIPService.GetLocationAsync(ip).GetAwaiter().GetResult();
         }
         catch
         {
