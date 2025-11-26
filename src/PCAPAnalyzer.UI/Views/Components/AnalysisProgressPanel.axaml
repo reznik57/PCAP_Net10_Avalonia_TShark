@@ -1,0 +1,227 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels.Components"
+             xmlns:converters="using:PCAPAnalyzer.UI.Converters"
+             x:Class="PCAPAnalyzer.UI.Views.Components.AnalysisProgressPanel"
+             x:DataType="vm:MainWindowAnalysisViewModel">
+
+    <UserControl.Resources>
+        <converters:StageStateToBrushConverter x:Key="StageStateToBrush"/>
+        <converters:StageStateToIconConverter x:Key="StageStateToIcon"/>
+        <converters:StageProgressVisibilityConverter x:Key="StageProgressVisibility"/>
+    </UserControl.Resources>
+
+    <Border Background="#1E1E2E"
+            BorderBrush="#313244"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="16">
+        <StackPanel Spacing="12">
+            <!-- Header with overall progress -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="Analysis Progress"
+                          FontSize="14"
+                          FontWeight="SemiBold"
+                          Foreground="#CDD6F4"/>
+
+                <Grid ColumnDefinitions="*,Auto">
+                    <ProgressBar Grid.Column="0"
+                               Value="{Binding AnalysisProgress}"
+                               Maximum="100"
+                               Height="8"
+                               CornerRadius="4"
+                               Background="#313244"
+                               Foreground="#3B82F6"
+                               IsIndeterminate="{Binding IsProgressIndeterminate}"/>
+
+                    <TextBlock Grid.Column="1"
+                             Text="{Binding AnalysisProgress, StringFormat='{}{0:F0}%'}"
+                             FontSize="12"
+                             FontWeight="Medium"
+                             Foreground="#CDD6F4"
+                             Margin="8,0,0,0"/>
+                </Grid>
+
+                <TextBlock Text="{Binding ProgressMessage}"
+                          FontSize="11"
+                          Foreground="#6C7086"
+                          TextWrapping="Wrap"/>
+            </StackPanel>
+
+            <!-- Real-Time Metrics Display -->
+            <Border Background="#181825"
+                    BorderBrush="#45475A"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="12"
+                    IsVisible="{Binding HasRealtimeMetrics}">
+                <Grid ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,Auto">
+                    <!-- Packets Analyzed -->
+                    <StackPanel Grid.Column="0" Grid.Row="0" Spacing="2" Margin="0,0,8,4">
+                        <TextBlock Text="📦 Packets Analyzed"
+                                 FontSize="10"
+                                 FontWeight="Medium"
+                                 Foreground="#7F849C"/>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock FontSize="13"
+                                     FontWeight="SemiBold"
+                                     Foreground="#CDD6F4">
+                                <Run Text="{Binding RealtimePacketsAnalyzed, StringFormat='{}{0:N0}'}"/>
+                                <Run Text="/" Foreground="#6C7086"/>
+                                <Run Text="{Binding RealtimeTotalPackets, StringFormat='{}{0:N0}'}" Foreground="#9399B2"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Processing Rate -->
+                    <StackPanel Grid.Column="1" Grid.Row="0" Spacing="2" Margin="0,0,8,4">
+                        <TextBlock Text="⚡ Processing Rate"
+                                 FontSize="10"
+                                 FontWeight="Medium"
+                                 Foreground="#7F849C"/>
+                        <TextBlock Text="{Binding RealtimePacketsPerSecond, StringFormat='{}{0:N0} pkt/s'}"
+                                 FontSize="13"
+                                 FontWeight="SemiBold"
+                                 Foreground="#A6E3A1"/>
+                    </StackPanel>
+
+                    <!-- Data Volume -->
+                    <StackPanel Grid.Column="2" Grid.Row="0" Spacing="2" Margin="0,0,8,4">
+                        <TextBlock Text="💾 Data Volume"
+                                 FontSize="10"
+                                 FontWeight="Medium"
+                                 Foreground="#7F849C"/>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock FontSize="13"
+                                     FontWeight="SemiBold"
+                                     Foreground="#CDD6F4">
+                                <Run Text="{Binding RealtimeMegabytesAnalyzed, StringFormat='{}{0:F1}'}"/>
+                                <Run Text="/" Foreground="#6C7086"/>
+                                <Run Text="{Binding RealtimeTotalMegabytes, StringFormat='{}{0:F1}'}" Foreground="#9399B2"/>
+                                <Run Text="MB" Foreground="#6C7086"/>
+                            </TextBlock>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Elapsed Time -->
+                    <StackPanel Grid.Column="3" Grid.Row="0" Spacing="2" Margin="0,0,0,4">
+                        <TextBlock Text="⏱️ Elapsed Time"
+                                 FontSize="10"
+                                 FontWeight="Medium"
+                                 Foreground="#7F849C"/>
+                        <TextBlock Text="{Binding RealtimeElapsedTime, StringFormat='{}{0:mm\\:ss}'}"
+                                 FontSize="13"
+                                 FontWeight="SemiBold"
+                                 Foreground="#F9E2AF"/>
+                    </StackPanel>
+
+                    <!-- Remaining Time (spans 2 columns) -->
+                    <StackPanel Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Spacing="2">
+                        <TextBlock Text="⏳ Remaining Time"
+                                 FontSize="10"
+                                 FontWeight="Medium"
+                                 Foreground="#7F849C"/>
+                        <TextBlock Text="{Binding RealtimeRemainingTimeFormatted}"
+                                 FontSize="13"
+                                 FontWeight="SemiBold"
+                                 Foreground="#89B4FA"
+                                 IsVisible="{Binding RealtimeRemainingTimeFormatted, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                        <TextBlock Text="Calculating..."
+                                 FontSize="13"
+                                 FontWeight="SemiBold"
+                                 Foreground="#6C7086"
+                                 IsVisible="{Binding RealtimeRemainingTimeFormatted, Converter={x:Static StringConverters.IsNullOrEmpty}}"/>
+                    </StackPanel>
+
+                    <!-- Threats Detected -->
+                    <StackPanel Grid.Column="2" Grid.Row="1" Spacing="2"
+                              IsVisible="{Binding RealtimeThreatsDetected, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <TextBlock Text="🚨 Threats Detected"
+                                 FontSize="10"
+                                 FontWeight="Medium"
+                                 Foreground="#7F849C"/>
+                        <TextBlock Text="{Binding RealtimeThreatsDetected, StringFormat='{}{0:N0}'}"
+                                 FontSize="13"
+                                 FontWeight="SemiBold"
+                                 Foreground="#F38BA8"/>
+                    </StackPanel>
+
+                    <!-- Unique IPs Processed -->
+                    <StackPanel Grid.Column="3" Grid.Row="1" Spacing="2"
+                              IsVisible="{Binding RealtimeUniqueIPsProcessed, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <TextBlock Text="🌐 Unique IPs"
+                                 FontSize="10"
+                                 FontWeight="Medium"
+                                 Foreground="#7F849C"/>
+                        <TextBlock Text="{Binding RealtimeUniqueIPsProcessed, StringFormat='{}{0:N0}'}"
+                                 FontSize="13"
+                                 FontWeight="SemiBold"
+                                 Foreground="#94E2D5"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Compact stages display - horizontal badges -->
+            <ItemsControl ItemsSource="{Binding AnalysisStages}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AnalysisProgressStage">
+                        <Border Margin="0,0,6,6"
+                               Background="#1E1E2E"
+                               BorderThickness="1"
+                               CornerRadius="4"
+                               Padding="8,4"
+                               BorderBrush="{Binding State, Converter={StaticResource StageStateToBrush}}">
+
+                            <ToolTip.Tip>
+                                <StackPanel Spacing="4" MaxWidth="300">
+                                    <TextBlock Text="{Binding Name}"
+                                             FontWeight="SemiBold"
+                                             FontSize="12"
+                                             Foreground="#CDD6F4"/>
+                                    <TextBlock Text="{Binding Detail}"
+                                             FontSize="11"
+                                             Foreground="#BAC2DE"
+                                             TextWrapping="Wrap"/>
+                                    <TextBlock FontSize="10"
+                                             Foreground="#6C7086"
+                                             IsVisible="{Binding ElapsedTime, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                        <Run Text="Time: "/>
+                                        <Run Text="{Binding ElapsedTime}" FontWeight="Medium"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </ToolTip.Tip>
+
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <!-- Compact icon indicator -->
+                                <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                                    <Path Data="{Binding State, Converter={StaticResource StageStateToIcon}}"
+                                         Fill="{Binding State, Converter={StaticResource StageStateToBrush}}"
+                                         Stretch="Uniform" />
+                                </Viewbox>
+
+                                <!-- Stage name and timing -->
+                                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}"
+                                             FontSize="11"
+                                             FontWeight="Medium"
+                                             Foreground="{Binding State, Converter={StaticResource StageStateToBrush}, ConverterParameter='Text'}"/>
+
+                                    <TextBlock Text="{Binding ElapsedTime, StringFormat='({0})'}"
+                                             FontSize="10"
+                                             FontWeight="Normal"
+                                             Foreground="#6C7086"
+                                             IsVisible="{Binding ElapsedTime, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </Border>
+</UserControl>

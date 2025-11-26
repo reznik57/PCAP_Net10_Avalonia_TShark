@@ -1,0 +1,682 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             xmlns:converters="using:PCAPAnalyzer.UI.Converters"
+             xmlns:controls="using:PCAPAnalyzer.UI.Controls"
+             xmlns:ctrl="using:PCAPAnalyzer.UI.Views.Controls"
+             xmlns:components="using:PCAPAnalyzer.UI.Views.Components"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
+             x:Class="PCAPAnalyzer.UI.Views.DashboardView"
+             x:DataType="vm:DashboardViewModel">
+
+    <UserControl.Resources>
+        <converters:ByteFormatConverter x:Key="ByteFormatConverter"/>
+        <converters:BoolToViewModeConverter x:Key="BoolToViewModeConverter"/>
+        <converters:PercentageToGradientConverter x:Key="PercentageToGradientConverter"/>
+        <converters:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
+        <converters:TrafficIntensityColorConverter x:Key="TrafficIntensityColorConverter"/>
+        <converters:TrafficIntensityGradientConverter x:Key="TrafficIntensityGradientConverter"/>
+        <converters:PercentageToScaleConverter x:Key="PercentageToScaleConverter"/>
+        <converters:PortTimelineCountConverter x:Key="PortTimelineCountConverter"/>
+        <converters:PortTableCountConverter x:Key="PortTableCountConverter"/>
+        <converters:OtherTableCountConverter x:Key="OtherTableCountConverter"/>
+        <converters:ConnectionTableCountConverter x:Key="ConnectionTableCountConverter"/>
+        <converters:ThroughputModeConverter x:Key="ThroughputModeConverter"/>
+        <converters:PortActivityModeConverter x:Key="PortActivityModeConverter"/>
+
+        <!-- Port/Protocol Row Template -->
+        <DataTemplate x:Key="PortRowTemplate">
+            <Border Classes="ranked-table-row">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal"><TextBlock Text="{Binding Port}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC"/><TextBlock Text="/" FontSize="11" Foreground="#484F58" Margin="2,0"/><TextBlock Text="{Binding Protocol}" FontSize="11" Foreground="#8B949E"/></StackPanel>
+                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding ServiceName}" FontSize="9" Foreground="#7D8590"/></Border>
+                    <Grid Grid.Column="3" Margin="8,0">
+                        <Border Classes="percentage-track">
+                            <Grid>
+                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    <TextBlock Grid.Column="4" Text="{Binding DataContext.MetricText, RelativeSource={RelativeSource AncestorType=Border}}" FontSize="12" FontWeight="SemiBold" Foreground="{Binding DataContext.MetricColor, RelativeSource={RelativeSource AncestorType=Border}}" HorizontalAlignment="Right"/>
+                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowPortDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- IP Endpoint Row Template -->
+        <DataTemplate x:Key="EndpointRowTemplate">
+            <Border Classes="ranked-table-row">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Address}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Address}"/>
+                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding Country}" FontSize="9" Foreground="#7D8590"/></Border>
+                    <Grid Grid.Column="3" Margin="8,0">
+                        <Border Classes="percentage-track">
+                            <Grid>
+                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    <TextBlock Grid.Column="4" Text="{Binding DataContext.MetricText, RelativeSource={RelativeSource AncestorType=Border}}" FontSize="12" FontWeight="SemiBold" Foreground="{Binding DataContext.MetricColor, RelativeSource={RelativeSource AncestorType=Border}}" HorizontalAlignment="Right"/>
+                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowIPDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!-- Connection Row Template -->
+        <DataTemplate x:Key="ConnectionRowTemplate">
+            <Border Classes="ranked-table-row">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="150"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                    <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2">
+                        <TextBlock FontSize="11" Foreground="#F0F6FC"><TextBlock.Text><MultiBinding StringFormat="{}{0}:{1}"><Binding Path="SourceIP"/><Binding Path="SourcePort"/></MultiBinding></TextBlock.Text></TextBlock>
+                        <TextBlock FontSize="10" Foreground="#8B949E"><TextBlock.Text><MultiBinding StringFormat="→ {0}:{1}"><Binding Path="DestinationIP"/><Binding Path="DestinationPort"/></MultiBinding></TextBlock.Text></TextBlock>
+                    </StackPanel>
+                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding Protocol}" FontSize="9" Foreground="#7D8590"/></Border>
+                    <Grid Grid.Column="3" Margin="8,0">
+                        <Border Classes="percentage-track">
+                            <Grid>
+                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                    <TextBlock Grid.Column="4" Text="{Binding DataContext.MetricText, RelativeSource={RelativeSource AncestorType=Border}}" FontSize="12" FontWeight="SemiBold" Foreground="{Binding DataContext.MetricColor, RelativeSource={RelativeSource AncestorType=Border}}" HorizontalAlignment="Right"/>
+                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowConnectionDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.card-title"><Setter Property="FontSize" Value="{StaticResource FontSizeMedium}"/><Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}"/><Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/><Setter Property="Margin" Value="0,0,0,12"/></Style>
+        <Style Selector="Border.table-header"><Setter Property="Background" Value="{DynamicResource BackgroundElevated}"/><Setter Property="Height" Value="48"/><Setter Property="Padding" Value="0,0,0,0"/></Style>
+        <Style Selector="ScrollViewer.fixed-height-table"><Setter Property="Height" Value="440"/><Setter Property="VerticalScrollBarVisibility" Value="Auto"/><Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/></Style>
+        <Style Selector="TextBlock.rank-number"><Setter Property="Width" Value="25"/><Setter Property="FontSize" Value="11"/><Setter Property="Foreground" Value="#6B7280"/><Setter Property="TextAlignment" Value="Right"/><Setter Property="Margin" Value="0,0,8,0"/></Style>
+        <Style Selector="Button.export-csv"><Setter Property="Background" Value="#238636"/><Setter Property="BorderBrush" Value="#2EA043"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="12,6"/><Setter Property="CornerRadius" Value="6"/><Setter Property="VerticalAlignment" Value="Center"/></Style>
+    </UserControl.Styles>
+
+    <Grid Background="{DynamicResource BackgroundDark}" ClipToBounds="True">
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+
+        <!-- Export Status Bar -->
+        <Border Grid.Row="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,0,1" Padding="16,8" IsVisible="{Binding ExportStatusMessage, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="📊" FontSize="16" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <TextBlock Grid.Column="1" Text="{Binding ExportStatusMessage}" FontSize="13" FontWeight="Medium" Foreground="{Binding ExportStatusColor}" VerticalAlignment="Center"/>
+                <ProgressBar Grid.Column="2" IsIndeterminate="True" Width="120" Height="4" Foreground="{Binding ExportStatusColor}" IsVisible="{Binding IsExporting}" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="24,24,24,24" Spacing="24" MaxWidth="{Binding $parent[Grid].Bounds.Width}">
+
+                <!-- FilterPanelControl for sophisticated filtering -->
+                <ctrl:FilterPanelControl DataContext="{Binding}" Margin="0,0,0,10" />
+
+                <!-- Sampling Indicator Banner (shown for large captures) -->
+                <Border IsVisible="{Binding UsingStatisticsSample}"
+                        Background="#2D1F00" BorderBrush="#F59E0B" BorderThickness="1"
+                        CornerRadius="8" Padding="16,12" Margin="0,0,0,10">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <TextBlock Grid.Column="0" Text="⚠️" FontSize="20" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="4">
+                            <TextBlock Text="Large Capture - Statistics Sampled" FontSize="13" FontWeight="SemiBold" Foreground="#F59E0B"/>
+                            <TextBlock Foreground="#D4A574" FontSize="11" TextWrapping="Wrap">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}This capture exceeds 1M packets. Dashboard statistics are calculated from a representative sample of {0:N0} packets for performance. Values shown are approximate.">
+                                        <Binding Path="StatisticsSampleSize"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Network Statistics -->
+                <Border Classes="modern-card-unified" Padding="20" Margin="0,0,0,20">
+                    <Grid ColumnDefinitions="*,*,*,*,*" RowDefinitions="Auto,12,Auto,12,Auto">
+                        <!-- Accent Bar -->
+                        <Border Grid.Row="0" Grid.ColumnSpan="5" Height="3" Background="#3B82F6" CornerRadius="2"/>
+                        <TextBlock Grid.Row="2" Grid.ColumnSpan="5" Text="NETWORK STATISTICS" FontSize="13" FontWeight="Bold" Foreground="#E6EDF3"/>
+
+                        <!-- Single Row: All Stats -->
+                        <Border Grid.Row="4" Grid.Column="0" Classes="stat-card-modern" Margin="0,0,8,0"><StackPanel><TextBlock Text="TOTAL PACKETS" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding Statistics.TotalPackets, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#3B82F6"/></StackPanel></Border>
+                        <Border Grid.Row="4" Grid.Column="1" Classes="stat-card-modern" Margin="4,0"><StackPanel><TextBlock Text="TOTAL TRAFFIC" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding Statistics.TotalBytesFormatted}" FontSize="24" FontWeight="SemiBold" Foreground="#10B981"/></StackPanel></Border>
+                        <Border Grid.Row="4" Grid.Column="2" Classes="stat-card-modern" Margin="4,0"><StackPanel><TextBlock Text="UNIQUE IPs" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding Statistics.UniqueIPs, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#F59E0B"/></StackPanel></Border>
+                        <Border Grid.Row="4" Grid.Column="3" Classes="stat-card-modern" Margin="4,0"><StackPanel><TextBlock Text="CONVERSATIONS" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding Statistics.ActiveConversations, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#06B6D4"/></StackPanel></Border>
+                        <Border Grid.Row="4" Grid.Column="4" Classes="stat-card-modern" Margin="8,0,0,0"><StackPanel><TextBlock Text="UNIQUE PROTOCOLS" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding Statistics.UniqueProtocols, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#EC4899"/></StackPanel></Border>
+                    </Grid>
+                </Border>
+
+                <!-- Traffic Over Time Chart -->
+                <Border Classes="modern-card-unified" MinHeight="400">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <Border Grid.Row="0" Classes="table-header-unified">
+                            <Grid Margin="20,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#3B82F6" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Traffic Over Time" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <Button x:Name="TrafficZoomInButton" Click="OnTrafficZoomIn" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom In"><TextBlock Text="🔍+" FontSize="12" Foreground="#8B949E"/></Button>
+                                    <Button x:Name="TrafficZoomOutButton" Click="OnTrafficZoomOut" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom Out"><TextBlock Text="🔍-" FontSize="12" Foreground="#8B949E"/></Button>
+                                    <Button x:Name="TrafficZoomResetButton" Click="OnTrafficZoomReset" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Reset Zoom"><TextBlock Text="⟲" FontSize="12" Foreground="#8B949E"/></Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <lvc:CartesianChart Grid.Row="1" x:Name="NetworkTrafficChart" Series="{Binding TimelineSeries}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}" ZoomMode="None" Height="320" Margin="20,20,20,10" TooltipPosition="Hidden" AnimationsSpeed="00:00:00.5" PointerPressed="OnChartPointerPressed" PointerMoved="OnTrafficChartPointerMoved" PointerExited="OnTrafficChartPointerExited"/>
+                        <Border Grid.Row="2" Height="35" Margin="20,0,20,10" Background="#1C2128" CornerRadius="6" BorderBrush="#30363D" BorderThickness="1"><TextBlock x:Name="TrafficTooltipText" FontSize="12" FontWeight="Medium" Foreground="#F0F6FC" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,0"/></Border>
+                    </Grid>
+                </Border>
+
+                <!-- Port Activity Timeline -->
+                <Border Classes="modern-card-unified" MinHeight="320">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <Border Grid.Row="0" Classes="table-header-unified">
+                            <Grid Margin="20,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#8B5CF6" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Port Activity Over Time" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="0,0,8,0">
+                                    <ToggleButton IsChecked="{Binding ShowPortActivityAsThroughput}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4"><TextBlock FontSize="11" Foreground="#8B949E"><TextBlock.Text><MultiBinding StringFormat="{}{0}"><Binding Path="ShowPortActivityAsThroughput" Converter="{StaticResource ThroughputModeConverter}"/></MultiBinding></TextBlock.Text></TextBlock></ToggleButton>
+                                    <ToggleButton IsChecked="{Binding ShowTop10PortsTimeline}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4"><TextBlock FontSize="11" Foreground="#8B949E"><TextBlock.Text><MultiBinding StringFormat="{}{0}"><Binding Path="ShowTop10PortsTimeline" Converter="{StaticResource PortTimelineCountConverter}"/></MultiBinding></TextBlock.Text></TextBlock></ToggleButton>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <Button x:Name="PortZoomInButton" Click="OnPortZoomIn" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom In"><TextBlock Text="🔍+" FontSize="12" Foreground="#8B949E"/></Button>
+                                    <Button x:Name="PortZoomOutButton" Click="OnPortZoomOut" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom Out"><TextBlock Text="🔍-" FontSize="12" Foreground="#8B949E"/></Button>
+                                    <Button x:Name="PortZoomResetButton" Click="OnPortZoomReset" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Reset Zoom"><TextBlock Text="⟲" FontSize="12" Foreground="#8B949E"/></Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <lvc:CartesianChart Grid.Row="1" x:Name="PortActivityChart" Series="{Binding PortActivitySeries}" XAxes="{Binding PortActivityXAxes}" YAxes="{Binding PortActivityYAxes}" Height="250" Margin="20,10,20,5" ZoomMode="None" TooltipPosition="Hidden" AnimationsSpeed="00:00:00.5" PointerPressed="OnChartPointerPressed" PointerMoved="OnPortChartPointerMoved" PointerExited="OnPortChartPointerExited"/>
+                        <Border Grid.Row="2" Height="35" Margin="20,0,20,10" Background="#1C2128" CornerRadius="6" BorderBrush="#30363D" BorderThickness="1"><TextBlock x:Name="PortActivityTooltipText" FontSize="12" FontWeight="Medium" Foreground="#F0F6FC" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,0"/></Border>
+                    </Grid>
+                </Border>
+
+                <!-- Top Ports Tables -->
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+                    <!-- By Packets -->
+                    <Border Grid.Column="0" Classes="modern-card-unified" Margin="0,0,12,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#10B981" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Ports by Packets" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportPortsByPacketsCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export ports by packets to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopPortsByPacketsExtended}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal"><TextBlock Text="{Binding Port}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC"/><TextBlock Text="/" FontSize="11" Foreground="#484F58" Margin="2,0"/><TextBlock Text="{Binding Protocol}" FontSize="11" Foreground="#8B949E"/></StackPanel>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding ServiceName}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowPortDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!-- By Bytes -->
+                    <Border Grid.Column="1" Classes="modern-card-unified" Margin="12,0,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#3B82F6" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Ports by Bytes" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportPortsByBytesCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export ports by bytes to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopPortsByBytesExtended}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal"><TextBlock Text="{Binding Port}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC"/><TextBlock Text="/" FontSize="11" Foreground="#484F58" Margin="2,0"/><TextBlock Text="{Binding Protocol}" FontSize="11" Foreground="#8B949E"/></StackPanel>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding ServiceName}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding ByteCountFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#3B82F6" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowPortDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Top Source IPs Tables -->
+                <Grid Margin="0,0,0,0">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+                    <!-- By Packets -->
+                    <Border Grid.Column="0" Classes="modern-card-unified" Margin="0,0,12,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#10B981" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Source IPs by Packets" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportSourcesByPacketsCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export source IPs by packets to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopSourcesExtended}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Address}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Address}"/>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding Country}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowIPDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!-- By Bytes -->
+                    <Border Grid.Column="1" Classes="modern-card-unified" Margin="12,0,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#F59E0B" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Source IPs by Bytes" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportSourcesByBytesCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export source IPs by bytes to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopSourcesByBytesExtended}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Address}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Address}"/>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding Country}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding ByteCount, Converter={StaticResource ByteFormatConverter}}" FontSize="12" FontWeight="SemiBold" Foreground="#F59E0B" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowIPDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Top Destination IPs Tables -->
+                <Grid Margin="0,0,0,0">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+                    <!-- By Packets -->
+                    <Border Grid.Column="0" Classes="modern-card-unified" Margin="0,0,12,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#EC4899" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Destination IPs by Packets" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportDestinationsByPacketsCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export destination IPs by packets to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopDestinationsExtended}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Address}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Address}"/>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding Country}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="12" FontWeight="SemiBold" Foreground="#EC4899" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowIPDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!-- By Bytes -->
+                    <Border Grid.Column="1" Classes="modern-card-unified" Margin="12,0,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#A855F7" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Destination IPs by Bytes" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportDestinationsByBytesCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export destination IPs by bytes to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopDestinationsByBytesExtended}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Address}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Address}"/>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding Country}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding ByteCount, Converter={StaticResource ByteFormatConverter}}" FontSize="12" FontWeight="SemiBold" Foreground="#A855F7" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowIPDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Top Total IPs Tables -->
+                <Grid Margin="0,0,0,0">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+                    <!-- By Packets -->
+                    <Border Grid.Column="0" Classes="modern-card-unified" Margin="0,0,12,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#06B6D4" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Total IPs by Packets" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportTotalIPsByPacketsCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export total IPs by packets to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopTotalIPsByPacketsExtended}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Address}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Address}"/>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding Country}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="12" FontWeight="SemiBold" Foreground="#06B6D4" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowIPDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!-- By Bytes -->
+                    <Border Grid.Column="1" Classes="modern-card-unified" Margin="12,0,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#14B8A6" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Total IPs by Bytes" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportTotalIPsByBytesCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export total IPs by bytes to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopTotalIPsByBytesExtended}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Address}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Address}"/>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding Country}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding ByteCount, Converter={StaticResource ByteFormatConverter}}" FontSize="12" FontWeight="SemiBold" Foreground="#14B8A6" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowIPDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Top Connections Tables -->
+                <Grid Margin="0,0,0,24">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+                    <!-- By Packets -->
+                    <Border Grid.Column="0" Classes="modern-card-unified" Margin="0,0,12,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#06B6D4" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Connections by Packets" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportConnectionsByPacketsCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export connections by packets to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopConnectionsExtended}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="150"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2">
+                                                        <TextBlock FontSize="11" Foreground="#F0F6FC"><TextBlock.Text><MultiBinding StringFormat="{}{0}:{1}"><Binding Path="SourceIP"/><Binding Path="SourcePort"/></MultiBinding></TextBlock.Text></TextBlock>
+                                                        <TextBlock FontSize="10" Foreground="#8B949E"><TextBlock.Text><MultiBinding StringFormat="→ {0}:{1}"><Binding Path="DestinationIP"/><Binding Path="DestinationPort"/></MultiBinding></TextBlock.Text></TextBlock>
+                                                    </StackPanel>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding Protocol}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="12" FontWeight="SemiBold" Foreground="#06B6D4" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowConnectionDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!-- By Bytes -->
+                    <Border Grid.Column="1" Classes="modern-card-unified" Margin="12,0,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#14B8A6" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Connections by Bytes" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportConnectionsByBytesCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export connections by bytes to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopConnectionsByBytesExtended}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="150"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2">
+                                                        <TextBlock FontSize="11" Foreground="#F0F6FC"><TextBlock.Text><MultiBinding StringFormat="{}{0}:{1}"><Binding Path="SourceIP"/><Binding Path="SourcePort"/></MultiBinding></TextBlock.Text></TextBlock>
+                                                        <TextBlock FontSize="10" Foreground="#8B949E"><TextBlock.Text><MultiBinding StringFormat="→ {0}:{1}"><Binding Path="DestinationIP"/><Binding Path="DestinationPort"/></MultiBinding></TextBlock.Text></TextBlock>
+                                                    </StackPanel>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding Protocol}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding ByteCount, Converter={StaticResource ByteFormatConverter}}" FontSize="12" FontWeight="SemiBold" Foreground="#14B8A6" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowConnectionDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Packet Size Distribution -->
+                <Border Classes="modern-card-unified" MinHeight="420">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <Border Grid.Row="0" Classes="table-header-unified">
+                            <Grid Margin="20,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#3FB950" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Packet Size Distribution" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                <Button Grid.Column="1" Background="Transparent" BorderThickness="0" Padding="8,4" Cursor="Hand" ToolTip.Tip="Histogram showing packet count by size buckets (bytes)"><TextBlock Text="ⓘ" FontSize="14" Foreground="#8B949E"/></Button>
+                            </Grid>
+                        </Border>
+                        <lvc:CartesianChart Grid.Row="1" Series="{Binding Charts.PacketSizeSeries}" XAxes="{Binding Charts.PacketSizeXAxes}" YAxes="{Binding Charts.PacketSizeYAxes}" ZoomMode="None" Height="320" Margin="20,20,20,10" TooltipPosition="Hidden" AnimationsSpeed="00:00:00.5"/>
+                        <Border Grid.Row="2" Background="#1C2128" BorderBrush="#30363D" BorderThickness="0,1,0,0" Padding="20,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0"><TextBlock Text="Average Size" FontSize="10" Foreground="#8B949E" Margin="0,0,0,4"/><TextBlock FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"><TextBlock.Text><MultiBinding StringFormat="{}{0:F1} bytes"><Binding Path="Statistics.AveragePacketSize"/></MultiBinding></TextBlock.Text></TextBlock></StackPanel>
+                                <StackPanel Grid.Column="1"><TextBlock Text="Median Size" FontSize="10" Foreground="#8B949E" Margin="0,0,0,4"/><TextBlock FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"><TextBlock.Text><MultiBinding StringFormat="{}{0} bytes"><Binding Path="Statistics.MedianPacketSize"/></MultiBinding></TextBlock.Text></TextBlock></StackPanel>
+                                <StackPanel Grid.Column="2"><TextBlock Text="Min / Max" FontSize="10" Foreground="#8B949E" Margin="0,0,0,4"/><TextBlock FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"><TextBlock.Text><MultiBinding StringFormat="{}{0} / {1}"><Binding Path="Statistics.MinPacketSize"/><Binding Path="Statistics.MaxPacketSize"/></MultiBinding></TextBlock.Text></TextBlock></StackPanel>
+                                <StackPanel Grid.Column="3"><TextBlock Text="Std Deviation" FontSize="10" Foreground="#8B949E" Margin="0,0,0,4"/><TextBlock FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"><TextBlock.Text><MultiBinding StringFormat="{}{0:F1}"><Binding Path="Statistics.StandardDeviation"/></MultiBinding></TextBlock.Text></TextBlock></StackPanel>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Drill-Down Popup Overlay -->
+        <Border Grid.Row="1" Background="#80000000" IsVisible="{Binding DrillDown.IsVisible}"
+                PointerPressed="OnPopupBackgroundPressed">
+            <Border HorizontalAlignment="Center" VerticalAlignment="Center" Margin="50">
+                <components:DrillDownPopupView DataContext="{Binding DrillDown}"/>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>

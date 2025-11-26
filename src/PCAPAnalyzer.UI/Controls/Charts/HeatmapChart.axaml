@@ -1,0 +1,103 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PCAPAnalyzer.UI.Controls.Charts.HeatmapChart"
+             x:CompileBindings="False">
+
+  <Grid RowDefinitions="Auto,*">
+    <!-- Title and Controls -->
+    <Border Grid.Row="0" Background="#2D3748" Padding="10">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="16" FontWeight="Bold"
+                   Foreground="White" VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Color Scheme:" Foreground="White" VerticalAlignment="Center" />
+          <ComboBox Name="ColorSchemeCombo" SelectedIndex="0" Width="120">
+            <ComboBoxItem Content="Heat" />
+            <ComboBoxItem Content="Cool" />
+            <ComboBoxItem Content="Viridis" />
+            <ComboBoxItem Content="Plasma" />
+          </ComboBox>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Heatmap Canvas -->
+    <Border Grid.Row="1" Background="#1A202C" Padding="20">
+      <Grid RowDefinitions="*,Auto" ColumnDefinitions="Auto,*">
+        <!-- Y-Axis Labels -->
+        <ItemsControl Grid.Row="0" Grid.Column="0" ItemsSource="{Binding YLabels}"
+                      VerticalAlignment="Stretch" Margin="0,0,10,0">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Vertical" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding}" Foreground="White" Padding="5"
+                         HorizontalAlignment="Right" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Heatmap Grid -->
+        <ItemsControl Grid.Row="0" Grid.Column="1" ItemsSource="{Binding HeatmapCells}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <UniformGrid Rows="{Binding RowCount}" Columns="{Binding ColumnCount}" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Background="{Binding CellColor}"
+                      BorderBrush="#4A5568"
+                      BorderThickness="1"
+                      ToolTip.Tip="{Binding Tooltip}">
+                <TextBlock Text="{Binding IntensityText}"
+                           Foreground="{Binding TextColor}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="10" />
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- X-Axis Labels -->
+        <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding XLabels}"
+                      HorizontalAlignment="Stretch" Margin="0,10,0,0">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Orientation="Horizontal" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding}" Foreground="White" Padding="5"
+                         TextAlignment="Center" />
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Color Legend -->
+        <Border Grid.Row="1" Grid.Column="0" Background="#2D3748"
+                Padding="10" CornerRadius="4" Margin="0,10,10,0">
+          <StackPanel Spacing="5">
+            <TextBlock Text="Intensity" Foreground="White" FontSize="10" />
+            <ItemsControl ItemsSource="{Binding LegendItems}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <StackPanel Orientation="Horizontal" Spacing="5">
+                    <Border Width="20" Height="15" Background="{Binding Color}"
+                            CornerRadius="2" />
+                    <TextBlock Text="{Binding Label}" Foreground="White" FontSize="9" />
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

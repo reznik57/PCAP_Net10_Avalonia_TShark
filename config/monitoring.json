@@ -1,0 +1,50 @@
+{
+  "monitoring": {
+    "enabled": true,
+    "performanceMonitor": {
+      "enabled": true,
+      "reportInterval": 30,
+      "cpuThreshold": 80.0,
+      "memoryThreshold": 500000000,
+      "slowResponseThreshold": 1000
+    },
+    "memoryPressureDetector": {
+      "enabled": true,
+      "checkInterval": 5,
+      "warningThreshold": 300000000,
+      "criticalThreshold": 500000000,
+      "emergencyThreshold": 800000000,
+      "autoOptimize": true
+    },
+    "autoOptimizer": {
+      "enabled": true,
+      "checkInterval": 30,
+      "minimumOptimizationInterval": 60,
+      "strategies": {
+        "memoryOptimization": true,
+        "collectionOptimization": true,
+        "cacheOptimization": true
+      }
+    },
+    "detailedLogger": {
+      "enabled": true,
+      "minimumLevel": "Info",
+      "enableConsoleOutput": true,
+      "enableFileOutput": true,
+      "maxLogFileSizeMB": 10,
+      "logDirectory": "logs"
+    },
+    "performanceProfiler": {
+      "enabled": true,
+      "reportInterval": 60,
+      "maxSectionsToTrack": 100,
+      "enableDetailedProfiling": false
+    }
+  },
+  "ui": {
+    "showMonitoringIndicators": true,
+    "updateInterval": 2,
+    "showPerformanceWarnings": true,
+    "showMemoryWarnings": true
+  }
+}

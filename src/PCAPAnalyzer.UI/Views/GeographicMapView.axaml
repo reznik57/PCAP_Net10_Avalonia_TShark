@@ -1,0 +1,147 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:PCAPAnalyzer.UI.Controls"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
+             x:Class="PCAPAnalyzer.UI.Views.GeographicMapView"
+             x:DataType="vm:CountryTrafficViewModel">
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#0F172A" Padding="15,15,15,15" CornerRadius="8,8,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Title -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="🌍" FontSize="24" VerticalAlignment="Center"/>
+                    <StackPanel>
+                        <TextBlock Text="Global IP Traffic Visualization" 
+                                   FontSize="18" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock Text="{Binding CountrySummary}" 
+                                   FontSize="12" Foreground="#94A3B8"/>
+                    </StackPanel>
+                </StackPanel>
+                
+                <!-- Controls -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+                    <!-- Animation Toggle -->
+                    <ToggleButton IsChecked="{Binding ShowAnimations}" 
+                                  Width="120" Height="32"
+                                  Background="#1E293B" Foreground="White">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="🎬" FontSize="14"/>
+                            <TextBlock Text="Animations" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ToggleButton>
+                    
+                    <!-- Traffic Flows Toggle -->
+                    <ToggleButton IsChecked="{Binding ShowTrafficFlows}" 
+                                  Width="120" Height="32"
+                                  Background="#1E293B" Foreground="White">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="🔀" FontSize="14"/>
+                            <TextBlock Text="Traffic Flows" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ToggleButton>
+                    
+                    <!-- Labels Toggle -->
+                    <ToggleButton IsChecked="{Binding ShowCountryLabels}" 
+                                  Width="120" Height="32"
+                                  Background="#1E293B" Foreground="White">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="🏷️" FontSize="14"/>
+                            <TextBlock Text="Labels" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </ToggleButton>
+                    
+                    <!-- Reset View -->
+                    <Button Command="{Binding ResetViewCommand}" 
+                            Width="100" Height="32"
+                            Background="#3B82F6" Foreground="White">
+                        <StackPanel Orientation="Horizontal" Spacing="5">
+                            <TextBlock Text="🔄" FontSize="14"/>
+                            <TextBlock Text="Reset" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+        
+        <!-- Map -->
+        <Border Grid.Row="1" Background="#0A0F1B" CornerRadius="0">
+            <controls:GeographicMapControlV2
+                x:Name="WorldMap"
+                CountryData="{Binding CountryTrafficStatistics}"
+                ExcludedCountries="{Binding ExcludedCountries}"
+                ShowAnimations="{Binding ShowAnimations}"
+                ShowTrafficFlows="{Binding ShowTrafficFlows}"
+                ShowCountryLabels="{Binding ShowCountryLabels}"
+                ShowHeatMap="True"
+                ShowProtocolColorCoding="True"/>
+        </Border>
+        
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="#0F172A" Padding="10,10,10,10" CornerRadius="0,0,8,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Statistics -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
+                    <TextBlock Foreground="#94A3B8">
+                        <Run Text="Countries:" FontWeight="Bold" Foreground="#E2E8F0"/>
+                        <Run Text="{Binding UniqueCountries}"/>
+                    </TextBlock>
+                </StackPanel>
+                
+                <TextBlock Grid.Column="1" Foreground="#94A3B8" Margin="20,0,0,0">
+                    <Run Text="International:" FontWeight="Bold" Foreground="#E2E8F0"/>
+                    <Run Text="{Binding InternationalPercentage, StringFormat='{}{0:F1}%'}"/>
+                </TextBlock>
+                
+                <TextBlock Grid.Column="2" Foreground="#94A3B8" Margin="20,0,0,0">
+                    <Run Text="Cross-Border Flows:" FontWeight="Bold" Foreground="#E2E8F0"/>
+                    <Run Text="{Binding CrossBorderFlows}"/>
+                </TextBlock>
+                
+                <!-- High Risk Warning -->
+                <Border Grid.Column="3" Margin="20,0,0,0"
+                        Background="#7F1D1D" CornerRadius="4" Padding="8,2"
+                        IsVisible="{Binding HasHighRiskTraffic}">
+                    <TextBlock Text="{Binding HighRiskWarning}" 
+                               Foreground="#FCA5A5" FontSize="11"/>
+                </Border>
+                
+                <!-- Zoom Controls -->
+                <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="5">
+                    <TextBlock Text="Zoom:" Foreground="#94A3B8" VerticalAlignment="Center"/>
+                    <Button Content="+" Width="24" Height="24" FontSize="14"
+                            Background="#1E293B" Foreground="White"
+                            Command="{Binding ZoomInCommand}"/>
+                    <Button Content="-" Width="24" Height="24" FontSize="14"
+                            Background="#1E293B" Foreground="White"
+                            Command="{Binding ZoomOutCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

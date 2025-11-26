@@ -1,0 +1,61 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             x:Class="PCAPAnalyzer.UI.Controls.Charts.InteractiveTimeSeriesChart"
+             x:CompileBindings="False">
+
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- Toolbar -->
+    <Border Grid.Row="0" Background="#2D3748" Padding="10" CornerRadius="4 4 0 0">
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <Button Content="Reset Zoom" Click="ResetZoom_Click" Classes="chart-button" />
+        <Button Content="Pan Mode" Click="TogglePan_Click" Classes="chart-button" />
+        <ComboBox Name="TimeRangeCombo" SelectedIndex="0" Width="150">
+          <ComboBoxItem Content="All Data" />
+          <ComboBoxItem Content="Last Hour" />
+          <ComboBoxItem Content="Last 5 Minutes" />
+          <ComboBoxItem Content="Custom Range" />
+        </ComboBox>
+        <TextBlock Text="Update Interval:" VerticalAlignment="Center" Foreground="White" />
+        <NumericUpDown Name="UpdateIntervalInput" Value="1000" Minimum="100" Maximum="10000"
+                       Increment="100" Width="100" />
+        <TextBlock Text="ms" VerticalAlignment="Center" Foreground="White" />
+        <CheckBox Name="AutoScrollCheck" Content="Auto-scroll" IsChecked="True" Foreground="White" />
+      </StackPanel>
+    </Border>
+
+    <!-- Chart -->
+    <lvc:CartesianChart Grid.Row="1"
+                        Series="{Binding Series}"
+                        XAxes="{Binding XAxes}"
+                        YAxes="{Binding YAxes}"
+                        TooltipPosition="Top"
+                        ZoomMode="X"
+                        Background="#1A202C"
+                        Margin="0" />
+
+    <!-- Status Bar -->
+    <Border Grid.Row="2" Background="#2D3748" Padding="10" CornerRadius="0 0 4 4">
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+        <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" Foreground="White" />
+        <TextBlock Grid.Column="1" Text="{Binding DataPointCount, StringFormat='Points: {0:N0}'}"
+                   Foreground="#A0AEC0" Margin="10,0" />
+        <TextBlock Grid.Column="2" Text="{Binding TimeRange}" Foreground="#A0AEC0" Margin="10,0" />
+        <TextBlock Grid.Column="3" Text="{Binding LastUpdate, StringFormat='Updated: {0:HH:mm:ss}'}"
+                   Foreground="#A0AEC0" Margin="10,0" />
+      </Grid>
+    </Border>
+  </Grid>
+
+  <UserControl.Styles>
+    <Style Selector="Button.chart-button">
+      <Setter Property="Background" Value="#4A5568" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Padding" Value="10,5" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style Selector="Button.chart-button:pointerover">
+      <Setter Property="Background" Value="#718096" />
+    </Style>
+  </UserControl.Styles>
+</UserControl>

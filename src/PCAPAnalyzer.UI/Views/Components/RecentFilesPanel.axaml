@@ -1,0 +1,186 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels.Components"
+             xmlns:svc="using:PCAPAnalyzer.UI.Services"
+             x:Class="PCAPAnalyzer.UI.Views.Components.RecentFilesPanel"
+             x:DataType="vm:RecentFilesViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.recent-file-item">
+            <Setter Property="Background" Value="#161B22" />
+            <Setter Property="BorderBrush" Value="#30363D" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Cursor" Value="Hand" />
+        </Style>
+
+        <Style Selector="Border.recent-file-item:pointerover">
+            <Setter Property="Background" Value="#1C2128" />
+            <Setter Property="BorderBrush" Value="#58A6FF" />
+        </Style>
+
+        <Style Selector="TextBlock.file-name">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="Medium" />
+            <Setter Property="Foreground" Value="#F0F6FC" />
+        </Style>
+
+        <Style Selector="TextBlock.file-detail">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#8B949E" />
+        </Style>
+
+        <Style Selector="TextBlock.pinned-badge">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Styles>
+
+    <Border Background="#0D1117"
+            BorderBrush="#30363D"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="16">
+
+        <Grid RowDefinitions="Auto,*,Auto">
+
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Text="📂 Recent Files"
+                               FontSize="16"
+                               FontWeight="Bold"
+                               Foreground="#F0F6FC" />
+
+                    <Button Grid.Column="1"
+                            Command="{Binding ClearAllFilesCommand}"
+                            IsVisible="{Binding HasRecentFiles}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Padding="8,4"
+                            ToolTip.Tip="Clear all recent files">
+                        <TextBlock Text="🗑️ Clear All"
+                                   FontSize="12"
+                                   Foreground="#8B949E" />
+                    </Button>
+                </Grid>
+
+                <TextBlock Text="Click a file to open it quickly"
+                           FontSize="12"
+                           Foreground="#8B949E" />
+            </StackPanel>
+
+            <!-- Recent Files List -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding RecentFiles}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="svc:RecentFileInfo">
+                            <Border Classes="recent-file-item">
+                                <Border.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="📌 Pin/Unpin"
+                                                  Command="{Binding $parent[UserControl].((vm:RecentFilesViewModel)DataContext).TogglePinCommand}"
+                                                  CommandParameter="{Binding}" />
+                                        <MenuItem Header="🗑️ Remove from List"
+                                                  Command="{Binding $parent[UserControl].((vm:RecentFilesViewModel)DataContext).RemoveFileCommand}"
+                                                  CommandParameter="{Binding}" />
+                                        <Separator />
+                                        <MenuItem Header="📋 Copy Path"
+                                                  Click="OnCopyPathClick" />
+                                    </ContextMenu>
+                                </Border.ContextMenu>
+
+                                <Grid ColumnDefinitions="Auto,*,Auto"
+                                      RowDefinitions="Auto,Auto"
+                                      PointerPressed="OnRecentFileClick">
+
+                                    <!-- Pin Icon -->
+                                    <TextBlock Grid.Column="0"
+                                               Grid.RowSpan="2"
+                                               Text="{Binding PinIcon}"
+                                               Classes="pinned-badge"
+                                               Margin="0,0,8,0"
+                                               IsVisible="{Binding IsPinned}" />
+
+                                    <!-- File Name -->
+                                    <TextBlock Grid.Column="1"
+                                               Grid.Row="0"
+                                               Text="{Binding FileName}"
+                                               Classes="file-name"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip.Tip="{Binding Tooltip}" />
+
+                                    <!-- File Details -->
+                                    <StackPanel Grid.Column="1"
+                                                Grid.Row="1"
+                                                Orientation="Horizontal"
+                                                Spacing="12"
+                                                Margin="0,4,0,0">
+                                        <TextBlock Classes="file-detail">
+                                            <Run Text="📊" />
+                                            <Run Text="{Binding PacketCountFormatted}" />
+                                        </TextBlock>
+
+                                        <TextBlock Classes="file-detail">
+                                            <Run Text="💾" />
+                                            <Run Text="{Binding FileSizeFormatted}" />
+                                        </TextBlock>
+
+                                        <TextBlock Classes="file-detail">
+                                            <Run Text="⏱️" />
+                                            <Run Text="{Binding AnalysisDurationFormatted}" />
+                                        </TextBlock>
+                                    </StackPanel>
+
+                                    <!-- Access Time -->
+                                    <TextBlock Grid.Column="2"
+                                               Grid.RowSpan="2"
+                                               Text="{Binding RelativeAccessTime}"
+                                               Classes="file-detail"
+                                               VerticalAlignment="Center"
+                                               Margin="12,0,0,0" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Empty State -->
+            <StackPanel Grid.Row="1"
+                        Spacing="12"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        IsVisible="{Binding !HasRecentFiles}">
+                <TextBlock Text="📂"
+                           FontSize="48"
+                           HorizontalAlignment="Center"
+                           Opacity="0.5" />
+                <TextBlock Text="No recent files"
+                           FontSize="14"
+                           Foreground="#8B949E"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="Open a PCAP file to get started"
+                           FontSize="12"
+                           Foreground="#8B949E"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Footer Hint -->
+            <Border Grid.Row="2"
+                    Background="#161B22"
+                    BorderBrush="#30363D"
+                    BorderThickness="0,1,0,0"
+                    Padding="0,12,0,0"
+                    Margin="0,12,0,0"
+                    IsVisible="{Binding HasRecentFiles}">
+                <TextBlock Text="💡 Tip: Right-click to pin favorites or remove files"
+                           FontSize="11"
+                           Foreground="#6E7681"
+                           FontStyle="Italic" />
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

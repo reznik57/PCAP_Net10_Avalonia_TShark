@@ -1,0 +1,111 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels.Components"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
+             x:Class="PCAPAnalyzer.UI.Views.Components.AnomalySummaryView"
+             x:DataType="vm:AnomalySummaryViewModel">
+
+    <Border Classes="card" Padding="16" IsVisible="{Binding IsVisible}">
+        <StackPanel Spacing="12">
+            <!-- Header -->
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Security Overview" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                </StackPanel>
+                <Button Grid.Column="1" Command="{Binding ViewAllAnomaliesCommand}"
+                        Classes="link-button" Content="View All"
+                        IsVisible="{Binding HasAnomalies}"/>
+            </Grid>
+
+            <!-- Severity Counts -->
+            <Grid ColumnDefinitions="*,*,*,*" IsVisible="{Binding HasAnomalies}">
+                <!-- Critical -->
+                <Button Grid.Column="0" Command="{Binding ViewBySeverityCommand}" CommandParameter="Critical"
+                        Classes="severity-badge critical" HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="!!" FontSize="12" FontWeight="Bold" Foreground="#F85149"/>
+                        <TextBlock Text="{Binding CriticalCount}" FontWeight="Bold" Foreground="#F85149"/>
+                        <TextBlock Text="Critical" FontSize="10" Foreground="#8B949E"/>
+                    </StackPanel>
+                </Button>
+                <!-- High -->
+                <Button Grid.Column="1" Command="{Binding ViewBySeverityCommand}" CommandParameter="High"
+                        Classes="severity-badge high" HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="!" FontSize="12" FontWeight="Bold" Foreground="#F0883E"/>
+                        <TextBlock Text="{Binding HighCount}" FontWeight="Bold" Foreground="#F0883E"/>
+                        <TextBlock Text="High" FontSize="10" Foreground="#8B949E"/>
+                    </StackPanel>
+                </Button>
+                <!-- Medium -->
+                <Button Grid.Column="2" Command="{Binding ViewBySeverityCommand}" CommandParameter="Medium"
+                        Classes="severity-badge medium" HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="~" FontSize="12" FontWeight="Bold" Foreground="#D29922"/>
+                        <TextBlock Text="{Binding MediumCount}" FontWeight="Bold" Foreground="#D29922"/>
+                        <TextBlock Text="Medium" FontSize="10" Foreground="#8B949E"/>
+                    </StackPanel>
+                </Button>
+                <!-- Low -->
+                <Button Grid.Column="3" Command="{Binding ViewBySeverityCommand}" CommandParameter="Low"
+                        Classes="severity-badge low" HorizontalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="-" FontSize="12" FontWeight="Bold" Foreground="#58A6FF"/>
+                        <TextBlock Text="{Binding LowCount}" FontWeight="Bold" Foreground="#58A6FF"/>
+                        <TextBlock Text="Low" FontSize="10" Foreground="#8B949E"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- Top Threats List -->
+            <ItemsControl ItemsSource="{Binding TopThreats}" IsVisible="{Binding HasAnomalies}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Background="#161B22" CornerRadius="4" Padding="8" Margin="0,2">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <TextBlock Grid.Column="0" Text="{Binding SeverityIcon}" Margin="0,0,8,0"
+                                           Foreground="{Binding SeverityColor}" FontWeight="Bold"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold"
+                                               Foreground="#F0F6FC" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Description}" FontSize="10"
+                                               Foreground="#8B949E" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- No Anomalies State -->
+            <StackPanel IsVisible="{Binding !HasAnomalies}" HorizontalAlignment="Center" Spacing="4">
+                <TextBlock Text="OK" FontSize="24" Foreground="#3FB950" HorizontalAlignment="Center" FontWeight="Bold"/>
+                <TextBlock Text="No anomalies detected" FontSize="12" Foreground="#8B949E"/>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+
+    <UserControl.Styles>
+        <Style Selector="Button.severity-badge">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.severity-badge:pointerover">
+            <Setter Property="Background" Value="#21262D"/>
+        </Style>
+        <Style Selector="Button.link-button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="#58A6FF"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.link-button:pointerover">
+            <Setter Property="Foreground" Value="#79C0FF"/>
+        </Style>
+    </UserControl.Styles>
+</UserControl>

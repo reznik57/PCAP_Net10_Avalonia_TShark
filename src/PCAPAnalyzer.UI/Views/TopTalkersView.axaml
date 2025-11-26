@@ -1,0 +1,403 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+             xmlns:converters="using:PCAPAnalyzer.UI.Converters"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
+             x:Class="PCAPAnalyzer.UI.Views.TopTalkersView"
+             x:DataType="vm:TopTalkersViewModel">
+
+    <UserControl.Resources>
+        <converters:ByteFormatConverter x:Key="ByteFormatConverter"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Border.modern-card">
+            <Setter Property="Background" Value="#0D1117"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+
+        <Style Selector="Border.control-panel">
+            <Setter Property="Background" Value="#161B22"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="20"/>
+        </Style>
+
+        <Style Selector="ComboBox.view-selector">
+            <Setter Property="MinWidth" Value="180"/>
+            <Setter Property="Background" Value="#161B22"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+        </Style>
+
+        <Style Selector="Button.export-button">
+            <Setter Property="Background" Value="#238636"/>
+            <Setter Property="BorderBrush" Value="#2EA043"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+
+        <Style Selector="DataGridRow:selected">
+            <Setter Property="Background" Value="#1F6FEB40"/>
+        </Style>
+
+        <Style Selector="DataGridRow:pointerover">
+            <Setter Property="Background" Value="#30363D"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="Auto"/> <!-- Summary Stats -->
+            <RowDefinition Height="*"/>    <!-- Main Content -->
+        </Grid.RowDefinitions>
+
+        <!-- Header with Title -->
+        <Border Grid.Row="0" Classes="control-panel">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border Width="4" Height="24" Background="#3FB950" CornerRadius="2" Margin="0,0,12,0"/>
+                    <TextBlock Text="Top Talkers Report"
+                             FontSize="18"
+                             FontWeight="SemiBold"
+                             Foreground="#F0F6FC"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="View:" VerticalAlignment="Center" Foreground="#8B949E" FontSize="12"/>
+                    <ComboBox ItemsSource="{Binding ViewOptions}"
+                            SelectedItem="{Binding SelectedView}"
+                            Classes="view-selector"
+                            Width="160"/>
+
+                    <TextBlock Text="Metric:" VerticalAlignment="Center" Foreground="#8B949E" FontSize="12" Margin="16,0,0,0"/>
+                    <ComboBox ItemsSource="{Binding MetricOptions}"
+                            SelectedItem="{Binding SelectedMetric}"
+                            Classes="view-selector"
+                            Width="100"/>
+
+                    <TextBlock Text="Top:" VerticalAlignment="Center" Foreground="#8B949E" FontSize="12" Margin="16,0,0,0"/>
+                    <ComboBox ItemsSource="{Binding TopNOptions}"
+                            SelectedItem="{Binding TopN}"
+                            Classes="view-selector"
+                            Width="80"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Summary Statistics -->
+        <Border Grid.Row="1" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,0,1" Padding="20,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Total Packets" FontSize="10" Foreground="#8B949E" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding TotalPackets, StringFormat='{}{0:N0}'}"
+                             FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="Total Bytes" FontSize="10" Foreground="#8B949E" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding TotalBytesFormatted}"
+                             FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Unique Endpoints" FontSize="10" Foreground="#8B949E" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding UniqueEndpoints, StringFormat='{}{0:N0}'}"
+                             FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="3">
+                    <TextBlock Text="Top Talkers Coverage" FontSize="10" Foreground="#8B949E" Margin="0,0,0,4"/>
+                    <TextBlock Text="{Binding TopTalkersPercentage, StringFormat='{}{0:F1}%'}"
+                             FontSize="16" FontWeight="SemiBold" Foreground="#3FB950"/>
+                </StackPanel>
+
+                <Button Grid.Column="4"
+                       Command="{Binding ExportTopTalkersCommand}"
+                       IsEnabled="{Binding !IsExporting}"
+                       Classes="export-button"
+                       ToolTip.Tip="Export top talkers to CSV">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="📊" FontSize="14"/>
+                        <TextBlock Text="Export CSV" FontSize="12"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" MinWidth="600"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*" MinWidth="400"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Panel: Top Talkers List or Conversations -->
+            <Border Grid.Column="0" Classes="modern-card-unified" Margin="12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,0,1" Height="48">
+                        <Grid Margin="20,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="3" Height="20" Background="#3FB950" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0} ({1} entries)">
+                                            <Binding Path="SelectedView"/>
+                                            <Binding Path="TopTalkers.Count"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Top Talkers DataGrid -->
+                    <DataGrid Grid.Row="1"
+                            ItemsSource="{Binding TopTalkers}"
+                            SelectedItem="{Binding SelectedTalker}"
+                            SelectionMode="Single"
+                            IsReadOnly="True"
+                            GridLinesVisibility="None"
+                            Background="#0D1117"
+                            RowBackground="#0D1117"
+                            HeadersVisibility="Column"
+                            CanUserSortColumns="True"
+                            CanUserResizeColumns="True"
+                            AutoGenerateColumns="False"
+                            Margin="0">
+
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="#" Binding="{Binding Rank}" Width="40" FontWeight="SemiBold"/>
+                            <DataGridTextColumn Header="Address" Binding="{Binding Address}" Width="140" FontWeight="Medium"/>
+                            <DataGridTextColumn Header="Country" Binding="{Binding Country}" Width="120"/>
+                            <DataGridTextColumn Header="Dir" Binding="{Binding Direction}" Width="80"/>
+                            <DataGridTextColumn Header="Sent Pkts" Binding="{Binding SentPackets, StringFormat='{}{0:N0}'}" Width="90"/>
+                            <DataGridTextColumn Header="Recv Pkts" Binding="{Binding ReceivedPackets, StringFormat='{}{0:N0}'}" Width="90"/>
+                            <DataGridTextColumn Header="Total Pkts" Binding="{Binding PacketCountFormatted}" Width="100" FontWeight="SemiBold"/>
+                            <DataGridTextColumn Header="Total Bytes" Binding="{Binding ByteCountFormatted}" Width="100" FontWeight="SemiBold"/>
+                            <DataGridTextColumn Header="Type" Binding="{Binding TypeDisplay}" Width="80"/>
+                            <DataGridTextColumn Header="" Binding="{Binding RiskIndicator}" Width="30" FontSize="16"/>
+                        </DataGrid.Columns>
+
+                        <DataGrid.Styles>
+                            <Style Selector="DataGridColumnHeader">
+                                <Setter Property="Background" Value="#161B22"/>
+                                <Setter Property="Foreground" Value="#8B949E"/>
+                                <Setter Property="FontSize" Value="11"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Padding" Value="8,12"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Setter Property="BorderBrush" Value="#30363D"/>
+                            </Style>
+
+                            <Style Selector="DataGridRow">
+                                <Setter Property="Height" Value="36"/>
+                                <Setter Property="Foreground" Value="#F0F6FC"/>
+                            </Style>
+
+                            <Style Selector="DataGridCell">
+                                <Setter Property="BorderThickness" Value="0"/>
+                                <Setter Property="Padding" Value="8,0"/>
+                            </Style>
+                        </DataGrid.Styles>
+                    </DataGrid>
+
+                    <!-- Conversations view is supported via ViewModel but not yet displayed in UI -->
+                    <!-- Future enhancement: Add separate conversations DataGrid -->
+                </Grid>
+            </Border>
+
+            <!-- Splitter -->
+            <GridSplitter Grid.Column="1"
+                        Background="#30363D"
+                        ResizeDirection="Columns"
+                        Width="5"/>
+
+            <!-- Right Panel: Detail View -->
+            <Border Grid.Column="2" Classes="modern-card-unified" Margin="0,12,12,12">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,0,1" Height="48">
+                        <Grid Margin="20,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="3" Height="20" Background="#1F6FEB" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                <TextBlock Text="Talker Details" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Detail Content -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="20" Spacing="20">
+
+                            <!-- Selected Talker Info -->
+                            <Border Background="#161B22" CornerRadius="6" Padding="16" IsVisible="{Binding SelectedTalker, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                <StackPanel Spacing="12">
+                                    <TextBlock Text="Selected Endpoint" FontSize="12" Foreground="#8B949E" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding SelectedTalker.Address}" FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Country" FontSize="10" Foreground="#8B949E"/>
+                                            <TextBlock Text="{Binding SelectedTalker.Country}" FontSize="12" Foreground="#F0F6FC"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Spacing="4">
+                                            <TextBlock Text="Type" FontSize="10" Foreground="#8B949E"/>
+                                            <TextBlock Text="{Binding SelectedTalker.TypeDisplay}" FontSize="12" Foreground="#F0F6FC"/>
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Spacing="4">
+                                            <TextBlock Text="Total Packets" FontSize="10" Foreground="#8B949E"/>
+                                            <TextBlock Text="{Binding SelectedTalker.PacketCountFormatted}" FontSize="14" FontWeight="SemiBold" Foreground="#3FB950"/>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Spacing="4">
+                                            <TextBlock Text="Total Bytes" FontSize="10" Foreground="#8B949E"/>
+                                            <TextBlock Text="{Binding SelectedTalker.ByteCountFormatted}" FontSize="14" FontWeight="SemiBold" Foreground="#3FB950"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Protocol Breakdown -->
+                            <Border Background="#161B22" CornerRadius="6" Padding="16" IsVisible="{Binding ProtocolBreakdown.Count}">
+                                <StackPanel Spacing="12">
+                                    <TextBlock Text="Protocol Breakdown" FontSize="12" Foreground="#8B949E" FontWeight="SemiBold"/>
+
+                                    <ItemsControl ItemsSource="{Binding ProtocolBreakdown}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Margin="0,4" Background="#0D1117" CornerRadius="4" Padding="12,8">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="80"/>
+                                                            <ColumnDefinition Width="*"/>
+                                                            <ColumnDefinition Width="80"/>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <TextBlock Grid.Column="0" Text="{Binding Protocol}" FontSize="12" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+
+                                                        <Border Grid.Column="1" Background="#21262D" CornerRadius="3" Height="16" VerticalAlignment="Center" Margin="8,0">
+                                                            <Border Background="#3FB950"
+                                                                   CornerRadius="3"
+                                                                   HorizontalAlignment="Left"
+                                                                   Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=100}"/>
+                                                        </Border>
+
+                                                        <TextBlock Grid.Column="2" Text="{Binding PercentageFormatted}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
+                                                    </Grid>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Conversations Involving This Talker -->
+                            <Border Background="#161B22" CornerRadius="6" Padding="16" IsVisible="{Binding TalkerConversations.Count}">
+                                <StackPanel Spacing="12">
+                                    <TextBlock FontSize="12" Foreground="#8B949E" FontWeight="SemiBold">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="Conversations ({0})">
+                                                <Binding Path="TalkerConversations.Count"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+
+                                    <ItemsControl ItemsSource="{Binding TalkerConversations}" MaxHeight="400">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Margin="0,4" Background="#0D1117" CornerRadius="4" Padding="12,8">
+                                                    <StackPanel Spacing="4">
+                                                        <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#F0F6FC">
+                                                            <Run Text="{Binding SourceAddress}"/>
+                                                            <Run Text=":" Foreground="#8B949E"/>
+                                                            <Run Text="{Binding SourcePort}"/>
+                                                            <Run Text="→" Foreground="#8B949E"/>
+                                                            <Run Text="{Binding DestinationAddress}"/>
+                                                            <Run Text=":" Foreground="#8B949E"/>
+                                                            <Run Text="{Binding DestinationPort}"/>
+                                                        </TextBlock>
+
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <TextBlock Grid.Column="0" Text="{Binding Protocol}" FontSize="10" Foreground="#3FB950" Margin="0,0,8,0"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding BytesFormatted}" FontSize="10" Foreground="#8B949E"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding State}" FontSize="10" Foreground="#8B949E"/>
+                                                        </Grid>
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Empty State -->
+                            <Border Background="#161B22" CornerRadius="6" Padding="40,60" IsVisible="{Binding SelectedTalker, Converter={x:Static ObjectConverters.IsNull}}">
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+                                    <TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" Opacity="0.5"/>
+                                    <TextBlock Text="Select a talker to view details"
+                                             FontSize="14"
+                                             Foreground="#8B949E"
+                                             HorizontalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

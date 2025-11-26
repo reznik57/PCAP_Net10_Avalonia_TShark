@@ -1,0 +1,99 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        x:Class="PCAPAnalyzer.UI.Views.DetailedTableWindow"
+        x:DataType="vm:DetailedTableViewModel"
+        Title="Detailed View"
+        WindowStartupLocation="CenterOwner"
+        SizeToContent="Manual"
+        CanResize="True"
+        Background="{DynamicResource BackgroundDark}">
+    
+    <Grid Margin="20,20,20,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Header -->
+            <RowDefinition Height="*"/>    <!-- Table -->
+            <RowDefinition Height="Auto"/> <!-- Status Bar -->
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Margin="0,0,0,20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="{Binding Title}" 
+                               FontSize="24" FontWeight="Bold" 
+                               Foreground="{DynamicResource TextPrimary}"/>
+                    <TextBlock Text="{Binding StatusMessage}" 
+                               FontSize="14" 
+                               Foreground="{DynamicResource TextSecondary}"
+                               Margin="0,5,0,0"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                    <Button Command="{Binding ExportToCsvCommand}"
+                            Content="Export CSV"
+                            IsEnabled="{Binding !IsExporting}"
+                            Classes="secondary"/>
+                    <Button Command="{Binding ExportToJsonCommand}"
+                            Content="Export JSON"
+                            IsEnabled="{Binding !IsExporting}"
+                            Classes="secondary"/>
+                    <Button Command="{Binding CloseCommand}"
+                            Content="Close"
+                            Click="OnCloseClicked"
+                            Classes="primary"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+        
+        <!-- Data Table -->
+        <Border Grid.Row="1"
+                Background="{DynamicResource BackgroundElevated}"
+                CornerRadius="8"
+                Padding="5,5,5,5">
+            <DataGrid Name="MainDataGrid"
+                     ItemsSource="{Binding Data}"
+                     AutoGenerateColumns="True"
+                     CanUserResizeColumns="True"
+                     CanUserSortColumns="True"
+                     CanUserReorderColumns="True"
+                     GridLinesVisibility="Horizontal"
+                     BorderThickness="0"
+                     IsReadOnly="True"
+                     Background="{DynamicResource BackgroundDark}"
+                     RowBackground="{DynamicResource BackgroundElevated}">
+            </DataGrid>
+        </Border>
+        
+        <!-- Status Bar -->
+        <Border Grid.Row="2"
+                Margin="0,15,0,0">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Status Text -->
+                <TextBlock Grid.Column="0"
+                          Text="{Binding StatusMessage}"
+                          VerticalAlignment="Center"
+                          Foreground="{DynamicResource TextSecondary}"/>
+                
+                <!-- Item Count -->
+                <TextBlock Grid.Column="1"
+                          Text="{Binding TotalItems, StringFormat='Total: {0:N0} items'}"
+                          VerticalAlignment="Center"
+                          Foreground="{DynamicResource TextPrimary}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

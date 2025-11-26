@@ -1,0 +1,118 @@
+
+
+
+# .NET SDK local cache
+.dotnet/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+# Test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+*.coverage
+*.coveragexml
+
+# NuGet Packages
+*.nupkg
+*.snupkg
+packages/
+!packages/build/
+*.nuget.props
+*.nuget.targets
+
+# PCAP Files (can be very large)
+*.pcap
+*.pcapng
+
+# Compressed archives
+*.tar.gz
+*.zip
+*.7z
+*.rar
+
+# Screenshots (archive in docs/screenshots/ directory)
+/*.jpg
+/*.png
+/*.jpeg
+/*.gif
+/*.bmp
+!docs/**/*.jpg
+!docs/**/*.png
+
+# Large binary files (keep out of git)
+*.exe
+*.dll
+*.pdb
+*.lib
+*.obj
+*.so
+*.dylib
+
+# IDE files
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Application specific
+PCAPAnalyzer-*.tar.gz
+
+# Code coverage
+coverage/
+TestResults/
+
+# Claude Flow generated files
+.claude/settings.local.json
+.mcp.json
+claude-flow.config.json
+.swarm/
+.hive-mind/
+memory/claude-flow-data.json
+memory/sessions/*
+!memory/sessions/README.md
+memory/agents/*
+!memory/agents/README.md
+coordination/memory_bank/*
+coordination/subtasks/*
+coordination/orchestration/*
+*.db
+*.db-journal
+*.db-wal
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+claude-flow
+claude-flow.bat
+claude-flow.ps1
+hive-mind-prompt-*.txt
+
+# Crash logs
+*.log
+pcap_crash.log
+
+# Git worktrees
+.worktrees/

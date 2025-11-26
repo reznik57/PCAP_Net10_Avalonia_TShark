@@ -1,0 +1,130 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PCAPAnalyzer.UI.Controls.ModernStatCard"
+             x:CompileBindings="False">
+    
+    <Border Classes="card fade-in" 
+            MinHeight="140"
+            Padding="24,24,24,24">
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                <GradientStop Offset="0" Color="{Binding GradientStart}"/>
+                <GradientStop Offset="1" Color="{Binding GradientEnd}"/>
+            </LinearGradientBrush>
+        </Border.Background>
+        
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Header with Icon -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Icon -->
+                <Border Grid.Column="0"
+                        Width="40" Height="40"
+                        CornerRadius="20"
+                        Background="#FFFFFF20"
+                        Margin="0,0,12,0">
+                    <Path Data="{Binding IconData}"
+                          Fill="White"
+                          Width="20" Height="20"
+                          Stretch="Uniform"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"/>
+                </Border>
+                
+                <!-- Title -->
+                <TextBlock Grid.Column="1"
+                           Text="{Binding Title}"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           Foreground="White"
+                           Opacity="0.9"
+                           VerticalAlignment="Center"/>
+                
+                <!-- Trend Indicator -->
+                <StackPanel Grid.Column="2" 
+                            Orientation="Horizontal" 
+                            Spacing="4"
+                            IsVisible="{Binding ShowTrend}">
+                    <Path Data="{Binding TrendIcon}"
+                          Fill="{Binding TrendColor}"
+                          Width="12" Height="12"
+                          Stretch="Uniform"/>
+                    <TextBlock Text="{Binding TrendValue}"
+                               FontSize="11"
+                               FontWeight="Medium"
+                               Foreground="{Binding TrendColor}"/>
+                </StackPanel>
+            </Grid>
+            
+            <!-- Main Value -->
+            <Grid Grid.Row="1" VerticalAlignment="Center" Margin="0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Column="0"
+                           Text="{Binding Value}"
+                           FontSize="36"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Classes="fade-in"/>
+                
+                <TextBlock Grid.Column="1"
+                           Text="{Binding Unit}"
+                           FontSize="16"
+                           Foreground="White"
+                           Opacity="0.7"
+                           VerticalAlignment="Bottom"
+                           Margin="8,0,0,6"/>
+            </Grid>
+            
+            <!-- Footer Info -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- Description -->
+                <TextBlock Grid.Column="0"
+                           Text="{Binding Description}"
+                           FontSize="12"
+                           Foreground="White"
+                           Opacity="0.7"/>
+                
+                <!-- Mini Chart (Optional) -->
+                <ItemsControl Grid.Column="1" 
+                              ItemsSource="{Binding SparklineData}"
+                              IsVisible="{Binding ShowSparkline}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="2"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Width="3" 
+                                    Height="20"
+                                    Background="White"
+                                    Opacity="0.5"
+                                    VerticalAlignment="Bottom"
+                                    CornerRadius="1"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

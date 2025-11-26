@@ -1,0 +1,37 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             x:Class="PCAPAnalyzer.UI.Controls.PopupChartView"
+             x:CompileBindings="False">
+    
+    <Panel>
+        <!-- Timeline Chart (Cartesian) -->
+        <Panel IsVisible="{Binding IsTimelineChart}">
+            <lvc:CartesianChart x:Name="TimelineChart"
+                               Series="{Binding CartesianSeries}"
+                               XAxes="{Binding ChartXAxes}"
+                               YAxes="{Binding ChartYAxes}"
+                               ZoomMode="X"
+                               MinHeight="400"
+                               LegendPosition="Bottom"/>
+        </Panel>
+        
+        <!-- Protocol Pie Chart -->
+        <Panel IsVisible="{Binding IsProtocolChart}">
+            <lvc:PieChart x:Name="ProtocolChart"
+                         Series="{Binding PieSeries}"
+                         MinHeight="400"
+                         LegendPosition="Bottom"/>
+        </Panel>
+        
+        <!-- Ports Bar Chart (Cartesian) -->
+        <Panel IsVisible="{Binding IsPortsChart}">
+            <lvc:CartesianChart x:Name="PortsChart"
+                               Series="{Binding CartesianSeries}"
+                               XAxes="{Binding ChartXAxes}"
+                               YAxes="{Binding ChartYAxes}"
+                               MinHeight="400"
+                               LegendPosition="Bottom"/>
+        </Panel>
+    </Panel>
+</UserControl>

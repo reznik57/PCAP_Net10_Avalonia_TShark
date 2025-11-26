@@ -1,0 +1,191 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
+        x:Class="PCAPAnalyzer.UI.Views.PacketNumbersDetailWindow"
+        x:DataType="vm:PacketNumbersDetailViewModel"
+        Title="Packet Details"
+        Width="600"
+        Height="400"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True">
+    
+    <Window.Styles>
+        <StyleInclude Source="/Styles/UnifiedDarkTheme.axaml"/>
+        
+        <Style Selector="Border.header-panel">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                        <GradientStop Offset="0" Color="#2A2A3A"/>
+                        <GradientStop Offset="1" Color="#1A1A24"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Padding" Value="20,20,20,20"/>
+            <Setter Property="BorderBrush" Value="#3A3A4A"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        </Style>
+        
+        <Style Selector="TextBlock.detail-label">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#B8D4E8"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+        </Style>
+        
+        <Style Selector="TextBlock.detail-value">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+    </Window.Styles>
+    
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Classes="header-panel">
+            <StackPanel>
+                <TextBlock Text="{Binding Title}" 
+                          FontSize="20" 
+                          FontWeight="Bold" 
+                          Foreground="#FFFFFF"
+                          Margin="0,0,0,10"/>
+                
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="0,0,20,0">
+                        <TextBlock Classes="detail-label" Text="Type:"/>
+                        <TextBlock Classes="detail-value" Text="{Binding EntryType}"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,20,0">
+                        <TextBlock Classes="detail-label" Text="Value:"/>
+                        <TextBlock Classes="detail-value" Text="{Binding EntryValue}"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,20,0">
+                        <TextBlock Classes="detail-label" Text="Total Packets:"/>
+                        <TextBlock Classes="detail-value" Text="{Binding TotalPackets, StringFormat='{}{0:N0}'}"/>
+                    </StackPanel>
+                    
+                    <StackPanel Grid.Column="3" Orientation="Horizontal">
+                        <TextBlock Classes="detail-label" Text="Total Bytes:"/>
+                        <TextBlock Classes="detail-value" Text="{Binding TotalBytesFormatted}"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </Border>
+        
+        <!-- Packet Numbers List -->
+        <Border Grid.Row="1" 
+                Background="#0A0A0F"
+                BorderBrush="#2A2A3A"
+                BorderThickness="1"
+                Margin="10,10,10,10"
+                CornerRadius="8"
+                Padding="10,10,10,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <TextBlock Grid.Row="0" 
+                          Text="Associated Packet Numbers"
+                          FontSize="14"
+                          FontWeight="SemiBold"
+                          Foreground="#B8D4E8"
+                          Margin="0,0,0,10"/>
+                
+                <ScrollViewer Grid.Row="1" 
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding PacketNumbers}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PacketNumberViewModel">
+                                <Border Background="#1A1A24"
+                                        BorderBrush="#3A3A4A"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Margin="3,3,3,3"
+                                        Padding="8,4"
+                                        ToolTip.Tip="{Binding PacketInfo}">
+                                    <TextBlock Text="{Binding Number, StringFormat='#{0}'}"
+                                              Foreground="#00D4FF"
+                                              FontFamily="Consolas,monospace"
+                                              FontSize="13"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+        
+        <!-- Footer with Actions -->
+        <Border Grid.Row="2" 
+                Background="#1A1A24"
+                BorderBrush="#3A3A4A"
+                BorderThickness="0,1,0,0"
+                Padding="20,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="5">
+                    <TextBlock Text="Display Range:" 
+                              VerticalAlignment="Center"
+                              Foreground="#B8D4E8"
+                              Margin="0,0,10,0"/>
+                    <ComboBox SelectedItem="{Binding DisplayRange}"
+                             MinWidth="100">
+                        <ComboBoxItem>All</ComboBoxItem>
+                        <ComboBoxItem>First 100</ComboBoxItem>
+                        <ComboBoxItem>First 500</ComboBoxItem>
+                        <ComboBoxItem>First 1000</ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
+                    <Button Content="Export List"
+                           Command="{Binding ExportCommand}"
+                           Background="#3B82F6"
+                           Foreground="White"
+                           Padding="12,6"/>
+                    <Button Content="Copy Numbers"
+                           Command="{Binding CopyCommand}"
+                           Background="#10B981"
+                           Foreground="White"
+                           Padding="12,6"/>
+                    <Button Content="Close"
+                           Click="CloseButton_Click"
+                           Background="#6B7280"
+                           Foreground="White"
+                           Padding="12,6"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

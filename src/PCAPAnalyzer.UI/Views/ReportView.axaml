@@ -1,0 +1,544 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
+             x:Class="PCAPAnalyzer.UI.Views.ReportView"
+             x:DataType="vm:ReportViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.report-card">
+            <Setter Property="Background" Value="#161B22"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="20,20,20,20"/>
+            <Setter Property="Margin" Value="0,0,0,16"/>
+        </Style>
+
+        <Style Selector="Border.config-section">
+            <Setter Property="Background" Value="#1C2128"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="16,16,16,16"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <Style Selector="TextBlock.section-title">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <Style Selector="Button.export-button">
+            <Setter Property="Background" Value="#238636"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style Selector="Button.export-button:pointerover">
+            <Setter Property="Background" Value="#2EA043"/>
+        </Style>
+
+        <Style Selector="CheckBox">
+            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Margin" Value="0,4"/>
+        </Style>
+
+        <Style Selector="Border.severity-badge">
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+        </Style>
+
+        <Style Selector="Border.finding-card">
+            <Setter Property="Background" Value="#1C2128"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="16,16,16,16"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Background="#0D1117">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="350"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Configuration Panel -->
+        <Border Grid.Column="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,1,0">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="20,20,20,20">
+                <StackPanel Spacing="20">
+                    <!-- Header -->
+                    <StackPanel>
+                        <TextBlock Text="📊 Report Generator" FontSize="20" FontWeight="Bold" Foreground="#F0F6FC"/>
+                        <TextBlock Text="Professional Network Analysis Reports" FontSize="12" Foreground="#8B949E" Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <!-- Report Type Selection -->
+                    <Border Classes="config-section">
+                        <StackPanel>
+                            <TextBlock Text="Report Type" FontWeight="SemiBold" Foreground="#F0F6FC" Margin="0,0,0,8"/>
+                            <ComboBox ItemsSource="{Binding ReportTypes}" 
+                                     SelectedItem="{Binding SelectedReportType}"
+                                     Width="280"
+                                     Background="#0D1117"
+                                     BorderBrush="#30363D"/>
+                            <TextBlock Text="Choose the report format based on your audience" 
+                                      FontSize="11" Foreground="#6B7280" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Report Sections -->
+                    <Border Classes="config-section">
+                        <StackPanel>
+                            <TextBlock Text="Report Sections" FontWeight="SemiBold" Foreground="#F0F6FC" Margin="0,0,0,8"/>
+                            <CheckBox IsChecked="{Binding IncludeExecutiveSummary}" Content="Executive Summary"/>
+                            <CheckBox IsChecked="{Binding IncludeSecurityFindings}" Content="Security Findings"/>
+                            <CheckBox IsChecked="{Binding IncludePerformanceAnalysis}" Content="Performance Analysis"/>
+                            <CheckBox IsChecked="{Binding IncludeComplianceCheck}" Content="Compliance Check"/>
+                            <CheckBox IsChecked="{Binding IncludeRecommendations}" Content="Recommendations"/>
+                            <CheckBox IsChecked="{Binding IncludeTechnicalDetails}" Content="Technical Details"/>
+                            <CheckBox IsChecked="{Binding IncludeRemediationTimeline}" Content="Remediation Timeline"/>
+                            <CheckBox IsChecked="{Binding IncludeNetworkDiagrams}" Content="Network Diagrams"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Advanced Options -->
+                    <Border Classes="config-section">
+                        <StackPanel>
+                            <TextBlock Text="Advanced Options" FontWeight="SemiBold" Foreground="#F0F6FC" Margin="0,0,0,8"/>
+                            <CheckBox IsChecked="{Binding IncludeRawData}" Content="Include Raw Data"/>
+                            <CheckBox IsChecked="{Binding IncludePacketSamples}" Content="Include Packet Samples"/>
+                            <CheckBox IsChecked="{Binding IncludeCostEstimates}" Content="Include Cost Estimates"/>
+                            
+                            <StackPanel Margin="0,12,0,0">
+                                <TextBlock Text="Minimum Severity" FontSize="12" Foreground="#8B949E" Margin="0,0,0,4"/>
+                                <ComboBox ItemsSource="{Binding SeverityLevels}" 
+                                         SelectedItem="{Binding MinimumSeverity}"
+                                         Width="280"
+                                         Background="#0D1117"
+                                         BorderBrush="#30363D"/>
+                            </StackPanel>
+
+                            <StackPanel Margin="0,12,0,0">
+                                <TextBlock Text="Max Findings per Category" FontSize="12" Foreground="#8B949E" Margin="0,0,0,4"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="50"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Slider Grid.Column="0" 
+                                           Value="{Binding MaxFindingsPerCategory}"
+                                           Minimum="5" Maximum="50" 
+                                           TickFrequency="5"
+                                           IsSnapToTickEnabled="True"/>
+                                    <TextBlock Grid.Column="1" 
+                                              Text="{Binding MaxFindingsPerCategory}" 
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              Foreground="#F0F6FC"/>
+                                </Grid>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Action Buttons -->
+                    <StackPanel Spacing="8">
+                        <Button Command="{Binding GenerateReportCommand}" 
+                               Classes="export-button"
+                               Width="280"
+                               IsEnabled="{Binding !IsGenerating}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="🔄" FontSize="14" IsVisible="{Binding IsGenerating}"/>
+                                <TextBlock Text="⚡" FontSize="14" IsVisible="{Binding !IsGenerating}"/>
+                                <TextBlock Text="Generate Report"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding ResetConfigurationCommand}" 
+                               Background="#1C2128"
+                               BorderBrush="#30363D"
+                               BorderThickness="1"
+                               Foreground="#8B949E"
+                               Padding="12,8"
+                               CornerRadius="6"
+                               Width="280">
+                            <TextBlock Text="Reset to Defaults"/>
+                        </Button>
+                    </StackPanel>
+
+                    <!-- Status -->
+                    <Border Background="#1C2128" CornerRadius="6" Padding="12,12,12,12">
+                        <StackPanel>
+                            <TextBlock Text="Status" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
+                            <TextBlock Text="{Binding GenerationStatus}" 
+                                      FontSize="12" Foreground="#58A6FF" 
+                                      TextWrapping="Wrap" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Report Preview/Display -->
+        <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="24,24,24,24">
+            <Grid>
+                <StackPanel IsVisible="{Binding HasReport}">
+                    <!-- Report Header -->
+                    <Border Classes="report-card">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                <GradientStop Color="#667eea" Offset="0"/>
+                                <GradientStop Color="#764ba2" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Network Security Analysis Report" 
+                                          FontSize="24" FontWeight="Bold" Foreground="White"/>
+                                <TextBlock Text="{Binding ReportGeneratedTime, StringFormat='Generated: {0}'}" 
+                                          FontSize="12" Foreground="#E0E0E0" Margin="0,8,0,0"/>
+                                <TextBlock Text="{Binding SelectedReportType, StringFormat='Type: {0} Report'}" 
+                                          FontSize="12" Foreground="#E0E0E0" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                                <Button Command="{Binding ExportHtmlCommand}" Classes="export-button">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="📄" FontSize="12"/>
+                                        <TextBlock Text="Export HTML"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ExportPdfCommand}" Classes="export-button" Background="#DC2626">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="📑" FontSize="12"/>
+                                        <TextBlock Text="Export PDF"/>
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{Binding ExportJsonCommand}" Classes="export-button" Background="#3B82F6">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="{}{}" FontSize="12"/>
+                                        <TextBlock Text="Export JSON"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Executive Summary -->
+                    <Border Classes="report-card" IsVisible="{Binding IncludeExecutiveSummary}">
+                        <StackPanel>
+                            <TextBlock Classes="section-title" Text="Executive Summary"/>
+                            
+                            <!-- Key Metrics Grid -->
+                            <Grid Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Security Score -->
+                                <Border Grid.Column="0" Background="#1C2128" CornerRadius="6" Padding="16,16,16,16" Margin="0,0,8,0">
+                                    <StackPanel>
+                                        <TextBlock Text="SECURITY SCORE" FontSize="10" FontWeight="Bold" 
+                                                  Foreground="#8B949E" Margin="0,0,0,8"/>
+                                        <TextBlock FontSize="32" FontWeight="Bold">
+                                            <TextBlock.Foreground>
+                                                <MultiBinding Converter="{x:Static BoolConverters.And}">
+                                                    <Binding Path="SecurityScore" Converter="{x:Static ObjectConverters.IsNotNull}"/>
+                                                </MultiBinding>
+                                            </TextBlock.Foreground>
+                                            <TextBlock.Text>
+                                                <MultiBinding StringFormat="{}{0:F0}">
+                                                    <Binding Path="SecurityScore"/>
+                                                </MultiBinding>
+                                            </TextBlock.Text>
+                                        </TextBlock>
+                                        <TextBlock Text="/100" FontSize="14" Foreground="#6B7280"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Risk Level -->
+                                <Border Grid.Column="1" Background="#1C2128" CornerRadius="6" Padding="16,16,16,16" Margin="4,0">
+                                    <StackPanel>
+                                        <TextBlock Text="RISK LEVEL" FontSize="10" FontWeight="Bold" 
+                                                  Foreground="#8B949E" Margin="0,0,0,8"/>
+                                        <TextBlock Text="{Binding OverallRiskLevel}" 
+                                                  FontSize="24" FontWeight="Bold" Foreground="#F59E0B"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Total Findings -->
+                                <Border Grid.Column="2" Background="#1C2128" CornerRadius="6" Padding="16,16,16,16" Margin="4,0">
+                                    <StackPanel>
+                                        <TextBlock Text="TOTAL FINDINGS" FontSize="10" FontWeight="Bold" 
+                                                  Foreground="#8B949E" Margin="0,0,0,8"/>
+                                        <TextBlock Text="{Binding TotalFindings}" 
+                                                  FontSize="32" FontWeight="Bold" Foreground="#3B82F6"/>
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Critical Issues -->
+                                <Border Grid.Column="3" Background="#1C2128" CornerRadius="6" Padding="16,16,16,16" Margin="8,0,0,0">
+                                    <StackPanel>
+                                        <TextBlock Text="CRITICAL" FontSize="10" FontWeight="Bold" 
+                                                  Foreground="#8B949E" Margin="0,0,0,8"/>
+                                        <TextBlock Text="{Binding CriticalFindings}" 
+                                                  FontSize="32" FontWeight="Bold" Foreground="#EF4444"/>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+
+                            <TextBlock Text="{Binding ExecutiveSummaryText}" 
+                                      FontSize="14" Foreground="#C9D1D9" 
+                                      TextWrapping="Wrap" LineHeight="24"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Security Findings -->
+                    <Border Classes="report-card" IsVisible="{Binding IncludeSecurityFindings}">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,16">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <TextBlock Grid.Column="0" Classes="section-title" Text="Security Findings"/>
+                                
+                                <!-- Severity Distribution -->
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="12">
+                                    <Border Background="#EF444420" CornerRadius="4" Padding="8,4">
+                                        <TextBlock Text="{Binding CriticalFindings, StringFormat='Critical: {0}'}" 
+                                                  FontSize="11" Foreground="#EF4444" FontWeight="Medium"/>
+                                    </Border>
+                                    <Border Background="#F59E0B20" CornerRadius="4" Padding="8,4">
+                                        <TextBlock Text="{Binding HighFindings, StringFormat='High: {0}'}" 
+                                                  FontSize="11" Foreground="#F59E0B" FontWeight="Medium"/>
+                                    </Border>
+                                    <Border Background="#3B82F620" CornerRadius="4" Padding="8,4">
+                                        <TextBlock Text="{Binding MediumFindings, StringFormat='Medium: {0}'}" 
+                                                  FontSize="11" Foreground="#3B82F6" FontWeight="Medium"/>
+                                    </Border>
+                                    <Border Background="#10B98120" CornerRadius="4" Padding="8,4">
+                                        <TextBlock Text="{Binding LowFindings, StringFormat='Low: {0}'}" 
+                                                  FontSize="11" Foreground="#10B981" FontWeight="Medium"/>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+
+                            <ItemsControl ItemsSource="{Binding SecurityFindings}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:SecurityFindingViewModel">
+                                        <Border Classes="finding-card">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <!-- Finding Header -->
+                                                <Grid Grid.Row="0" Margin="0,0,0,12">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                                        <Border Background="{Binding SeverityColor}" 
+                                                               CornerRadius="4" Padding="8,3">
+                                                            <TextBlock Text="{Binding Severity}" 
+                                                                      FontSize="11" FontWeight="Bold" Foreground="White"/>
+                                                        </Border>
+                                                        <TextBlock Text="{Binding Title}" 
+                                                                  FontSize="14" FontWeight="SemiBold" 
+                                                                  Foreground="#F0F6FC" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                    
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                                                        <TextBlock Text="{Binding RiskScore, StringFormat='Risk Score: {0:F0}'}" 
+                                                                  FontSize="11" Foreground="#8B949E" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="{Binding AffectedSystemsCount, StringFormat='🖥️ {0} systems'}" 
+                                                                  FontSize="11" Foreground="#F59E0B" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Grid>
+
+                                                <!-- Description -->
+                                                <TextBlock Grid.Row="1" Text="{Binding Description}" 
+                                                          FontSize="13" Foreground="#C9D1D9" 
+                                                          TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                                <!-- Remediation -->
+                                                <Border Grid.Row="2" Background="#10B98115" CornerRadius="4" Padding="12,12,12,12">
+                                                    <StackPanel>
+                                                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,6">
+                                                            <TextBlock Text="🔧" FontSize="12"/>
+                                                            <TextBlock Text="Remediation" FontWeight="SemiBold" 
+                                                                      FontSize="12" Foreground="#10B981"/>
+                                                            <Border Background="#F59E0B" CornerRadius="3" Padding="4,2">
+                                                                <TextBlock Text="{Binding RemediationPriority}" 
+                                                                          FontSize="10" Foreground="White"/>
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding RemediationSummary}" 
+                                                                  FontSize="12" Foreground="#C9D1D9" TextWrapping="Wrap"/>
+                                                    </StackPanel>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Recommendations -->
+                    <Border Classes="report-card" IsVisible="{Binding IncludeRecommendations}">
+                        <StackPanel>
+                            <TextBlock Classes="section-title" Text="Recommendations"/>
+                            
+                            <ItemsControl ItemsSource="{Binding Recommendations}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:RecommendationViewModel">
+                                        <Border Background="#1C2128" CornerRadius="6" Padding="16,16,16,16" Margin="0,0,0,12">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Grid.Column="0">
+                                                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,8">
+                                                        <Border Background="{Binding PriorityColor}" 
+                                                               CornerRadius="3" Padding="6,2">
+                                                            <TextBlock Text="{Binding Priority}" 
+                                                                      FontSize="10" FontWeight="Bold" Foreground="White"/>
+                                                        </Border>
+                                                        <TextBlock Text="{Binding Title}" 
+                                                                  FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                                    </StackPanel>
+                                                    <TextBlock Text="{Binding Description}" 
+                                                              FontSize="12" Foreground="#8B949E" 
+                                                              TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                                    <TextBlock FontSize="12" Foreground="#10B981">
+                                                        <TextBlock.Text>
+                                                            <MultiBinding StringFormat="✓ {0}">
+                                                                <Binding Path="Benefit"/>
+                                                            </MultiBinding>
+                                                        </TextBlock.Text>
+                                                    </TextBlock>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0">
+                                                    <TextBlock Text="{Binding ExpectedImprovement, StringFormat='+{0:F0}%'}" 
+                                                              FontSize="20" FontWeight="Bold" Foreground="#10B981" 
+                                                              HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="Improvement" FontSize="10" Foreground="#6B7280" 
+                                                              HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding EstimatedTimeframe}" 
+                                                              FontSize="11" Foreground="#8B949E" 
+                                                              HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Remediation Plan -->
+                    <Border Classes="report-card" IsVisible="{Binding IncludeRemediationTimeline}">
+                        <StackPanel>
+                            <TextBlock Classes="section-title" Text="Remediation Timeline"/>
+                            
+                            <ItemsControl ItemsSource="{Binding RemediationPhases}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:RemediationPhaseViewModel">
+                                        <Border Background="#1C2128" CornerRadius="6" Padding="16,16,16,16" Margin="0,0,0,12">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="60"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="Auto"/>
+                                                </Grid.ColumnDefinitions>
+
+                                                <!-- Phase Number -->
+                                                <Border Grid.Column="0" Background="#3B82F6" 
+                                                       Width="40" Height="40" CornerRadius="20">
+                                                    <TextBlock Text="{Binding PhaseNumber}" 
+                                                              FontSize="18" FontWeight="Bold" Foreground="White"
+                                                              HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+
+                                                <!-- Phase Details -->
+                                                <StackPanel Grid.Column="1" Margin="16,0,0,0">
+                                                    <TextBlock Text="{Binding Name}" 
+                                                              FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                                    <TextBlock Text="{Binding Description}" 
+                                                              FontSize="12" Foreground="#8B949E" Margin="0,4,0,0"/>
+                                                    <TextBlock FontSize="11" Foreground="#6B7280" Margin="0,4,0,0">
+                                                        <TextBlock.Text>
+                                                            <MultiBinding StringFormat="📅 {0} → {1}">
+                                                                <Binding Path="StartDate"/>
+                                                                <Binding Path="EndDate"/>
+                                                            </MultiBinding>
+                                                        </TextBlock.Text>
+                                                    </TextBlock>
+                                                </StackPanel>
+
+                                                <!-- Task Count -->
+                                                <Border Grid.Column="2" Background="#30363D" 
+                                                       CornerRadius="4" Padding="8,4">
+                                                    <TextBlock Text="{Binding TaskCount, StringFormat='{}{0} tasks'}" 
+                                                              FontSize="11" Foreground="#58A6FF"/>
+                                                </Border>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- No Report Message -->
+                <Border IsVisible="{Binding !HasReport}" 
+                       Background="#161B22" 
+                       CornerRadius="8" 
+                       Padding="40,40,40,40"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center">
+                    <StackPanel>
+                        <TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+                        <TextBlock Text="No Report Generated" 
+                                  FontSize="20" FontWeight="Bold" 
+                                  Foreground="#F0F6FC" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Configure report options and click 'Generate Report' to create a professional analysis report" 
+                                  FontSize="13" Foreground="#8B949E" 
+                                  HorizontalAlignment="Center" TextWrapping="Wrap" 
+                                  MaxWidth="400" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

@@ -1,0 +1,751 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+             xmlns:converters="using:PCAPAnalyzer.UI.Converters"
+             xmlns:components="using:PCAPAnalyzer.UI.Views.Components"
+             xmlns:ctrl="using:PCAPAnalyzer.UI.Views.Controls"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
+             x:Class="PCAPAnalyzer.UI.Views.ThreatsView"
+             x:DataType="vm:ThreatsViewModel">
+
+    <UserControl.Resources>
+        <converters:PercentageToGradientConverter x:Key="PercentageToGradientConverter"/>
+        <converters:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
+        <converters:TrafficIntensityGradientConverter x:Key="TrafficIntensityGradientConverter"/>
+        <converters:ThroughputModeConverter x:Key="ThroughputModeConverter"/>
+        <converters:PortTimelineCountConverter x:Key="PortTimelineCountConverter"/>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="Border.modern-card">
+            <Setter Property="Background" Value="#0D1117"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+        </Style>
+        <Style Selector="Border.table-header">
+            <Setter Property="Background" Value="#161B22"/>
+            <Setter Property="Height" Value="48"/>
+            <Setter Property="Padding" Value="0,0"/>
+        </Style>
+        <Style Selector="Border.stat-card-modern">
+            <Setter Property="Background" Value="#161B22"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="20,20,20,20"/>
+            <Setter Property="MinHeight" Value="100"/>
+        </Style>
+        <Style Selector="TextBlock.section-title">
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="Margin" Value="0,24,0,12"/>
+        </Style>
+        <Style Selector="Button.toggle-button">
+            <Setter Property="Background" Value="#1C2128"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
+        </Style>
+        <Style Selector="Button.toggle-button:pointerover">
+            <Setter Property="Background" Value="#22272E"/>
+        </Style>
+        <Style Selector="ToggleButton.toggle-button:checked">
+            <Setter Property="Background" Value="#238636"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <!-- Quick Filter Toggle Styles (OR-logic toggles for threat filtering) -->
+        <Style Selector="ToggleButton.quick-filter-toggle">
+            <Setter Property="Background" Value="#1C2128"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="ToggleButton.quick-filter-toggle:pointerover">
+            <Setter Property="Background" Value="#22272E"/>
+            <Setter Property="BorderBrush" Value="#8B5CF6"/>
+        </Style>
+        <Style Selector="ToggleButton.quick-filter-toggle:checked">
+            <Setter Property="Background" Value="#5B21B6"/>
+            <Setter Property="BorderBrush" Value="#8B5CF6"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="ToggleButton.quick-filter-toggle:checked:pointerover">
+            <Setter Property="Background" Value="#6D28D9"/>
+        </Style>
+        <Style Selector="Button.export-button">
+            <Setter Property="Background" Value="#238636"/>
+            <Setter Property="BorderBrush" Value="#2EA043"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+        <!-- Dashboard-compatible table styles -->
+        <Style Selector="Border.ranked-table-row">
+            <Setter Property="Background" Value="#161B22"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="Padding" Value="16,12"/>
+        </Style>
+        <Style Selector="Border.ranked-table-row:pointerover">
+            <Setter Property="Background" Value="#1C2128"/>
+        </Style>
+        <Style Selector="TextBlock.rank-number">
+            <Setter Property="Width" Value="25"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="#6B7280"/>
+            <Setter Property="TextAlignment" Value="Right"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Border.service-badge">
+            <Setter Property="Background" Value="#21262D"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Border.percentage-track">
+            <Setter Property="Background" Value="#21262D"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Height" Value="20"/>
+        </Style>
+        <Style Selector="TextBlock.percentage-text">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.details-btn">
+            <Setter Property="Background" Value="#21262D"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.details-btn:pointerover">
+            <Setter Property="Background" Value="#30363D"/>
+            <Setter Property="Foreground" Value="#F0F6FC"/>
+        </Style>
+        <Style Selector="Button.export-csv">
+            <Setter Property="Background" Value="#238636"/>
+            <Setter Property="BorderBrush" Value="#2EA043"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.export-csv:pointerover">
+            <Setter Property="Background" Value="#2EA043"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Background="#0D1117" ClipToBounds="True">
+        <!-- Main Content -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="24,24,24,24" Spacing="24" MaxWidth="{Binding $parent[Grid].Bounds.Width}">
+
+                <!-- FilterPanelControl (Dashboard pattern - INCLUDE/EXCLUDE filters) -->
+                <ctrl:FilterPanelControl DataContext="{Binding}" Margin="0,0,0,10" />
+
+                <!-- Threat-Specific Filters + Quick Filters (Combined) -->
+                <Border Classes="modern-card-unified" Padding="16,14" Margin="0,0,0,20">
+                    <Grid RowDefinitions="Auto,12,Auto,12,Auto,12,Auto">
+                        <!-- Header -->
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
+                            <Border Width="3" Height="18" Background="#EF4444" CornerRadius="1.5"/>
+                            <TextBlock Text="THREAT FILTERS" FontSize="13" FontWeight="Bold" Foreground="#EF4444" VerticalAlignment="Center"/>
+                            <Border Background="#1C2128" BorderBrush="#EF4444" BorderThickness="1" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                <TextBlock Text="ℹ️ Combined with network filters using AND logic" FontSize="9" Foreground="#F87171"/>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Threat Filter Inputs -->
+                        <Grid Grid.Row="2" ColumnDefinitions="180,16,200,16,*">
+                            <!-- Threat Severity -->
+                            <StackPanel Grid.Column="0" Spacing="4">
+                                <TextBlock Text="Severity" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E"/>
+                                <ComboBox SelectedItem="{Binding SelectedCategory}" ItemsSource="{Binding Categories}" PlaceholderText="All" Width="180" FontSize="12"/>
+                            </StackPanel>
+
+                            <!-- Threat Category -->
+                            <StackPanel Grid.Column="2" Spacing="4">
+                                <TextBlock Text="Category" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E"/>
+                                <ComboBox SelectedItem="{Binding SelectedThreatType}" ItemsSource="{Binding ThreatTypes}" PlaceholderText="All" Width="200" FontSize="12"/>
+                            </StackPanel>
+
+                            <!-- Search Threats -->
+                            <StackPanel Grid.Column="4" Spacing="4">
+                                <TextBlock Text="Search Threats" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E"/>
+                                <TextBox Text="{Binding SearchFilter}" Watermark="Search threat names, IPs, ports..." FontSize="12"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Divider -->
+                        <Border Grid.Row="3" Height="1" Background="#30363D"/>
+
+                        <!-- Quick Filter Toggles (OR logic within) -->
+                        <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="Quick (OR):" FontSize="10" FontWeight="SemiBold" Foreground="#8B5CF6" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                            <ToggleButton IsChecked="{Binding ShowCriticalOnly}" Classes="quick-filter-toggle" Padding="8,4" Height="24" ToolTip.Tip="Critical severity only">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="🔴" FontSize="10"/>
+                                    <TextBlock Text="Critical" FontSize="9"/>
+                                </StackPanel>
+                            </ToggleButton>
+                            <ToggleButton IsChecked="{Binding ShowHighOnly}" Classes="quick-filter-toggle" Padding="8,4" Height="24" ToolTip.Tip="High+ severity">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="🟠" FontSize="10"/>
+                                    <TextBlock Text="High+" FontSize="9"/>
+                                </StackPanel>
+                            </ToggleButton>
+                            <ToggleButton IsChecked="{Binding IsInsecureProtocolFilterActive}" Classes="quick-filter-toggle" Padding="8,4" Height="24" ToolTip.Tip="Insecure protocol usage (HTTP, Telnet, FTP)">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="🔓" FontSize="10"/>
+                                    <TextBlock Text="Insecure" FontSize="9"/>
+                                </StackPanel>
+                            </ToggleButton>
+                            <ToggleButton IsChecked="{Binding IsKnownCVEFilterActive}" Classes="quick-filter-toggle" Padding="8,4" Height="24" ToolTip.Tip="Known CVE vulnerabilities">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="🛡️" FontSize="10"/>
+                                    <TextBlock Text="CVEs" FontSize="9"/>
+                                </StackPanel>
+                            </ToggleButton>
+                            <ToggleButton IsChecked="{Binding IsWeakEncryptionFilterActive}" Classes="quick-filter-toggle" Padding="8,4" Height="24" ToolTip.Tip="Weak encryption (SSL, RC4, DES)">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="🔐" FontSize="10"/>
+                                    <TextBlock Text="Weak Crypto" FontSize="9"/>
+                                </StackPanel>
+                            </ToggleButton>
+                            <ToggleButton IsChecked="{Binding IsAuthIssuesFilterActive}" Classes="quick-filter-toggle" Padding="8,4" Height="24" ToolTip.Tip="Authentication issues">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="🔑" FontSize="10"/>
+                                    <TextBlock Text="Auth" FontSize="9"/>
+                                </StackPanel>
+                            </ToggleButton>
+                            <ToggleButton IsChecked="{Binding IsCleartextFilterActive}" Classes="quick-filter-toggle" Padding="8,4" Height="24" ToolTip.Tip="Cleartext/unencrypted data">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="📝" FontSize="10"/>
+                                    <TextBlock Text="Cleartext" FontSize="9"/>
+                                </StackPanel>
+                            </ToggleButton>
+                        </StackPanel>
+
+                        <!-- Divider -->
+                        <Border Grid.Row="5" Height="1" Background="#30363D"/>
+
+                        <!-- Apply/Clear Actions for Threat Filters -->
+                        <Grid Grid.Row="6" ColumnDefinitions="*,Auto,12,Auto">
+                            <TextBlock Grid.Column="0" Text="Click Apply to update threat list with selected filters" FontSize="10" Foreground="#6E7681" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Command="{Binding ApplyFilterCommand}" Classes="primary-action" Height="28" Padding="14,0">
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <TextBlock Text="⚡" FontSize="12"/>
+                                    <TextBlock Text="Apply Threat Filters" FontSize="11" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="3" Command="{Binding ClearLocalFiltersCommand}" Classes="secondary-action" Height="28" Padding="12,0">
+                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                    <TextBlock Text="🔄" FontSize="11"/>
+                                    <TextBlock Text="Clear" FontSize="11"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Active Quick Filter Chips (Purple theme) -->
+                <Border Background="#0D1117" BorderBrush="#8B5CF6" BorderThickness="2"
+                        CornerRadius="6" Padding="12,8" Margin="0,0,0,20"
+                        IsVisible="{Binding ActiveQuickFilterChips.Count}"
+                        BoxShadow="0 0 12 #8B5CF660">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="🔍" FontSize="11"/>
+                            <TextBlock Text="ACTIVE Quick Filters (OR logic):" FontSize="11" FontWeight="Bold" Foreground="#8B5CF6"/>
+                            <Border Background="#1C2128" BorderBrush="#8B5CF6" BorderThickness="1"
+                                    CornerRadius="4" Padding="6,2" VerticalAlignment="Center"
+                                    ToolTip.Tip="Quick filters use OR logic. Stats and charts reflect filtered threats only.">
+                                <TextBlock Text="ℹ️ Stats show filtered threats only" FontSize="9" Foreground="#A78BFA"/>
+                            </Border>
+                        </StackPanel>
+                        <ItemsControl ItemsSource="{Binding ActiveQuickFilterChips}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Background="#5B21B6" BorderBrush="#8B5CF6" BorderThickness="2"
+                                            CornerRadius="12" Padding="8,4" Margin="0,0,6,6"
+                                            BoxShadow="0 0 8 #8B5CF640">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding Emoji}" FontSize="10" VerticalAlignment="Center"/>
+                                            <TextBlock Text="{Binding DisplayLabel}" FontSize="10" Foreground="#F0F6FC" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                            <Button Command="{Binding RemoveCommand}"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Padding="4,0" Height="16" Width="16"
+                                                    ToolTip.Tip="Remove this filter">
+                                                <TextBlock Text="✕" Foreground="#F0F6FC" FontSize="10" FontWeight="Bold"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Security Risk Assessment - 6 Card Layout (Dashboard Pattern) -->
+                <Border Classes="modern-card-unified" Padding="0" Margin="0,0,0,20">
+                    <Grid RowDefinitions="Auto,Auto,Auto">
+                        <!-- Accent Bar -->
+                        <Border Grid.Row="0" Height="3" Background="#EF4444" CornerRadius="8,8,0,0"/>
+
+                        <!-- Header with Export -->
+                        <Border Grid.Row="1" Classes="table-header-unified">
+                            <Grid Margin="20,0" ColumnDefinitions="*,Auto">
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="SECURITY RISK ASSESSMENT" FontSize="13" FontWeight="Bold" Foreground="#E6EDF3"/>
+                                </StackPanel>
+                                <Button Grid.Column="1" Command="{Binding ExportThreatsCommand}" Classes="export-button">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="📥" FontSize="12"/>
+                                        <TextBlock Text="Export Report" FontSize="11"/>
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+                        </Border>
+
+                        <!-- 6 Stats Cards Row -->
+                        <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*,*,*" Margin="16,16,16,16">
+                            <Border Grid.Column="0" Classes="stat-card-modern" Margin="0,0,4,0">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="RISK LEVEL" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/>
+                                    <TextBlock Text="{Binding RiskLevel}" FontSize="24" FontWeight="SemiBold" Foreground="{Binding RiskLevelColor}"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="1" Classes="stat-card-modern" Margin="4,0">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="RISK SCORE" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/>
+                                    <TextBlock FontSize="24" FontWeight="SemiBold" Foreground="{Binding RiskLevelColor}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}{0:F1}/10">
+                                                <Binding Path="OverallRiskScore"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="2" Classes="stat-card-modern" Margin="4,0">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="CRITICAL" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/>
+                                    <TextBlock Text="{Binding CriticalThreats}" FontSize="24" FontWeight="SemiBold" Foreground="#DC2626"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="3" Classes="stat-card-modern" Margin="4,0">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="HIGH" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/>
+                                    <TextBlock Text="{Binding HighThreats}" FontSize="24" FontWeight="SemiBold" Foreground="#F59E0B"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="4" Classes="stat-card-modern" Margin="4,0">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="MEDIUM" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/>
+                                    <TextBlock Text="{Binding MediumThreats}" FontSize="24" FontWeight="SemiBold" Foreground="#FBBF24"/>
+                                </StackPanel>
+                            </Border>
+                            <Border Grid.Column="5" Classes="stat-card-modern" Margin="4,0,0,0">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="LOW" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/>
+                                    <TextBlock Text="{Binding LowThreats}" FontSize="24" FontWeight="SemiBold" Foreground="#10B981"/>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- Threat Timeline -->
+                <Border Classes="modern-card-unified" MinHeight="400">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <Border Grid.Row="0" Classes="table-header-unified">
+                            <Grid Margin="20,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#8B5CF6" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Threat Timeline" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <Button x:Name="ThreatZoomInButton" Click="OnThreatZoomIn" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom In"><TextBlock Text="🔍+" FontSize="12" Foreground="#8B949E"/></Button>
+                                    <Button x:Name="ThreatZoomOutButton" Click="OnThreatZoomOut" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom Out"><TextBlock Text="🔍-" FontSize="12" Foreground="#8B949E"/></Button>
+                                    <Button x:Name="ThreatZoomResetButton" Click="OnThreatZoomReset" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Reset Zoom"><TextBlock Text="⟲" FontSize="12" Foreground="#8B949E"/></Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <lvc:CartesianChart Grid.Row="1" x:Name="ThreatTimelineChart" Series="{Binding ThreatTimelineSeries}" XAxes="{Binding XAxes}" YAxes="{Binding YAxes}" ZoomMode="None" Height="320" Margin="20,20,20,10" TooltipPosition="Hidden" AnimationsSpeed="00:00:00.5" PointerPressed="OnThreatChartPointerPressed" PointerMoved="OnThreatChartPointerMoved" PointerExited="OnThreatChartPointerExited"/>
+                        <Border Grid.Row="2" Height="35" Margin="20,0,20,10" Background="#1C2128" CornerRadius="6" BorderBrush="#30363D" BorderThickness="1"><TextBlock x:Name="ThreatTooltipText" FontSize="12" FontWeight="Medium" Foreground="#F0F6FC" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,0"/></Border>
+                    </Grid>
+                </Border>
+
+                <!-- Threat Port Activity Timeline -->
+                <Border Classes="modern-card-unified" MinHeight="320">
+                    <Grid>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <Border Grid.Row="0" Classes="table-header-unified">
+                            <Grid Margin="20,0">
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#EF4444" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Threat Port Activity Over Time" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="0,0,8,0">
+                                    <ToggleButton IsChecked="{Binding Charts.ShowThreatPortActivityAsThroughput}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4"><TextBlock FontSize="11" Foreground="#8B949E"><TextBlock.Text><MultiBinding StringFormat="{}{0}"><Binding Path="Charts.ShowThreatPortActivityAsThroughput" Converter="{StaticResource ThroughputModeConverter}"/></MultiBinding></TextBlock.Text></TextBlock></ToggleButton>
+                                    <ToggleButton IsChecked="{Binding Charts.ShowTop10ThreatPortsTimeline}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4"><TextBlock FontSize="11" Foreground="#8B949E"><TextBlock.Text><MultiBinding StringFormat="{}{0}"><Binding Path="Charts.ShowTop10ThreatPortsTimeline" Converter="{StaticResource PortTimelineCountConverter}"/></MultiBinding></TextBlock.Text></TextBlock></ToggleButton>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                    <Button x:Name="ThreatPortZoomInButton" Click="OnThreatPortZoomIn" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom In"><TextBlock Text="🔍+" FontSize="12" Foreground="#8B949E"/></Button>
+                                    <Button x:Name="ThreatPortZoomOutButton" Click="OnThreatPortZoomOut" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom Out"><TextBlock Text="🔍-" FontSize="12" Foreground="#8B949E"/></Button>
+                                    <Button x:Name="ThreatPortZoomResetButton" Click="OnThreatPortZoomReset" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Reset Zoom"><TextBlock Text="⟲" FontSize="12" Foreground="#8B949E"/></Button>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <lvc:CartesianChart Grid.Row="1" x:Name="ThreatPortActivityChart" Series="{Binding Charts.ThreatPortActivitySeries}" XAxes="{Binding Charts.ThreatPortActivityXAxes}" YAxes="{Binding Charts.ThreatPortActivityYAxes}" Height="250" Margin="20,10,20,5" ZoomMode="None" TooltipPosition="Hidden" AnimationsSpeed="00:00:00.5" PointerPressed="OnThreatPortChartPointerPressed" PointerMoved="OnThreatPortChartPointerMoved" PointerExited="OnThreatPortChartPointerExited"/>
+                        <Border Grid.Row="2" Height="35" Margin="20,0,20,10" Background="#1C2128" CornerRadius="6" BorderBrush="#30363D" BorderThickness="1"><TextBlock x:Name="ThreatPortActivityTooltipText" FontSize="12" FontWeight="Medium" Foreground="#F0F6FC" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,0"/></Border>
+                    </Grid>
+                </Border>
+
+                <!-- Top Ports Tables -->
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+                    <!-- By Count -->
+                    <Border Grid.Column="0" Classes="modern-card-unified" Margin="0,0,12,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#10B981" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Affected Ports (by Count)" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportPortsByCountCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export affected ports by count to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopAffectedPortsByCount}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal"><TextBlock Text="{Binding Port}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC"/><TextBlock Text="/" FontSize="11" Foreground="#484F58" Margin="2,0"/><TextBlock Text="{Binding Protocol}" FontSize="11" Foreground="#8B949E"/></StackPanel>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding ServiceName}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding ThreatCountFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowPortDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!-- By Severity -->
+                    <Border Grid.Column="1" Classes="modern-card-unified" Margin="12,0,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#EF4444" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Affected Ports (by Severity)" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportPortsBySeverityCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export affected ports by severity to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopAffectedPortsBySeverity}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal"><TextBlock Text="{Binding Port}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC"/><TextBlock Text="/" FontSize="11" Foreground="#484F58" Margin="2,0"/><TextBlock Text="{Binding Protocol}" FontSize="11" Foreground="#8B949E"/></StackPanel>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding ServiceName}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding SeverityScoreFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#EF4444" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowPortDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Top Source IPs Tables -->
+                <Grid Margin="0,0,0,0">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+                    <!-- Source IPs -->
+                    <Border Grid.Column="0" Classes="modern-card-unified" Margin="0,0,12,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#F59E0B" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Source IPs" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportSourceIPsCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export source IPs to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopSourceIPs}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Address}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Address}"/>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding Country}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding ThreatCountFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#F59E0B" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowIPDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!-- Destination IPs -->
+                    <Border Grid.Column="1" Classes="modern-card-unified" Margin="12,0,0,0">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#3B82F6" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Destination IPs" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                    <Button Grid.Column="1" Command="{Binding ExportDestinationIPsCommand}" IsEnabled="{Binding !IsExporting}" Classes="export-csv" ToolTip.Tip="Export destination IPs to CSV"><StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel></Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding TopDestinationIPs}" Margin="0,8,0,8">
+                                    <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Classes="ranked-table-row">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="140"/><ColumnDefinition Width="70"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Address}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Address}"/>
+                                                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding Country}" FontSize="9" Foreground="#7D8590"/></Border>
+                                                    <Grid Grid.Column="3" Margin="8,0">
+                                                        <Border Classes="percentage-track">
+                                                            <Grid>
+                                                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                            </Grid>
+                                                        </Border>
+                                                    </Grid>
+                                                    <TextBlock Grid.Column="4" Text="{Binding ThreatCountFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#3B82F6" HorizontalAlignment="Right"/>
+                                                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowIPDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Security Threats Table -->
+                <Border Classes="modern-card-unified" Margin="0,0,0,0" MinHeight="300" Padding="0">
+                <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+                    <Border Grid.Row="0" Classes="table-header-unified">
+                        <Grid ColumnDefinitions="*,Auto,12,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                                <Border Classes="accent-bar" Background="#EF4444"/>
+                                <TextBlock Text="Security Threats" Classes="section-title-unified" Margin="0"/>
+                                <Border Classes="badge-unified">
+                                    <TextBlock Text="{Binding SecurityThreatsPagination.TotalItems, StringFormat='{}{0:N0}'}" Foreground="#EF4444"/>
+                                </Border>
+                            </StackPanel>
+                            <ComboBox Grid.Column="1" ItemsSource="{Binding SortOptions}" SelectedItem="{Binding SelectedSortOption}" Width="140" Background="#1C2128" BorderBrush="#30363D" VerticalAlignment="Center">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" FontSize="11"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                            <ComboBox Grid.Column="3" SelectedItem="{Binding SecurityThreatsPagination.PageSize}" ItemsSource="{Binding PageSizeOptions}" Width="80" Background="#1C2128" BorderBrush="#30363D" VerticalAlignment="Center">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" FontSize="11"/>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </Grid>
+                    </Border>
+
+                    <!-- Pagination Controls -->
+                    <Border Grid.Row="1" Classes="pagination-controls">
+                        <Grid ColumnDefinitions="*,Auto,*">
+                            <!-- Left side: Page info -->
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}">
+                                    <Run Text="Page"/><Run Text="{Binding SecurityThreatsPagination.CurrentPage}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/><Run Text="of"/><Run Text="{Binding SecurityThreatsPagination.TotalPages}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                    <Run Text="{Binding SecurityThreatsPagination.PageSize, StringFormat='({0} per page)'}" FontSize="10" Foreground="{DynamicResource TextMuted}"/>
+                                </TextBlock>
+                            </StackPanel>
+
+                            <!-- Center: Empty spacer -->
+                            <Border Grid.Column="1"/>
+
+                            <!-- Right: Navigation buttons -->
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
+                                <Button Content="⏮ First" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Command="{Binding SecurityThreatsPagination.GoToFirstPageCommand}" ToolTip.Tip="Go to first page"/>
+                                <Button Content="◀ Prev" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Command="{Binding SecurityThreatsPagination.GoToPreviousPageCommand}" ToolTip.Tip="Previous page"/>
+                                <Button Content="Next ▶" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Command="{Binding SecurityThreatsPagination.GoToNextPageCommand}" ToolTip.Tip="Next page"/>
+                                <Button Content="Last ⏭" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Command="{Binding SecurityThreatsPagination.GoToLastPageCommand}" ToolTip.Tip="Go to last page"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Column Headers -->
+                    <Border Grid.Row="2" Background="#0D1117" BorderBrush="#21262D" BorderThickness="0,0,0,1" Padding="20,8,20,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="40"/>   <!-- Rank -->
+                                <ColumnDefinition Width="300"/>  <!-- Threat Name + Description -->
+                                <ColumnDefinition Width="120"/>  <!-- Percentage -->
+                                <ColumnDefinition Width="150"/>  <!-- Source -->
+                                <ColumnDefinition Width="150"/>  <!-- Destination -->
+                                <ColumnDefinition Width="100"/>  <!-- Severity -->
+                                <ColumnDefinition Width="*"/>    <!-- Details -->
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="#" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="1" Text="THREAT" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="2" Text="PERCENTAGE" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="3" Text="SOURCE IP" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="4" Text="DESTINATION IP" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="5" Text="SEVERITY" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="6" Text="ACTIONS" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Threat List (ItemsControl) -->
+                    <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="600">
+                        <ItemsControl ItemsSource="{Binding SecurityThreatsPagination.PagedItems}" Margin="0,8,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Classes="ranked-table-row" Cursor="Hand">
+                                        <Grid ColumnDefinitions="4,*">
+                                            <!-- Severity Color Accent Bar -->
+                                            <Border Grid.Column="0"
+                                                    Background="{Binding SeverityColor}"
+                                                    CornerRadius="2,0,0,2"
+                                                    Margin="0,2,0,2"/>
+
+                                            <!-- Threat Data Columns -->
+                                            <Grid Grid.Column="1" Margin="8,0,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="32"/>   <!-- Rank -->
+                                                    <ColumnDefinition Width="300"/>  <!-- Threat Name + Description -->
+                                                    <ColumnDefinition Width="120"/>  <!-- Percentage -->
+                                                    <ColumnDefinition Width="150"/>  <!-- Source -->
+                                                    <ColumnDefinition Width="150"/>  <!-- Destination -->
+                                                    <ColumnDefinition Width="100"/>  <!-- Severity -->
+                                                    <ColumnDefinition Width="*"/>    <!-- Details -->
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Column="0" Text="{Binding Rank}" FontSize="13" FontWeight="SemiBold" Foreground="#7D8590" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding ThreatName}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                                    <TextBlock Text="{Binding Description}" FontSize="11" Foreground="#8B949E" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Description}"/>
+                                                </StackPanel>
+                                                <Grid Grid.Column="2" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                    <Border Classes="percentage-track">
+                                                        <Grid>
+                                                            <Border Background="{Binding SeverityColor}" CornerRadius="3" HorizontalAlignment="Left" Opacity="0.8"
+                                                                    Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=100}"/>
+                                                            <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </Grid>
+                                                <TextBlock Grid.Column="3" Text="{Binding SourceIPs[0]}" FontSize="12" FontWeight="Medium" Foreground="#58A6FF" FontFamily="Cascadia Code, Consolas, monospace" HorizontalAlignment="Left" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding SourceIPs[0]}"/>
+                                                <TextBlock Grid.Column="4" Text="{Binding DestinationIPs[0]}" FontSize="12" FontWeight="Medium" Foreground="#58A6FF" FontFamily="Cascadia Code, Consolas, monospace" HorizontalAlignment="Left" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding DestinationIPs[0]}"/>
+                                                <Border Grid.Column="5" Background="{Binding SeverityColor}" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Severity}" FontSize="11" FontWeight="SemiBold" Foreground="White"/>
+                                                </Border>
+                                                <Button Grid.Column="6" Classes="secondary-action" Height="28" Padding="12,0" HorizontalAlignment="Left" VerticalAlignment="Center"
+                                                        Command="{Binding $parent[ItemsControl].DataContext.ShowThreatDetailsCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        ToolTip.Tip="{Binding OccurrenceCount, StringFormat='{}{0:N0} packets'}">
+                                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                                        <TextBlock Text="📋" FontSize="11"/>
+                                                        <TextBlock Text="Details" FontSize="11"/>
+                                                    </StackPanel>
+                                                </Button>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Bottom Pagination Summary (optional) -->
+                    <Border Grid.Row="4" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,1,0,0" Padding="20,12" IsVisible="{Binding SecurityThreatsPagination.TotalPages, Converter={StaticResource IntToBoolConverter}}">
+                        <TextBlock VerticalAlignment="Center" Foreground="#8B949E" FontSize="12" Text="{Binding SecurityThreatsPagination.PageInfo}"/>
+                    </Border>
+                </Grid>
+            </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- DrillDown Overlay Panel (Dashboard pattern) -->
+        <Border IsVisible="{Binding DrillDown.IsVisible}" Background="#80000000" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                <components:ThreatsDrillDownView DataContext="{Binding DrillDown}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

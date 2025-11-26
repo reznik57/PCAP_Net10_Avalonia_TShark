@@ -1,0 +1,398 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         UNIFIED COMPONENT LIBRARY - Single Source of Truth
+         All tabs use these styles for perfect harmonization
+         ═══════════════════════════════════════════════════════════════ -->
+
+    <!-- ═══ SPACING CONSTANTS ═══ -->
+    <Styles.Resources>
+        <x:Double x:Key="CardSpacing">24</x:Double>
+        <x:Double x:Key="CardPadding">20</x:Double>
+        <x:Double x:Key="SectionMargin">16</x:Double>
+        <x:Double x:Key="GridColumnGap">12</x:Double>
+    </Styles.Resources>
+
+    <!-- ═══ UNIFIED CARD STYLE ═══ -->
+    <Style Selector="Border.modern-card-unified">
+        <Setter Property="Background" Value="#0D1117"/>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="20"/>
+        <Setter Property="ClipToBounds" Value="True"/>
+    </Style>
+
+    <!-- ═══ UNIFIED TABLE HEADER ═══ -->
+    <Style Selector="Border.table-header-unified">
+        <Setter Property="Background" Value="#161B22"/>
+        <Setter Property="Height" Value="48"/>
+        <Setter Property="Padding" Value="20,0"/>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+
+    <!-- ═══ UNIFIED DATAGRID STYLE ═══ -->
+    <Style Selector="DataGrid.modern-grid-unified">
+        <Setter Property="Background" Value="#0D1117"/>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="RowBackground" Value="#161B22"/>
+        <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+        <Setter Property="HorizontalGridLinesBrush" Value="#21262D"/>
+        <Setter Property="HeadersVisibility" Value="Column"/>
+        <Setter Property="CanUserSortColumns" Value="True"/>
+        <Setter Property="CanUserResizeColumns" Value="True"/>
+        <Setter Property="IsReadOnly" Value="True"/>
+        <Setter Property="SelectionMode" Value="Single"/>
+    </Style>
+
+    <!-- Alternating row background -->
+    <Style Selector="DataGrid.modern-grid-unified DataGridRow:nth-child(even)">
+        <Setter Property="Background" Value="#0D1117"/>
+    </Style>
+
+    <!-- DataGrid Header Style -->
+    <Style Selector="DataGrid.modern-grid-unified DataGridColumnHeader">
+        <Setter Property="Background" Value="#161B22"/>
+        <Setter Property="Foreground" Value="#8B949E"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="12,0"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+
+    <Style Selector="DataGrid.modern-grid-unified DataGridColumnHeader:pointerover">
+        <Setter Property="Background" Value="#21262D"/>
+        <Setter Property="Foreground" Value="#C9D1D9"/>
+    </Style>
+
+    <!-- DataGrid Row Selection -->
+    <Style Selector="DataGrid.modern-grid-unified DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
+        <Setter Property="Fill" Value="#1F4788"/>
+        <Setter Property="Opacity" Value="0.4"/>
+    </Style>
+
+    <Style Selector="DataGrid.modern-grid-unified DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
+        <Setter Property="Fill" Value="#21262D"/>
+        <Setter Property="Opacity" Value="1"/>
+    </Style>
+
+    <!-- DataGrid Cell Style -->
+    <Style Selector="DataGrid.modern-grid-unified DataGridCell">
+        <Setter Property="Foreground" Value="#C9D1D9"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Padding" Value="12,8"/>
+    </Style>
+
+    <!-- ═══ UNIFIED STAT CARD ═══ -->
+    <Style Selector="Border.stat-card-unified">
+        <Setter Property="Background" Value="#161B22"/>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="20"/>
+        <Setter Property="MinHeight" Value="100"/>
+    </Style>
+
+    <!-- ═══ UNIFIED LOADING INDICATOR ═══ -->
+    <Style Selector="Border.loading-unified">
+        <Setter Property="Background" Value="#161B22"/>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="20"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="ProgressBar.loading-progress-unified">
+        <Setter Property="Height" Value="8"/>
+        <Setter Property="Foreground" Value="#3B82F6"/>
+        <Setter Property="Background" Value="#21262D"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+
+    <!-- ═══ UNIFIED PAGINATION BUTTONS ═══ -->
+    <Style Selector="Button.pagination-btn">
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="Background" Value="#1C2128"/>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Foreground" Value="#8B949E"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
+    <Style Selector="Button.pagination-btn:pointerover">
+        <Setter Property="Background" Value="#22272E"/>
+        <Setter Property="BorderBrush" Value="#58A6FF"/>
+        <Setter Property="Foreground" Value="#C9D1D9"/>
+    </Style>
+
+    <Style Selector="Button.pagination-btn:disabled">
+        <Setter Property="Opacity" Value="0.4"/>
+        <Setter Property="Background" Value="#161B22"/>
+    </Style>
+
+    <!-- ═══ UNIFIED PAGE INFO TEXT ═══ -->
+    <Style Selector="TextBlock.pagination-info">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="#8B949E"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0,0,12,0"/>
+    </Style>
+
+    <!-- ═══ UNIFIED SECTION TITLE ═══ -->
+    <Style Selector="TextBlock.section-title-unified">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#F0F6FC"/>
+        <Setter Property="Margin" Value="0,0,0,16"/>
+    </Style>
+
+    <!-- ═══ UNIFIED ACCENT BAR (left border) ═══ -->
+    <Style Selector="Border.accent-bar">
+        <Setter Property="Width" Value="3"/>
+        <Setter Property="Height" Value="20"/>
+        <Setter Property="CornerRadius" Value="1.5"/>
+        <Setter Property="Margin" Value="0,0,12,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ═══ UNIFIED BADGE STYLE ═══ -->
+    <Style Selector="Border.badge-unified">
+        <Setter Property="Background" Value="#1C2128"/>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Border.badge-unified TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+
+    <!-- ═══ UNIFIED EXPORT BUTTON ═══ -->
+    <Style Selector="Button.export-btn-unified">
+        <Setter Property="Background" Value="#1C2128"/>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Foreground" Value="#8B949E"/>
+    </Style>
+
+    <Style Selector="Button.export-btn-unified:pointerover">
+        <Setter Property="Background" Value="#22272E"/>
+        <Setter Property="BorderBrush" Value="#58A6FF"/>
+        <Setter Property="Foreground" Value="#C9D1D9"/>
+    </Style>
+
+    <!-- ═══ UNIFIED SEPARATOR ═══ -->
+    <Style Selector="Separator.unified-separator">
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Background" Value="#30363D"/>
+        <Setter Property="Margin" Value="0,16"/>
+    </Style>
+
+    <!-- ═══ UNIFIED RANKED TABLE ROW ═══ -->
+    <Style Selector="Border.ranked-table-row">
+        <Setter Property="Margin" Value="20,2"/>
+        <Setter Property="Background" Value="#161B2220"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="8,4"/>
+    </Style>
+
+    <Style Selector="Border.ranked-table-row:pointerover">
+        <Setter Property="Background" Value="#21262D"/>
+    </Style>
+
+    <Style Selector="TextBlock.rank-number">
+        <Setter Property="Width" Value="30"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#F0F6FC"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Border.service-badge">
+        <Setter Property="Background" Value="#1C2128"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Padding" Value="4,2"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="Margin" Value="4,0"/>
+    </Style>
+
+    <Style Selector="Border.percentage-track">
+        <Setter Property="Background" Value="#21262D"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Height" Value="20"/>
+    </Style>
+
+    <Style Selector="TextBlock.percentage-text">
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Button.details-btn">
+        <Setter Property="Background" Value="#1C2128"/>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.details-btn:pointerover">
+        <Setter Property="Background" Value="#238636"/>
+        <Setter Property="BorderBrush" Value="#2EA043"/>
+    </Style>
+
+    <Style Selector="Button.details-btn:pointerover TextBlock">
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <Style Selector="Button.details-btn TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Foreground" Value="#8B949E"/>
+    </Style>
+
+    <!-- ═══ BOTTOM STATUS BAR ═══ -->
+    <Style Selector="Border.status-bar-unified">
+        <Setter Property="Background" Value="#161B22"/>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="0,1,0,0"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Padding" Value="12,0"/>
+    </Style>
+
+    <Style Selector="TextBlock.status-bar-label">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Foreground" Value="#8B949E"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0,0,6,0"/>
+    </Style>
+
+    <Style Selector="TextBlock.status-bar-value">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="#F0F6FC"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style Selector="Button.status-bar-btn">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.status-bar-btn:pointerover">
+        <Setter Property="Background" Value="#21262D"/>
+    </Style>
+
+    <Style Selector="Ellipse.status-indicator">
+        <Setter Property="Width" Value="8"/>
+        <Setter Property="Height" Value="8"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- ═══ FILE ANALYSIS VIEW BUTTON STYLES ═══ -->
+    <Style Selector="Button.primary-button">
+        <Setter Property="Background" Value="#1F6FEB"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderBrush" Value="#58A6FF"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.primary-button:pointerover">
+        <Setter Property="Background" Value="#388BFD"/>
+        <Setter Property="BorderBrush" Value="#79C0FF"/>
+    </Style>
+
+    <Style Selector="Button.primary-button:pressed">
+        <Setter Property="Background" Value="#1F6FEB"/>
+    </Style>
+
+    <Style Selector="Button.success-button">
+        <Setter Property="Background" Value="#238636"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderBrush" Value="#2EA043"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.success-button:pointerover">
+        <Setter Property="Background" Value="#2EA043"/>
+        <Setter Property="BorderBrush" Value="#3FB950"/>
+    </Style>
+
+    <Style Selector="Button.success-button:pressed">
+        <Setter Property="Background" Value="#238636"/>
+    </Style>
+
+    <Style Selector="Button.warning-button">
+        <Setter Property="Background" Value="#9E6A03"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderBrush" Value="#D29922"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.warning-button:pointerover">
+        <Setter Property="Background" Value="#BF8700"/>
+        <Setter Property="BorderBrush" Value="#E3B341"/>
+    </Style>
+
+    <Style Selector="Button.warning-button:pressed">
+        <Setter Property="Background" Value="#9E6A03"/>
+    </Style>
+
+    <Style Selector="Button.danger-button">
+        <Setter Property="Background" Value="#DA3633"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderBrush" Value="#F85149"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.danger-button:pointerover">
+        <Setter Property="Background" Value="#F85149"/>
+        <Setter Property="BorderBrush" Value="#FF7B72"/>
+    </Style>
+
+    <Style Selector="Button.danger-button:pressed">
+        <Setter Property="Background" Value="#DA3633"/>
+    </Style>
+
+</Styles>

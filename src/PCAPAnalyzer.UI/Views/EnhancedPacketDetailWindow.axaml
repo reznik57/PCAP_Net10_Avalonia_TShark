@@ -1,0 +1,461 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        x:Class="PCAPAnalyzer.UI.Views.EnhancedPacketDetailWindow"
+        x:DataType="vm:EnhancedPacketDetailViewModel"
+        Title="Packet Details"
+        Width="1200"
+        Height="800"
+        WindowStartupLocation="CenterOwner">
+
+    <Window.Styles>
+        <StyleInclude Source="/Styles/UnifiedDarkTheme.axaml"/>
+        
+        <Style Selector="Border.detail-header">
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                        <GradientStop Offset="0" Color="#1E293B"/>
+                        <GradientStop Offset="1" Color="#334155"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Padding" Value="20,20,20,20"/>
+            <Setter Property="BorderThickness" Value="0,0,0,2"/>
+            <Setter Property="BorderBrush" Value="#475569"/>
+        </Style>
+
+        <Style Selector="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+
+        <Style Selector="TabItem">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="15,10"/>
+        </Style>
+
+        <Style Selector="DataGrid">
+            <Setter Property="Background" Value="#0F172A"/>
+            <Setter Property="RowBackground" Value="#1E293B"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+
+        <Style Selector="Button.detail-button">
+            <Setter Property="Background" Value="#3B82F6"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Margin" Value="5,5,5,5"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+
+        <Style Selector="Button.detail-button:pointerover">
+            <Setter Property="Background" Value="#2563EB"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Classes="detail-header">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="{Binding Title}" 
+                               FontSize="24" 
+                               FontWeight="Bold" 
+                               Foreground="White"/>
+                    <TextBlock Text="{Binding FilterDescription}" 
+                               FontSize="14" 
+                               Foreground="#94A3B8"
+                               Margin="0,5,0,0"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <TextBlock Text="Total Packets: " 
+                                   Foreground="#94A3B8"/>
+                        <TextBlock Text="{Binding FilteredPacketCount}" 
+                                   FontWeight="Bold" 
+                                   Foreground="White"/>
+                        <TextBlock Text=" / " 
+                                   Foreground="#94A3B8"/>
+                        <TextBlock Text="{Binding TotalPacketCount}" 
+                                   Foreground="#94A3B8"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" 
+                            Orientation="Horizontal" 
+                            VerticalAlignment="Center">
+                    <TextBox Watermark="Quick filter..." 
+                             Width="200" 
+                             Margin="10,0"
+                             Text="{Binding QuickFilter}"/>
+                    <Button Content="Export" 
+                            Classes="detail-button"
+                            Command="{Binding ExportCommand}"/>
+                    <Button Content="Close" 
+                            Classes="detail-button"
+                            Click="OnCloseClick"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Content Tabs -->
+        <TabControl Grid.Row="1">
+            <!-- Packets Tab -->
+            <TabItem Header="Packets">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="200"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Packet List -->
+                    <DataGrid Grid.Row="0" 
+                              ItemsSource="{Binding FilteredPackets}"
+                              SelectedItem="{Binding SelectedPacket}"
+                              AutoGenerateColumns="False"
+                              CanUserSortColumns="True"
+                              CanUserResizeColumns="True">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Frame #" 
+                                                Binding="{Binding FrameNumber}" 
+                                                Width="80"/>
+                            <DataGridTextColumn Header="Time" 
+                                                Binding="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}" 
+                                                Width="120"/>
+                            <DataGridTextColumn Header="Source" 
+                                                Binding="{Binding SourceIP}" 
+                                                Width="150"/>
+                            <DataGridTextColumn Header="Src Port" 
+                                                Binding="{Binding SourcePort}" 
+                                                Width="80"/>
+                            <DataGridTextColumn Header="Destination" 
+                                                Binding="{Binding DestinationIP}" 
+                                                Width="150"/>
+                            <DataGridTextColumn Header="Dst Port" 
+                                                Binding="{Binding DestinationPort}" 
+                                                Width="80"/>
+                            <DataGridTextColumn Header="Protocol" 
+                                                Binding="{Binding Protocol}" 
+                                                Width="80"/>
+                            <DataGridTextColumn Header="Length" 
+                                                Binding="{Binding Length}" 
+                                                Width="80"/>
+                            <DataGridTextColumn Header="Info" 
+                                                Binding="{Binding Info}" 
+                                                Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <!-- Splitter -->
+                    <GridSplitter Grid.Row="1" 
+                                  Height="5" 
+                                  HorizontalAlignment="Stretch"
+                                  Background="#475569"/>
+
+                    <!-- Packet Details -->
+                    <Border Grid.Row="2" 
+                            Background="#0F172A" 
+                            Padding="10,10,10,10">
+                        <ScrollViewer>
+                            <StackPanel>
+                                <TextBlock Text="Packet Details" 
+                                           FontWeight="Bold" 
+                                           FontSize="16" 
+                                           Foreground="White"
+                                           Margin="0,0,0,10"/>
+                                <TextBlock Text="{Binding SelectedPacketDetails}" 
+                                           FontFamily="Consolas,Courier New,monospace"
+                                           Foreground="#94A3B8"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- Statistics Tab -->
+            <TabItem Header="Statistics">
+                <ScrollViewer>
+                    <Grid Margin="20,20,20,20">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Protocol Distribution -->
+                        <Border Grid.Row="0" Grid.Column="0" 
+                                Background="#1E293B" 
+                                CornerRadius="8" 
+                                Padding="15,15,15,15" 
+                                Margin="5,5,5,5">
+                            <StackPanel>
+                                <TextBlock Text="Protocol Distribution" 
+                                           FontWeight="Bold" 
+                                           FontSize="16" 
+                                           Foreground="White"
+                                           Margin="0,0,0,10"/>
+                                <ItemsControl ItemsSource="{Binding ProtocolStats}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:ProtocolStat">
+                                            <Grid Margin="0,5">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="100"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="60"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" 
+                                                           Text="{Binding Protocol}" 
+                                                           Foreground="#94A3B8"/>
+                                                <ProgressBar Grid.Column="1" 
+                                                             Value="{Binding Percentage}" 
+                                                             Maximum="100" 
+                                                             Height="20" 
+                                                             Margin="5,0"/>
+                                                <TextBlock Grid.Column="2" 
+                                                           Text="{Binding Count}" 
+                                                           Foreground="White" 
+                                                           HorizontalAlignment="Right"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Port Distribution -->
+                        <Border Grid.Row="0" Grid.Column="1" 
+                                Background="#1E293B" 
+                                CornerRadius="8" 
+                                Padding="15,15,15,15" 
+                                Margin="5,5,5,5">
+                            <StackPanel>
+                                <TextBlock Text="Top Ports" 
+                                           FontWeight="Bold" 
+                                           FontSize="16" 
+                                           Foreground="White"
+                                           Margin="0,0,0,10"/>
+                                <ItemsControl ItemsSource="{Binding TopPorts}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:TopPortViewModel">
+                                            <Grid Margin="0,5">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="120"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="60"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0" 
+                                                           Text="{Binding DisplayName}" 
+                                                           Foreground="#94A3B8"/>
+                                                <ProgressBar Grid.Column="1" 
+                                                             Value="{Binding Percentage}" 
+                                                             Maximum="100" 
+                                                             Height="20" 
+                                                             Margin="5,0"/>
+                                                <TextBlock Grid.Column="2" 
+                                                           Text="{Binding PacketCount}" 
+                                                           Foreground="White" 
+                                                           HorizontalAlignment="Right"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Time Distribution -->
+                        <Border Grid.Row="1" Grid.ColumnSpan="2" 
+                                Background="#1E293B" 
+                                CornerRadius="8" 
+                                Padding="15,15,15,15" 
+                                Margin="5,5,5,5">
+                            <StackPanel>
+                                <TextBlock Text="Packet Statistics" 
+                                           FontWeight="Bold" 
+                                           FontSize="16" 
+                                           Foreground="White"
+                                           Margin="0,0,0,10"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <StackPanel Grid.Column="0" Margin="10,10,10,10">
+                                        <TextBlock Text="{Binding TotalBytes}" 
+                                                   FontSize="24" 
+                                                   FontWeight="Bold" 
+                                                   Foreground="White"/>
+                                        <TextBlock Text="Total Bytes" 
+                                                   Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Grid.Column="1" Margin="10,10,10,10">
+                                        <TextBlock Text="{Binding AveragePacketSize}" 
+                                                   FontSize="24" 
+                                                   FontWeight="Bold" 
+                                                   Foreground="White"/>
+                                        <TextBlock Text="Avg Packet Size" 
+                                                   Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Grid.Column="2" Margin="10,10,10,10">
+                                        <TextBlock Text="{Binding Duration}" 
+                                                   FontSize="24" 
+                                                   FontWeight="Bold" 
+                                                   Foreground="White"/>
+                                        <TextBlock Text="Duration" 
+                                                   Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                    
+                                    <StackPanel Grid.Column="3" Margin="10,10,10,10">
+                                        <TextBlock Text="{Binding PacketsPerSecond}" 
+                                                   FontSize="24" 
+                                                   FontWeight="Bold" 
+                                                   Foreground="White"/>
+                                        <TextBlock Text="Packets/sec" 
+                                                   Foreground="#94A3B8"/>
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- TCP Analysis Tab (if TCP packets present) -->
+            <TabItem Header="TCP Analysis" IsVisible="{Binding HasTCPPackets}">
+                <ScrollViewer>
+                    <StackPanel Margin="20,20,20,20">
+                        <!-- TCP Anomalies -->
+                        <Border Background="#1E293B" 
+                                CornerRadius="8" 
+                                Padding="15,15,15,15" 
+                                Margin="5,5,5,5">
+                            <StackPanel>
+                                <TextBlock Text="TCP Anomalies Detected" 
+                                           FontWeight="Bold" 
+                                           FontSize="16" 
+                                           Foreground="White"
+                                           Margin="0,0,0,10"/>
+                                <DataGrid ItemsSource="{Binding TCPAnomalies}"
+                                          AutoGenerateColumns="False"
+                                          MaxHeight="300">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Type" 
+                                                            Binding="{Binding Type}" 
+                                                            Width="150"/>
+                                        <DataGridTextColumn Header="Severity" 
+                                                            Binding="{Binding Severity}" 
+                                                            Width="80"/>
+                                        <DataGridTextColumn Header="Description" 
+                                                            Binding="{Binding Description}" 
+                                                            Width="*"/>
+                                        <DataGridTextColumn Header="Affected" 
+                                                            Binding="{Binding AffectedPacketCount}" 
+                                                            Width="80"/>
+                                        <DataGridTemplateColumn Header="Action" Width="100">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate x:DataType="vm:TCPAnomalyViewModel">
+                                                    <Button Content="Details" 
+                                                            Command="{Binding ViewDetailsCommand}"
+                                                            Classes="detail-button"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- TCP Stream Analysis -->
+                        <Border Background="#1E293B" 
+                                CornerRadius="8" 
+                                Padding="15,15,15,15" 
+                                Margin="5,15,5,5">
+                            <StackPanel>
+                                <TextBlock Text="TCP Stream Analysis" 
+                                           FontWeight="Bold" 
+                                           FontSize="16" 
+                                           Foreground="White"
+                                           Margin="0,0,0,10"/>
+                                <DataGrid ItemsSource="{Binding TCPStreams}"
+                                          AutoGenerateColumns="False"
+                                          MaxHeight="300">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Stream" 
+                                                            Binding="{Binding StreamId}" 
+                                                            Width="200"/>
+                                        <DataGridTextColumn Header="Packets" 
+                                                            Binding="{Binding TotalPackets}" 
+                                                            Width="80"/>
+                                        <DataGridTextColumn Header="Retrans %" 
+                                                            Binding="{Binding RetransmissionRate, StringFormat='{}{0:F1}%'}" 
+                                                            Width="80"/>
+                                        <DataGridTextColumn Header="Loss %" 
+                                                            Binding="{Binding PacketLossRate, StringFormat='{}{0:F1}%'}" 
+                                                            Width="80"/>
+                                        <DataGridTextColumn Header="State" 
+                                                            Binding="{Binding State}" 
+                                                            Width="100"/>
+                                        <DataGridTemplateColumn Header="Action" Width="100">
+                                            <DataGridTemplateColumn.CellTemplate>
+                                                <DataTemplate x:DataType="vm:TCPStreamViewModel">
+                                                    <Button Content="Details" 
+                                                            Command="{Binding ViewDetailsCommand}"
+                                                            Classes="detail-button"/>
+                                                </DataTemplate>
+                                            </DataGridTemplateColumn.CellTemplate>
+                                        </DataGridTemplateColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+
+        <!-- Footer -->
+        <Border Grid.Row="2" 
+                Background="#1E293B" 
+                Padding="10,10,10,10"
+                BorderThickness="0,2,0,0"
+                BorderBrush="#475569">
+            <Grid>
+                <TextBlock Text="{Binding StatusMessage}" 
+                           Foreground="#94A3B8"
+                           VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" 
+                            HorizontalAlignment="Right">
+                    <Button Content="Refresh" 
+                            Command="{Binding RefreshCommand}"
+                            Classes="detail-button"/>
+                    <Button Content="Apply Filter" 
+                            Command="{Binding ApplyFilterCommand}"
+                            Classes="detail-button"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,286 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:PCAPAnalyzer.UI.ViewModels.Capture"
+        x:Class="PCAPAnalyzer.UI.Views.Capture.CaptureConfigurationDialog"
+        x:DataType="vm:CaptureConfigurationViewModel"
+        Title="Configure Live Capture"
+        Width="700"
+        Height="650"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        Background="{DynamicResource BackgroundDark}">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="Live Packet Capture Configuration"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Foreground="{DynamicResource TextPrimary}"/>
+            <TextBlock Text="Configure network interface, filters, and capture settings"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextSecondary}"
+                       Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <!-- Configuration Form -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="16">
+
+                <!-- Interface Selection -->
+                <Border Classes="card" Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Network Interface"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+
+                        <ComboBox ItemsSource="{Binding AvailableInterfaces}"
+                                  SelectedItem="{Binding SelectedInterface}"
+                                  HorizontalAlignment="Stretch"
+                                  IsEnabled="{Binding !IsLoading}">
+                            <ComboBox.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}"
+                                                   FontWeight="Medium"/>
+                                        <TextBlock Text="{Binding Description}"
+                                                   FontSize="10"
+                                                   Foreground="{DynamicResource TextMuted}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ComboBox.ItemTemplate>
+                        </ComboBox>
+
+                        <TextBlock Text="{Binding TsharkVersion, StringFormat='TShark version: {0}'}"
+                                   FontSize="10"
+                                   Foreground="{DynamicResource TextSecondary}"
+                                   IsVisible="{Binding IsTSharkAvailable}"/>
+
+                        <TextBlock Text="{Binding ErrorMessage}"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource AccentRed}"
+                                   IsVisible="{Binding !!ErrorMessage}"
+                                   TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Capture Filter -->
+                <Border Classes="card" Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Capture Filter (BPF Syntax)"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+
+                        <TextBox Text="{Binding CaptureFilter}"
+                                 Watermark="e.g., tcp port 80"
+                                 FontFamily="Consolas,Courier New,monospace"/>
+
+                        <TextBlock Text="{Binding FilterValidationMessage}"
+                                   FontSize="11"
+                                   Foreground="{Binding IsFilterValid, Converter={StaticResource BoolToSuccessErrorBrushConverter}}"/>
+
+                        <TextBlock Text="Common Filters:"
+                                   FontSize="11"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource TextMuted}"/>
+
+                        <ItemsControl ItemsSource="{Binding FilterTemplates}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Button Content="{Binding}"
+                                            Command="{Binding $parent[ItemsControl].((vm:CaptureConfigurationViewModel)DataContext).ApplyFilterTemplateCommand}"
+                                            CommandParameter="{Binding}"
+                                            FontSize="10"
+                                            FontFamily="Consolas,Courier New,monospace"
+                                            Margin="0,0,4,4"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Basic Settings -->
+                <Border Classes="card" Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Basic Settings"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+
+                        <CheckBox Content="Enable promiscuous mode (capture all network traffic)"
+                                  IsChecked="{Binding PromiscuousMode}"/>
+
+                        <CheckBox Content="Enable real-time analysis during capture"
+                                  IsChecked="{Binding EnableRealtimeAnalysis}"/>
+
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock Grid.Column="0"
+                                       Text="Snapshot length (bytes):"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+                            <ComboBox Grid.Column="1"
+                                      ItemsSource="{Binding SnapshotLengthPresets}"
+                                      SelectedItem="{Binding SnapshotLength}"/>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock Grid.Column="0"
+                                       Text="Buffer size (MB):"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+                            <NumericUpDown Grid.Column="1"
+                                           Value="{Binding BufferSizeMB}"
+                                           Minimum="1"
+                                           Maximum="1024"
+                                           Increment="10"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- File Management -->
+                <Border Classes="card" Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="File Management"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Grid.Column="0"
+                                       Text="Output directory:"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding OutputDirectory}"
+                                     IsReadOnly="True"/>
+                            <Button Grid.Column="2"
+                                    Content="Browse..."
+                                    Command="{Binding BrowseOutputDirectoryCommand}"
+                                    Margin="8,0,0,0"/>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock Grid.Column="0"
+                                       Text="File name prefix:"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+                            <TextBox Grid.Column="1"
+                                     Text="{Binding FileNamePrefix}"/>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Grid.Column="0"
+                                       Text="Max file size (MB):"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+                            <NumericUpDown Grid.Column="1"
+                                           Value="{Binding MaxFileSizeMB}"
+                                           Minimum="0"
+                                           Maximum="10000"
+                                           Increment="10"/>
+                            <TextBlock Grid.Column="2"
+                                       Text="(0 = unlimited)"
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0"/>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="Auto,*">
+                            <TextBlock Grid.Column="0"
+                                       Text="Max rolling files:"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+                            <NumericUpDown Grid.Column="1"
+                                           Value="{Binding MaxRollingFiles}"
+                                           Minimum="0"
+                                           Maximum="100"
+                                           Increment="1"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Capture Limits -->
+                <Border Classes="card" Padding="16">
+                    <StackPanel Spacing="12">
+                        <TextBlock Text="Capture Limits (Optional)"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Grid.Column="0"
+                                       Text="Max duration (seconds):"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+                            <NumericUpDown Grid.Column="1"
+                                           Value="{Binding MaxDurationSeconds}"
+                                           Minimum="0"
+                                           Maximum="86400"
+                                           Increment="60"/>
+                            <TextBlock Grid.Column="2"
+                                       Text="(0 = unlimited)"
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0"/>
+                        </Grid>
+
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock Grid.Column="0"
+                                       Text="Max packets:"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+                            <NumericUpDown Grid.Column="1"
+                                           Value="{Binding MaxPackets}"
+                                           Minimum="0"
+                                           Maximum="1000000000"
+                                           Increment="1000"/>
+                            <TextBlock Grid.Column="2"
+                                       Text="(0 = unlimited)"
+                                       FontSize="10"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       VerticalAlignment="Center"
+                                       Margin="8,0,0,0"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <Grid Grid.Row="2" Margin="0,20,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <Button Grid.Column="1"
+                    Content="Cancel"
+                    Width="100"
+                    Margin="0,0,8,0"
+                    Click="CancelButton_Click"/>
+
+            <Button Grid.Column="2"
+                    Content="Start Capture"
+                    Classes="primary-action"
+                    Width="120"
+                    Click="StartButton_Click"
+                    IsEnabled="{Binding IsTSharkAvailable}"/>
+        </Grid>
+    </Grid>
+</Window>

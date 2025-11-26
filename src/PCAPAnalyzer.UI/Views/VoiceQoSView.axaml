@@ -1,0 +1,558 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             xmlns:converters="using:PCAPAnalyzer.UI.Converters"
+             xmlns:ctrl="using:PCAPAnalyzer.UI.Views.Controls"
+             x:Class="PCAPAnalyzer.UI.Views.VoiceQoSView"
+             x:DataType="vm:VoiceQoSViewModel"
+             Background="{DynamicResource BackgroundDarkest}">
+
+    <UserControl.Resources>
+        <converters:TrafficIntensityGradientConverter x:Key="TrafficIntensityGradientConverter"/>
+        <converters:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
+
+        <!-- Reusable Endpoint Row Template (used by 6 sections) -->
+        <DataTemplate x:Key="EndpointRowTemplate">
+            <Border Classes="ranked-table-row">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition Width="70"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="100"/>
+                        <ColumnDefinition Width="60"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="{Binding Rank}" FontSize="11" Foreground="#6B7280" TextAlignment="Right" Margin="0,0,8,0"/>
+                    <TextBlock Grid.Column="1" Text="{Binding IPAddress}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding IPAddress}"/>
+                    <Border Grid.Column="2" Classes="service-badge"><TextBlock Text="{Binding Badge}" FontSize="9" Foreground="#7D8590"/></Border>
+
+                    <Grid Grid.Column="3" Margin="8,0">
+                        <Border Classes="percentage-track">
+                            <Grid>
+                                <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <TextBlock Grid.Column="4" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="12" FontWeight="SemiBold" Foreground="{Binding DataContext.EndpointColor, RelativeSource={RelativeSource AncestorType=Border}}" HorizontalAlignment="Right"/>
+                    <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowTopEndpointDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                </Grid>
+            </Border>
+        </DataTemplate>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <!-- Export Button Style -->
+        <Style Selector="Button.export-csv">
+            <Setter Property="Background" Value="#238636"/>
+            <Setter Property="BorderBrush" Value="#2EA043"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <Style Selector="ScrollViewer.fixed-height-table">
+            <Setter Property="Height" Value="440"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+        </Style>
+
+        <!-- Pagination Controls Template -->
+        <Style Selector="Border.pagination-controls">
+            <Setter Property="Background" Value="{DynamicResource BackgroundDark}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderColor}"/>
+            <Setter Property="BorderThickness" Value="0,1,0,0"/>
+            <Setter Property="Padding" Value="20,12"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Panel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <Grid Margin="24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- FilterPanelControl for sophisticated filtering -->
+            <ctrl:FilterPanelControl Grid.Row="0" DataContext="{Binding}" Margin="0,0,0,10" />
+
+            <!-- Quality Statistics -->
+            <Border Grid.Row="2" Classes="modern-card-unified" Padding="20" Margin="0,0,0,20">
+                <Grid ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,12,Auto,12,Auto,20,Auto">
+                    <!-- Accent Bar -->
+                    <Border Grid.Row="0" Grid.ColumnSpan="4" Height="3" Background="#8B5CF6" CornerRadius="2"/>
+                    <TextBlock Grid.Row="2" Grid.ColumnSpan="4" Text="QUALITY OVERVIEW" FontSize="13" FontWeight="Bold" Foreground="#E6EDF3"/>
+
+                    <!-- Row 1: Core Metrics -->
+                    <Border Grid.Row="4" Grid.Column="0" Classes="stat-card-modern" Margin="0,0,8,0">
+                        <StackPanel><TextBlock Text="TOTAL QoS PACKETS" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding TotalQoSPackets, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#3B82F6"/></StackPanel>
+                    </Border>
+                    <Border Grid.Row="4" Grid.Column="1" Classes="stat-card-modern" Margin="4,0">
+                        <StackPanel><TextBlock Text="HIGH LATENCY CONNS" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding HighLatencyCount, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#F59E0B"/></StackPanel>
+                    </Border>
+                    <Border Grid.Row="4" Grid.Column="2" Classes="stat-card-modern" Margin="4,0">
+                        <StackPanel><TextBlock Text="HIGH JITTER CONNS" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding HighJitterCount, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#EF4444"/></StackPanel>
+                    </Border>
+                    <Border Grid.Row="4" Grid.Column="3" Classes="stat-card-modern" Margin="8,0,0,0">
+                        <StackPanel><TextBlock Text="AVG LATENCY" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding AverageLatency, StringFormat='{}{0:F2} ms'}" FontSize="24" FontWeight="SemiBold" Foreground="#3B82F6"/></StackPanel>
+                    </Border>
+
+                    <!-- Row 2: Additional Metrics -->
+                    <Border Grid.Row="6" Grid.Column="0" Classes="stat-card-modern" Margin="0,0,8,0">
+                        <StackPanel><TextBlock Text="AVG JITTER" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding AverageJitter, StringFormat='{}{0:F2} ms'}" FontSize="24" FontWeight="SemiBold" Foreground="#10B981"/></StackPanel>
+                    </Border>
+                    <Border Grid.Row="6" Grid.Column="1" Classes="stat-card-modern" Margin="4,0">
+                        <StackPanel><TextBlock Text="MAX LATENCY" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding MaxLatency, StringFormat='{}{0:F2} ms'}" FontSize="24" FontWeight="SemiBold" Foreground="#F59E0B"/></StackPanel>
+                    </Border>
+                    <Border Grid.Row="6" Grid.Column="2" Classes="stat-card-modern" Margin="4,0">
+                        <StackPanel><TextBlock Text="MAX JITTER" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding MaxJitter, StringFormat='{}{0:F2} ms'}" FontSize="24" FontWeight="SemiBold" Foreground="#EF4444"/></StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Timeline Chart Section -->
+            <Border Grid.Row="3" Classes="modern-card-unified" Padding="24" Margin="0,0,0,24">
+                <StackPanel Spacing="16">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="📊" FontSize="18" VerticalAlignment="Center"/>
+                            <TextBlock Text="QoS Metrics Timeline" FontSize="16" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}" VerticalAlignment="Center"/>
+                            <Border Classes="badge badge-purple" VerticalAlignment="Center" Margin="8,0,0,0"><TextBlock Text="{Binding ChartsViewModel.TimeRange}" FontSize="11"/></Border>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                            <CheckBox Content="QoS" IsChecked="{Binding ChartsViewModel.ShowQoSPackets}" Foreground="#3FB950" FontSize="11" FontWeight="Medium"/>
+                            <Separator Width="1" Height="16" Background="#30363D" Margin="4,0"/>
+                            <CheckBox Content="Lat All" IsChecked="{Binding ChartsViewModel.ShowLatencyAll}" Foreground="#3B82F6" FontSize="11" FontWeight="Bold"/>
+                            <CheckBox Content="Lat Min" IsChecked="{Binding ChartsViewModel.ShowLatencyMin}" Foreground="#58A6FF" FontSize="11" FontWeight="Medium"/>
+                            <CheckBox Content="Lat P5" IsChecked="{Binding ChartsViewModel.ShowLatencyP5}" Foreground="#87CEEB" FontSize="11" FontWeight="Medium"/>
+                            <CheckBox Content="Lat Avg" IsChecked="{Binding ChartsViewModel.ShowLatencyAvg}" Foreground="#1F6FEB" FontSize="11" FontWeight="Medium"/>
+                            <CheckBox Content="Lat P95" IsChecked="{Binding ChartsViewModel.ShowLatencyP95}" Foreground="#4682B4" FontSize="11" FontWeight="Medium"/>
+                            <CheckBox Content="Lat Max" IsChecked="{Binding ChartsViewModel.ShowLatencyMax}" Foreground="#0969DA" FontSize="11" FontWeight="Medium"/>
+                            <Separator Width="1" Height="16" Background="#30363D" Margin="4,0"/>
+                            <CheckBox Content="Jit All" IsChecked="{Binding ChartsViewModel.ShowJitterAll}" Foreground="#FB923C" FontSize="11" FontWeight="Bold"/>
+                            <CheckBox Content="Jit Min" IsChecked="{Binding ChartsViewModel.ShowJitterMin}" Foreground="#FFA657" FontSize="11" FontWeight="Medium"/>
+                            <CheckBox Content="Jit P5" IsChecked="{Binding ChartsViewModel.ShowJitterP5}" Foreground="#FFFACD" FontSize="11" FontWeight="Medium"/>
+                            <CheckBox Content="Jit Avg" IsChecked="{Binding ChartsViewModel.ShowJitterAvg}" Foreground="#F85149" FontSize="11" FontWeight="Medium"/>
+                            <CheckBox Content="Jit P95" IsChecked="{Binding ChartsViewModel.ShowJitterP95}" Foreground="#FF6347" FontSize="11" FontWeight="Medium"/>
+                            <CheckBox Content="Jit Max" IsChecked="{Binding ChartsViewModel.ShowJitterMax}" Foreground="#DA3633" FontSize="11" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Grid>
+                    <lvc:CartesianChart Series="{Binding ChartsViewModel.TimelineSeries}" XAxes="{Binding ChartsViewModel.XAxes}" YAxes="{Binding ChartsViewModel.YAxes}" Height="320" Margin="20,20,20,10" ZoomMode="None" TooltipPosition="Hidden" AnimationsSpeed="00:00:00.5" Background="{DynamicResource BackgroundMedium}" PointerMoved="OnTimelineChartPointerMoved" PointerExited="OnTimelineChartPointerExited"/>
+                    <!-- Hover Tooltip -->
+                    <Border Background="{DynamicResource BackgroundMedium}" CornerRadius="6" Padding="12,8" Margin="20,4,20,0" HorizontalAlignment="Center">
+                        <TextBlock x:Name="TimelineTooltipText" FontSize="13" Foreground="{DynamicResource TextPrimary}" TextWrapping="NoWrap" TextAlignment="Center"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- QoS Traffic Section -->
+            <Border Grid.Row="4" Classes="modern-card-unified" Margin="0,0,0,20" MinHeight="300">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <Border Grid.Row="0" Classes="table-header-unified">
+                        <Grid Margin="20,0" ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="3" Height="20" Background="#10B981" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                <TextBlock Text="QoS-Marked Traffic" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                <Border Classes="badge badge-blue" Margin="12,0,0,0"><TextBlock Text="{Binding QosTrafficTotalItems, StringFormat='{}{0:N0} total'}" FontSize="11"/></Border>
+                                <Border Classes="badge badge-gray" Margin="6,0,0,0"><TextBlock Text="{Binding QosTraffic.Count, StringFormat='Showing {0:N0}'}" FontSize="11"/></Border>
+                            </StackPanel>
+                            <Button Grid.Column="1" Classes="export-csv" ToolTip.Tip="Export QoS traffic to CSV">
+                                <StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                        <ItemsControl ItemsSource="{Binding QosTraffic}" Margin="0,8,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Classes="ranked-table-row">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="50"/><ColumnDefinition Width="140"/><ColumnDefinition Width="140"/><ColumnDefinition Width="80"/><ColumnDefinition Width="120"/><ColumnDefinition Width="90"/><ColumnDefinition Width="100"/><ColumnDefinition Width="90"/><ColumnDefinition Width="90"/><ColumnDefinition Width="90"/><ColumnDefinition Width="60"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding RowNumber}" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding SourceIP}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding SourceIP}"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding DestinationIP}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding DestinationIP}"/>
+                                            <Border Grid.Column="3" Classes="service-badge"><TextBlock Text="{Binding Protocol}" FontSize="9" Foreground="#7D8590"/></Border>
+                                            <TextBlock Grid.Column="4" Text="{Binding QoSType}" FontSize="11" Foreground="#10B981" FontWeight="Medium" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding QoSType}"/>
+                                            <TextBlock Grid.Column="5" Text="{Binding DscpDisplay}" FontSize="11" Foreground="#8B949E" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="6" Text="{Binding PacketCount, StringFormat='{}{0:N0}'}" FontSize="12" FontWeight="SemiBold" Foreground="#10B981" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="7" Text="{Binding BytesFormatted}" FontSize="12" Foreground="#8B949E" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="8" Text="{Binding Duration}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="9" Text="{Binding PortRange}" FontSize="11" Foreground="#8B949E" VerticalAlignment="Center"/>
+                                            <Button Grid.Column="10" Command="{Binding $parent[UserControl].DataContext.ShowQoSDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2" Classes="pagination-controls">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="Per page:" FontSize="12" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <Button Content="30" FontSize="11" Padding="8,4" MinWidth="40" Classes="secondary-action" Click="QosPageSize30_Click"/>
+                                    <Button Content="100" FontSize="11" Padding="8,4" MinWidth="40" Classes="secondary-action" Click="QosPageSize100_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}">
+                                <Run Text="Page"/><Run Text="{Binding QosTrafficCurrentPage}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/><Run Text="of"/><Run Text="{Binding QosTrafficTotalPages}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                            </TextBlock>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                                <Button Content="⏮ First" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="QosFirstPage_Click" ToolTip.Tip="Go to first page"/>
+                                <Button Content="◀◀ -10" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="QosJumpBack10_Click" ToolTip.Tip="Jump back 10 pages"/>
+                                <Button Content="◀ Prev" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="QosPrevPage_Click" ToolTip.Tip="Previous page"/>
+                                <Button Content="Next ▶" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="QosNextPage_Click" ToolTip.Tip="Next page"/>
+                                <Button Content="+10 ▶▶" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="QosJumpForward10_Click" ToolTip.Tip="Jump forward 10 pages"/>
+                                <Button Content="Last ⏭" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="QosLastPage_Click" ToolTip.Tip="Go to last page"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Top QoS Endpoints (Sources + Destinations) -->
+            <Grid Grid.Row="5" Margin="0,0,0,20" ColumnDefinitions="*,24,*">
+                <Border Grid.Column="0" Classes="modern-card-unified">
+                    <Border Classes="modern-card-inner">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0" ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border Width="3" Height="20" Background="#10B981" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Top QoS Sources" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Classes="export-csv" ToolTip.Tip="Export QoS sources to CSV">
+                                        <StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding StatisticsViewModel.TopQoSSourcesExtended}" Margin="0,8,0,8" ItemTemplate="{StaticResource EndpointRowTemplate}"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Border>
+                <Border Grid.Column="2" Classes="modern-card-unified">
+                    <Border Classes="modern-card-inner">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0" ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border Width="3" Height="20" Background="#10B981" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Top QoS Destinations" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Classes="export-csv" ToolTip.Tip="Export QoS destinations to CSV">
+                                        <StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding StatisticsViewModel.TopQoSDestinationsExtended}" Margin="0,8,0,8" ItemTemplate="{StaticResource EndpointRowTemplate}"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Border>
+            </Grid>
+
+            <!-- High Latency Section -->
+            <Border Grid.Row="6" Classes="modern-card-unified" Margin="0,0,0,20" MinHeight="300">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <Border Grid.Row="0" Classes="table-header-unified">
+                        <Grid Margin="20,0" ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="3" Height="20" Background="#3B82F6" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                <TextBlock Text="High Latency Connections" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                <Border Classes="badge badge-blue" Margin="12,0,0,0"><TextBlock Text="{Binding LatencyTotalItems, StringFormat='{}{0:N0} total'}" FontSize="11"/></Border>
+                                <Border Classes="badge badge-gray" Margin="6,0,0,0"><TextBlock Text="{Binding HighLatencyConnections.Count, StringFormat='Showing {0:N0}'}" FontSize="11"/></Border>
+                                <TextBlock Text="{Binding LatencyThreshold, StringFormat='≥{0:F0} ms'}" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="12,0,0,0"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Classes="export-csv" ToolTip.Tip="Export latency connections to CSV">
+                                <StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                        <ItemsControl ItemsSource="{Binding HighLatencyConnections}" Margin="0,8,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Classes="ranked-table-row">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="50"/><ColumnDefinition Width="140"/><ColumnDefinition Width="140"/><ColumnDefinition Width="80"/><ColumnDefinition Width="100"/><ColumnDefinition Width="90"/><ColumnDefinition Width="90"/><ColumnDefinition Width="100"/><ColumnDefinition Width="90"/><ColumnDefinition Width="90"/><ColumnDefinition Width="80"/><ColumnDefinition Width="90"/><ColumnDefinition Width="90"/><ColumnDefinition Width="60"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding RowNumber}" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding SourceIP}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding SourceIP}"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding DestinationIP}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding DestinationIP}"/>
+                                            <Border Grid.Column="3" Classes="service-badge"><TextBlock Text="{Binding Protocol}" FontSize="9" Foreground="#7D8590"/></Border>
+                                            <TextBlock Grid.Column="4" Text="{Binding PortRange}" FontSize="11" Foreground="#8B949E" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="5" Text="{Binding MinLatencyFormatted}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="6" Text="{Binding P5LatencyFormatted}" FontSize="11" Foreground="#60A5FA" HorizontalAlignment="Right" VerticalAlignment="Center" ToolTip.Tip="5th percentile"/>
+                                            <TextBlock Grid.Column="7" Text="{Binding AverageLatencyFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#3B82F6" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="8" Text="{Binding P95LatencyFormatted}" FontSize="11" Foreground="#FB923C" HorizontalAlignment="Right" VerticalAlignment="Center" ToolTip.Tip="95th percentile"/>
+                                            <TextBlock Grid.Column="9" Text="{Binding MaxLatencyFormatted}" FontSize="11" Foreground="#F59E0B" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <Border Grid.Column="10" Background="{Binding SeverityColor}" CornerRadius="3" Padding="6,2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding LatencySeverity}" FontSize="9" FontWeight="SemiBold" Foreground="White"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="11" Text="{Binding PacketCount, StringFormat='{}{0:N0}'}" FontSize="12" FontWeight="SemiBold" Foreground="#3B82F6" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="12" Text="{Binding Duration}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <Button Grid.Column="13" Command="{Binding $parent[UserControl].DataContext.ShowLatencyDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2" Classes="pagination-controls">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="Per page:" FontSize="12" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <Button Content="30" FontSize="11" Padding="8,4" MinWidth="40" Classes="secondary-action" Click="LatencyPageSize30_Click"/>
+                                    <Button Content="100" FontSize="11" Padding="8,4" MinWidth="40" Classes="secondary-action" Click="LatencyPageSize100_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}">
+                                <Run Text="Page"/><Run Text="{Binding LatencyCurrentPage}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/><Run Text="of"/><Run Text="{Binding LatencyTotalPages}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                            </TextBlock>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                                <Button Content="⏮ First" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="LatencyFirstPage_Click" ToolTip.Tip="Go to first page"/>
+                                <Button Content="◀◀ -10" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="LatencyJumpBack10_Click" ToolTip.Tip="Jump back 10 pages"/>
+                                <Button Content="◀ Prev" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="LatencyPrevPage_Click" ToolTip.Tip="Previous page"/>
+                                <Button Content="Next ▶" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="LatencyNextPage_Click" ToolTip.Tip="Next page"/>
+                                <Button Content="+10 ▶▶" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="LatencyJumpForward10_Click" ToolTip.Tip="Jump forward 10 pages"/>
+                                <Button Content="Last ⏭" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="LatencyLastPage_Click" ToolTip.Tip="Go to last page"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Top Latency Endpoints -->
+            <Grid Grid.Row="6" Margin="0,0,0,20" ColumnDefinitions="*,24,*">
+                <Border Grid.Column="0" Classes="modern-card-unified">
+                    <Border Classes="modern-card-inner">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0" ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border Width="3" Height="20" Background="#3B82F6" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Top Latency Sources" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Classes="export-csv" ToolTip.Tip="Export latency sources to CSV">
+                                        <StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding StatisticsViewModel.TopLatencySourcesExtended}" Margin="0,8,0,8" ItemTemplate="{StaticResource EndpointRowTemplate}"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Border>
+                <Border Grid.Column="2" Classes="modern-card-unified">
+                    <Border Classes="modern-card-inner">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0" ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border Width="3" Height="20" Background="#3B82F6" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Top Latency Destinations" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Classes="export-csv" ToolTip.Tip="Export latency destinations to CSV">
+                                        <StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding StatisticsViewModel.TopLatencyDestinationsExtended}" Margin="0,8,0,8" ItemTemplate="{StaticResource EndpointRowTemplate}"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Border>
+            </Grid>
+
+            <!-- High Jitter Section -->
+            <Border Grid.Row="7" Classes="modern-card-unified" MinHeight="300">
+                <Grid RowDefinitions="Auto,*,Auto">
+                    <Border Grid.Row="0" Classes="table-header-unified">
+                        <Grid Margin="20,0" ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Width="3" Height="20" Background="#F59E0B" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                <TextBlock Text="High Jitter Connections" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                <Border Classes="badge badge-blue" Margin="12,0,0,0"><TextBlock Text="{Binding JitterTotalItems, StringFormat='{}{0:N0} total'}" FontSize="11"/></Border>
+                                <Border Classes="badge badge-gray" Margin="6,0,0,0"><TextBlock Text="{Binding HighJitterConnections.Count, StringFormat='Showing {0:N0}'}" FontSize="11"/></Border>
+                                <TextBlock Text="{Binding JitterThreshold, StringFormat='≥{0:F0} ms'}" FontSize="11" Foreground="{DynamicResource TextSecondary}" Margin="12,0,0,0"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Classes="export-csv" ToolTip.Tip="Export jitter connections to CSV">
+                                <StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel>
+                            </Button>
+                        </Grid>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                        <ItemsControl ItemsSource="{Binding HighJitterConnections}" Margin="0,8,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Classes="ranked-table-row">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="50"/><ColumnDefinition Width="140"/><ColumnDefinition Width="140"/><ColumnDefinition Width="80"/><ColumnDefinition Width="100"/><ColumnDefinition Width="90"/><ColumnDefinition Width="90"/><ColumnDefinition Width="100"/><ColumnDefinition Width="90"/><ColumnDefinition Width="90"/><ColumnDefinition Width="80"/><ColumnDefinition Width="90"/><ColumnDefinition Width="90"/><ColumnDefinition Width="60"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding RowNumber}" FontSize="11" FontWeight="Medium" Foreground="{DynamicResource TextMuted}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding SourceIP}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding SourceIP}"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding DestinationIP}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" ToolTip.Tip="{Binding DestinationIP}"/>
+                                            <Border Grid.Column="3" Classes="service-badge"><TextBlock Text="{Binding Protocol}" FontSize="9" Foreground="#7D8590"/></Border>
+                                            <TextBlock Grid.Column="4" Text="{Binding PortRange}" FontSize="11" Foreground="#8B949E" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="5" Text="{Binding MinJitterFormatted}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="6" Text="{Binding P5JitterFormatted}" FontSize="11" Foreground="#FB923C" HorizontalAlignment="Right" VerticalAlignment="Center" ToolTip.Tip="5th percentile"/>
+                                            <TextBlock Grid.Column="7" Text="{Binding AverageJitterFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#F59E0B" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="8" Text="{Binding P95JitterFormatted}" FontSize="11" Foreground="#F87171" HorizontalAlignment="Right" VerticalAlignment="Center" ToolTip.Tip="95th percentile"/>
+                                            <TextBlock Grid.Column="9" Text="{Binding MaxJitterFormatted}" FontSize="11" Foreground="#EF4444" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <Border Grid.Column="10" Background="{Binding SeverityColor}" CornerRadius="3" Padding="6,2" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding JitterSeverity}" FontSize="9" FontWeight="SemiBold" Foreground="White"/>
+                                            </Border>
+                                            <TextBlock Grid.Column="11" Text="{Binding PacketCount, StringFormat='{}{0:N0}'}" FontSize="12" FontWeight="SemiBold" Foreground="#F59E0B" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <TextBlock Grid.Column="12" Text="{Binding Duration}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            <Button Grid.Column="13" Command="{Binding $parent[UserControl].DataContext.ShowJitterDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <Border Grid.Row="2" Classes="pagination-controls">
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <TextBlock Text="Per page:" FontSize="12" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <Button Content="30" FontSize="11" Padding="8,4" MinWidth="40" Classes="secondary-action" Click="JitterPageSize30_Click"/>
+                                    <Button Content="100" FontSize="11" Padding="8,4" MinWidth="40" Classes="secondary-action" Click="JitterPageSize100_Click"/>
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}">
+                                <Run Text="Page"/><Run Text="{Binding JitterCurrentPage}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/><Run Text="of"/><Run Text="{Binding JitterTotalPages}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                            </TextBlock>
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                                <Button Content="⏮ First" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="JitterFirstPage_Click" ToolTip.Tip="Go to first page"/>
+                                <Button Content="◀◀ -10" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="JitterJumpBack10_Click" ToolTip.Tip="Jump back 10 pages"/>
+                                <Button Content="◀ Prev" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="JitterPrevPage_Click" ToolTip.Tip="Previous page"/>
+                                <Button Content="Next ▶" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="JitterNextPage_Click" ToolTip.Tip="Next page"/>
+                                <Button Content="+10 ▶▶" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="JitterJumpForward10_Click" ToolTip.Tip="Jump forward 10 pages"/>
+                                <Button Content="Last ⏭" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Click="JitterLastPage_Click" ToolTip.Tip="Go to last page"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Top Jitter Endpoints -->
+            <Grid Grid.Row="8" Margin="0,0,0,20" ColumnDefinitions="*,24,*">
+                <Border Grid.Column="0" Classes="modern-card-unified">
+                    <Border Classes="modern-card-inner">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0" ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border Width="3" Height="20" Background="#F59E0B" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Top Jitter Sources" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Classes="export-csv" ToolTip.Tip="Export jitter sources to CSV">
+                                        <StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding StatisticsViewModel.TopJitterSourcesExtended}" Margin="0,8,0,8" ItemTemplate="{StaticResource EndpointRowTemplate}"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Border>
+                <Border Grid.Column="2" Classes="modern-card-unified">
+                    <Border Classes="modern-card-inner">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0" Classes="table-header-unified">
+                                <Grid Margin="20,0" ColumnDefinitions="*,Auto">
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border Width="3" Height="20" Background="#F59E0B" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Top Jitter Destinations" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Classes="export-csv" ToolTip.Tip="Export jitter destinations to CSV">
+                                        <StackPanel Orientation="Horizontal" Spacing="6"><TextBlock Text="📊" FontSize="14"/><TextBlock Text="Export CSV" FontSize="12" FontWeight="Medium" Foreground="White"/></StackPanel>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                <ItemsControl ItemsSource="{Binding StatisticsViewModel.TopJitterDestinationsExtended}" Margin="0,8,0,8" ItemTemplate="{StaticResource EndpointRowTemplate}"/>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Border>
+            </Grid>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Packet Details Modal Dialog Overlay -->
+        <Border IsVisible="{Binding PopupViewModel.IsDetailDialogOpen}" Background="#AA000000" ZIndex="100">
+            <Border Width="1200" Height="700" Background="{DynamicResource BackgroundDark}" CornerRadius="12" BoxShadow="0 8 32 #40000000" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid RowDefinitions="Auto,*,Auto" Margin="0">
+                    <Border Grid.Row="0" Background="{DynamicResource BackgroundMedium}" Padding="24,16" CornerRadius="12,12,0,0" BorderBrush="{DynamicResource BorderPrimary}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="📦 Packet Details" FontSize="18" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
+                                <TextBlock Text="{Binding PopupViewModel.DetailTitle}" FontSize="13" Foreground="{DynamicResource TextMuted}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Command="{Binding CloseDetailDialogCommand}" Classes="secondary-action" Padding="12,8" VerticalAlignment="Top">
+                                <TextBlock Text="✖ Close" FontSize="13"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+                    <Border Grid.Row="1" Margin="24,16">
+                        <DataGrid ItemsSource="{Binding PopupViewModel.DetailPackets}" AutoGenerateColumns="False" CanUserSortColumns="True" CanUserResizeColumns="True" Classes="modern-grid" IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="FRAME #" Binding="{Binding FrameNumber}" Width="80" MinWidth="60"/>
+                                <DataGridTextColumn Header="TIMESTAMP" Binding="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}" Width="120" MinWidth="100"/>
+                                <DataGridTextColumn Header="SOURCE IP" Binding="{Binding SourceIP}" Width="150" MinWidth="120"/>
+                                <DataGridTextColumn Header="SRC PORT" Binding="{Binding SourcePort}" Width="90" MinWidth="70"/>
+                                <DataGridTextColumn Header="DEST IP" Binding="{Binding DestinationIP}" Width="150" MinWidth="120"/>
+                                <DataGridTextColumn Header="DST PORT" Binding="{Binding DestinationPort}" Width="90" MinWidth="70"/>
+                                <DataGridTextColumn Header="PROTOCOL" Binding="{Binding Protocol}" Width="100" MinWidth="80"/>
+                                <DataGridTextColumn Header="L7 PROTOCOL" Binding="{Binding L7Protocol}" Width="120" MinWidth="100"/>
+                                <DataGridTextColumn Header="LENGTH" Binding="{Binding Length, StringFormat='{}{0:N0}'}" Width="90" MinWidth="70"/>
+                                <DataGridTextColumn Header="INFO" Binding="{Binding Info}" Width="*" MinWidth="200"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Border>
+                    <Border Grid.Row="2" Background="{DynamicResource BackgroundMedium}" Padding="24,12" CornerRadius="0,0,12,12" BorderBrush="{DynamicResource BorderPrimary}" BorderThickness="0,1,0,0">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="{Binding PopupViewModel.DetailPackets.Count, StringFormat='Total Packets: {0:N0}'}" FontSize="13" Foreground="{DynamicResource TextSecondary}" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Command="{Binding CloseDetailDialogCommand}" Classes="primary-action" Padding="20,10">
+                                <TextBlock Text="Close" FontSize="13" FontWeight="Medium"/>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Border>
+        </Border>
+    </Panel>
+</UserControl>

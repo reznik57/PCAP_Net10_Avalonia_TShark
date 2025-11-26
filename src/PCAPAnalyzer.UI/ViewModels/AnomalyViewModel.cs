@@ -1,0 +1,263 @@
+using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.Core.Utilities;
+
+namespace PCAPAnalyzer.UI.ViewModels;
+
+/// <summary>
+/// ViewModel for the dedicated Anomalies analysis tab.
+/// Provides filtering, sorting, and detail view of detected anomalies.
+/// </summary>
+public partial class AnomalyViewModel : ObservableObject
+{
+    // ==================== DATA ====================
+
+    private IReadOnlyList<NetworkAnomaly> _allAnomalies = Array.Empty<NetworkAnomaly>();
+
+    [ObservableProperty]
+    private ObservableCollection<AnomalyDisplayItem> _filteredAnomalies = new();
+
+    [ObservableProperty]
+    private AnomalyDisplayItem? _selectedAnomaly;
+
+    // ==================== FILTER STATE ====================
+
+    [ObservableProperty] private bool _showCritical = true;
+    [ObservableProperty] private bool _showHigh = true;
+    [ObservableProperty] private bool _showMedium = true;
+    [ObservableProperty] private bool _showLow = false;
+
+    [ObservableProperty] private bool _filterNetwork = true;
+    [ObservableProperty] private bool _filterTcp = true;
+    [ObservableProperty] private bool _filterApplication = true;
+    [ObservableProperty] private bool _filterVoip = true;
+    [ObservableProperty] private bool _filterIot = true;
+    [ObservableProperty] private bool _filterSecurity = true;
+    [ObservableProperty] private bool _filterMalformed = true;
+
+    [ObservableProperty] private string _searchText = "";
+
+    // ==================== STATISTICS ====================
+
+    [ObservableProperty] private int _totalCount;
+    [ObservableProperty] private int _criticalCount;
+    [ObservableProperty] private int _highCount;
+    [ObservableProperty] private int _mediumCount;
+    [ObservableProperty] private int _lowCount;
+    [ObservableProperty] private int _filteredCount;
+
+    // ==================== NAVIGATION ====================
+
+    private readonly Action<string, string>? _navigateWithFilter;
+
+    public AnomalyViewModel(Action<string, string>? navigateWithFilter = null)
+    {
+        _navigateWithFilter = navigateWithFilter;
+    }
+
+    // ==================== PUBLIC METHODS ====================
+
+    /// <summary>
+    /// Update with new anomaly data from analysis.
+    /// </summary>
+    public void UpdateAnomalies(IReadOnlyList<NetworkAnomaly>? anomalies)
+    {
+        _allAnomalies = anomalies ?? Array.Empty<NetworkAnomaly>();
+
+        // Update counts
+        TotalCount = _allAnomalies.Count;
+        CriticalCount = _allAnomalies.Count(a => a.Severity == AnomalySeverity.Critical);
+        HighCount = _allAnomalies.Count(a => a.Severity == AnomalySeverity.High);
+        MediumCount = _allAnomalies.Count(a => a.Severity == AnomalySeverity.Medium);
+        LowCount = _allAnomalies.Count(a => a.Severity == AnomalySeverity.Low);
+
+        ApplyFilters();
+        DebugLogger.Log($"[AnomalyViewModel] Updated with {TotalCount} anomalies");
+    }
+
+    /// <summary>
+    /// Apply navigation filter (from Dashboard link).
+    /// </summary>
+    public void ApplyNavigationFilter(string? severity, string? category)
+    {
+        // Reset all filters first
+        ShowCritical = ShowHigh = ShowMedium = ShowLow = true;
+        FilterNetwork = FilterTcp = FilterApplication = FilterVoip = FilterIot = FilterSecurity = FilterMalformed = true;
+
+        // Apply severity filter if specified
+        if (!string.IsNullOrEmpty(severity))
+        {
+            ShowCritical = severity.Equals("Critical", StringComparison.OrdinalIgnoreCase);
+            ShowHigh = severity.Equals("High", StringComparison.OrdinalIgnoreCase);
+            ShowMedium = severity.Equals("Medium", StringComparison.OrdinalIgnoreCase);
+            ShowLow = severity.Equals("Low", StringComparison.OrdinalIgnoreCase);
+
+            // If a specific severity is selected, also show critical+ for context
+            if (ShowHigh) ShowCritical = true;
+            if (ShowMedium) { ShowCritical = true; ShowHigh = true; }
+        }
+
+        ApplyFilters();
+    }
+
+    /// <summary>
+    /// Clear all data.
+    /// </summary>
+    public void Clear()
+    {
+        _allAnomalies = Array.Empty<NetworkAnomaly>();
+        FilteredAnomalies.Clear();
+        SelectedAnomaly = null;
+        TotalCount = CriticalCount = HighCount = MediumCount = LowCount = FilteredCount = 0;
+    }
+
+    // ==================== FILTER LOGIC ====================
+
+    partial void OnShowCriticalChanged(bool value) => ApplyFilters();
+    partial void OnShowHighChanged(bool value) => ApplyFilters();
+    partial void OnShowMediumChanged(bool value) => ApplyFilters();
+    partial void OnShowLowChanged(bool value) => ApplyFilters();
+    partial void OnFilterNetworkChanged(bool value) => ApplyFilters();
+    partial void OnFilterTcpChanged(bool value) => ApplyFilters();
+    partial void OnFilterApplicationChanged(bool value) => ApplyFilters();
+    partial void OnFilterVoipChanged(bool value) => ApplyFilters();
+    partial void OnFilterIotChanged(bool value) => ApplyFilters();
+    partial void OnFilterSecurityChanged(bool value) => ApplyFilters();
+    partial void OnFilterMalformedChanged(bool value) => ApplyFilters();
+    partial void OnSearchTextChanged(string value) => ApplyFilters();
+
+    [SuppressMessage("Maintainability", "CA1502:Avoid excessive class coupling", Justification = "Filter method checks 4 severity + 7 category flags with search - complexity is inherent to multi-criteria filtering")]
+    private void ApplyFilters()
+    {
+        var filtered = _allAnomalies.AsEnumerable();
+
+        // Severity filter
+        filtered = filtered.Where(a =>
+            (ShowCritical && a.Severity == AnomalySeverity.Critical) ||
+            (ShowHigh && a.Severity == AnomalySeverity.High) ||
+            (ShowMedium && a.Severity == AnomalySeverity.Medium) ||
+            (ShowLow && a.Severity == AnomalySeverity.Low));
+
+        // Category filter
+        filtered = filtered.Where(a =>
+            (FilterNetwork && a.Category == AnomalyCategory.Network) ||
+            (FilterTcp && a.Category == AnomalyCategory.TCP) ||
+            (FilterApplication && a.Category == AnomalyCategory.Application) ||
+            (FilterVoip && a.Category == AnomalyCategory.VoIP) ||
+            (FilterIot && a.Category == AnomalyCategory.IoT) ||
+            (FilterSecurity && a.Category == AnomalyCategory.Security) ||
+            (FilterMalformed && a.Category == AnomalyCategory.Malformed));
+
+        // Search filter
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            var search = SearchText.Trim();
+            filtered = filtered.Where(a =>
+                (a.Type?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (a.Description?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (a.SourceIP?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (a.DestinationIP?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+
+        // Convert to display items
+        var items = filtered
+            .OrderByDescending(a => a.Severity)
+            .ThenByDescending(a => a.DetectedAt)
+            .Select(a => new AnomalyDisplayItem(a))
+            .ToList();
+
+        FilteredAnomalies = new ObservableCollection<AnomalyDisplayItem>(items);
+        FilteredCount = items.Count;
+    }
+
+    // ==================== COMMANDS ====================
+
+    [RelayCommand]
+    private void ViewPackets()
+    {
+        if (SelectedAnomaly == null) return;
+
+        var filter = !string.IsNullOrEmpty(SelectedAnomaly.SourceIP)
+            ? $"ip={SelectedAnomaly.SourceIP}"
+            : "";
+
+        _navigateWithFilter?.Invoke("PacketAnalysis", filter);
+    }
+
+    [RelayCommand]
+    private void ClearFilters()
+    {
+        ShowCritical = ShowHigh = ShowMedium = true;
+        ShowLow = false;
+        FilterNetwork = FilterTcp = FilterApplication = FilterVoip = FilterIot = FilterSecurity = FilterMalformed = true;
+        SearchText = "";
+    }
+
+    [RelayCommand]
+    private void ExportToCsv()
+    {
+        // TODO: Implement CSV export
+        DebugLogger.Log("[AnomalyViewModel] Export to CSV requested");
+    }
+}
+
+/// <summary>
+/// Display wrapper for NetworkAnomaly with UI-friendly properties.
+/// </summary>
+public class AnomalyDisplayItem
+{
+    private readonly NetworkAnomaly _anomaly;
+
+    public AnomalyDisplayItem(NetworkAnomaly anomaly)
+    {
+        _anomaly = anomaly;
+    }
+
+    public string Type => _anomaly.Type ?? "Unknown";
+    public string Description => _anomaly.Description ?? "";
+    public AnomalySeverity Severity => _anomaly.Severity;
+    public AnomalyCategory Category => _anomaly.Category;
+    public string SourceIP => _anomaly.SourceIP ?? "";
+    public string DestinationIP => _anomaly.DestinationIP ?? "";
+    public DateTime DetectedAt => _anomaly.DetectedAt;
+    public int SourcePort => _anomaly.SourcePort;
+    public int DestinationPort => _anomaly.DestinationPort;
+
+    public string SeverityIcon => Severity switch
+    {
+        AnomalySeverity.Critical => "\U0001F534", // Red circle
+        AnomalySeverity.High => "\U0001F7E0",     // Orange circle
+        AnomalySeverity.Medium => "\U0001F7E1",   // Yellow circle
+        AnomalySeverity.Low => "\U0001F535",      // Blue circle
+        _ => "\U000026AA"                          // White circle
+    };
+
+    public string SeverityColor => Severity switch
+    {
+        AnomalySeverity.Critical => "#F85149",
+        AnomalySeverity.High => "#F0883E",
+        AnomalySeverity.Medium => "#D29922",
+        AnomalySeverity.Low => "#58A6FF",
+        _ => "#8B949E"
+    };
+
+    public string CategoryIcon => Category switch
+    {
+        AnomalyCategory.Network => "\U0001F310",     // Globe
+        AnomalyCategory.TCP => "\U0001F517",          // Link
+        AnomalyCategory.Application => "\U0001F4F1", // Phone
+        AnomalyCategory.VoIP => "\U0001F4DE",        // Phone receiver
+        AnomalyCategory.IoT => "\U0001F50C",          // Plug
+        AnomalyCategory.Security => "\U000026A0",    // Warning
+        AnomalyCategory.Malformed => "\U00002753",   // Question
+        _ => "\U00002754"                             // Question
+    };
+
+    public string TimeFormatted => DetectedAt.ToString("HH:mm:ss");
+    public string ConnectionInfo => !string.IsNullOrEmpty(SourceIP)
+        ? $"{SourceIP}:{SourcePort} \u2192 {DestinationIP}:{DestinationPort}"
+        : "N/A";
+}

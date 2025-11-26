@@ -1,0 +1,190 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Live Capture Button Styles -->
+    <Style Selector="Button.primary-action">
+        <Setter Property="Background" Value="#3FB950"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.primary-action:pointerover">
+        <Setter Property="Background" Value="#2EA043"/>
+    </Style>
+
+    <Style Selector="Button.primary-action:pressed">
+        <Setter Property="Background" Value="#25843D"/>
+    </Style>
+
+    <Style Selector="Button.primary-action:disabled">
+        <Setter Property="Background" Value="#2D2D30"/>
+        <Setter Property="Foreground" Value="#6C757D"/>
+        <Setter Property="Cursor" Value="Arrow"/>
+    </Style>
+
+    <Style Selector="Button.danger-action">
+        <Setter Property="Background" Value="#DA3633"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.danger-action:pointerover">
+        <Setter Property="Background" Value="#B62824"/>
+    </Style>
+
+    <Style Selector="Button.danger-action:pressed">
+        <Setter Property="Background" Value="#962018"/>
+    </Style>
+
+    <Style Selector="Button.danger-action:disabled">
+        <Setter Property="Background" Value="#2D2D30"/>
+        <Setter Property="Foreground" Value="#6C757D"/>
+        <Setter Property="Cursor" Value="Arrow"/>
+    </Style>
+
+    <Style Selector="Button.warning-action">
+        <Setter Property="Background" Value="#FFA657"/>
+        <Setter Property="Foreground" Value="#1A1B1E"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.warning-action:pointerover">
+        <Setter Property="Background" Value="#E68B3F"/>
+    </Style>
+
+    <Style Selector="Button.warning-action:pressed">
+        <Setter Property="Background" Value="#CC7A35"/>
+    </Style>
+
+    <!-- Badge Styles -->
+    <Style Selector="Border.badge">
+        <Setter Property="Background" Value="#3E3E42"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+
+    <Style Selector="Border.badge-blue">
+        <Setter Property="Background" Value="#1F6FEB"/>
+    </Style>
+
+    <Style Selector="Border.badge-green">
+        <Setter Property="Background" Value="#3FB950"/>
+    </Style>
+
+    <Style Selector="Border.badge-red">
+        <Setter Property="Background" Value="#DA3633"/>
+    </Style>
+
+    <Style Selector="Border.badge-orange">
+        <Setter Property="Background" Value="#FFA657"/>
+    </Style>
+
+    <Style Selector="Border.badge TextBlock">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+    </Style>
+
+    <!-- Card Style for Configuration Dialog -->
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="#2D2D30"/>
+        <Setter Property="BorderBrush" Value="#3E3E42"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="16"/>
+    </Style>
+
+    <!-- Modern DataGrid Style -->
+    <Style Selector="DataGrid.modern-grid">
+        <Setter Property="Background" Value="#1E1E1E"/>
+        <Setter Property="RowBackground" Value="Transparent"/>
+        <!-- AlternatingRowBackground removed - not supported in Avalonia 11.3.4 DataGrid -->
+        <Setter Property="BorderBrush" Value="#3E3E42"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+        <Setter Property="HeadersVisibility" Value="Column"/>
+        <Setter Property="HorizontalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+    </Style>
+
+    <Style Selector="DataGrid.modern-grid DataGridColumnHeader">
+        <Setter Property="Background" Value="#2D2D30"/>
+        <Setter Property="Foreground" Value="#9B9B9B"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="BorderBrush" Value="#3E3E42"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+
+    <Style Selector="DataGrid.modern-grid DataGridRow">
+        <Setter Property="Foreground" Value="#CCCCCC"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <Style Selector="DataGrid.modern-grid DataGridRow:selected">
+        <Setter Property="Background" Value="#264F78"/>
+    </Style>
+
+    <Style Selector="DataGrid.modern-grid DataGridRow:pointerover">
+        <Setter Property="Background" Value="#2A2D2E"/>
+    </Style>
+
+    <Style Selector="DataGrid.modern-grid DataGridCell">
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="BorderBrush" Value="#3E3E42"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+
+    <!-- Status Indicator Animation -->
+    <Style Selector="Ellipse.status-pulse">
+        <Style.Animations>
+            <Animation Duration="0:0:1"
+                       IterationCount="INFINITE"
+                       PlaybackDirection="Alternate">
+                <KeyFrame Cue="0%">
+                    <Setter Property="Opacity" Value="0.4"/>
+                </KeyFrame>
+                <KeyFrame Cue="100%">
+                    <Setter Property="Opacity" Value="1.0"/>
+                </KeyFrame>
+            </Animation>
+        </Style.Animations>
+    </Style>
+
+    <!-- Metric Card for Statistics Panel -->
+    <Style Selector="Border.metric-card">
+        <Setter Property="Background" Value="#2D2D30"/>
+        <Setter Property="BorderBrush" Value="#3E3E42"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+
+    <Style Selector="TextBlock.metric-label">
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Foreground" Value="#9B9B9B"/>
+        <!-- TextTransform removed - not supported in Avalonia 11.3.4 TextBlock -->
+        <!-- Use uppercase text in XAML directly if needed -->
+    </Style>
+
+    <Style Selector="TextBlock.metric-value">
+        <Setter Property="FontSize" Value="20"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Margin" Value="0,4,0,0"/>
+    </Style>
+</Styles>

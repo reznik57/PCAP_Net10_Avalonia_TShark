@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "profiles": {
+    "PCAPAnalyzer.UI (Debug)": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "PCAP_DEBUG": "1",
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "",
+      "dotnetRunMessages": true
+    },
+    "PCAPAnalyzer.UI (Release)": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "PCAP_DEBUG": "0",
+        "DOTNET_ENVIRONMENT": "Production"
+      },
+      "applicationUrl": "",
+      "dotnetRunMessages": false
+    }
+  }
+}

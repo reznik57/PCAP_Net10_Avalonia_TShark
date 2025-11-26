@@ -1,0 +1,140 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    
+    <!-- 
+    ════════════════════════════════════════════════════════════════
+    UNIFIED LOADING INDICATORS - Harmonized with Dark Theme
+    ════════════════════════════════════════════════════════════════
+    -->
+    
+    <!-- Base Progress Bar Style -->
+    <Style Selector="ProgressBar">
+        <Setter Property="Foreground" Value="#2F81F7"/>
+        <Setter Property="Background" Value="#161B22"/>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Height" Value="6"/>
+        <Setter Property="CornerRadius" Value="3"/>
+    </Style>
+    
+    
+    <!-- Quick Stats Loading Card -->
+    <Style Selector="Border.quick-stats-loading">
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                    <GradientStop Offset="0" Color="#161B22"/>
+                    <GradientStop Offset="1" Color="#0D1117"/>
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="Padding" Value="24"/>
+        <Setter Property="Opacity" Value="0.98"/>
+    </Style>
+    
+    <!-- Animated Loading Bar -->
+    <Style Selector="Border.loading-bar">
+        <Setter Property="Height" Value="4"/>
+        <Setter Property="CornerRadius" Value="2"/>
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                    <GradientStop Offset="0" Color="#002F81F7"/>
+                    <GradientStop Offset="0.3" Color="#FF2F81F7"/>
+                    <GradientStop Offset="0.7" Color="#FF2F81F7"/>
+                    <GradientStop Offset="1" Color="#002F81F7"/>
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- Loading Text Style -->
+    <Style Selector="TextBlock.loading-text">
+        <Setter Property="Foreground" Value="#8B949E"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+    
+    <!-- Spinner Style -->
+    <Style Selector="Border.loading-spinner">
+        <Setter Property="Width" Value="24"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="BorderThickness" Value="3"/>
+        <Setter Property="BorderBrush">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                    <GradientStop Offset="0" Color="#FF2F81F7"/>
+                    <GradientStop Offset="0.5" Color="#802F81F7"/>
+                    <GradientStop Offset="1" Color="Transparent"/>
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+    </Style>
+    
+    <!-- Filtered Stats Loading -->
+    <Style Selector="Border.filtered-stats-loading">
+        <Setter Property="Background" Value="#1A2F81F7"/>
+        <Setter Property="BorderBrush" Value="#2F81F7"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="12,6"/>
+    </Style>
+    
+    <!-- Small Inline Progress -->
+    <Style Selector="ProgressBar.inline-progress">
+        <Setter Property="Height" Value="3"/>
+        <Setter Property="Foreground" Value="#2F81F7"/>
+        <Setter Property="Background" Value="#1C2128"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="1.5"/>
+    </Style>
+    
+    <!-- Loading Overlay -->
+    <Style Selector="Border.loading-overlay">
+        <Setter Property="Background" Value="#E60D1117"/>
+        <Setter Property="CornerRadius" Value="8"/>
+    </Style>
+    
+    <!-- Pulse Animation for Loading Elements -->
+    <Style Selector="Border.pulse-animation">
+        <Setter Property="Opacity" Value="0.9"/>
+    </Style>
+    
+    <!-- Shimmer Effect -->
+    <Style Selector="Border.shimmer-loading">
+        <Setter Property="Background">
+            <Setter.Value>
+                <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
+                    <GradientStop Offset="0" Color="#00FFFFFF"/>
+                    <GradientStop Offset="0.5" Color="#10FFFFFF"/>
+                    <GradientStop Offset="1" Color="#00FFFFFF"/>
+                </LinearGradientBrush>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- Data Loading Card -->
+    <Style Selector="Border.data-loading-card">
+        <Setter Property="Background" Value="#161B22"/>
+        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="MinHeight" Value="100"/>
+    </Style>
+    
+    <!-- Skeleton Loading -->
+    <Style Selector="Rectangle.skeleton-line">
+        <Setter Property="Fill" Value="#1C2128"/>
+        <Setter Property="Height" Value="12"/>
+        <Setter Property="RadiusX" Value="2"/>
+        <Setter Property="RadiusY" Value="2"/>
+        <Setter Property="Opacity" Value="0.5"/>
+    </Style>
+</Styles>

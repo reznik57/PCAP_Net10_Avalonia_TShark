@@ -1,0 +1,74 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:PCAPAnalyzer.UI.Controls">
+
+    <Design.PreviewWith>
+        <StackPanel Spacing="10" Margin="20">
+            <controls:ProtocolBadge Protocol="TCP"/>
+            <controls:ProtocolBadge Protocol="UDP"/>
+            <controls:ProtocolBadge Protocol="HTTP"/>
+            <controls:ProtocolBadge Protocol="HTTPS"/>
+            <controls:ProtocolBadge Protocol="DNS"/>
+        </StackPanel>
+    </Design.PreviewWith>
+
+    <Style Selector="controls|ProtocolBadge">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border x:Name="PART_Border"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="3"
+                        Padding="6,2"
+                        ToolTip.Tip="{TemplateBinding ProtocolDescription}">
+
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <!-- Protocol Icon/Dot -->
+                        <Border Width="8" Height="8"
+                                Background="{TemplateBinding Foreground}"
+                                CornerRadius="4"
+                                VerticalAlignment="Center"
+                                IsVisible="{TemplateBinding ShowDot}"/>
+
+                        <!-- Protocol Text -->
+                        <TextBlock x:Name="PART_Text"
+                                   Text="{TemplateBinding Protocol}"
+                                   FontSize="{TemplateBinding FontSize}"
+                                   FontWeight="{TemplateBinding FontWeight}"
+                                   Foreground="{TemplateBinding Foreground}"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <!-- Hover effect -->
+    <Style Selector="controls|ProtocolBadge:pointerover /template/ Border#PART_Border">
+        <Setter Property="Opacity" Value="0.85"/>
+    </Style>
+
+    <!-- Compact variant (smaller, for tables) -->
+    <Style Selector="controls|ProtocolBadge.compact">
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Padding" Value="4,1"/>
+    </Style>
+
+    <!-- Large variant (for headers) -->
+    <Style Selector="controls|ProtocolBadge.large">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Padding" Value="8,3"/>
+    </Style>
+
+    <!-- Category badge style (shows category instead of protocol) -->
+    <Style Selector="controls|ProtocolBadge.category">
+        <Setter Property="ShowDot" Value="False"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Padding" Value="6,2"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+</Styles>

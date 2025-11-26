@@ -1,0 +1,48 @@
+using System;
+using System.Diagnostics;
+using PCAPAnalyzer.Core.Utilities;
+
+namespace PCAPAnalyzer.Core.Monitoring
+{
+    public static class HealthMonitor
+    {
+        private static readonly Process _process = Process.GetCurrentProcess();
+        private static DateTime _startTime = DateTime.Now;
+        private static long _packetsProcessed;
+        
+        public static void Initialize()
+        {
+            _startTime = DateTime.Now;
+            DebugLogger.Log($"[HEALTH] Monitor initialized at {_startTime:HH:mm:ss}");
+        }
+        
+        public static void LogPacketProcessed()
+        {
+            _packetsProcessed++;
+            // ✅ PERFORMANCE FIX: Reduced from 1K to 100K to minimize log spam
+            if (_packetsProcessed % 100000 == 0)
+            {
+                LogStatus($"Processed {_packetsProcessed} packets");
+            }
+        }
+        
+        public static void LogStatus(string operation)
+        {
+            _process.Refresh();
+            var memoryMB = _process.WorkingSet64 / (1024 * 1024);
+            var runtime = DateTime.Now - _startTime;
+            
+            DebugLogger.Log($"[{DateTime.Now:HH:mm:ss}] {operation}");
+            DebugLogger.Log($"  Memory: {memoryMB}MB | Runtime: {runtime:hh\\:mm\\:ss} | Packets: {_packetsProcessed}");
+            
+            // Warning only - no action taken
+            if (memoryMB > 1000)
+            {
+                DebugLogger.Log($"  ⚠️ Warning: High memory usage detected ({memoryMB}MB)");
+            }
+        }
+        
+        public static long GetPacketCount() => _packetsProcessed;
+        public static long GetMemoryMB() => _process.WorkingSet64 / (1024 * 1024);
+    }
+}

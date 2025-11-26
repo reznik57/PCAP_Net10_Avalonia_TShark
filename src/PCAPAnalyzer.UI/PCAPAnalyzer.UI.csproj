@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Disabled for Debug builds to allow incremental development - re-enable for Release -->
+    <AvaloniaUseCompiledBindingsByDefault Condition="'$(Configuration)' == 'Release'">true</AvaloniaUseCompiledBindingsByDefault>
+    <AvaloniaUseCompiledBindingsByDefault Condition="'$(Configuration)' != 'Release'">false</AvaloniaUseCompiledBindingsByDefault>
+    <!-- Suppress XAML type resolution errors for LiveCharts and deprecated properties -->
+    <!-- These types are resolved at runtime and functionality works correctly -->
+    <!-- CA rules (CA1063, CA1816, CA2213) now documented in .editorconfig -->
+    <AvaloniaXamlErrorOnUnresolvedTypes>false</AvaloniaXamlErrorOnUnresolvedTypes>
+    <!-- AVLN2000: LiveCharts types are resolved at runtime - see .editorconfig for details -->
+    <NoWarn>$(NoWarn);AVLN2000</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.9" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.9" />
+    <PackageReference Include="Avalonia.X11" Version="11.3.9" />
+    <PackageReference Include="Avalonia.Skia" Version="11.3.9" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
+    <PackageReference Include="Avalonia.Diagnostics" Version="11.3.9">
+      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
+      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.0-rc4.5" />
+    <PackageReference Include="QuestPDF" Version="2025.7.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PCAPAnalyzer.Core\PCAPAnalyzer.Core.csproj" />
+    <ProjectReference Include="..\PCAPAnalyzer.TShark\PCAPAnalyzer.TShark.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="..\legacy\**\*.cs" />
+    <Compile Remove="..\legacy\**\*.xaml.cs" />
+    <None Remove="..\legacy\**\*.*" />
+    <AvaloniaXaml Remove="..\legacy\**\*.axaml" />
+    <AvaloniaXaml Remove="..\legacy\**\*.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\native\duckdb.dll" Condition="'$(RuntimeIdentifier)' == '' Or '$(RuntimeIdentifier)' == 'win-x64'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\native\libduckdb.so" Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

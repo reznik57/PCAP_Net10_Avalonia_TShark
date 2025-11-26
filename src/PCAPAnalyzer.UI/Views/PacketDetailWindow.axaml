@@ -1,0 +1,217 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+        x:Class="PCAPAnalyzer.UI.Views.PacketDetailWindow"
+        x:DataType="vm:PacketDetailViewModel"
+        Title="Packet Details"
+        WindowState="Maximized"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True">
+    
+    <Window.Styles>
+        <StyleInclude Source="/Styles/UnifiedDarkTheme.axaml"/>
+    </Window.Styles>
+    
+    <Grid Margin="20,20,20,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Classes="stat-card" Margin="0,0,0,10">
+            <StackPanel>
+                <TextBlock Text="{Binding Title}" 
+                          FontSize="20" 
+                          FontWeight="Bold" 
+                          Foreground="{StaticResource TextPrimary}"/>
+                <TextBlock Text="{Binding Summary}" 
+                          FontSize="14" 
+                          Foreground="{StaticResource TextSecondary}"
+                          Margin="0,5,0,0"/>
+            </StackPanel>
+        </Border>
+        
+        <!-- Filter Info -->
+        <Border Grid.Row="1" Classes="stat-card" Margin="0,0,0,10"
+                Background="{StaticResource BackgroundElevated}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
+                    <StackPanel>
+                        <TextBlock Text="Total Packets" FontSize="12" Foreground="{StaticResource TextMuted}"/>
+                        <TextBlock Text="{Binding TotalPackets}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource HCAccent}"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Matching Packets" FontSize="12" Foreground="{StaticResource TextMuted}"/>
+                        <TextBlock Text="{Binding MatchingPackets}" FontSize="18" FontWeight="Bold" Foreground="{StaticResource HCSuccess}"/>
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Text="Time Range" FontSize="12" Foreground="{StaticResource TextMuted}"/>
+                        <TextBlock Text="{Binding TimeRange}" FontSize="14" Foreground="{StaticResource TextPrimary}"/>
+                    </StackPanel>
+                </StackPanel>
+                
+                <TextBlock Grid.Column="1" 
+                          Text="{Binding FilterExpression}" 
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Center"
+                          FontFamily="Consolas,Monaco,monospace"
+                          FontSize="14"
+                          Foreground="{StaticResource HCInfo}"/>
+                
+                <Button Grid.Column="2" 
+                        Content="Export Matching Packets" 
+                        Command="{Binding ExportCommand}"
+                        VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+        
+        <!-- Packet List -->
+        <Border Grid.Row="2" Classes="stat-card">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <TextBlock Grid.Row="0" 
+                          Text="Matching Packets" 
+                          Classes="card-title" 
+                          Margin="0,0,0,10"/>
+                
+                <DataGrid Grid.Row="1" 
+                         ItemsSource="{Binding Packets}"
+                         AutoGenerateColumns="False"
+                         CanUserResizeColumns="True"
+                         CanUserSortColumns="True"
+                         SelectionMode="Single"
+                         SelectedItem="{Binding SelectedPacket}"
+                         IsReadOnly="True">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Frame #" 
+                                          Binding="{Binding FrameNumber}" 
+                                          Width="80"
+                                          IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Time" 
+                                          Binding="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}" 
+                                          Width="120"
+                                          IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Source IP" 
+                                          Binding="{Binding SourceIP}" 
+                                          Width="150"
+                                          IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Source Port" 
+                                          Binding="{Binding SourcePort}" 
+                                          Width="80"
+                                          IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Destination IP" 
+                                          Binding="{Binding DestinationIP}" 
+                                          Width="150"
+                                          IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Destination Port" 
+                                          Binding="{Binding DestinationPort}" 
+                                          Width="80"
+                                          IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Protocol" 
+                                          Binding="{Binding Protocol}" 
+                                          Width="80"
+                                          IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Length" 
+                                          Binding="{Binding Length}" 
+                                          Width="80"
+                                          IsReadOnly="True"/>
+                        <DataGridTextColumn Header="Info" 
+                                          Binding="{Binding Info}" 
+                                          Width="*"
+                                          IsReadOnly="True"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+        
+        <!-- Selected Packet Details -->
+        <Border Grid.Row="2" 
+                Classes="stat-card" 
+                Margin="0,10,0,0"
+                IsVisible="{Binding HasSelectedPacket}">
+            <ScrollViewer>
+                <StackPanel>
+                    <TextBlock Text="Packet Details" 
+                              Classes="card-title" 
+                              Margin="0,0,0,10"/>
+                    
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Frame Number:" FontWeight="Bold" Margin="0,2"/>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SelectedPacket.FrameNumber}" Margin="10,2"/>
+                        
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Timestamp:" FontWeight="Bold" Margin="0,2"/>
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedPacket.Timestamp}" Margin="10,2"/>
+                        
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Source:" FontWeight="Bold" Margin="0,2"/>
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedPacket.SourceEndpoint}" Margin="10,2"/>
+                        
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Destination:" FontWeight="Bold" Margin="0,2"/>
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedPacket.DestinationEndpoint}" Margin="10,2"/>
+                        
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Protocol Stack:" FontWeight="Bold" Margin="0,2"/>
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedPacket.ProtocolStack}" Margin="10,2"/>
+                        
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Flags:" FontWeight="Bold" Margin="0,2"/>
+                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedPacket.Flags}" Margin="10,2"/>
+                        
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Payload:" FontWeight="Bold" Margin="0,2"/>
+                        <TextBlock Grid.Row="6" Grid.Column="1" 
+                                Text="{Binding SelectedPacket.PayloadHex}" 
+                                FontFamily="Consolas,Monaco,monospace"
+                                MaxHeight="200"
+                                TextWrapping="Wrap"
+                                Margin="10,2"/>
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+        
+        <!-- Footer -->
+        <Grid Grid.Row="3" Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock Grid.Column="0" 
+                      Text="{Binding StatusMessage}" 
+                      VerticalAlignment="Center"
+                      Foreground="{StaticResource TextSecondary}"/>
+            
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                <Button Content="Copy Details" Command="{Binding CopyDetailsCommand}"/>
+                <Button Content="Close" Click="OnCloseClick"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

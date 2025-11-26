@@ -1,0 +1,628 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels.Components"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="400"
+             x:Class="PCAPAnalyzer.UI.Views.Controls.PacketDetailsPanel"
+             x:DataType="vm:PacketDetailsViewModel">
+
+    <!-- Packet Details Panel - 3 Tabs: Protocol Details, Hex Dump, Flow Info -->
+    <Border Classes="modern-card-unified" Padding="0">
+        <Grid RowDefinitions="Auto,Auto">
+
+            <!-- Header -->
+            <Border Grid.Row="0" Classes="table-header-unified">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                        <Border Classes="accent-bar" Background="#8B5CF6"/>
+                        <TextBlock Text="Packet Details" Classes="section-title-unified" Margin="0"/>
+                        <Border Classes="badge-unified" IsVisible="{Binding HasPacket}">
+                            <TextBlock Text="{Binding CurrentPacket.FrameNumber, StringFormat='Frame #{0:N0}'}" Foreground="#8B5CF6"/>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Tab Content -->
+            <TabControl Grid.Row="1" Background="Transparent" Padding="0">
+
+                <!-- Tab 1: Protocol Details -->
+                <TabItem Header="Protocol Details">
+                    <Border Background="#0D1117" Padding="16">
+                        <Grid>
+                            <!-- Empty state when no packet selected -->
+                            <StackPanel IsVisible="{Binding !HasPacket}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Spacing="12">
+                                <TextBlock Text="📦" FontSize="48" HorizontalAlignment="Center" Opacity="0.3"/>
+                                <TextBlock Text="{Binding EmptyStateMessage}"
+                                           FontSize="14"
+                                           Foreground="#6E7681"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Protocol tree when packet is selected -->
+                            <ItemsControl ItemsSource="{Binding ProtocolTree}"
+                                          IsVisible="{Binding HasPacket}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="vm:ProtocolTreeItemViewModel">
+                                            <Border Background="#161B22" CornerRadius="6" Padding="12,10" Margin="0,4">
+                                                <StackPanel Spacing="6">
+                                                    <!-- Protocol layer header -->
+                                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                                        <TextBlock Text="▸" FontSize="12" Foreground="#8B5CF6" VerticalAlignment="Center"
+                                                                   IsVisible="{Binding HasChildren}"/>
+                                                        <TextBlock Text="{Binding DisplayText}"
+                                                                   FontFamily="Consolas, Courier New, monospace"
+                                                                   FontSize="13"
+                                                                   Foreground="#F0F6FC"
+                                                                   FontWeight="SemiBold"/>
+                                                    </StackPanel>
+
+                                                    <!-- Child items (protocol details) -->
+                                                    <ItemsControl ItemsSource="{Binding Children}"
+                                                                  IsVisible="{Binding HasChildren}"
+                                                                  Margin="20,4,0,0">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate DataType="vm:ProtocolTreeItemViewModel">
+                                                                <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,2">
+                                                                    <TextBlock Text="├─" FontSize="11" Foreground="#30363D"
+                                                                               FontFamily="Consolas, Courier New, monospace"/>
+                                                                    <TextBlock Text="{Binding DisplayText}"
+                                                                               FontFamily="Consolas, Courier New, monospace"
+                                                                               FontSize="11"
+                                                                               Foreground="#8B949E"/>
+                                                                </StackPanel>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                        </Grid>
+                    </Border>
+                </TabItem>
+
+                <!-- Tab 2: Hex Dump -->
+                <TabItem Header="Hex Dump">
+                    <Border Background="#0D1117" Padding="16">
+                        <Grid>
+                            <!-- Placeholder when hex dump not loaded yet -->
+                            <StackPanel IsVisible="{Binding !HexDumpAvailable}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Spacing="16"
+                                        MaxWidth="600">
+                                <TextBlock Text="🔍" FontSize="48" HorizontalAlignment="Center" Opacity="0.5"/>
+                                <TextBlock Text="{Binding HexDumpPlaceholder}"
+                                           FontSize="12"
+                                           Foreground="#8B949E"
+                                           TextWrapping="Wrap"
+                                           TextAlignment="Center"
+                                           LineHeight="18"/>
+
+                                <!-- Load Hex Dump Button -->
+                                <Button Command="{Binding LoadHexDumpCommand}"
+                                        IsEnabled="{Binding !HexDumpLoading}"
+                                        HorizontalAlignment="Center"
+                                        Classes="primary-button"
+                                        Padding="24,10"
+                                        FontSize="13"
+                                        FontWeight="SemiBold"
+                                        IsVisible="{Binding HasPacket}">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="⏳" IsVisible="{Binding HexDumpLoading}"/>
+                                        <TextBlock Text="Load Hex Dump" IsVisible="{Binding !HexDumpLoading}"/>
+                                        <TextBlock Text="Loading..." IsVisible="{Binding HexDumpLoading}"/>
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+
+                            <!-- Hex dump display (will be used when raw bytes are available) -->
+                            <ScrollViewer IsVisible="{Binding HexDumpAvailable}"
+                                          VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding HexDumpLines}"
+                                              Background="Transparent"
+                                              Padding="8">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Grid ColumnDefinitions="100,500,Auto" Margin="0,2">
+                                                <!-- Offset -->
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding Offset}"
+                                                           FontFamily="Consolas, Courier New, monospace"
+                                                           FontSize="11"
+                                                           Foreground="#6E7681"
+                                                           Margin="0,0,16,0"/>
+
+                                                <!-- Hex bytes -->
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding HexBytes}"
+                                                           FontFamily="Consolas, Courier New, monospace"
+                                                           FontSize="11"
+                                                           Foreground="#C9D1D9"
+                                                           Margin="0,0,24,0"/>
+
+                                                <!-- ASCII -->
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{Binding Ascii}"
+                                                           FontFamily="Consolas, Courier New, monospace"
+                                                           FontSize="11"
+                                                           Foreground="#8B949E"/>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </TabItem>
+
+                <!-- Tab 3: Flow Info -->
+                <TabItem Header="Flow Info">
+                    <Border Background="#0D1117" Padding="16">
+                        <Grid>
+                            <!-- Empty state when no packet selected -->
+                            <StackPanel IsVisible="{Binding !HasPacket}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Spacing="12">
+                                <TextBlock Text="🌊" FontSize="48" HorizontalAlignment="Center" Opacity="0.3"/>
+                                <TextBlock Text="{Binding EmptyStateMessage}"
+                                           FontSize="14"
+                                           Foreground="#6E7681"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Flow information when packet is selected -->
+                            <StackPanel IsVisible="{Binding HasPacket}" Spacing="16" MaxWidth="800">
+
+                            <!-- Stream ID with Filter Button -->
+                            <Border Classes="modern-card-unified" Padding="16" Background="#161B22">
+                                <Grid RowDefinitions="Auto" ColumnDefinitions="180,*,Auto">
+                                    <TextBlock Grid.Column="0"
+                                               Text="TCP/UDP Stream:"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="#8B949E"
+                                               VerticalAlignment="Center"/>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding FlowStreamId}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="#58A6FF"
+                                               VerticalAlignment="Center"/>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                                        <Button Content="🔍 Search"
+                                                Command="{Binding SearchByStreamCommand}"
+                                                IsVisible="{Binding CanFilterByStream}"
+                                                Background="#22C55E"
+                                                Foreground="White"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Padding="12,6"
+                                                CornerRadius="4"
+                                                ToolTip.Tip="Highlight all packets from this stream (keeps all packets visible)"/>
+                                        <Button Content="🔒 Filter"
+                                                Command="{Binding FilterByStreamCommand}"
+                                                IsVisible="{Binding CanFilterByStream}"
+                                                Background="#8B5CF6"
+                                                Foreground="White"
+                                                FontSize="11"
+                                                FontWeight="SemiBold"
+                                                Padding="12,6"
+                                                CornerRadius="4"
+                                                ToolTip.Tip="Show ONLY packets from this stream (hides other packets)"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- Conversation -->
+                            <Border Classes="modern-card-unified" Padding="16" Background="#161B22">
+                                <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="180,*">
+                                    <TextBlock Grid.Row="0" Grid.Column="0"
+                                               Text="Conversation:"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               Foreground="#8B949E"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1"
+                                               Text="{Binding FlowConversation}"
+                                               FontSize="12"
+                                               FontFamily="Consolas, Courier New, monospace"
+                                               Foreground="#C9D1D9"
+                                               TextWrapping="Wrap"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Stream Navigation -->
+                            <Border Classes="modern-card-unified" Padding="16" Background="#161B22">
+                                <StackPanel Spacing="12">
+                                    <TextBlock Text="🧭 Stream Navigation"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Foreground="#F0F6FC"
+                                               Margin="0,0,0,8"/>
+
+                                    <Grid RowDefinitions="Auto" ColumnDefinitions="180,*">
+                                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                                   Text="Packets in Stream:"
+                                                   FontSize="12"
+                                                   Foreground="#8B949E"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                                   Text="{Binding FlowPacketCount}"
+                                                   FontSize="12"
+                                                   Foreground="#C9D1D9"/>
+                                    </Grid>
+
+                                    <!-- Navigation Buttons -->
+                                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,8,0,0">
+                                        <Button Command="{Binding NavigateToPreviousInStreamCommand}"
+                                                IsEnabled="{Binding CanNavigatePrevious}"
+                                                Background="#1C2128"
+                                                Foreground="#C9D1D9"
+                                                BorderBrush="#30363D"
+                                                BorderThickness="1"
+                                                Padding="12,8"
+                                                CornerRadius="4">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Text="◀" FontSize="12"/>
+                                                <TextBlock Text="Previous in Stream" FontSize="11"/>
+                                                <TextBlock Text="{Binding PreviousPacketInStream, StringFormat='#{0}'}"
+                                                           FontSize="11"
+                                                           Foreground="#8B5CF6"
+                                                           IsVisible="{Binding CanNavigatePrevious}"/>
+                                            </StackPanel>
+                                        </Button>
+
+                                        <Button Command="{Binding NavigateToNextInStreamCommand}"
+                                                IsEnabled="{Binding CanNavigateNext}"
+                                                Background="#1C2128"
+                                                Foreground="#C9D1D9"
+                                                BorderBrush="#30363D"
+                                                BorderThickness="1"
+                                                Padding="12,8"
+                                                CornerRadius="4">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <TextBlock Text="Next in Stream" FontSize="11"/>
+                                                <TextBlock Text="{Binding NextPacketInStream, StringFormat='#{0}'}"
+                                                           FontSize="11"
+                                                           Foreground="#8B5CF6"
+                                                           IsVisible="{Binding CanNavigateNext}"/>
+                                                <TextBlock Text="▶" FontSize="12"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Stream Statistics -->
+                            <Border Classes="modern-card-unified" Padding="16" Background="#161B22">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="Stream Statistics"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Foreground="#F0F6FC"
+                                               Margin="0,0,0,8"/>
+
+                                    <TextBlock Text="{Binding FlowStatistics}"
+                                               FontSize="12"
+                                               Foreground="#8B949E"
+                                               TextWrapping="Wrap"
+                                               LineHeight="18"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Security Indicators -->
+                            <Border Classes="modern-card-unified" Padding="16" Background="#161B22">
+                                <StackPanel Spacing="12">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="Security Analysis"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#F0F6FC"/>
+                                        <Border Background="{Binding SecurityRiskColor}"
+                                                CornerRadius="4"
+                                                Padding="8,2">
+                                            <TextBlock Text="{Binding SecurityRiskLevel}"
+                                                       FontSize="11"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="White"/>
+                                        </Border>
+                                    </StackPanel>
+
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="180,*">
+                                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                                   Text="Source Port:"
+                                                   FontSize="12"
+                                                   Foreground="#8B949E"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                                   Text="{Binding SourcePortSecurity}"
+                                                   FontSize="12"
+                                                   Foreground="#C9D1D9"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                                   Text="Destination Port:"
+                                                   FontSize="12"
+                                                   Foreground="#8B949E"
+                                                   Margin="0,8,0,0"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                                   Text="{Binding DestinationPortSecurity}"
+                                                   FontSize="12"
+                                                   Foreground="#C9D1D9"
+                                                   Margin="0,8,0,0"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0"
+                                                   Text="Source Location:"
+                                                   FontSize="12"
+                                                   Foreground="#8B949E"
+                                                   Margin="0,8,0,0"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1"
+                                                   Text="{Binding SourceGeoInfo}"
+                                                   FontSize="12"
+                                                   Foreground="#C9D1D9"
+                                                   Margin="0,8,0,0"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0"
+                                                   Text="Destination Location:"
+                                                   FontSize="12"
+                                                   Foreground="#8B949E"
+                                                   Margin="0,8,0,0"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1"
+                                                   Text="{Binding DestinationGeoInfo}"
+                                                   FontSize="12"
+                                                   Foreground="#C9D1D9"
+                                                   Margin="0,8,0,0"/>
+                                    </Grid>
+
+                                    <!-- Security Warnings -->
+                                    <ItemsControl ItemsSource="{Binding SecurityWarnings}"
+                                                  IsVisible="{Binding HasSecurityWarnings}"
+                                                  Margin="0,8,0,0">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="#1C1917"
+                                                        BorderBrush="#78350F"
+                                                        BorderThickness="1"
+                                                        CornerRadius="4"
+                                                        Padding="8,4"
+                                                        Margin="0,2">
+                                                    <TextBlock Text="{Binding}"
+                                                               FontSize="11"
+                                                               Foreground="#FCD34D"
+                                                               TextWrapping="Wrap"/>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Traffic Direction -->
+                            <Border Classes="modern-card-unified" Padding="16" Background="#161B22">
+                                <StackPanel Spacing="12">
+                                    <TextBlock Text="📊 Traffic Direction"
+                                               FontSize="13"
+                                               FontWeight="SemiBold"
+                                               Foreground="#F0F6FC"
+                                               Margin="0,0,0,8"/>
+
+                                    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="180,*">
+                                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                                   Text="Client (Initiator):"
+                                                   FontSize="12"
+                                                   Foreground="#8B949E"/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                                   Text="{Binding ClientTraffic}"
+                                                   FontSize="12"
+                                                   FontFamily="Consolas, Courier New, monospace"
+                                                   Foreground="#22C55E"/>
+
+                                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                                   Text="Server (Responder):"
+                                                   FontSize="12"
+                                                   Foreground="#8B949E"
+                                                   Margin="0,8,0,0"/>
+                                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                                   Text="{Binding ServerTraffic}"
+                                                   FontSize="12"
+                                                   FontFamily="Consolas, Courier New, monospace"
+                                                   Foreground="#3B82F6"
+                                                   Margin="0,8,0,0"/>
+
+                                        <TextBlock Grid.Row="2" Grid.Column="0"
+                                                   Text="Dominant Direction:"
+                                                   FontSize="12"
+                                                   Foreground="#8B949E"
+                                                   Margin="0,8,0,0"/>
+                                        <TextBlock Grid.Row="2" Grid.Column="1"
+                                                   Text="{Binding TrafficDirection}"
+                                                   FontSize="12"
+                                                   Foreground="#C9D1D9"
+                                                   Margin="0,8,0,0"/>
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0"
+                                                   Text="Stream Position:"
+                                                   FontSize="12"
+                                                   Foreground="#8B949E"
+                                                   Margin="0,8,0,0"/>
+                                        <TextBlock Grid.Row="3" Grid.Column="1"
+                                                   Text="{Binding StreamPosition}"
+                                                   FontSize="12"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="#8B5CF6"
+                                                   Margin="0,8,0,0"/>
+
+                                        <TextBlock Grid.Row="4" Grid.Column="0"
+                                                   Text="Connection Age:"
+                                                   FontSize="12"
+                                                   Foreground="#8B949E"
+                                                   Margin="0,8,0,0"/>
+                                        <TextBlock Grid.Row="4" Grid.Column="1"
+                                                   Text="{Binding ConnectionAge}"
+                                                   FontSize="12"
+                                                   Foreground="#C9D1D9"
+                                                   Margin="0,8,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                        </Grid>
+                    </Border>
+                </TabItem>
+
+                <!-- Tab 4: Protocol Deep Dive -->
+                <TabItem Header="Protocol Deep Dive">
+                    <Border Background="#0D1117" Padding="16">
+                        <Grid>
+                            <!-- Empty state when no packet selected -->
+                            <StackPanel IsVisible="{Binding !HasPacket}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Spacing="12">
+                                <TextBlock Text="🔬" FontSize="48" HorizontalAlignment="Center" Opacity="0.3"/>
+                                <TextBlock Text="{Binding EmptyStateMessage}"
+                                           FontSize="14"
+                                           Foreground="#6E7681"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+
+                            <!-- Placeholder when deep dive not loaded -->
+                            <StackPanel IsVisible="{Binding HasPacket}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Spacing="16"
+                                        MaxWidth="600">
+
+                                <!-- Not yet loaded state -->
+                                <StackPanel IsVisible="{Binding !DeepDiveAvailable}" Spacing="16">
+                                    <TextBlock Text="🔬" FontSize="48" HorizontalAlignment="Center" Opacity="0.5"/>
+                                    <TextBlock Text="Protocol Deep Dive uses TShark to extract detailed protocol dissection.&#x0a;&#x0a;Click below to analyze this packet's full protocol stack including:&#x0a;• DNS queries, record types, and responses&#x0a;• HTTP headers, methods, and URIs&#x0a;• TLS handshakes, cipher suites, and certificates&#x0a;• SMTP/SIP/RTP protocol details"
+                                               FontSize="12"
+                                               Foreground="#8B949E"
+                                               TextWrapping="Wrap"
+                                               TextAlignment="Center"
+                                               LineHeight="18"/>
+
+                                    <!-- Load Deep Dive Button -->
+                                    <Button Command="{Binding LoadDeepDiveCommand}"
+                                            IsEnabled="{Binding !DeepDiveLoading}"
+                                            HorizontalAlignment="Center"
+                                            Classes="primary-button"
+                                            Padding="24,10"
+                                            FontSize="13"
+                                            FontWeight="SemiBold">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="⏳" IsVisible="{Binding DeepDiveLoading}"/>
+                                            <TextBlock Text="🔬 Load Protocol Details" IsVisible="{Binding !DeepDiveLoading}"/>
+                                            <TextBlock Text="Analyzing..." IsVisible="{Binding DeepDiveLoading}"/>
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+
+                                <!-- Deep dive loaded - show results -->
+                                <ScrollViewer IsVisible="{Binding DeepDiveAvailable}"
+                                              VerticalScrollBarVisibility="Auto"
+                                              HorizontalScrollBarVisibility="Disabled"
+                                              MaxHeight="600">
+                                    <StackPanel Spacing="12" MaxWidth="800">
+
+                                        <!-- Protocol Summary Header -->
+                                        <Border Background="#161B22" CornerRadius="8" Padding="16">
+                                            <StackPanel Spacing="12">
+                                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                                    <TextBlock Text="{Binding DeepDiveIcon}" FontSize="28"/>
+                                                    <StackPanel VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding DeepDiveProtocol}"
+                                                                   FontSize="18"
+                                                                   FontWeight="Bold"
+                                                                   Foreground="#F0F6FC"/>
+                                                        <TextBlock Text="Protocol Deep Dive"
+                                                                   FontSize="11"
+                                                                   Foreground="#8B949E"/>
+                                                    </StackPanel>
+                                                </StackPanel>
+
+                                                <!-- Key-Value Summary -->
+                                                <ItemsControl ItemsSource="{Binding DeepDiveSummary}"
+                                                              IsVisible="{Binding DeepDiveSummary.Count}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate DataType="vm:ProtocolSummaryItem">
+                                                            <Grid ColumnDefinitions="120,*" Margin="0,2">
+                                                                <TextBlock Grid.Column="0"
+                                                                           Text="{Binding Key, StringFormat='{}{0}:'}"
+                                                                           FontSize="11"
+                                                                           FontWeight="SemiBold"
+                                                                           Foreground="#8B5CF6"/>
+                                                                <TextBlock Grid.Column="1"
+                                                                           Text="{Binding Value}"
+                                                                           FontSize="11"
+                                                                           Foreground="#C9D1D9"
+                                                                           TextWrapping="Wrap"/>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Protocol Layers -->
+                                        <ItemsControl ItemsSource="{Binding DeepDiveLayers}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate DataType="vm:ProtocolLayerViewModel">
+                                                    <Border Background="#161B22" CornerRadius="6" Padding="12,10" Margin="0,4">
+                                                        <StackPanel Spacing="6">
+                                                            <!-- Layer header -->
+                                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                                <TextBlock Text="▸" FontSize="12" Foreground="#8B5CF6" VerticalAlignment="Center"
+                                                                           IsVisible="{Binding HasFields}"/>
+                                                                <TextBlock Text="{Binding Name}"
+                                                                           FontFamily="Consolas, Courier New, monospace"
+                                                                           FontSize="13"
+                                                                           Foreground="#F0F6FC"
+                                                                           FontWeight="SemiBold"/>
+                                                            </StackPanel>
+
+                                                            <!-- Fields -->
+                                                            <ItemsControl ItemsSource="{Binding Fields}"
+                                                                          IsVisible="{Binding HasFields}"
+                                                                          Margin="8,4,0,0">
+                                                                <ItemsControl.ItemTemplate>
+                                                                    <DataTemplate DataType="vm:ProtocolFieldViewModel">
+                                                                        <Border Margin="{Binding IndentPixels, StringFormat='{}{0},2,0,2'}"
+                                                                                Background="Transparent"
+                                                                                Padding="0,1">
+                                                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                                <TextBlock Text="{Binding Name, StringFormat='{}{0}:'}"
+                                                                                           FontFamily="Consolas, Courier New, monospace"
+                                                                                           FontSize="10"
+                                                                                           Foreground="{Binding NameColor}"/>
+                                                                                <TextBlock Text="{Binding Value}"
+                                                                                           FontFamily="Consolas, Courier New, monospace"
+                                                                                           FontSize="10"
+                                                                                           Foreground="{Binding ValueColor}"
+                                                                                           TextWrapping="Wrap"/>
+                                                                            </StackPanel>
+                                                                        </Border>
+                                                                    </DataTemplate>
+                                                                </ItemsControl.ItemTemplate>
+                                                            </ItemsControl>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ScrollViewer>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </TabItem>
+            </TabControl>
+        </Grid>
+    </Border>
+</UserControl>

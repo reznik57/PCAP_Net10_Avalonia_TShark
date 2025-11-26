@@ -1,0 +1,475 @@
+using System;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using PCAPAnalyzer.Core.Interfaces;
+using PCAPAnalyzer.Core.Services;
+using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.Core.Orchestration;
+using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.ViewModels.Components;
+using PCAPAnalyzer.UI.ViewModels.FileAnalysis;
+
+namespace PCAPAnalyzer.UI.ViewModels;
+
+/// <summary>
+/// Enhanced ViewModel for File Analysis tab - thin orchestrator pattern.
+/// Delegates to component ViewModels:
+/// - ProgressViewModel: Real-time metrics, throttling, QuickStats
+/// - StagesViewModel: Stage initialization, reset, completion
+/// - PipelineViewModel: 4-stage async analysis pipeline
+/// </summary>
+public partial class FileAnalysisViewModel : ObservableObject, IDisposable
+{
+    private readonly Services.IFileDialogService? _fileDialogService;
+    private CancellationTokenSource? _analysisCts;
+    private readonly DispatcherTimer _progressTimer;
+    private readonly Stopwatch _analysisStopwatch = new();
+
+    // ==================== COMPONENT VIEWMODELS ====================
+
+    /// <summary>Progress tracking, metrics, and QuickStats</summary>
+    public FileAnalysisProgressViewModel ProgressViewModel { get; }
+
+    /// <summary>Stage initialization, reset, and completion tracking</summary>
+    public FileAnalysisStagesViewModel StagesViewModel { get; }
+
+    /// <summary>4-stage analysis pipeline execution</summary>
+    public FileAnalysisPipelineViewModel PipelineViewModel { get; }
+
+    // ==================== FILE PROPERTIES ====================
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AnalyzeCommand))]
+    private string? _selectedFilePath;
+
+    [ObservableProperty] private string? _selectedFileName;
+
+    // ==================== ANALYSIS STATE ====================
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AnalyzeCommand))]
+    [NotifyCanExecuteChangedFor(nameof(StopCommand))]
+    private bool _isAnalyzing;
+
+    [ObservableProperty] private bool _isAnalysisComplete;
+
+    partial void OnIsAnalyzingChanged(bool value) =>
+        DebugLogger.Log($"[FileAnalysisViewModel] IsAnalyzing: {value}");
+
+    partial void OnIsAnalysisCompleteChanged(bool value) =>
+        DebugLogger.Log($"[FileAnalysisViewModel] IsAnalysisComplete: {value}");
+
+    // ==================== FORWARDED PROPERTIES ====================
+
+    /// <summary>Progress percentage (forwarded from ProgressViewModel)</summary>
+    public double ProgressPercentage
+    {
+        get => ProgressViewModel.ProgressPercentage;
+        set => ProgressViewModel.ProgressPercentage = value;
+    }
+
+    /// <summary>Stages collection (forwarded from StagesViewModel)</summary>
+    public ObservableCollection<AnalysisProgressStage> Stages => StagesViewModel.Stages;
+
+    /// <summary>Real-time metrics</summary>
+    public long PacketsProcessed => ProgressViewModel.PacketsProcessed;
+    public long TotalPacketsInFile => ProgressViewModel.TotalPacketsInFile;
+    public long PacketsPerSecond => ProgressViewModel.PacketsPerSecond;
+    public string TotalBytesFormatted => ProgressViewModel.TotalBytesFormatted;
+    public TimeSpan ElapsedTime => ProgressViewModel.ElapsedTime;
+    public string RemainingTimeFormatted => ProgressViewModel.RemainingTimeFormatted;
+
+    /// <summary>Quick stats model</summary>
+    public QuickStatsModel QuickStats => ProgressViewModel.QuickStats;
+
+    /// <summary>Stage durations</summary>
+    public TimeSpan ReadingDuration => ProgressViewModel.ReadingDuration;
+    public TimeSpan ParsingDuration => ProgressViewModel.ParsingDuration;
+    public TimeSpan StatisticsDuration => ProgressViewModel.StatisticsDuration;
+    public TimeSpan FinalizingDuration => ProgressViewModel.FinalizingDuration;
+
+    // ==================== SMART FILTERS ====================
+
+    [ObservableProperty] private SmartFiltersModel _smartFilters = new();
+    [ObservableProperty] private bool _isFiltersExpanded;
+
+    // ==================== PACKET PREVIEW ====================
+
+    public ObservableCollection<PacketInfo> PreviewPackets { get; } = new();
+
+    // ==================== SUMMARY STATS ====================
+
+    [ObservableProperty] private long _totalPackets;
+    [ObservableProperty] private string _totalTrafficVolume = "0 B";
+    [ObservableProperty] private TimeSpan _captureDuration;
+    [ObservableProperty] private int _uniqueProtocols;
+    [ObservableProperty] private int _uniqueIPs;
+    [ObservableProperty] private int _uniquePorts;
+    [ObservableProperty] private string _averagePacketSize = "0 B";
+
+    // ==================== NAVIGATION ====================
+
+    public Action<int>? NavigateToTab { get; set; }
+
+    // ==================== EVENTS ====================
+
+    /// <summary>Event fired when analysis completes successfully.</summary>
+    public Action<AnalysisCompletedEventArgs>? OnAnalysisCompleted { get; set; }
+
+    /// <summary>Event fired during analysis for real-time progress updates.</summary>
+    public Action<AnalysisProgressEventArgs>? OnProgressUpdated { get; set; }
+
+    // ==================== CONSTRUCTOR ====================
+
+    public FileAnalysisViewModel(
+        ITSharkService tsharkService,
+        IStatisticsService statisticsService,
+        MainWindowAnalysisViewModel? analysisVm = null,
+        Services.IFileDialogService? fileDialogService = null)
+    {
+        _fileDialogService = fileDialogService;
+
+        // Initialize component ViewModels
+        ProgressViewModel = new FileAnalysisProgressViewModel();
+        StagesViewModel = new FileAnalysisStagesViewModel();
+        PipelineViewModel = new FileAnalysisPipelineViewModel(tsharkService, statisticsService);
+
+        // Wire up stages to progress for notifications
+        ProgressViewModel.SetStagesCollection(StagesViewModel.Stages);
+
+        // Wire up analysis VM for global overlay
+        if (analysisVm != null)
+            StagesViewModel.SetAnalysisViewModel(analysisVm);
+
+        // Wire up stage change notifications
+        StagesViewModel.StagesChanged += () => OnPropertyChanged(nameof(Stages));
+
+        // Wire up pipeline events
+        PipelineViewModel.AnalysisCompleted += args => OnAnalysisCompleted?.Invoke(args);
+        PipelineViewModel.StageDurationUpdated += OnStageDurationUpdated;
+
+        // Initialize timer
+        _progressTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
+        _progressTimer.Tick += (_, _) => ProgressViewModel.ElapsedTime = _analysisStopwatch.Elapsed;
+
+        // Initialize stages
+        StagesViewModel.InitializeStages();
+    }
+
+    private void OnStageDurationUpdated(string stageName, TimeSpan duration)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            switch (stageName)
+            {
+                case "Reading":
+                    ProgressViewModel.ReadingDuration = duration;
+                    break;
+                case "Parsing":
+                    ProgressViewModel.ParsingDuration = duration;
+                    break;
+                case "Statistics":
+                    ProgressViewModel.StatisticsDuration = duration;
+                    break;
+                case "Finalizing":
+                    ProgressViewModel.FinalizingDuration = duration;
+                    break;
+            }
+        });
+    }
+
+    /// <summary>
+    /// Set the MainWindowAnalysisViewModel reference for global progress overlay integration.
+    /// </summary>
+    public void SetAnalysisViewModel(MainWindowAnalysisViewModel analysisVm)
+    {
+        StagesViewModel.SetAnalysisViewModel(analysisVm);
+        DebugLogger.Log("[FileAnalysisViewModel] Wired to MainWindowAnalysisViewModel");
+    }
+
+    // ==================== COMMANDS ====================
+
+    [RelayCommand]
+    private async Task BrowseAsync()
+    {
+        DebugLogger.Log("[FileAnalysisViewModel] Browse requested");
+
+        if (_fileDialogService == null)
+        {
+            DebugLogger.Log("[FileAnalysisViewModel] FileDialogService not available");
+            return;
+        }
+
+        var filter = new Services.FileDialogFilter("PCAP Files", "pcap", "pcapng", "cap");
+        var filePath = await _fileDialogService.OpenFileAsync("Open PCAP File", filter);
+
+        if (!string.IsNullOrEmpty(filePath))
+        {
+            SelectedFilePath = filePath;
+            SelectedFileName = Path.GetFileName(filePath);
+            DebugLogger.Log($"[FileAnalysisViewModel] File selected: {filePath}");
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanAnalyze))]
+    private async Task AnalyzeAsync()
+    {
+        if (string.IsNullOrEmpty(SelectedFilePath) || !File.Exists(SelectedFilePath))
+            return;
+
+        _analysisCts = new CancellationTokenSource();
+        IsAnalyzing = true;
+        IsAnalysisComplete = false;
+        ProgressViewModel.ResetMetrics();
+        StagesViewModel.ResetStages();
+
+        _analysisStopwatch.Restart();
+        _progressTimer.Start();
+
+        // Create shared ProgressCoordinator
+        var coordinator = new ProgressCoordinator(new Progress<AnalysisProgress>(ProgressViewModel.OnProgressUpdate));
+        var fileInfo = new FileInfo(SelectedFilePath);
+        coordinator.InitializeTimeEstimates(fileInfo.Length / 1024.0 / 1024.0);
+        PipelineViewModel.Initialize(coordinator);
+
+        var overallStartTime = DateTime.Now;
+
+        try
+        {
+            // Stage 0: Count packets
+            var (totalPackets, packets) = await PipelineViewModel.ExecuteCountingStageAsync(
+                SelectedFilePath, _analysisCts.Token);
+            _analysisCts.Token.ThrowIfCancellationRequested();
+
+            await UpdateUIAfterCounting(totalPackets);
+
+            // Stage 1: Load packets
+            var totalBytes = await PipelineViewModel.ExecuteLoadingStageAsync(
+                SelectedFilePath,
+                packets,
+                totalPackets,
+                _analysisCts.Token,
+                (count, bytes) => UpdateUIProgress(count, bytes));
+            _analysisCts.Token.ThrowIfCancellationRequested();
+
+            // Stage 2: Calculate statistics
+            var statistics = await PipelineViewModel.ExecuteStatisticsStageAsync(
+                packets,
+                StagesViewModel.GetGeoIPStage(),
+                StagesViewModel.GetFlowStage());
+            _analysisCts.Token.ThrowIfCancellationRequested();
+
+            // Stage 3: Finalization
+            await PipelineViewModel.ExecuteFinalizationStageAsync(
+                packets,
+                totalBytes,
+                statistics,
+                OnFinalized);
+
+            // Set to 95% (tab loading continues to 100%)
+            ProgressViewModel.ProgressPercentage = 95;
+
+            // Fire completion event
+            PipelineViewModel.FireAnalysisCompleted(
+                overallStartTime,
+                SelectedFilePath,
+                totalBytes,
+                packets,
+                statistics,
+                ProgressViewModel.ReadingDuration,
+                ProgressViewModel.ParsingDuration,
+                ProgressViewModel.StatisticsDuration,
+                ProgressViewModel.FinalizingDuration,
+                true,
+                null);
+        }
+        catch (OperationCanceledException)
+        {
+            PipelineViewModel.HandleCancellation();
+            await HandleAnalysisCancellation();
+        }
+        catch (Exception ex)
+        {
+            PipelineViewModel.HandleError(ex, overallStartTime, SelectedFilePath);
+            await HandleAnalysisError();
+        }
+    }
+
+    private async Task UpdateUIAfterCounting(long totalPackets)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            ProgressViewModel.TotalPacketsInFile = totalPackets;
+            ProgressViewModel.TotalBytesFormatted = "0 B";
+        });
+    }
+
+    private void UpdateUIProgress(int count, long bytes)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            ProgressViewModel.PacketsProcessed = count;
+            ProgressViewModel.TotalBytesFormatted = NumberFormatter.FormatBytes(bytes);
+        });
+    }
+
+    private void OnFinalized(long totalPackets, string trafficVolume, TimeSpan duration, int protocols, int ips, int ports, string avgSize)
+    {
+        TotalPackets = totalPackets;
+        TotalTrafficVolume = trafficVolume;
+        CaptureDuration = duration;
+        UniqueProtocols = protocols;
+        UniqueIPs = ips;
+        UniquePorts = ports;
+        AveragePacketSize = avgSize;
+    }
+
+    private async Task HandleAnalysisCancellation()
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            IsAnalyzing = false;
+            _progressTimer.Stop();
+        });
+    }
+
+    private async Task HandleAnalysisError()
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            IsAnalyzing = false;
+            IsAnalysisComplete = false;
+            _progressTimer.Stop();
+        });
+    }
+
+    [RelayCommand(CanExecute = nameof(CanStop))]
+    private void Stop()
+    {
+        _analysisCts?.Cancel();
+        IsAnalyzing = false;
+        _progressTimer.Stop();
+    }
+
+    [RelayCommand]
+    private void Clear()
+    {
+        SelectedFilePath = null;
+        SelectedFileName = null;
+        IsAnalysisComplete = false;
+        ProgressViewModel.ResetMetrics();
+        ResetSummaryStats();
+    }
+
+    // ==================== NAVIGATION COMMANDS ====================
+
+    [RelayCommand] private void NavigateToPacketAnalysis() => NavigateToTab?.Invoke(0);
+    [RelayCommand] private void NavigateToDashboard() => NavigateToTab?.Invoke(1);
+    [RelayCommand] private void NavigateToThreats() => NavigateToTab?.Invoke(2);
+    [RelayCommand] private void NavigateToVoiceQoS() => NavigateToTab?.Invoke(3);
+
+    // ==================== FILTER COMMANDS ====================
+
+    [RelayCommand]
+    private void ToggleFilters() => IsFiltersExpanded = !IsFiltersExpanded;
+
+    [RelayCommand]
+    private void ApplyFilters()
+    {
+        DebugLogger.Log("[FileAnalysisViewModel] Apply Filters requested");
+        DebugLogger.Log($"[FileAnalysisViewModel] SourceIP: {SmartFilters.SourceIPCIDR}, DestIP: {SmartFilters.DestIPCIDR}");
+    }
+
+    [RelayCommand]
+    private void ClearAnalysis()
+    {
+        SelectedFilePath = null;
+        SelectedFileName = null;
+        IsAnalysisComplete = false;
+        ProgressViewModel.ResetMetrics();
+        ProgressViewModel.QuickStats.Reset();
+        StagesViewModel.Stages.Clear();
+        PreviewPackets.Clear();
+        DebugLogger.Log("[FileAnalysisViewModel] Analysis cleared");
+    }
+
+    [RelayCommand]
+    private void ClearAllFilters()
+    {
+        SmartFilters.Clear();
+        DebugLogger.Log("[FileAnalysisViewModel] All filters cleared");
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    private bool CanAnalyze() => !string.IsNullOrEmpty(SelectedFilePath) && !IsAnalyzing;
+    private bool CanStop() => IsAnalyzing;
+
+    private void ResetSummaryStats()
+    {
+        TotalPackets = 0;
+        TotalTrafficVolume = "0 B";
+        CaptureDuration = TimeSpan.Zero;
+        UniqueProtocols = 0;
+        UniqueIPs = 0;
+        UniquePorts = 0;
+        AveragePacketSize = "0 B";
+    }
+
+    // ==================== PUBLIC API (for MainWindowViewModel) ====================
+
+    /// <summary>Report tab loading progress (Stage 6: 97-100%).</summary>
+    public void ReportTabLoadingProgress(int percentWithinStage, string message)
+    {
+        StagesViewModel.ReportTabLoadingProgress(
+            percentWithinStage,
+            message,
+            progress => ProgressViewModel.ProgressPercentage = progress);
+    }
+
+    /// <summary>Complete entire analysis after all tabs loaded.</summary>
+    public void CompleteAnalysis()
+    {
+        StagesViewModel.CompleteAnalysis(() =>
+        {
+            ProgressViewModel.ProgressPercentage = 100;
+            IsAnalyzing = false;
+            IsAnalysisComplete = true;
+            _progressTimer.Stop();
+            DebugLogger.Log("[FileAnalysisViewModel] Analysis COMPLETE at 100%");
+        });
+    }
+
+    /// <summary>Update QuickStats from analysis result.</summary>
+    public void UpdateQuickStatsFromResult(AnalysisResult result) =>
+        ProgressViewModel.UpdateQuickStatsFromResult(result);
+
+    /// <summary>Sync stages from orchestrator.</summary>
+    public void SyncStageFromOrchestrator(string phaseName, int percentComplete, string detail) =>
+        StagesViewModel.SyncStageFromOrchestrator(phaseName, percentComplete, detail);
+
+    /// <summary>Initialize progress reporter for ProgressCoordinator integration.</summary>
+    public void InitializeProgressReporter()
+    {
+        DebugLogger.Log("[FileAnalysisViewModel] Progress reporter initialized");
+    }
+
+    /// <summary>Public accessor for progress reporter.</summary>
+    public IProgress<AnalysisProgress>? ProgressReporter =>
+        new Progress<AnalysisProgress>(ProgressViewModel.OnProgressUpdate);
+
+    public void Dispose()
+    {
+        _analysisCts?.Cancel();
+        _analysisCts?.Dispose();
+        _progressTimer?.Stop();
+        GC.SuppressFinalize(this);
+    }
+}

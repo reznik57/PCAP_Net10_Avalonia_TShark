@@ -1,0 +1,179 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels.Components"
+             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="500"
+             x:Class="PCAPAnalyzer.UI.Views.Components.DrillDownPopupView"
+             x:DataType="vm:DrillDownPopupViewModel"
+             IsVisible="{Binding IsVisible}">
+
+    <Border Background="#0D1117" BorderBrush="#30363D" BorderThickness="1"
+            CornerRadius="8" Padding="16" MinWidth="400" MaxWidth="500">
+        <StackPanel Spacing="16">
+            <!-- Header -->
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                <Button Grid.Column="1" Command="{Binding CloseCommand}" Classes="close-btn" Content="X"/>
+            </Grid>
+
+            <!-- Sampling Warning -->
+            <Border Background="#3D2A1E" CornerRadius="4" Padding="8" IsVisible="{Binding ShowSamplingWarning}">
+                <TextBlock Text="Showing sample of 50,000 packets" FontSize="11" Foreground="#F0883E"/>
+            </Border>
+
+            <!-- Traffic Summary -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="TRAFFIC SUMMARY" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
+                    <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="Packets:" Foreground="#8B949E" FontSize="12"/>
+                        <TextBlock Text="{Binding TotalPackets, StringFormat='{}{0:N0}'}" Foreground="#F0F6FC" FontSize="12" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="First:" Foreground="#8B949E" FontSize="12"/>
+                        <TextBlock Text="{Binding FirstSeen, StringFormat='{}{0:HH:mm:ss}'}" Foreground="#F0F6FC" FontSize="12"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="Traffic:" Foreground="#8B949E" FontSize="12"/>
+                        <TextBlock Text="{Binding TotalBytesFormatted}" Foreground="#F0F6FC" FontSize="12" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="Last:" Foreground="#8B949E" FontSize="12"/>
+                        <TextBlock Text="{Binding LastSeen, StringFormat='{}{0:HH:mm:ss}'}" Foreground="#F0F6FC" FontSize="12"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="Avg Size:" Foreground="#8B949E" FontSize="12"/>
+                        <TextBlock Text="{Binding AveragePacketSize, StringFormat='{}{0:N0} bytes'}" Foreground="#F0F6FC" FontSize="12"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="Duration:" Foreground="#8B949E" FontSize="12"/>
+                        <TextBlock Text="{Binding Duration}" Foreground="#F0F6FC" FontSize="12"/>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+
+            <!-- Top Ports (clickable) -->
+            <StackPanel Spacing="8" IsVisible="{Binding TopPorts.Count}">
+                <TextBlock Text="TOP PORTS" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
+                <ItemsControl ItemsSource="{Binding TopPorts}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding DataContext.FilterByPortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding Port}"
+                                    Classes="row-btn" ToolTip.Tip="Click to view packets for this port">
+                                <Grid ColumnDefinitions="80,*,60">
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                                        <TextBlock Text="{Binding Port}" FontSize="12" Foreground="#58A6FF" FontWeight="SemiBold"/>
+                                        <TextBlock Text="{Binding ServiceName, StringFormat='({0})'}" FontSize="10" Foreground="#8B949E"
+                                                   IsVisible="{Binding ServiceName, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Height="8" Background="#21262D" CornerRadius="4" Margin="8,0">
+                                        <Border Background="#58A6FF" CornerRadius="4" HorizontalAlignment="Left"
+                                                Width="{Binding Percentage}"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="2" Text="{Binding Percentage, StringFormat='{}{0:F0}%'}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- Connected Endpoints (clickable) -->
+            <StackPanel Spacing="8" IsVisible="{Binding ConnectedEndpoints.Count}">
+                <TextBlock Text="TOP TALKERS" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
+                <ItemsControl ItemsSource="{Binding ConnectedEndpoints}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding DataContext.FilterByIPCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding IP}"
+                                    Classes="row-btn" ToolTip.Tip="Click to view packets for this IP">
+                                <Grid ColumnDefinitions="*,80,80">
+                                    <TextBlock Grid.Column="0" Text="{Binding IP}" FontSize="12" Foreground="#58A6FF" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding BytesFormatted}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- Top Conversations (clickable) -->
+            <StackPanel Spacing="8" IsVisible="{Binding TopConversations.Count}">
+                <TextBlock Text="TOP CONVERSATIONS" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
+                <ItemsControl ItemsSource="{Binding TopConversations}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding DataContext.FilterByConversationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"
+                                    Classes="row-btn" ToolTip.Tip="Click to view packets for this conversation">
+                                <Grid ColumnDefinitions="*,60,60">
+                                    <TextBlock Grid.Column="0" Text="{Binding DisplayText}" FontSize="11" Foreground="#58A6FF" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding PacketCount, StringFormat='{}{0:N0}'}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="2" Text="{Binding BytesFormatted}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
+                                </Grid>
+                            </Button>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+
+            <!-- Action Buttons -->
+            <Border Background="#161B22" CornerRadius="4" Padding="8">
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                    <Button Command="{Binding CopyToClipboardCommand}" Classes="action-btn" Content="Copy"/>
+                    <Button Command="{Binding FilterDashboardCommand}" Classes="action-btn" Content="Filter"/>
+                    <Button Command="{Binding ViewInPacketAnalysisCommand}" Classes="action-btn primary" Content="View Packets"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Border>
+
+    <UserControl.Styles>
+        <Style Selector="Button.close-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.close-btn:pointerover">
+            <Setter Property="Foreground" Value="#F0F6FC"/>
+        </Style>
+        <Style Selector="Button.row-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.row-btn:pointerover">
+            <Setter Property="Background" Value="#21262D"/>
+        </Style>
+        <Style Selector="Button.action-btn">
+            <Setter Property="Background" Value="#21262D"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.action-btn:pointerover">
+            <Setter Property="Background" Value="#30363D"/>
+        </Style>
+        <Style Selector="Button.action-btn.primary">
+            <Setter Property="Background" Value="#238636"/>
+            <Setter Property="BorderBrush" Value="#2EA043"/>
+        </Style>
+        <Style Selector="Button.action-btn.primary:pointerover">
+            <Setter Property="Background" Value="#2EA043"/>
+        </Style>
+    </UserControl.Styles>
+</UserControl>

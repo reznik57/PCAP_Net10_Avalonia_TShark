@@ -1,0 +1,123 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Avalonia.Threading;
+
+namespace PCAPAnalyzer.UI.Helpers
+{
+    /// <summary>
+    /// Throttles actions to prevent excessive updates while ensuring all data is processed
+    /// </summary>
+    public class ThrottledAction
+    {
+        private readonly TimeSpan _throttleInterval;
+        private readonly Action _action;
+        private readonly DispatcherTimer _timer;
+        private bool _isPending;
+        private readonly object _lock = new object();
+        
+        public ThrottledAction(TimeSpan throttleInterval, Action action)
+        {
+            _throttleInterval = throttleInterval;
+            _action = action ?? throw new ArgumentNullException(nameof(action));
+            
+            _timer = new DispatcherTimer
+            {
+                Interval = throttleInterval
+            };
+            _timer.Tick += OnTimerTick;
+        }
+        
+        /// <summary>
+        /// Request the action to be executed. Multiple calls will be throttled.
+        /// </summary>
+        public void Request()
+        {
+            lock (_lock)
+            {
+                _isPending = true;
+                if (!_timer.IsEnabled)
+                {
+                    _timer.Start();
+                }
+            }
+        }
+        
+        private void OnTimerTick(object? sender, EventArgs e)
+        {
+            lock (_lock)
+            {
+                _timer.Stop();
+                if (_isPending)
+                {
+                    _isPending = false;
+                    _action();
+                }
+            }
+        }
+        
+        public void Stop()
+        {
+            lock (_lock)
+            {
+                _timer.Stop();
+                _isPending = false;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Async version of ThrottledAction
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "CTS is disposed in ExecuteAsync method")]
+    public class ThrottledAsyncAction
+    {
+        private readonly TimeSpan _throttleInterval;
+        private readonly Func<Task> _action;
+        private CancellationTokenSource? _cts;
+        private readonly object _lock = new object();
+        
+        public ThrottledAsyncAction(TimeSpan throttleInterval, Func<Task> action)
+        {
+            _throttleInterval = throttleInterval;
+            _action = action ?? throw new ArgumentNullException(nameof(action));
+        }
+        
+        /// <summary>
+        /// Request the async action to be executed. Multiple calls will be throttled.
+        /// </summary>
+        public async Task RequestAsync()
+        {
+            CancellationTokenSource cts;
+            
+            lock (_lock)
+            {
+                _cts?.Cancel();
+                _cts = new CancellationTokenSource();
+                cts = _cts;
+            }
+            
+            try
+            {
+                await Task.Delay(_throttleInterval, cts.Token).ConfigureAwait(false);
+                
+                if (!cts.Token.IsCancellationRequested)
+                {
+                    await _action().ConfigureAwait(false);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // Expected when throttling
+            }
+        }
+        
+        public void Cancel()
+        {
+            lock (_lock)
+            {
+                _cts?.Cancel();
+            }
+        }
+    }
+}

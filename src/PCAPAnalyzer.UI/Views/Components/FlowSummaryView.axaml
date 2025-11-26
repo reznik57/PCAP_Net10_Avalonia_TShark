@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PCAPAnalyzer.UI.Views.Components.FlowSummaryView"
+             x:CompileBindings="False">
+    <UserControl.Styles>
+        <Style Selector="DataGrid">
+            <Setter Property="RowHeight" Value="28"/>
+        </Style>
+    </UserControl.Styles>
+    <Grid RowDefinitions="Auto,*">
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Spacing="8">
+            <TextBlock Text="Flows" FontSize="20" FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding TotalFlows, StringFormat='({0:N0} total)'}" FontSize="14" VerticalAlignment="Bottom"/>
+            <Button Content="Export CSV" Command="{Binding ExportCsvCommand}" Margin="20,0,0,0"/>
+            <Button Content="Export PDF" Command="{Binding ExportPdfCommand}"/>
+        </StackPanel>
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Flows}"
+                  AutoGenerateColumns="False"
+                  CanUserSortColumns="True"
+                  CanUserResizeColumns="True"
+                  IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Source" Binding="{Binding Path=SourceIP}" Width="*"/>
+                <DataGridTextColumn Header="Src Port" Binding="{Binding Path=SourcePort}" Width="80"/>
+                <DataGridTextColumn Header="Destination" Binding="{Binding Path=DestinationIP}" Width="*"/>
+                <DataGridTextColumn Header="Dst Port" Binding="{Binding Path=DestinationPort}" Width="80"/>
+                <DataGridTextColumn Header="Protocol" Binding="{Binding Path=Protocol}" Width="120"/>
+                <DataGridTextColumn Header="Packets" Binding="{Binding Path=PacketCount}" Width="120"/>
+                <DataGridTextColumn Header="Traffic" Binding="{Binding Path=DisplayBytes}" Width="120"/>
+                <DataGridTextColumn Header="First Seen" Binding="{Binding Path=FirstSeen, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" Width="180"/>
+                <DataGridTextColumn Header="Last Seen" Binding="{Binding Path=LastSeen, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" Width="180"/>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</UserControl>

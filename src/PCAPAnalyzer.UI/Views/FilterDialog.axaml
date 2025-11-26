@@ -1,0 +1,208 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:PCAPAnalyzer.UI.Views"
+        xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+        x:Class="PCAPAnalyzer.UI.Views.FilterDialog"
+        x:DataType="vm:FilterViewModel"
+        Title="Filter Packets"
+        Width="500" Height="600"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource BackgroundDark}">
+    
+    <Grid Margin="20,20,20,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="Filter Packets" 
+                   FontSize="20" FontWeight="Bold" 
+                   Foreground="{DynamicResource TextPrimary}"
+                   Margin="0,0,0,10"/>
+        
+        <!-- Help Text -->
+        <TextBlock Grid.Row="1" 
+                   Text="Tip: Use '!' prefix for NOT filters (e.g., !192.168 excludes packets from/to 192.168.x.x)" 
+                   FontSize="12" FontStyle="Italic"
+                   Foreground="{DynamicResource TextSecondary}"
+                   TextWrapping="Wrap"
+                   Margin="0,0,0,15"/>
+        
+        <!-- Filter Fields -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="15">
+                <!-- IP Filters -->
+                <Border Background="{DynamicResource BackgroundElevated}" 
+                        Padding="15,15,15,15" CornerRadius="8">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="IP Address Filters" FontWeight="SemiBold" 
+                                  Foreground="{DynamicResource TextPrimary}"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Source IP:" 
+                                      VerticalAlignment="Center"
+                                      Foreground="{DynamicResource TextSecondary}"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" 
+                                    Text="{Binding SourceIpFilter}"
+                                    Watermark="e.g., 192.168.1.1 or 192.168"
+                                    Background="{DynamicResource BackgroundLight}"/>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Destination IP:" 
+                                      VerticalAlignment="Center" Margin="0,10,0,0"
+                                      Foreground="{DynamicResource TextSecondary}"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" 
+                                    Text="{Binding DestinationIpFilter}"
+                                    Watermark="e.g., 10.0.0.1 or 10.0"
+                                    Margin="0,10,0,0"
+                                    Background="{DynamicResource BackgroundLight}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Port Filters -->
+                <Border Background="{DynamicResource BackgroundElevated}" 
+                        Padding="15,15,15,15" CornerRadius="8">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Port Filters" FontWeight="SemiBold" 
+                                  Foreground="{DynamicResource TextPrimary}"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Source Port:" 
+                                      VerticalAlignment="Center"
+                                      Foreground="{DynamicResource TextSecondary}"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" 
+                                    Text="{Binding SourcePortText}"
+                                    Watermark="e.g., 80, 443, 8080"
+                                    Background="{DynamicResource BackgroundLight}"/>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Destination Port:" 
+                                      VerticalAlignment="Center" Margin="0,10,0,0"
+                                      Foreground="{DynamicResource TextSecondary}"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" 
+                                    Text="{Binding DestinationPortText}"
+                                    Watermark="e.g., 80, 443, 8080"
+                                    Margin="0,10,0,0"
+                                    Background="{DynamicResource BackgroundLight}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Protocol Filter -->
+                <Border Background="{DynamicResource BackgroundElevated}" 
+                        Padding="15,15,15,15" CornerRadius="8">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Protocol" FontWeight="SemiBold" 
+                                  Foreground="{DynamicResource TextPrimary}"/>
+                        <TextBox Text="{Binding ProtocolFilterText}"
+                                Watermark="Enter protocol (e.g., TCP, TLSv1.2, SNMP)"
+                                Width="200" HorizontalAlignment="Left"
+                                Background="{DynamicResource BackgroundLight}"
+                                ToolTip.Tip="Protocol name (TCP, UDP, HTTP, TLSv1.2, SNMP, etc.) Use ! for NOT"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Length Filter -->
+                <Border Background="{DynamicResource BackgroundElevated}" 
+                        Padding="15,15,15,15" CornerRadius="8">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Packet Length" FontWeight="SemiBold" 
+                                  Foreground="{DynamicResource TextPrimary}"/>
+                        
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Min Length:" 
+                                      VerticalAlignment="Center"
+                                      Foreground="{DynamicResource TextSecondary}"/>
+                            <TextBox Grid.Row="0" Grid.Column="1" 
+                                    Text="{Binding MinLengthText}"
+                                    Watermark="Minimum packet size in bytes"
+                                    Background="{DynamicResource BackgroundLight}"/>
+                            
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Max Length:" 
+                                      VerticalAlignment="Center" Margin="0,10,0,0"
+                                      Foreground="{DynamicResource TextSecondary}"/>
+                            <TextBox Grid.Row="1" Grid.Column="1" 
+                                    Text="{Binding MaxLengthText}"
+                                    Watermark="Maximum packet size in bytes"
+                                    Margin="0,10,0,0"
+                                    Background="{DynamicResource BackgroundLight}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Info Search -->
+                <Border Background="{DynamicResource BackgroundElevated}" 
+                        Padding="15,15,15,15" CornerRadius="8">
+                    <StackPanel Spacing="10">
+                        <TextBlock Text="Info Text Search" FontWeight="SemiBold" 
+                                  Foreground="{DynamicResource TextPrimary}"/>
+                        <TextBox Text="{Binding InfoSearchText}"
+                                Watermark="Search in packet info field..."
+                                Background="{DynamicResource BackgroundLight}"/>
+                    </StackPanel>
+                </Border>
+                
+                <!-- Active Filter Indicator -->
+                <Border Background="{DynamicResource AccentWarning}" 
+                        Padding="10,10,10,10" CornerRadius="8"
+                        IsVisible="{Binding IsFilterActive}"
+                        Opacity="0.8">
+                    <TextBlock Text="Filter is active. Clear to show all packets."
+                              Foreground="White" FontWeight="Medium"
+                              HorizontalAlignment="Center"/>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+        
+        <!-- Buttons -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" 
+                   HorizontalAlignment="Right" Spacing="10" 
+                   Margin="0,20,0,0">
+            <Button Command="{Binding ClearFilterCommand}"
+                   Content="Clear Filter"
+                   Width="100"
+                   Classes="secondary"/>
+            <Button Command="{Binding ApplyFilterCommand}"
+                   Content="Apply Filter"
+                   Width="100"
+                   Classes="primary"/>
+            <Button Content="OK"
+                   Width="100"
+                   Classes="primary"
+                   IsDefault="True"
+                   Click="OnOkClick"/>
+            <Button Content="Cancel"
+                   Width="100"
+                   Click="OnCancelClick"/>
+        </StackPanel>
+    </Grid>
+</Window>

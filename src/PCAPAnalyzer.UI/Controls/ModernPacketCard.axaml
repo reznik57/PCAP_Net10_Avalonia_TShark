@@ -1,0 +1,159 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PCAPAnalyzer.UI.Controls.ModernPacketCard"
+             x:CompileBindings="False">
+    
+    <Border Classes="card glow-hover" Margin="8,8,8,8" MinHeight="120">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Protocol Color Indicator -->
+            <Border Grid.Column="0" 
+                    Background="{Binding ProtocolColor}"
+                    CornerRadius="4,0,0,4"/>
+            
+            <!-- Main Content -->
+            <Grid Grid.Column="1" Margin="20,20,20,20">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Header Row -->
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Frame Number Badge -->
+                    <Border Grid.Column="0" 
+                            Classes="badge badge-info" 
+                            Margin="0,0,12,0">
+                        <TextBlock Text="{Binding FrameNumber, StringFormat='#{0}'}"
+                                   FontWeight="Bold"
+                                   FontSize="12"
+                                   Foreground="White"/>
+                    </Border>
+                    
+                    <!-- Protocol Badge -->
+                    <Border Grid.Column="1" 
+                            HorizontalAlignment="Left"
+                            Background="{Binding ProtocolBadgeColor}"
+                            CornerRadius="4"
+                            Padding="8,4">
+                        <TextBlock Text="{Binding Protocol}"
+                                   FontWeight="SemiBold"
+                                   FontSize="12"
+                                   Foreground="White"/>
+                    </Border>
+                    
+                    <!-- Timestamp -->
+                    <TextBlock Grid.Column="2" 
+                               Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextMuted}"
+                               VerticalAlignment="Center"/>
+                </Grid>
+                
+                <!-- Connection Info Row -->
+                <Grid Grid.Row="1" Margin="0,12,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Source -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                        <Path Data="M 12 2 C 6.48 2 2 6.48 2 12 C 2 17.52 6.48 22 12 22 C 17.52 22 22 17.52 22 12 C 22 6.48 17.52 2 12 2 Z M 12 20 C 7.59 20 4 16.41 4 12 C 4 7.59 7.59 4 12 4 C 16.41 4 20 7.59 20 12 C 20 16.41 16.41 20 12 20 Z M 16.59 7.58 L 10 14.17 L 7.41 11.59 L 6 13 L 10 17 L 18 9 Z"
+                              Fill="{DynamicResource AccentPrimary}"
+                              Width="16" Height="16"
+                              Stretch="Uniform"
+                              VerticalAlignment="Center"/>
+                        <StackPanel>
+                            <TextBlock Text="{Binding SourceIP}"
+                                       FontSize="14"
+                                       FontWeight="Medium"
+                                       Foreground="{DynamicResource TextPrimary}"/>
+                            <TextBlock Text="{Binding SourcePort, StringFormat='Port: {0}'}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextMuted}"/>
+                        </StackPanel>
+                    </StackPanel>
+                    
+                    <!-- Arrow -->
+                    <Path Grid.Column="1" 
+                          Data="M 10 6 L 18 12 L 10 18 Z"
+                          Fill="{DynamicResource TextMuted}"
+                          Width="20" Height="20"
+                          Stretch="Uniform"
+                          Margin="16,0"
+                          VerticalAlignment="Center"/>
+                    
+                    <!-- Destination -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                        <StackPanel>
+                            <TextBlock Text="{Binding DestinationIP}"
+                                       FontSize="14"
+                                       FontWeight="Medium"
+                                       Foreground="{DynamicResource TextPrimary}"
+                                       HorizontalAlignment="Right"/>
+                            <TextBlock Text="{Binding DestinationPort, StringFormat='Port: {0}'}"
+                                       FontSize="11"
+                                       Foreground="{DynamicResource TextMuted}"
+                                       HorizontalAlignment="Right"/>
+                        </StackPanel>
+                        <Path Data="M 12 2 C 6.48 2 2 6.48 2 12 C 2 17.52 6.48 22 12 22 C 17.52 22 22 17.52 22 12 C 22 6.48 17.52 2 12 2 Z M 12 20 C 7.59 20 4 16.41 4 12 C 4 7.59 7.59 4 12 4 C 16.41 4 20 7.59 20 12 C 20 16.41 16.41 20 12 20 Z"
+                              Fill="{DynamicResource AccentSecondary}"
+                              Width="16" Height="16"
+                              Stretch="Uniform"
+                              VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Grid>
+                
+                <!-- Info Row -->
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <!-- Info Text -->
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding Info}"
+                               FontSize="12"
+                               Foreground="{DynamicResource TextSecondary}"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTip.Tip="{Binding Info}"/>
+                    
+                    <!-- Size Badge -->
+                    <Border Grid.Column="1"
+                            Background="{DynamicResource BackgroundLight}"
+                            CornerRadius="4"
+                            Padding="8,4"
+                            Margin="8,0,0,0">
+                        <TextBlock Text="{Binding Length, StringFormat='{}{0} bytes'}"
+                                   FontSize="11"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource TextMuted}"/>
+                    </Border>
+                </Grid>
+            </Grid>
+            
+            <!-- Threat Indicator (if applicable) -->
+            <Border Grid.Column="2" 
+                    IsVisible="{Binding IsThreat}"
+                    Background="{DynamicResource AccentError}"
+                    Width="4"
+                    CornerRadius="0,4,4,0"
+                    ToolTip.Tip="Potential threat detected"/>
+        </Grid>
+    </Border>
+</UserControl>

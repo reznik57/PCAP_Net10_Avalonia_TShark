@@ -1,0 +1,99 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PCAPAnalyzer.UI.Controls.ChartZoomControl"
+             x:CompileBindings="False">
+    
+    <Border Background="{DynamicResource BackgroundElevated}"
+            CornerRadius="24"
+            Padding="8,4"
+            BorderBrush="{DynamicResource BorderPrimary}"
+            BorderThickness="1"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            Margin="12,12,12,12">
+        
+        <StackPanel Orientation="Horizontal" Spacing="4">
+            <!-- Zoom Out Button -->
+            <Button Classes="icon-button"
+                    Width="32" Height="32"
+                    Command="{Binding ZoomOutCommand}"
+                    ToolTip.Tip="Zoom Out (-)">
+                <Path Data="M 5 11 L 19 11"
+                      Stroke="{DynamicResource TextPrimary}"
+                      StrokeThickness="2"
+                      Width="14" Height="2"
+                      Stretch="None"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"/>
+            </Button>
+            
+            <!-- Zoom Level Display -->
+            <Border Background="{DynamicResource BackgroundLight}"
+                    CornerRadius="4"
+                    Padding="8,0"
+                    MinWidth="60"
+                    VerticalAlignment="Center">
+                <TextBlock Text="{Binding ZoomLevel, StringFormat='{}{0:F0}%'}"
+                           Foreground="{DynamicResource TextPrimary}"
+                           FontSize="12"
+                           FontWeight="Medium"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Border>
+            
+            <!-- Zoom In Button -->
+            <Button Classes="icon-button"
+                    Width="32" Height="32"
+                    Command="{Binding ZoomInCommand}"
+                    ToolTip.Tip="Zoom In (+)">
+                <Grid>
+                    <Path Data="M 5 11 L 19 11"
+                          Stroke="{DynamicResource TextPrimary}"
+                          StrokeThickness="2"
+                          Width="14" Height="2"
+                          Stretch="None"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"/>
+                    <Path Data="M 12 4 L 12 18"
+                          Stroke="{DynamicResource TextPrimary}"
+                          StrokeThickness="2"
+                          Width="2" Height="14"
+                          Stretch="None"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"/>
+                </Grid>
+            </Button>
+            
+            <!-- Separator -->
+            <Rectangle Width="1" Height="20"
+                       Fill="{DynamicResource BorderPrimary}"
+                       Margin="4,0"/>
+            
+            <!-- Reset Zoom Button -->
+            <Button Classes="icon-button"
+                    Width="32" Height="32"
+                    Command="{Binding ResetZoomCommand}"
+                    ToolTip.Tip="Reset Zoom (100%)">
+                <Path Data="M 12 2 C 6.48 2 2 6.48 2 12 C 2 17.52 6.48 22 12 22 C 17.52 22 22 17.52 22 12 C 22 6.48 17.52 2 12 2 Z M 12 4 C 16.41 4 20 7.59 20 12 C 20 16.41 16.41 20 12 20 C 7.59 20 4 16.41 4 12 C 4 7.59 7.59 4 12 4 Z M 9 11 L 15 11 L 15 13 L 9 13 Z"
+                      Fill="{DynamicResource TextPrimary}"
+                      Width="18" Height="18"
+                      Stretch="Uniform"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"/>
+            </Button>
+            
+            <!-- Fit to Window Button -->
+            <Button Classes="icon-button"
+                    Width="32" Height="32"
+                    Command="{Binding FitToWindowCommand}"
+                    ToolTip.Tip="Fit to Window">
+                <Path Data="M 4 4 L 10 4 L 10 6 L 6 6 L 6 10 L 4 10 Z M 14 4 L 20 4 L 20 10 L 18 10 L 18 6 L 14 6 Z M 4 14 L 6 14 L 6 18 L 10 18 L 10 20 L 4 20 Z M 18 14 L 20 14 L 20 20 L 14 20 L 14 18 L 18 18 Z"
+                      Fill="{DynamicResource TextPrimary}"
+                      Width="18" Height="18"
+                      Stretch="Uniform"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center"/>
+            </Button>
+        </StackPanel>
+    </Border>
+</UserControl>

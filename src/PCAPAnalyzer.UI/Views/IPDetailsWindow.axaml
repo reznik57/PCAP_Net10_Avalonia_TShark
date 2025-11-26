@@ -1,0 +1,231 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+        x:Class="PCAPAnalyzer.UI.Views.IPDetailsWindow"
+        x:DataType="vm:IPDetailsViewModel"
+        Title="{Binding WindowTitle}"
+        WindowState="Maximized"
+        WindowStartupLocation="CenterOwner"
+        Background="#0D1117">
+    
+    <Grid Margin="20,20,20,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#161B22" CornerRadius="8" Padding="20,20,20,20" Margin="0,0,0,20">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
+                <!-- IP Badge -->
+                <Border Grid.Column="0" Background="#21262D" CornerRadius="4" Padding="12,8" Margin="0,0,15,0">
+                    <TextBlock Text="{Binding IPType}" FontSize="14" FontWeight="Bold" Foreground="#F0F6FC"/>
+                </Border>
+                
+                <!-- IP Info -->
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding IPAddress}" FontSize="24" FontWeight="Bold" Foreground="#F0F6FC"/>
+                    <StackPanel Orientation="Horizontal" Spacing="20" Margin="0,5,0,0">
+                        <TextBlock FontSize="14" Foreground="#8B949E">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}Packets: {0:N0}">
+                                    <Binding Path="TotalPackets"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                        <TextBlock FontSize="14" Foreground="#8B949E">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}Bytes: {0}">
+                                    <Binding Path="FormattedBytes"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                        <TextBlock FontSize="14" Foreground="#8B949E">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}Unique Connections: {0:N0}">
+                                    <Binding Path="UniqueConnections"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
+                </StackPanel>
+                
+                <!-- Close Button -->
+                <Button Grid.Column="2" 
+                        Click="OnCloseClick"
+                        Background="#21262D"
+                        BorderBrush="#30363D"
+                        Padding="12,8">
+                    <TextBlock Text="Close" FontSize="12" Foreground="#F0F6FC"/>
+                </Button>
+            </Grid>
+        </Border>
+        
+        <!-- Main Content -->
+        <Border Grid.Row="1" Background="#161B22" CornerRadius="8" Padding="10,10,10,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
+                <!-- Filter Bar -->
+                <Border Grid.Row="0" Background="#21262D" CornerRadius="4" Padding="10,10,10,10" Margin="0,0,0,10">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBox Grid.Column="0" 
+                                 Text="{Binding FilterText}"
+                                 Watermark="Filter by Port, Protocol, IP..."
+                                 Background="#0D1117"
+                                 BorderBrush="#30363D"
+                                 Foreground="#F0F6FC"
+                                 Padding="8,5"
+                                 Margin="0,0,10,0"/>
+                        
+                        <ComboBox Grid.Column="1" 
+                                  SelectedItem="{Binding SelectedProtocol}"
+                                  ItemsSource="{Binding Protocols}"
+                                  Background="#0D1117"
+                                  BorderBrush="#30363D"
+                                  Foreground="#F0F6FC"
+                                  Width="120"
+                                  Margin="0,0,10,0"/>
+                        
+                        <ComboBox Grid.Column="2" 
+                                  SelectedItem="{Binding SelectedDirection}"
+                                  ItemsSource="{Binding Directions}"
+                                  Background="#0D1117"
+                                  BorderBrush="#30363D"
+                                  Foreground="#F0F6FC"
+                                  Width="120"
+                                  Margin="0,0,10,0"/>
+                        
+                        <Button Grid.Column="3" 
+                                Command="{Binding ExportCommand}"
+                                Background="#3FB950"
+                                BorderThickness="0"
+                                Padding="12,5">
+                            <TextBlock Text="Export" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                        </Button>
+                    </Grid>
+                </Border>
+                
+                <!-- Data Grid -->
+                <DataGrid Grid.Row="1" 
+                          ItemsSource="{Binding FilteredPackets}"
+                          Background="#0D1117"
+                          BorderBrush="#30363D"
+                          BorderThickness="1"
+                          GridLinesVisibility="Horizontal"
+                          HeadersVisibility="Column"
+                          CanUserReorderColumns="True"
+                          CanUserResizeColumns="True"
+                          CanUserSortColumns="True"
+                          AutoGenerateColumns="False">
+                    
+                    <DataGrid.Styles>
+                        <Style Selector="DataGridRow">
+                            <Setter Property="Background" Value="#0D1117"/>
+                            <Setter Property="Height" Value="32"/>
+                        </Style>
+                        <Style Selector="DataGridRow:pointerover">
+                            <Setter Property="Background" Value="#161B22"/>
+                        </Style>
+                        <Style Selector="DataGridRow:selected">
+                            <Setter Property="Background" Value="#21262D"/>
+                        </Style>
+                        <Style Selector="DataGridColumnHeader">
+                            <Setter Property="Background" Value="#21262D"/>
+                            <Setter Property="Foreground" Value="#F0F6FC"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Height" Value="36"/>
+                            <Setter Property="SeparatorBrush" Value="#30363D"/>
+                        </Style>
+                        <Style Selector="DataGridCell">
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Foreground" Value="#E6EDF3"/>
+                            <Setter Property="FontSize" Value="12"/>
+                        </Style>
+                    </DataGrid.Styles>
+                    
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Packet #" 
+                                            Binding="{Binding PacketNumber}" 
+                                            Width="80"/>
+                        <DataGridTextColumn Header="Time" 
+                                            Binding="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}" 
+                                            Width="100"/>
+                        <DataGridTextColumn Header="Direction" 
+                                            Binding="{Binding Direction}" 
+                                            Width="80"/>
+                        <DataGridTextColumn Header="Remote IP" 
+                                            Binding="{Binding RemoteIP}" 
+                                            Width="130"/>
+                        <DataGridTextColumn Header="Local Port" 
+                                            Binding="{Binding LocalPort}" 
+                                            Width="80"/>
+                        <DataGridTextColumn Header="Remote Port" 
+                                            Binding="{Binding RemotePort}" 
+                                            Width="80"/>
+                        <DataGridTextColumn Header="Protocol" 
+                                            Binding="{Binding Protocol}" 
+                                            Width="80"/>
+                        <DataGridTextColumn Header="Length" 
+                                            Binding="{Binding Length}" 
+                                            Width="80"/>
+                        <DataGridTextColumn Header="Info" 
+                                            Binding="{Binding Info}" 
+                                            Width="*"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Border>
+        
+        <!-- Status Bar -->
+        <Border Grid.Row="2" Background="#161B22" CornerRadius="8" Padding="15,10" Margin="0,20,0,0">
+            <Grid>
+                <TextBlock HorizontalAlignment="Left" FontSize="12" Foreground="#8B949E">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="{}Showing {0} of {1} packets">
+                            <Binding Path="FilteredCount"/>
+                            <Binding Path="TotalCount"/>
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+                
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="20">
+                    <TextBlock FontSize="12" Foreground="#8B949E">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}Incoming: {0:N0}">
+                                <Binding Path="IncomingPackets"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                    <TextBlock FontSize="12" Foreground="#8B949E">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}Outgoing: {0:N0}">
+                                <Binding Path="OutgoingPackets"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,616 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+             xmlns:models="using:PCAPAnalyzer.UI.Models"
+             xmlns:controls="using:PCAPAnalyzer.UI.Controls"
+             xmlns:converters="using:PCAPAnalyzer.UI.Converters"
+             xmlns:ctrl="using:PCAPAnalyzer.UI.Views.Controls"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
+             x:Class="PCAPAnalyzer.UI.Views.CountryTrafficView_Enhanced"
+             x:DataType="vm:CountryTrafficViewModel">
+
+   <UserControl.Resources>
+       <converters:TrafficIntensityColorConverter x:Key="TrafficIntensityColorConverter"/>
+       <converters:TrafficIntensityGradientConverter x:Key="TrafficIntensityGradientConverter"/>
+       <converters:FlowCountDisplayConverter x:Key="FlowCountDisplayConverter"/>
+       <converters:CountryCountDisplayConverter x:Key="CountryCountDisplayConverter"/>
+       <converters:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
+       <converters:PercentageToScaleConverter x:Key="PercentageToScaleConverter"/>
+       <converters:PercentageToPixelWidthConverter x:Key="PercentageToPixelWidthConverter"/>
+       <converters:BoolToTextConverter x:Key="BoolToTextConverter"/>
+       <converters:ByteFormatConverter x:Key="ByteFormatConverter"/>
+
+       <!-- Country Row DataTemplate -->
+       <DataTemplate x:Key="CountryRowTemplate">
+           <Border Margin="20,0" Background="#161B2220" CornerRadius="4" Padding="4,2">
+               <Grid ColumnDefinitions="30,140,*,100,80,60">
+                   <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='#{0}'}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                   <TextBlock Grid.Column="1" Text="{Binding CountryDisplay}" FontSize="11" Foreground="#7D8590" TextTrimming="CharacterEllipsis"/>
+                   <Grid Grid.Column="2" Margin="10,0" HorizontalAlignment="Stretch">
+                       <Border x:Name="PercentageTrack" Background="#21262D" CornerRadius="3" Height="20">
+                           <Grid>
+                               <Border Background="{Binding DataContext.PercentageValue, RelativeSource={RelativeSource AncestorType=Border}, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left">
+                                   <Border.Width>
+                                       <MultiBinding Converter="{StaticResource PercentageToPixelWidthConverter}">
+                                           <Binding Path="DataContext.PercentageValue" RelativeSource="{RelativeSource AncestorType=Border}"/>
+                                           <Binding ElementName="PercentageTrack" Path="Bounds.Width"/>
+                                       </MultiBinding>
+                                   </Border.Width>
+                               </Border>
+                               <TextBlock Text="{Binding DataContext.PercentageValue, RelativeSource={RelativeSource AncestorType=Border}, StringFormat='{}{0:F1}%'}" FontSize="10" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                           </Grid>
+                       </Border>
+                   </Grid>
+                   <TextBlock Grid.Column="3" Text="{Binding DataContext.ValueFormatted, RelativeSource={RelativeSource AncestorType=Border}}" FontSize="12" FontWeight="SemiBold" Foreground="#3B82F6" HorizontalAlignment="Right"/>
+                   <TextBlock Grid.Column="4" Text="{Binding Continent}" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"/>
+                   <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}" CommandParameter="{Binding}" Background="#1C2128" BorderBrush="#30363D" Padding="8,4">
+                       <TextBlock Text="Details" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                   </Button>
+               </Grid>
+           </Border>
+       </DataTemplate>
+
+       <!-- Flow Row DataTemplate -->
+       <DataTemplate x:Key="FlowRowTemplate">
+           <Border Margin="20,0" Background="#161B2220" CornerRadius="4" Padding="4,2">
+               <Grid ColumnDefinitions="40,200,60,*,120,80">
+                   <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='#{0}'}" FontSize="12" FontWeight="SemiBold" Foreground="#F0F6FC" VerticalAlignment="Center"/>
+                   <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                       <Border Background="#1C2128" CornerRadius="3" Padding="6,3">
+                           <TextBlock Text="{Binding SourceCountryDisplayCode}" FontSize="10" FontWeight="Bold" Foreground="#F0F6FC"/>
+                       </Border>
+                       <TextBlock Text="->" FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                       <Border Background="#1C2128" CornerRadius="3" Padding="6,3">
+                           <TextBlock Text="{Binding DestinationCountryDisplayCode}" FontSize="10" FontWeight="Bold" Foreground="#F0F6FC"/>
+                       </Border>
+                   </StackPanel>
+                   <Border Grid.Column="2" Background="#21262D" CornerRadius="3" Padding="4,2" HorizontalAlignment="Center">
+                       <TextBlock Text="{Binding Protocol}" FontSize="9" Foreground="#7D8590"/>
+                   </Border>
+                   <Grid Grid.Column="3" Margin="8,0" HorizontalAlignment="Stretch">
+                       <Border x:Name="FlowIntensityTrack" Background="#21262D" CornerRadius="3" Height="20">
+                           <Grid>
+                               <Border Background="{Binding DataContext.IntensityValue, RelativeSource={RelativeSource AncestorType=Border}, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left">
+                                   <Border.Width>
+                                       <MultiBinding Converter="{StaticResource PercentageToPixelWidthConverter}">
+                                           <Binding Path="DataContext.IntensityValue" RelativeSource="{RelativeSource AncestorType=Border}"/>
+                                           <Binding ElementName="FlowIntensityTrack" Path="Bounds.Width"/>
+                                       </MultiBinding>
+                                   </Border.Width>
+                               </Border>
+                               <TextBlock Text="{Binding DataContext.IntensityValue, RelativeSource={RelativeSource AncestorType=Border}, StringFormat='{}{0:F1}%'}" FontSize="10" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                           </Grid>
+                       </Border>
+                   </Grid>
+                   <StackPanel Grid.Column="4" Orientation="Vertical" HorizontalAlignment="Right">
+                       <TextBlock Text="{Binding DataContext.ValueFormatted, RelativeSource={RelativeSource AncestorType=StackPanel}}" FontSize="11" FontWeight="SemiBold" Foreground="{Binding DataContext.ValueColor, RelativeSource={RelativeSource AncestorType=StackPanel}}"/>
+                       <TextBlock Text="{Binding DataContext.IntensityValue, RelativeSource={RelativeSource AncestorType=StackPanel}, StringFormat='{}{0:F1}%'}" FontSize="10" Foreground="#7D8590" HorizontalAlignment="Right"/>
+                   </StackPanel>
+                   <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowFlowDetailsCommand}" CommandParameter="{Binding}" Background="#1C2128" BorderBrush="#30363D" Padding="8,4">
+                       <TextBlock Text="Details" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                   </Button>
+               </Grid>
+           </Border>
+       </DataTemplate>
+
+       <!-- Quick Filter Button Style -->
+       <Style Selector="Button.quick-filter-btn" x:Key="QuickFilterStyle">
+           <Setter Property="Padding" Value="12,6"/>
+           <Setter Property="Height" Value="28"/>
+       </Style>
+
+       <!-- Continent Map TabItem -->
+       <DataTemplate x:Key="ContinentMapTabTemplate">
+           <Grid Margin="20">
+               <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                   <controls:ContinentMapControlV2
+                       TrafficData="{Binding $parent[UserControl].DataContext.CountryTrafficStatistics}"
+                       Width="800" Height="400"
+                       ShowAnimations="{Binding $parent[UserControl].DataContext.ShowTrafficFlows}"
+                       FocusContinent="{Binding DataContext.ContinentCode, RelativeSource={RelativeSource AncestorType=TabItem}}"/>
+               </Viewbox>
+           </Grid>
+       </DataTemplate>
+   </UserControl.Resources>
+
+   <Grid Background="#0D1117">
+       <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+           <Grid Margin="24" RowDefinitions="Auto,Auto,Auto,Auto,*">
+
+               <!-- FilterPanelControl for sophisticated filtering -->
+               <ctrl:FilterPanelControl Grid.Row="0" DataContext="{Binding}" Margin="0,0,0,10" />
+
+               <!-- Geographic Statistics -->
+               <Border Grid.Row="2" Classes="modern-card-unified" Padding="20" Margin="0,0,0,20">
+                   <Grid ColumnDefinitions="*,*,*,*,*,*" RowDefinitions="Auto,12,Auto,12,Auto">
+                       <!-- Accent Bar -->
+                       <Border Grid.Row="0" Grid.ColumnSpan="6" Height="3" Background="#06B6D4" CornerRadius="2"/>
+                       <TextBlock Grid.Row="2" Grid.ColumnSpan="6" Text="GEOGRAPHIC OVERVIEW" FontSize="13" FontWeight="Bold" Foreground="#E6EDF3"/>
+
+                       <Border Grid.Row="4" Grid.Column="0" Classes="stat-card-modern" Margin="0,0,8,0">
+                           <StackPanel>
+                               <TextBlock Text="COUNTRIES" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/>
+                               <TextBlock Text="{Binding UniqueCountries, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#3B82F6"/>
+                           </StackPanel>
+                       </Border>
+                       <Border Grid.Row="4" Grid.Column="1" Classes="stat-card-modern" Margin="4,0">
+                           <StackPanel>
+                               <TextBlock Text="TOTAL PACKETS" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/>
+                               <TextBlock Text="{Binding TotalPackets, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#10B981"/>
+                           </StackPanel>
+                       </Border>
+                       <Border Grid.Row="4" Grid.Column="2" Classes="stat-card-modern" Margin="4,0">
+                           <StackPanel>
+                               <TextBlock Text="TOTAL BYTES" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/>
+                               <TextBlock Text="{Binding TotalBytes, Converter={StaticResource ByteFormatConverter}}" FontSize="24" FontWeight="SemiBold" Foreground="#F59E0B"/>
+                           </StackPanel>
+                       </Border>
+                       <Border Grid.Row="4" Grid.Column="3" Classes="stat-card-modern" Margin="4,0">
+                           <StackPanel>
+                               <TextBlock Text="FLOWS" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/>
+                               <TextBlock Text="{Binding TotalFlows, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#8B5CF6"/>
+                           </StackPanel>
+                       </Border>
+                       <Border Grid.Row="4" Grid.Column="4" Classes="stat-card-modern" Margin="4,0">
+                           <StackPanel>
+                               <TextBlock Text="TOP SOURCE" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/>
+                               <TextBlock Text="{Binding TopSourceCountry}" FontSize="24" FontWeight="SemiBold" Foreground="#EF4444"/>
+                           </StackPanel>
+                       </Border>
+                       <Border Grid.Row="4" Grid.Column="5" Classes="stat-card-modern" Margin="8,0,0,0">
+                           <StackPanel>
+                               <TextBlock Text="TOP DEST" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/>
+                               <TextBlock Text="{Binding TopDestCountry}" FontSize="24" FontWeight="SemiBold" Foreground="#06B6D4"/>
+                           </StackPanel>
+                       </Border>
+                   </Grid>
+               </Border>
+
+               <!-- Map Section -->
+               <Border Grid.Row="3" Classes="modern-card-unified" Margin="0,0,0,24">
+                   <Grid ColumnDefinitions="*,Auto">
+                       <Grid Grid.Column="0" HorizontalAlignment="Center">
+                           <TabControl SelectedIndex="{Binding SelectedContinentTab, Mode=TwoWay}" Background="Transparent" HorizontalAlignment="Center">
+                               <TabControl.Styles>
+                                   <Style Selector="TabItem">
+                                       <Setter Property="Padding" Value="20,10"/>
+                                       <Setter Property="Background" Value="#161B22"/>
+                                       <Setter Property="Foreground" Value="#8B949E"/>
+                                   </Style>
+                                   <Style Selector="TabItem:selected">
+                                       <Setter Property="Background" Value="#21262D"/>
+                                       <Setter Property="Foreground" Value="#F0F6FC"/>
+                                   </Style>
+                               </TabControl.Styles>
+
+                               <TabItem Header="🌍 World">
+                                   <Grid Margin="20">
+                                       <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                                           <controls:ContinentMapControlV2 x:Name="WorldMapControl" TrafficData="{Binding CountryTrafficStatistics}" Width="800" Height="400" ShowAnimations="{Binding ShowTrafficFlows}" FocusContinent="World" ContinentClicked="{Binding OnContinentClickedAction}"/>
+                                       </Viewbox>
+                                   </Grid>
+                               </TabItem>
+                               <TabItem Header="🌎 North America">
+                                   <Grid Margin="20">
+                                       <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                                           <controls:ContinentMapControlV2 TrafficData="{Binding CountryTrafficStatistics}" Width="800" Height="400" ShowAnimations="{Binding ShowTrafficFlows}" FocusContinent="NA"/>
+                                       </Viewbox>
+                                   </Grid>
+                               </TabItem>
+                               <TabItem Header="🌎 South America">
+                                   <Grid Margin="20">
+                                       <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                                           <controls:ContinentMapControlV2 TrafficData="{Binding CountryTrafficStatistics}" Width="800" Height="400" ShowAnimations="{Binding ShowTrafficFlows}" FocusContinent="SA"/>
+                                       </Viewbox>
+                                   </Grid>
+                               </TabItem>
+                               <TabItem Header="🌍 Europe">
+                                   <Grid Margin="20">
+                                       <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                                           <controls:ContinentMapControlV2 TrafficData="{Binding CountryTrafficStatistics}" Width="800" Height="400" ShowAnimations="{Binding ShowTrafficFlows}" FocusContinent="EU"/>
+                                       </Viewbox>
+                                   </Grid>
+                               </TabItem>
+                               <TabItem Header="🌍 Africa">
+                                   <Grid Margin="20">
+                                       <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                                           <controls:ContinentMapControlV2 TrafficData="{Binding CountryTrafficStatistics}" Width="800" Height="400" ShowAnimations="{Binding ShowTrafficFlows}" FocusContinent="AF"/>
+                                       </Viewbox>
+                                   </Grid>
+                               </TabItem>
+                               <TabItem Header="🌏 Asia">
+                                   <Grid Margin="20">
+                                       <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                                           <controls:ContinentMapControlV2 TrafficData="{Binding CountryTrafficStatistics}" Width="800" Height="400" ShowAnimations="{Binding ShowTrafficFlows}" FocusContinent="AS"/>
+                                       </Viewbox>
+                                   </Grid>
+                               </TabItem>
+                               <TabItem Header="🌏 Oceania">
+                                   <Grid Margin="20">
+                                       <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                                           <controls:ContinentMapControlV2 TrafficData="{Binding CountryTrafficStatistics}" Width="800" Height="400" ShowAnimations="{Binding ShowTrafficFlows}" FocusContinent="OC"/>
+                                       </Viewbox>
+                                   </Grid>
+                               </TabItem>
+                               <TabItem Header="INT Internal">
+                                   <Grid Margin="20">
+                                       <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                                           <controls:ContinentMapControlV2 TrafficData="{Binding CountryTrafficStatistics}" Width="800" Height="400" ShowAnimations="{Binding ShowTrafficFlows}" FocusContinent="INT"/>
+                                       </Viewbox>
+                                   </Grid>
+                               </TabItem>
+                               <TabItem Header="🛰 IPv6 Space">
+                                   <Grid Margin="20">
+                                       <Viewbox Stretch="Uniform" StretchDirection="DownOnly">
+                                           <controls:ContinentMapControlV2 TrafficData="{Binding CountryTrafficStatistics}" Width="800" Height="400" ShowAnimations="{Binding ShowTrafficFlows}" FocusContinent="IP6"/>
+                                       </Viewbox>
+                                   </Grid>
+                               </TabItem>
+                           </TabControl>
+                       </Grid>
+
+                       <!-- Legend Panel -->
+                       <Border Grid.Column="1" Background="#161B22" CornerRadius="6" Padding="16" Margin="16,40,0,0" VerticalAlignment="Top">
+                           <StackPanel Spacing="16">
+                               <TextBlock Text="Legend" FontSize="13" FontWeight="Bold" Foreground="#F0F6FC" HorizontalAlignment="Center"/>
+                               <StackPanel Spacing="8">
+                                   <TextBlock Text="Traffic Intensity" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMuted}"/>
+                                   <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="40,Auto" RowSpacing="4">
+                                       <Border Grid.Row="0" Grid.Column="0" Height="16" Background="#6B7280" CornerRadius="2"/>
+                                       <TextBlock Grid.Row="0" Grid.Column="1" Text="&lt; 0.1%" FontSize="10" Foreground="#7D8590" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                       <Border Grid.Row="1" Grid.Column="0" Height="16" Background="#3B82F6" CornerRadius="2"/>
+                                       <TextBlock Grid.Row="1" Grid.Column="1" Text="&lt; 1%" FontSize="10" Foreground="#7D8590" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                       <Border Grid.Row="2" Grid.Column="0" Height="16" Background="#10B981" CornerRadius="2"/>
+                                       <TextBlock Grid.Row="2" Grid.Column="1" Text="&lt; 5%" FontSize="10" Foreground="#7D8590" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                       <Border Grid.Row="3" Grid.Column="0" Height="16" Background="#F59E0B" CornerRadius="2"/>
+                                       <TextBlock Grid.Row="3" Grid.Column="1" Text="&lt; 10%" FontSize="10" Foreground="#7D8590" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                       <Border Grid.Row="4" Grid.Column="0" Height="16" Background="#EF4444" CornerRadius="2"/>
+                                       <TextBlock Grid.Row="4" Grid.Column="1" Text="≥ 10%" FontSize="10" Foreground="#7D8590" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                   </Grid>
+                               </StackPanel>
+                               <Border BorderBrush="#30363D" BorderThickness="0,1,0,0" Padding="0,12,0,0">
+                                   <StackPanel Spacing="8">
+                                       <TextBlock Text="Split Indicators" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextMuted}"/>
+                                       <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="12">
+                                           <Canvas Grid.Column="0" Width="32" Height="32">
+                                               <Ellipse Width="32" Height="32" Fill="#1C2128"/>
+                                               <Path Fill="#22D3EE" Data="M 16,4 A 12,12 0 0,0 16,28 L 16,16 Z"/>
+                                               <Path Fill="#3B82F6" Data="M 16,4 A 12,12 0 0,1 16,28 L 16,16 Z"/>
+                                               <Ellipse Width="32" Height="32" Stroke="#8B949E" StrokeThickness="1"/>
+                                           </Canvas>
+                                           <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                                               <TextBlock FontSize="10" Foreground="#7D8590">
+                                                   <Run Text="Left:" Foreground="#22D3EE" FontWeight="SemiBold"/> Packets %
+                                               </TextBlock>
+                                               <TextBlock FontSize="10" Foreground="#7D8590">
+                                                   <Run Text="Right:" Foreground="#3B82F6" FontWeight="SemiBold"/> Bytes %
+                                               </TextBlock>
+                                           </StackPanel>
+                                       </Grid>
+                                   </StackPanel>
+                               </Border>
+                           </StackPanel>
+                       </Border>
+                   </Grid>
+               </Border>
+
+               <!-- Country Tables Grid -->
+               <Grid Grid.Row="4" RowDefinitions="Auto,Auto,*">
+
+                   <!-- Source Countries -->
+                   <Grid Grid.Row="0" Margin="0,0,0,24" ColumnDefinitions="*,*">
+                       <!-- Source by Packets -->
+                       <Border Grid.Column="0" Classes="modern-card-unified" Margin="0,0,12,0" MaxHeight="500">
+                           <Grid RowDefinitions="Auto,*">
+                               <Border Grid.Row="0" Background="#0D1117" BorderBrush="#30363D" BorderThickness="0,0,0,1">
+                                   <StackPanel Orientation="Horizontal" Margin="20,8" VerticalAlignment="Center">
+                                       <Border Width="3" Height="16" Background="#10B981" CornerRadius="1.5" Margin="0,0,8,0"/>
+                                       <TextBlock Text="Top Source Countries by Packets" FontSize="12" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                   </StackPanel>
+                               </Border>
+                               <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                   <ItemsControl ItemsSource="{Binding TopSourceCountriesByPackets}">
+                                       <ItemsControl.ItemTemplate>
+                                           <DataTemplate>
+                                               <Border Margin="20,0" Background="#161B2220" CornerRadius="4" Padding="4,2">
+                                                   <Grid ColumnDefinitions="30,140,*,100,80,60">
+                                                       <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='#{0}'}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                                       <TextBlock Grid.Column="1" Text="{Binding CountryDisplay}" FontSize="11" Foreground="#7D8590" TextTrimming="CharacterEllipsis"/>
+                                                       <Grid Grid.Column="2" Margin="10,0">
+                                                           <Border x:Name="SourcePacketsTrack" Background="#21262D" CornerRadius="3" Height="20">
+                                                               <Grid>
+                                                                   <Border Background="{Binding PacketPercentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left">
+                                                                       <Border.Width>
+                                                                           <MultiBinding Converter="{StaticResource PercentageToPixelWidthConverter}">
+                                                                               <Binding Path="PacketPercentage"/>
+                                                                               <Binding ElementName="SourcePacketsTrack" Path="Bounds.Width"/>
+                                                                           </MultiBinding>
+                                                                       </Border.Width>
+                                                                   </Border>
+                                                                   <TextBlock Text="{Binding PacketPercentage, StringFormat='{}{0:F1}%'}" FontSize="10" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                               </Grid>
+                                                           </Border>
+                                                       </Grid>
+                                                       <TextBlock Grid.Column="3" Text="{Binding PacketsFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#3B82F6" HorizontalAlignment="Right"/>
+                                                       <TextBlock Grid.Column="4" Text="{Binding Continent}" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"/>
+                                                       <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}" CommandParameter="{Binding}" Background="#1C2128" BorderBrush="#30363D" Padding="8,4">
+                                                           <TextBlock Text="Details" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                                                       </Button>
+                                                   </Grid>
+                                               </Border>
+                                           </DataTemplate>
+                                       </ItemsControl.ItemTemplate>
+                                   </ItemsControl>
+                               </ScrollViewer>
+                           </Grid>
+                       </Border>
+
+                       <!-- Source by Bytes -->
+                       <Border Grid.Column="1" Classes="modern-card-unified" Margin="12,0,0,0" MaxHeight="500">
+                           <Grid RowDefinitions="Auto,*">
+                               <Border Grid.Row="0" Background="#0D1117" BorderBrush="#30363D" BorderThickness="0,0,0,1">
+                                   <StackPanel Orientation="Horizontal" Margin="20,8" VerticalAlignment="Center">
+                                       <Border Width="3" Height="16" Background="#F59E0B" CornerRadius="1.5" Margin="0,0,8,0"/>
+                                       <TextBlock Text="Top Source Countries by Bytes" FontSize="12" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                   </StackPanel>
+                               </Border>
+                               <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                   <ItemsControl ItemsSource="{Binding TopSourceCountriesByBytes}">
+                                       <ItemsControl.ItemTemplate>
+                                           <DataTemplate>
+                                               <Border Margin="20,0" Background="#161B2220" CornerRadius="4" Padding="4,2">
+                                                   <Grid ColumnDefinitions="30,140,*,100,80,60">
+                                                       <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='#{0}'}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                                       <TextBlock Grid.Column="1" Text="{Binding CountryDisplay}" FontSize="11" Foreground="#7D8590" TextTrimming="CharacterEllipsis"/>
+                                                       <Grid Grid.Column="2" Margin="10,0">
+                                                           <Border x:Name="SourceBytesTrack" Background="#21262D" CornerRadius="3" Height="20">
+                                                               <Grid>
+                                                                   <Border Background="{Binding BytePercentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left">
+                                                                       <Border.Width>
+                                                                           <MultiBinding Converter="{StaticResource PercentageToPixelWidthConverter}">
+                                                                               <Binding Path="BytePercentage"/>
+                                                                               <Binding ElementName="SourceBytesTrack" Path="Bounds.Width"/>
+                                                                           </MultiBinding>
+                                                                       </Border.Width>
+                                                                   </Border>
+                                                                   <TextBlock Text="{Binding BytePercentage, StringFormat='{}{0:F1}%'}" FontSize="10" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                               </Grid>
+                                                           </Border>
+                                                       </Grid>
+                                                       <TextBlock Grid.Column="3" Text="{Binding BytesFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#3B82F6" HorizontalAlignment="Right"/>
+                                                       <TextBlock Grid.Column="4" Text="{Binding Continent}" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"/>
+                                                       <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}" CommandParameter="{Binding}" Background="#1C2128" BorderBrush="#30363D" Padding="8,4">
+                                                           <TextBlock Text="Details" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                                                       </Button>
+                                                   </Grid>
+                                               </Border>
+                                           </DataTemplate>
+                                       </ItemsControl.ItemTemplate>
+                                   </ItemsControl>
+                               </ScrollViewer>
+                           </Grid>
+                       </Border>
+                   </Grid>
+
+                   <!-- Destination Countries -->
+                   <Grid Grid.Row="1" Margin="0,0,0,24" ColumnDefinitions="*,*">
+                       <!-- Destination by Packets -->
+                       <Border Grid.Column="0" Classes="modern-card-unified" Margin="0,0,12,0" MaxHeight="500">
+                           <Grid RowDefinitions="Auto,*">
+                               <Border Grid.Row="0" Background="#0D1117" BorderBrush="#30363D" BorderThickness="0,0,0,1">
+                                   <StackPanel Orientation="Horizontal" Margin="20,8" VerticalAlignment="Center">
+                                       <Border Width="3" Height="16" Background="#8B5CF6" CornerRadius="1.5" Margin="0,0,8,0"/>
+                                       <TextBlock Text="Top Destination Countries by Packets" FontSize="12" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                   </StackPanel>
+                               </Border>
+                               <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                   <ItemsControl ItemsSource="{Binding TopDestinationCountriesByPackets}">
+                                       <ItemsControl.ItemTemplate>
+                                           <DataTemplate>
+                                               <Border Margin="20,0" Background="#161B2220" CornerRadius="4" Padding="4,2">
+                                                   <Grid ColumnDefinitions="30,140,*,100,80,60">
+                                                       <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='#{0}'}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                                       <TextBlock Grid.Column="1" Text="{Binding CountryDisplay}" FontSize="11" Foreground="#7D8590" TextTrimming="CharacterEllipsis"/>
+                                                       <Grid Grid.Column="2" Margin="10,0">
+                                                           <Border x:Name="DestinationPacketsTrack" Background="#21262D" CornerRadius="3" Height="20">
+                                                               <Grid>
+                                                                   <Border Background="{Binding PacketPercentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left">
+                                                                       <Border.Width>
+                                                                           <MultiBinding Converter="{StaticResource PercentageToPixelWidthConverter}">
+                                                                               <Binding Path="PacketPercentage"/>
+                                                                               <Binding ElementName="DestinationPacketsTrack" Path="Bounds.Width"/>
+                                                                           </MultiBinding>
+                                                                       </Border.Width>
+                                                                   </Border>
+                                                                   <TextBlock Text="{Binding PacketPercentage, StringFormat='{}{0:F1}%'}" FontSize="10" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                               </Grid>
+                                                           </Border>
+                                                       </Grid>
+                                                       <TextBlock Grid.Column="3" Text="{Binding PacketsFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#3B82F6" HorizontalAlignment="Right"/>
+                                                       <TextBlock Grid.Column="4" Text="{Binding Continent}" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"/>
+                                                       <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}" CommandParameter="{Binding}" Background="#1C2128" BorderBrush="#30363D" Padding="8,4">
+                                                           <TextBlock Text="Details" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                                                       </Button>
+                                                   </Grid>
+                                               </Border>
+                                           </DataTemplate>
+                                       </ItemsControl.ItemTemplate>
+                                   </ItemsControl>
+                               </ScrollViewer>
+                           </Grid>
+                       </Border>
+
+                       <!-- Destination by Bytes -->
+                       <Border Grid.Column="1" Classes="modern-card-unified" Margin="12,0,0,0" MaxHeight="500">
+                           <Grid RowDefinitions="Auto,*">
+                               <Border Grid.Row="0" Background="#0D1117" BorderBrush="#30363D" BorderThickness="0,0,0,1">
+                                   <StackPanel Orientation="Horizontal" Margin="20,8" VerticalAlignment="Center">
+                                       <Border Width="3" Height="16" Background="#EF4444" CornerRadius="1.5" Margin="0,0,8,0"/>
+                                       <TextBlock Text="Top Destination Countries by Bytes" FontSize="12" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                   </StackPanel>
+                               </Border>
+                               <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                   <ItemsControl ItemsSource="{Binding TopDestinationCountriesByBytes}">
+                                       <ItemsControl.ItemTemplate>
+                                           <DataTemplate>
+                                               <Border Margin="20,0" Background="#161B2220" CornerRadius="4" Padding="4,2">
+                                                   <Grid ColumnDefinitions="30,140,*,100,80,60">
+                                                       <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='#{0}'}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                                       <TextBlock Grid.Column="1" Text="{Binding CountryDisplay}" FontSize="11" Foreground="#7D8590" TextTrimming="CharacterEllipsis"/>
+                                                       <Grid Grid.Column="2" Margin="10,0">
+                                                           <Border x:Name="DestinationBytesTrack" Background="#21262D" CornerRadius="3" Height="20">
+                                                               <Grid>
+                                                                   <Border Background="{Binding BytePercentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left">
+                                                                       <Border.Width>
+                                                                           <MultiBinding Converter="{StaticResource PercentageToPixelWidthConverter}">
+                                                                               <Binding Path="BytePercentage"/>
+                                                                               <Binding ElementName="DestinationBytesTrack" Path="Bounds.Width"/>
+                                                                           </MultiBinding>
+                                                                       </Border.Width>
+                                                                   </Border>
+                                                                   <TextBlock Text="{Binding BytePercentage, StringFormat='{}{0:F1}%'}" FontSize="10" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                               </Grid>
+                                                           </Border>
+                                                       </Grid>
+                                                       <TextBlock Grid.Column="3" Text="{Binding BytesFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#3B82F6" HorizontalAlignment="Right"/>
+                                                       <TextBlock Grid.Column="4" Text="{Binding Continent}" FontSize="11" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"/>
+                                                       <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}" CommandParameter="{Binding}" Background="#1C2128" BorderBrush="#30363D" Padding="8,4">
+                                                           <TextBlock Text="Details" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                                                       </Button>
+                                                   </Grid>
+                                               </Border>
+                                           </DataTemplate>
+                                       </ItemsControl.ItemTemplate>
+                                   </ItemsControl>
+                               </ScrollViewer>
+                           </Grid>
+                       </Border>
+                   </Grid>
+
+                   <!-- Active Flows -->
+                   <Grid Grid.Row="2" Margin="0,0,0,24" ColumnDefinitions="*,*">
+                       <!-- Flows by Packets -->
+                       <Border Grid.Column="0" Classes="modern-card-unified" Margin="0,0,12,0" MaxHeight="500">
+                           <Grid RowDefinitions="Auto,*">
+                               <Border Grid.Row="0" Background="#0D1117" BorderBrush="#30363D" BorderThickness="0,0,0,1">
+                                   <StackPanel Orientation="Horizontal" Margin="20,8" VerticalAlignment="Center">
+                                       <Border Width="3" Height="16" Background="#3B82F6" CornerRadius="1.5" Margin="0,0,8,0"/>
+                                       <TextBlock Text="Connection flows by Packets" FontSize="12" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                   </StackPanel>
+                               </Border>
+                               <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                   <ItemsControl ItemsSource="{Binding ActiveFlowsByPackets}">
+                                       <ItemsControl.ItemTemplate>
+                                           <DataTemplate>
+                                               <Border Margin="20,0" Background="#161B2220" CornerRadius="4" Padding="4,2">
+                                                   <Grid ColumnDefinitions="40,200,60,*,120,80">
+                                                       <TextBlock Grid.Column="0" Text="{Binding Rank}" FontSize="12" FontWeight="SemiBold" Foreground="#7D8590" VerticalAlignment="Center"/>
+                                                       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                                                           <Border Background="#1C2128" CornerRadius="3" Padding="6,3">
+                                                               <TextBlock Text="{Binding SourceCountryDisplayCode}" FontSize="10" FontWeight="Bold" Foreground="#F0F6FC"/>
+                                                           </Border>
+                                                           <TextBlock Text="->" FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                                           <Border Background="#1C2128" CornerRadius="3" Padding="6,3">
+                                                               <TextBlock Text="{Binding DestinationCountryDisplayCode}" FontSize="10" FontWeight="Bold" Foreground="#F0F6FC"/>
+                                                           </Border>
+                                                       </StackPanel>
+                                                       <Border Grid.Column="2" Background="#21262D" CornerRadius="3" Padding="4,2" HorizontalAlignment="Center">
+                                                           <TextBlock Text="{Binding Protocol}" FontSize="9" Foreground="#7D8590"/>
+                                                       </Border>
+                                                       <Grid Grid.Column="3" Margin="8,0">
+                                                           <Border x:Name="FlowPacketsTrack" Background="#21262D" CornerRadius="3" Height="20">
+                                                               <Grid>
+                                                                   <Border Background="{Binding FlowIntensity, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left">
+                                                                       <Border.Width>
+                                                                           <MultiBinding Converter="{StaticResource PercentageToPixelWidthConverter}">
+                                                                               <Binding Path="FlowIntensity"/>
+                                                                               <Binding ElementName="FlowPacketsTrack" Path="Bounds.Width"/>
+                                                                           </MultiBinding>
+                                                                       </Border.Width>
+                                                                   </Border>
+                                                                   <TextBlock Text="{Binding FlowIntensity, StringFormat='{}{0:F1}%'}" FontSize="10" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                               </Grid>
+                                                           </Border>
+                                                       </Grid>
+                                                       <StackPanel Grid.Column="4" Orientation="Vertical" HorizontalAlignment="Right">
+                                                           <TextBlock Text="{Binding PacketsFormatted}" FontSize="11" FontWeight="SemiBold" Foreground="#58A6FF"/>
+                                                           <TextBlock Text="{Binding FlowIntensity, StringFormat='{}{0:F1}%'}" FontSize="10" Foreground="#7D8590" HorizontalAlignment="Right"/>
+                                                       </StackPanel>
+                                                       <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowFlowDetailsCommand}" CommandParameter="{Binding}" Background="#1C2128" BorderBrush="#30363D" Padding="8,4">
+                                                           <TextBlock Text="Details" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                                                       </Button>
+                                                   </Grid>
+                                               </Border>
+                                           </DataTemplate>
+                                       </ItemsControl.ItemTemplate>
+                                   </ItemsControl>
+                               </ScrollViewer>
+                           </Grid>
+                       </Border>
+
+                       <!-- Flows by Bytes -->
+                       <Border Grid.Column="1" Classes="modern-card-unified" Margin="12,0,0,0" MaxHeight="500">
+                           <Grid RowDefinitions="Auto,*">
+                               <Border Grid.Row="0" Background="#0D1117" BorderBrush="#30363D" BorderThickness="0,0,0,1">
+                                   <StackPanel Orientation="Horizontal" Margin="20,8" VerticalAlignment="Center">
+                                       <Border Width="3" Height="16" Background="#A855F7" CornerRadius="1.5" Margin="0,0,8,0"/>
+                                       <TextBlock Text="Connection flows by Bytes" FontSize="12" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                   </StackPanel>
+                               </Border>
+                               <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                   <ItemsControl ItemsSource="{Binding ActiveFlowsByBytes}">
+                                       <ItemsControl.ItemTemplate>
+                                           <DataTemplate>
+                                               <Border Margin="20,0" Background="#161B2220" CornerRadius="4" Padding="4,2">
+                                                   <Grid ColumnDefinitions="40,200,60,*,120,80">
+                                                       <TextBlock Grid.Column="0" Text="{Binding Rank}" FontSize="12" FontWeight="SemiBold" Foreground="#7D8590" VerticalAlignment="Center"/>
+                                                       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                                                           <Border Background="#1C2128" CornerRadius="3" Padding="6,3">
+                                                               <TextBlock Text="{Binding SourceCountryDisplayCode}" FontSize="10" FontWeight="Bold" Foreground="#F0F6FC"/>
+                                                           </Border>
+                                                           <TextBlock Text="->" FontSize="12" Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center"/>
+                                                           <Border Background="#1C2128" CornerRadius="3" Padding="6,3">
+                                                               <TextBlock Text="{Binding DestinationCountryDisplayCode}" FontSize="10" FontWeight="Bold" Foreground="#F0F6FC"/>
+                                                           </Border>
+                                                       </StackPanel>
+                                                       <Border Grid.Column="2" Background="#21262D" CornerRadius="3" Padding="4,2" HorizontalAlignment="Center">
+                                                           <TextBlock Text="{Binding Protocol}" FontSize="9" Foreground="#7D8590"/>
+                                                       </Border>
+                                                       <Grid Grid.Column="3" Margin="8,0">
+                                                           <Border x:Name="FlowBytesTrack" Background="#21262D" CornerRadius="3" Height="20">
+                                                               <Grid>
+                                                                   <Border Background="{Binding ByteIntensity, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left">
+                                                                       <Border.Width>
+                                                                           <MultiBinding Converter="{StaticResource PercentageToPixelWidthConverter}">
+                                                                               <Binding Path="ByteIntensity"/>
+                                                                               <Binding ElementName="FlowBytesTrack" Path="Bounds.Width"/>
+                                                                           </MultiBinding>
+                                                                       </Border.Width>
+                                                                   </Border>
+                                                                   <TextBlock Text="{Binding ByteIntensity, StringFormat='{}{0:F1}%'}" FontSize="10" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                               </Grid>
+                                                           </Border>
+                                                       </Grid>
+                                                       <StackPanel Grid.Column="4" Orientation="Vertical" HorizontalAlignment="Right">
+                                                           <TextBlock Text="{Binding BytesFormatted}" FontSize="11" FontWeight="SemiBold" Foreground="#F59E0B"/>
+                                                           <TextBlock Text="{Binding ByteIntensity, StringFormat='{}{0:F1}%'}" FontSize="10" Foreground="#7D8590" HorizontalAlignment="Right"/>
+                                                       </StackPanel>
+                                                       <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowFlowDetailsCommand}" CommandParameter="{Binding}" Background="#1C2128" BorderBrush="#30363D" Padding="8,4">
+                                                           <TextBlock Text="Details" FontSize="11" Foreground="{DynamicResource TextMuted}"/>
+                                                       </Button>
+                                                   </Grid>
+                                               </Border>
+                                           </DataTemplate>
+                                       </ItemsControl.ItemTemplate>
+                                   </ItemsControl>
+                               </ScrollViewer>
+                           </Grid>
+                       </Border>
+                   </Grid>
+               </Grid>
+           </Grid>
+       </ScrollViewer>
+   </Grid>
+</UserControl>

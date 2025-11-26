@@ -1,0 +1,72 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PCAPAnalyzer.UI.Controls.ModernLoadingControl"
+             x:CompileBindings="False">
+    
+    <Grid>
+        <!-- Semi-transparent overlay -->
+        <Border Background="#80000000" IsVisible="{Binding IsLoading}">
+            <Grid>
+                <Border Width="200" Height="200" 
+                        HorizontalAlignment="Center" 
+                        VerticalAlignment="Center"
+                        CornerRadius="20"
+                        Background="{DynamicResource BackgroundElevated}"
+                        BoxShadow="0 8 32 0 #00000060"
+                        Classes="scale-in">
+                    
+                    <StackPanel VerticalAlignment="Center" Spacing="20">
+                        <!-- Modern circular loading animation -->
+                        <Grid HorizontalAlignment="Center">
+                            <Border Width="60" Height="60" 
+                                    CornerRadius="30"
+                                    BorderThickness="4"
+                                    BorderBrush="{DynamicResource BackgroundLight}"/>
+                            
+                            <Border Width="60" Height="60" 
+                                    CornerRadius="30"
+                                    BorderThickness="4"
+                                    Classes="rotate">
+                                <Border.BorderBrush>
+                                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                        <GradientStop Offset="0" Color="{DynamicResource AccentPrimary}"/>
+                                        <GradientStop Offset="0.5" Color="{DynamicResource AccentSecondary}"/>
+                                        <GradientStop Offset="1" Color="Transparent"/>
+                                    </LinearGradientBrush>
+                                </Border.BorderBrush>
+                            </Border>
+                            
+                            <!-- Inner pulse effect -->
+                            <Ellipse Width="20" Height="20" 
+                                     Fill="{DynamicResource AccentPrimary}"
+                                     Opacity="0.3"
+                                     Classes="pulse"/>
+                        </Grid>
+                        
+                        <!-- Loading text -->
+                        <TextBlock Text="{Binding LoadingMessage, FallbackValue='Processing...'}"
+                                   HorizontalAlignment="Center"
+                                   FontSize="16"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource TextPrimary}"/>
+                        
+                        <!-- Progress bar (optional) -->
+                        <ProgressBar Width="140" Height="6"
+                                     Value="{Binding LoadingProgress}"
+                                     Maximum="100"
+                                     IsIndeterminate="{Binding IsProgressIndeterminate}"
+                                     IsVisible="{Binding ShowProgress}"
+                                     Classes="progress-wave"/>
+                        
+                        <!-- Additional info text -->
+                        <TextBlock Text="{Binding LoadingSubMessage}"
+                                   HorizontalAlignment="Center"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource TextMuted}"
+                                   IsVisible="{Binding HasSubMessage}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

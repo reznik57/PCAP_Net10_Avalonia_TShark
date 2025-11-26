@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+             xmlns:converters="using:PCAPAnalyzer.UI.Converters"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="180"
+             x:Class="PCAPAnalyzer.UI.Views.FilterBar"
+             x:DataType="vm:EnhancedFilterViewModel">
+
+    <UserControl.Resources>
+        <converters:ApplyFilterButtonTextConverter x:Key="ApplyFilterButtonTextConverter"/>
+        <converters:ClearFilterButtonTextConverter x:Key="ClearFilterButtonTextConverter"/>
+
+        <!-- Filter Chip with Icon Template -->
+        <ControlTemplate x:Key="FilterChipWithIcon" x:DataType="ContentControl">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <Border Background="{Binding Tag}" CornerRadius="10" Width="20" Height="20">
+                    <TextBlock Text="{Binding Content}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <TextBlock Text="{TemplateBinding Content}" FontSize="12"/>
+            </StackPanel>
+        </ControlTemplate>
+    </UserControl.Resources>
+
+    <Border Classes="modern-card" Padding="20">
+        <!-- Empty - custom filters removed per user request -->
+    </Border>
+</UserControl>

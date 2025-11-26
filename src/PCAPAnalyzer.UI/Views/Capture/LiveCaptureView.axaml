@@ -1,0 +1,345 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels.Capture"
+             xmlns:controls="using:PCAPAnalyzer.UI.Controls"
+             x:Class="PCAPAnalyzer.UI.Views.Capture.LiveCaptureView"
+             x:DataType="vm:LiveCaptureViewModel"
+             Background="{DynamicResource BackgroundDark}">
+
+    <UserControl.Resources>
+        <!-- Protocol color brushes -->
+        <SolidColorBrush x:Key="TcpBrush" Color="#58A6FF"/>
+        <SolidColorBrush x:Key="UdpBrush" Color="#3FB950"/>
+        <SolidColorBrush x:Key="IcmpBrush" Color="#F0E68C"/>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Top bar -->
+            <RowDefinition Height="*"/>     <!-- Content -->
+            <RowDefinition Height="Auto"/> <!-- Status bar -->
+        </Grid.RowDefinitions>
+
+        <!-- Top Bar: Controls and Filter -->
+        <Border Grid.Row="0"
+                Background="{DynamicResource BackgroundMedium}"
+                BorderBrush="{DynamicResource BorderPrimary}"
+                BorderThickness="0,0,0,1"
+                Padding="16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Capture Controls -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                    <!-- Configure Button -->
+                    <Button Command="{Binding ConfigureCaptureCommand}"
+                            Height="36"
+                            Padding="12,0"
+                            ToolTip.Tip="Configure capture settings">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Path Data="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"
+                                  Fill="{DynamicResource TextPrimary}"
+                                  Width="16" Height="16"
+                                  Stretch="Uniform"/>
+                            <TextBlock Text="Configure" FontSize="13" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Start Button -->
+                    <Button Command="{Binding StartCaptureCommand}"
+                            Classes="primary-action"
+                            Height="36"
+                            Padding="16,0"
+                            ToolTip.Tip="Start packet capture">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Path Data="M8 5L20 12L8 19Z"
+                                  Fill="White"
+                                  Width="14" Height="14"
+                                  Stretch="Uniform"/>
+                            <TextBlock Text="Start"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="White"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Stop Button -->
+                    <Button Command="{Binding StopCaptureCommand}"
+                            Classes="danger-action"
+                            Height="36"
+                            Padding="16,0"
+                            ToolTip.Tip="Stop packet capture">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Border Width="14" Height="14"
+                                    Background="White"
+                                    CornerRadius="2"/>
+                            <TextBlock Text="Stop"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="White"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Pause/Resume Button -->
+                    <Button Command="{Binding PauseCaptureCommand}"
+                            Height="36"
+                            Padding="16,0"
+                            IsVisible="{Binding IsCapturing}"
+                            ToolTip.Tip="Pause packet capture">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Path Data="M6 4h4v16H6V4zm8 0h4v16h-4V4z"
+                                  Fill="{DynamicResource TextPrimary}"
+                                  Width="14" Height="14"
+                                  Stretch="Uniform"/>
+                            <TextBlock Text="Pause" FontSize="13" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Command="{Binding ResumeCaptureCommand}"
+                            Classes="primary-action"
+                            Height="36"
+                            Padding="16,0"
+                            IsVisible="{Binding IsPaused}"
+                            ToolTip.Tip="Resume packet capture">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Path Data="M8 5L20 12L8 19Z"
+                                  Fill="White"
+                                  Width="14" Height="14"
+                                  Stretch="Uniform"/>
+                            <TextBlock Text="Resume"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Foreground="White"/>
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Clear Button -->
+                    <Button Command="{Binding ClearPacketsCommand}"
+                            Height="36"
+                            Padding="12,0"
+                            ToolTip.Tip="Clear packet list">
+                        <Path Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"
+                              Fill="{DynamicResource TextPrimary}"
+                              Width="16" Height="16"
+                              Stretch="Uniform"/>
+                    </Button>
+
+                    <!-- Export Button -->
+                    <Button Command="{Binding ExportCaptureCommand}"
+                            Height="36"
+                            Padding="12,0"
+                            ToolTip.Tip="Export capture to file">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Path Data="M19 12v7H5v-7H3v7c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7h-2zm-6 .67l2.59-2.58L17 11.5l-5 5-5-5 1.41-1.41L11 12.67V3h2v9.67z"
+                                  Fill="{DynamicResource TextPrimary}"
+                                  Width="16" Height="16"
+                                  Stretch="Uniform"/>
+                            <TextBlock Text="Export" FontSize="13" FontWeight="Medium"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <!-- Interface and Filter Info -->
+                <StackPanel Grid.Column="1"
+                            Orientation="Vertical"
+                            Margin="20,0,0,0"
+                            VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Interface:"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextMuted}"/>
+                        <TextBlock Text="{Binding SelectedInterfaceName}"
+                                   FontSize="11"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource AccentBlue}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Filter:"
+                                   FontSize="11"
+                                   Foreground="{DynamicResource TextMuted}"/>
+                        <TextBlock Text="{Binding AppliedFilter}"
+                                   FontSize="11"
+                                   FontWeight="Medium"
+                                   Foreground="{DynamicResource AccentGreen}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- Session Info -->
+                <StackPanel Grid.Column="2"
+                            Orientation="Vertical"
+                            HorizontalAlignment="Right">
+                    <TextBlock Text="{Binding SessionId, StringFormat='Session: {0}'}"
+                               FontSize="10"
+                               Foreground="{DynamicResource TextMuted}"
+                               IsVisible="{Binding IsCapturing}"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320"/> <!-- Statistics Panel -->
+                <ColumnDefinition Width="*"/>   <!-- Packet List -->
+            </Grid.ColumnDefinitions>
+
+            <!-- Left Panel: Live Statistics -->
+            <controls:LiveStatisticsPanel Grid.Column="0"
+                                          DataContext="{Binding StatisticsViewModel}"
+                                          BorderBrush="{DynamicResource BorderPrimary}"
+                                          BorderThickness="0,0,1,0"/>
+
+            <!-- Right Panel: Packet List -->
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- Packet List Header -->
+                <Border Grid.Row="0"
+                        Background="{DynamicResource BackgroundMedium}"
+                        BorderBrush="{DynamicResource BorderPrimary}"
+                        BorderThickness="0,0,0,1"
+                        Padding="16,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                            <TextBlock Text="Live Packets"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimary}"/>
+                            <Border Classes="badge badge-blue">
+                                <TextBlock Text="{Binding PacketListViewModel.PacketsDisplayed, StringFormat='{}{0:N0} displayed'}"
+                                           FontSize="11"/>
+                            </Border>
+                            <Border Classes="badge badge-green"
+                                    IsVisible="{Binding IsCapturing}">
+                                <TextBlock Text="LIVE"
+                                           FontSize="11"
+                                           FontWeight="Bold"/>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Filter Box -->
+                        <TextBox Grid.Column="1"
+                                 Text="{Binding PacketListViewModel.FilterText}"
+                                 Watermark="Filter packets..."
+                                 Width="200"
+                                 Height="28"/>
+                    </Grid>
+                </Border>
+
+                <!-- Packet DataGrid -->
+                <DataGrid Grid.Row="1"
+                          ItemsSource="{Binding PacketListViewModel.Packets}"
+                          SelectedItem="{Binding PacketListViewModel.SelectedPacket}"
+                          AutoGenerateColumns="False"
+                          CanUserSortColumns="True"
+                          CanUserResizeColumns="True"
+                          IsReadOnly="True"
+                          GridLinesVisibility="Horizontal"
+                          Classes="modern-grid">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="#"
+                                            Binding="{Binding SequenceNumber}"
+                                            Width="80"/>
+                        <DataGridTextColumn Header="TIME"
+                                            Binding="{Binding TimestampFormatted}"
+                                            Width="110"/>
+                        <DataGridTextColumn Header="SOURCE IP"
+                                            Binding="{Binding SourceIp}"
+                                            Width="140"/>
+                        <DataGridTextColumn Header="SRC PORT"
+                                            Binding="{Binding SourcePortFormatted}"
+                                            Width="85"/>
+                        <DataGridTextColumn Header="DESTINATION IP"
+                                            Binding="{Binding DestinationIp}"
+                                            Width="140"/>
+                        <DataGridTextColumn Header="DST PORT"
+                                            Binding="{Binding DestinationPortFormatted}"
+                                            Width="85"/>
+                        <DataGridTemplateColumn Header="PROTOCOL" Width="100">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Background="{Binding ProtocolColor}"
+                                            CornerRadius="4"
+                                            Padding="8,4"
+                                            HorizontalAlignment="Left">
+                                        <TextBlock Text="{Binding Protocol}"
+                                                   FontSize="11"
+                                                   FontWeight="Medium"
+                                                   Foreground="White"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="LENGTH"
+                                            Binding="{Binding Length}"
+                                            Width="80"/>
+                        <DataGridTextColumn Header="INFO"
+                                            Binding="{Binding Info}"
+                                            Width="*"
+                                            MinWidth="200"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Grid>
+
+        <!-- Bottom Status Bar -->
+        <Border Grid.Row="2"
+                Background="{DynamicResource BackgroundMedium}"
+                BorderBrush="{DynamicResource BorderPrimary}"
+                BorderThickness="0,1,0,0"
+                Padding="16,8">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Status Indicator -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                    <Ellipse Width="10" Height="10"
+                             Fill="{Binding StatusColor}"
+                             IsVisible="{Binding IsCapturing}"
+                             Classes="status-pulse">
+                        <!-- Animation moved to LiveCaptureStyles.axaml with .status-pulse class -->
+                    </Ellipse>
+                    <TextBlock Text="{Binding StatusMessage}"
+                               FontSize="12"
+                               FontWeight="Medium"
+                               Foreground="{DynamicResource TextPrimary}"/>
+                </StackPanel>
+
+                <!-- Error Message -->
+                <TextBlock Grid.Column="1"
+                           Text="{Binding ErrorMessage}"
+                           FontSize="12"
+                           Foreground="{DynamicResource AccentRed}"
+                           IsVisible="{Binding HasError}"
+                           Margin="16,0"/>
+
+                <!-- Total Packet Count -->
+                <TextBlock Grid.Column="2"
+                           FontSize="12"
+                           Foreground="{DynamicResource TextSecondary}">
+                    <Run Text="Total:"/>
+                    <Run Text="{Binding PacketListViewModel.TotalPacketCount, StringFormat='{}{0:N0}'}"
+                         FontWeight="Bold"
+                         Foreground="{DynamicResource AccentBlue}"/>
+                    <Run Text="packets"/>
+                </TextBlock>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,103 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="PCAPAnalyzer.UI.Controls.Charts.NetworkGraphChart"
+             x:CompileBindings="False">
+
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- Toolbar -->
+    <Border Grid.Row="0" Background="#2D3748" Padding="10">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Grid.Column="0" Text="Network Topology Graph"
+                   FontSize="16" FontWeight="Bold" Foreground="White"
+                   VerticalAlignment="Center" />
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="Layout:" Foreground="White" VerticalAlignment="Center" />
+          <ComboBox Name="LayoutCombo" SelectedIndex="0" Width="120">
+            <ComboBoxItem Content="Force-Directed" />
+            <ComboBoxItem Content="Circular" />
+            <ComboBoxItem Content="Hierarchical" />
+            <ComboBoxItem Content="Grid" />
+          </ComboBox>
+          <Button Content="Refresh" Classes="chart-button" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Graph Canvas -->
+    <Canvas Grid.Row="1" Background="#1A202C" Name="GraphCanvas">
+      <!-- Nodes and edges will be rendered here dynamically -->
+      <ItemsControl ItemsSource="{Binding Edges}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <Canvas />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Line StartPoint="{Binding StartPoint}"
+                  EndPoint="{Binding EndPoint}"
+                  Stroke="{Binding EdgeColor}"
+                  StrokeThickness="{Binding Thickness}"
+                  Opacity="0.6" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <ItemsControl ItemsSource="{Binding Nodes}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <Canvas />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Background="{Binding NodeColor}"
+                    CornerRadius="{Binding NodeRadius}"
+                    Width="{Binding NodeSize}"
+                    Height="{Binding NodeSize}"
+                    ToolTip.Tip="{Binding Tooltip}"
+                    Canvas.Left="{Binding X}"
+                    Canvas.Top="{Binding Y}">
+              <TextBlock Text="{Binding Label}"
+                         Foreground="White"
+                         FontSize="8"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                         TextWrapping="Wrap" />
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </Canvas>
+
+    <!-- Legend and Stats -->
+    <Border Grid.Row="2" Background="#2D3748" Padding="10">
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="15">
+          <Border Background="#3B82F6" Width="15" Height="15" CornerRadius="7.5" />
+          <TextBlock Text="Source Nodes" Foreground="White" />
+          <Border Background="#10B981" Width="15" Height="15" CornerRadius="7.5" />
+          <TextBlock Text="Destination Nodes" Foreground="White" />
+        </StackPanel>
+        <TextBlock Grid.Column="1" Text="{Binding NodeCount, StringFormat='Nodes: {0}'}"
+                   Foreground="#A0AEC0" Margin="10,0" />
+        <TextBlock Grid.Column="2" Text="{Binding EdgeCount, StringFormat='Connections: {0}'}"
+                   Foreground="#A0AEC0" Margin="10,0" />
+        <TextBlock Grid.Column="3" Text="{Binding SelectedNode}"
+                   Foreground="White" Margin="10,0" />
+      </Grid>
+    </Border>
+  </Grid>
+
+  <UserControl.Styles>
+    <Style Selector="Button.chart-button">
+      <Setter Property="Background" Value="#4A5568" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Padding" Value="10,5" />
+      <Setter Property="CornerRadius" Value="4" />
+    </Style>
+    <Style Selector="Button.chart-button:pointerover">
+      <Setter Property="Background" Value="#718096" />
+    </Style>
+  </UserControl.Styles>
+</UserControl>

@@ -1,0 +1,149 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:PCAPAnalyzer.UI.Controls"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="400"
+             x:Class="PCAPAnalyzer.UI.Controls.ProtocolLegend">
+
+    <Design.PreviewWith>
+        <controls:ProtocolLegend ShowCommonOnly="True"/>
+    </Design.PreviewWith>
+
+    <Border Background="#0D1117"
+            BorderBrush="#30363D"
+            BorderThickness="1"
+            CornerRadius="6"
+            Padding="16">
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+
+            <StackPanel Spacing="12">
+                <!-- Header -->
+                <TextBlock Text="Protocol Legend"
+                           FontSize="14"
+                           FontWeight="SemiBold"
+                           Foreground="#F0F6FC"
+                           Margin="0,0,0,8"/>
+
+                <!-- Common Protocols Section -->
+                <StackPanel x:Name="CommonProtocolsPanel" Spacing="8">
+                    <TextBlock Text="Common Protocols"
+                               FontSize="11"
+                               FontWeight="Medium"
+                               Foreground="#8B949E"
+                               Margin="0,0,0,4"
+                               IsVisible="{ReflectionBinding !ShowCommonOnly}"/>
+
+                    <ItemsControl x:Name="CommonProtocolsList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="controls:ProtocolLegendItem">
+                                <Grid ColumnDefinitions="Auto,*" Margin="0,2">
+                                    <controls:ProtocolBadge Grid.Column="0"
+                                                           Protocol="{Binding Protocol}"
+                                                           Classes="compact"
+                                                           Width="65"
+                                                           HorizontalAlignment="Left"/>
+
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Description}"
+                                               FontSize="10"
+                                               Foreground="#8B949E"
+                                               VerticalAlignment="Center"
+                                               Margin="8,0,0,0"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- All Protocols Section (only shown when ShowCommonOnly=False) -->
+                <StackPanel x:Name="AllProtocolsPanel"
+                            Spacing="8"
+                            IsVisible="{ReflectionBinding !ShowCommonOnly}">
+
+                    <Border Height="1"
+                            Background="#30363D"
+                            Margin="0,4"/>
+
+                    <TextBlock Text="All Protocols"
+                               FontSize="11"
+                               FontWeight="Medium"
+                               Foreground="#8B949E"
+                               Margin="0,0,0,4"/>
+
+                    <ItemsControl x:Name="AllProtocolsList">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="controls:ProtocolLegendItem">
+                                <controls:ProtocolBadge Protocol="{Binding Protocol}"
+                                                       Classes="compact"
+                                                       Margin="0,0,4,4"
+                                                       ToolTip.Tip="{Binding Description}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- Category View (alternative display mode) -->
+                <StackPanel x:Name="CategoryPanel"
+                            Spacing="8"
+                            IsVisible="{ReflectionBinding ShowByCategory}">
+
+                    <Border Height="1"
+                            Background="#30363D"
+                            Margin="0,4"/>
+
+                    <TextBlock Text="By Category"
+                               FontSize="11"
+                               FontWeight="Medium"
+                               Foreground="#8B949E"
+                               Margin="0,0,0,4"/>
+
+                    <ItemsControl x:Name="CategoryList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="controls:ProtocolCategoryGroup">
+                                <StackPanel Spacing="4" Margin="0,0,0,8">
+                                    <TextBlock Text="{Binding Category}"
+                                               FontSize="10"
+                                               FontWeight="SemiBold"
+                                               Foreground="#8B949E"/>
+
+                                    <ItemsControl ItemsSource="{Binding Protocols}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel Orientation="Horizontal"/>
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="x:String">
+                                                <controls:ProtocolBadge Protocol="{Binding}"
+                                                                       Classes="compact"
+                                                                       Margin="0,0,4,2"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- Footer info -->
+                <TextBlock x:Name="FooterText"
+                           FontSize="9"
+                           Foreground="#6E7681"
+                           TextAlignment="Center"
+                           Margin="0,8,0,0"/>
+            </StackPanel>
+        </ScrollViewer>
+    </Border>
+</UserControl>

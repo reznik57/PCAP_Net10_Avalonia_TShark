@@ -1,0 +1,329 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:ns2="using:PCAPAnalyzer.UI.Converters"
+        xmlns:ns3="using:PCAPAnalyzer.UI.Views"
+        xmlns:ns4="using:PCAPAnalyzer.UI.Views.Components"
+        xmlns:ctrl="using:PCAPAnalyzer.UI.Views.Controls"
+        xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+        xmlns:vmc="using:PCAPAnalyzer.UI.ViewModels.Components"
+        xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="PCAPAnalyzer.UI.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="PCAP Security Analyzer - Dark Mode"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        Background="{DynamicResource BackgroundDark}">
+
+    <Window.Resources>
+        <ns2:SecurityRatingToColorConverter x:Key="SecurityRatingToColorConverter" />
+        <ns2:AnalyzeButtonTextConverter x:Key="AnalyzeButtonTextConverter" />
+        <ns2:ClearButtonTextConverter x:Key="ClearButtonTextConverter" />
+        <ns2:ByteSizeConverter x:Key="ByteSizeConverter" />
+        <ns2:StageStateToBrushConverter x:Key="StageStateBrushConverter" />
+        <ns2:StageProgressVisibilityConverter x:Key="StageProgressVisibilityConverter" />
+        <ns2:BoolToTextConverter x:Key="BoolToTextConverter" />
+        <ns2:BoolToOpacityConverter x:Key="BoolToOpacityConverter" />
+    </Window.Resources>
+
+    <Window.Styles>
+        <Style Selector="TextBlock.title">
+            <Setter Property="FontSize" Value="28" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+        <Style Selector="TextBlock.subtitle">
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Foreground" Value="#F0F6FC" />
+        </Style>
+        <Style Selector="TextBlock.stat-label">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Foreground" Value="#C9D1D9" />
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+        <Style Selector="TextBlock.stat-value">
+            <Setter Property="FontSize" Value="32" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+    </Window.Styles>
+
+    <DockPanel>
+        <!-- Status Bar -->
+        <Border DockPanel.Dock="Bottom" Classes="status-bar-unified">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <!-- Status Indicator -->
+                <Border Grid.Column="0" Padding="14,8" Background="#0D1117" BorderBrush="#58A6FF" BorderThickness="2" CornerRadius="8" BoxShadow="0 0 12 2 #58A6FF40">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse Width="8" Height="8" Fill="{Binding StatusColor}" VerticalAlignment="Center">
+                            <Ellipse.Styles>
+                                <Style Selector="Ellipse">
+                                    <Style.Animations>
+                                        <Animation Duration="0:0:1" IterationCount="INFINITE" PlaybackDirection="Alternate">
+                                            <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.4"/></KeyFrame>
+                                            <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1.0"/></KeyFrame>
+                                        </Animation>
+                                    </Style.Animations>
+                                </Style>
+                            </Ellipse.Styles>
+                        </Ellipse>
+                        <TextBlock Text="⚡ ANALYZING" FontSize="12" FontWeight="Black" Foreground="#58A6FF" VerticalAlignment="Center" Margin="0,0,6,0" IsVisible="{Binding IsAnalyzing}">
+                            <TextBlock.Effect><DropShadowEffect Color="#58A6FF" BlurRadius="8" Opacity="0.6"/></TextBlock.Effect>
+                        </TextBlock>
+                        <TextBlock Text="{Binding Status}" FontSize="12" FontWeight="SemiBold" Foreground="#C9D1D9" VerticalAlignment="Center" IsVisible="{Binding !IsAnalyzing}"/>
+                        <TextBlock Text="{Binding PerformanceStatus}" FontSize="12" FontWeight="Medium" Foreground="#C9D1D9" VerticalAlignment="Center" IsVisible="{Binding IsAnalyzing}"/>
+                        <Border Background="#238636" CornerRadius="4" Padding="8,3" Margin="6,0,0,0" BorderBrush="#2EA043" BorderThickness="1" IsVisible="{Binding AnalysisProgress, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <TextBlock Text="{Binding AnalysisProgress, StringFormat='{}{0:F0}%'}" FontSize="11" FontWeight="Black" Foreground="White">
+                                <TextBlock.Effect><DropShadowEffect Color="#238636" BlurRadius="6" Opacity="0.8"/></TextBlock.Effect>
+                            </TextBlock>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Memory + Screenshot -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" Margin="12,0,0,0">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="Memory:" Classes="status-bar-label"/>
+                        <TextBlock Text="{Binding MemoryUsage}" Classes="status-bar-value"/>
+                    </StackPanel>
+                    <Button Command="{Binding TakeScreenshotCommand}" ToolTip.Tip="Take Screenshot - Save current view as image" Padding="14,9" Background="#0D1117" BorderBrush="#58A6FF" BorderThickness="2" CornerRadius="8" HorizontalAlignment="Center" VerticalAlignment="Center" Cursor="Hand" Name="ScreenshotButton">
+                        <Button.Effect><DropShadowEffect Color="#58A6FF" BlurRadius="16" Opacity="0.6" OffsetX="0" OffsetY="0"/></Button.Effect>
+                        <Button.Styles>
+                            <Style Selector="Button">
+                                <Style.Animations>
+                                    <Animation Duration="0:0:2" IterationCount="INFINITE" PlaybackDirection="Alternate">
+                                        <KeyFrame Cue="0%"><Setter Property="BorderBrush" Value="#58A6FF"/></KeyFrame>
+                                        <KeyFrame Cue="100%"><Setter Property="BorderBrush" Value="#79C0FF"/></KeyFrame>
+                                    </Animation>
+                                </Style.Animations>
+                            </Style>
+                            <Style Selector="Button:pointerover">
+                                <Setter Property="Background" Value="#161B22"/>
+                                <Setter Property="BorderBrush" Value="#79C0FF"/>
+                                <Setter Property="RenderTransform" Value="scale(1.05)"/>
+                            </Style>
+                            <Style Selector="Button:pressed">
+                                <Setter Property="Background" Value="#0D1117"/>
+                                <Setter Property="BorderBrush" Value="#58A6FF"/>
+                                <Setter Property="RenderTransform" Value="scale(0.95)"/>
+                            </Style>
+                        </Button.Styles>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="📸" FontSize="18" VerticalAlignment="Center">
+                                <TextBlock.Effect><DropShadowEffect Color="#58A6FF" BlurRadius="10" Opacity="0.6"/></TextBlock.Effect>
+                            </TextBlock>
+                            <TextBlock Text="Screenshot" FontSize="13" FontWeight="Bold" Foreground="#E6EDF3" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Main Content with Progress Overlay -->
+        <Grid>
+            <!-- TabControl (background layer) -->
+            <TabControl Name="MainTabControl" Background="{DynamicResource BackgroundDark}" SelectedIndex="{Binding SelectedTabIndex}">
+            <TabControl.Styles>
+                <Style Selector="TabItem">
+                    <Setter Property="FontSize" Value="13" />
+                    <Setter Property="Padding" Value="14,8" />
+                    <Setter Property="Margin" Value="2" />
+                    <Setter Property="Background" Value="#161B22" />
+                    <!-- ✅ FIX: Remove Foreground - let emoji+text control their own colors -->
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="BorderBrush" Value="#30363D" />
+                    <Setter Property="CornerRadius" Value="6" />
+                    <Setter Property="Transitions">
+                        <Transitions>
+                            <BrushTransition Property="Background" Duration="0:0:0.15" />
+                            <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                        </Transitions>
+                    </Setter>
+                </Style>
+                <Style Selector="TabItem:pointerover">
+                    <Setter Property="Background" Value="#21262D" />
+                    <!-- ✅ FIX: Remove Foreground - preserve emoji colors on hover -->
+                    <Setter Property="BorderBrush" Value="#484F58" />
+                </Style>
+                <Style Selector="TabItem:selected">
+                    <Setter Property="Background">
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Offset="0" Color="#1F4788" />
+                            <GradientStop Offset="1" Color="#1A3A6E" />
+                        </LinearGradientBrush>
+                    </Setter>
+                    <!-- ✅ FIX: Remove Foreground setter to keep colored icons/text -->
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                    <Setter Property="BorderBrush" Value="#58A6FF" />
+                    <Setter Property="BorderThickness" Value="1" />
+                </Style>
+                <!-- Selected tab maintains colors on hover -->
+                <Style Selector="TabItem:selected:pointerover">
+                    <Setter Property="Background">
+                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                            <GradientStop Offset="0" Color="#2558A0" />
+                            <GradientStop Offset="1" Color="#1F4788" />
+                        </LinearGradientBrush>
+                    </Setter>
+                    <!-- ✅ FIX: Remove Foreground setter to keep colored icons/text -->
+                    <Setter Property="BorderBrush" Value="#79C0FF" />
+                </Style>
+            </TabControl.Styles>
+
+            <!-- File Manager Tab (FIRST TAB) -->
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding FileManagerBadge}" FontSize="14" VerticalAlignment="Center"/>
+                        <TextBlock Text="📂 File Manager" FontSize="13" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ns3:FileManagerView DataContext="{Binding FileManagerViewModel}" />
+            </TabItem>
+
+            <!-- Packet Analysis Tab with Badge -->
+            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding PacketAnalysisBadge}" FontSize="14" VerticalAlignment="Center"/>
+                        <TextBlock Text="📦 Packet Analysis" FontSize="13" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="{DynamicResource BackgroundDarkest}">
+                    <Grid Margin="24" RowDefinitions="Auto,16,Auto,16,Auto,16,Auto">
+                        <!-- ✅ CLEANUP: FileSelectionControl removed (now in File Manager tab with awesome progress panel) -->
+
+                        <!-- Row 0: Filter Panel UserControl -->
+                        <ctrl:FilterPanelControl Grid.Row="0" DataContext="{Binding}" />
+
+                        <!-- Row 2: Statistics Bar UserControl -->
+                        <ctrl:StatsBarControl Grid.Row="2" DataContext="{Binding PacketAnalysisStats}" />
+
+                        <!-- Row 4: Packets Over Time Chart (filtered packets only) -->
+                        <Border Grid.Row="4" Background="#0D1117" CornerRadius="8" BorderBrush="#30363D" BorderThickness="1"
+                                MinHeight="320" IsVisible="{Binding Charts.HasPacketData}">
+                            <Grid RowDefinitions="Auto,*,Auto">
+                                <!-- Chart Header -->
+                                <Border Grid.Row="0" Background="#161B22" CornerRadius="8,8,0,0" BorderBrush="#30363D" BorderThickness="0,0,0,1" Padding="0">
+                                    <Grid Margin="20,12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Border Width="3" Height="20" Background="#58A6FF" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                            <TextBlock Text="Packets Over Time" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                            <Border Background="#21262D" CornerRadius="4" Padding="8,2" Margin="12,0,0,0" BorderBrush="#30363D" BorderThickness="1">
+                                                <TextBlock Text="{Binding Charts.FilteredPacketCount, StringFormat='{}Filtered: {0:N0}'}" FontSize="11" Foreground="#58A6FF" FontWeight="Medium"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                            <Button Command="{Binding Charts.ZoomInPacketsTimelineCommand}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom In">
+                                                <TextBlock Text="🔍+" FontSize="12" Foreground="#8B949E"/>
+                                            </Button>
+                                            <Button Command="{Binding Charts.ZoomOutPacketsTimelineCommand}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom Out">
+                                                <TextBlock Text="🔍-" FontSize="12" Foreground="#8B949E"/>
+                                            </Button>
+                                            <Button Command="{Binding Charts.ResetPacketsTimelineZoomCommand}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Reset Zoom">
+                                                <TextBlock Text="⟲" FontSize="12" Foreground="#8B949E"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Chart -->
+                                <lvc:CartesianChart Grid.Row="1"
+                                    x:Name="PacketsOverTimeChart"
+                                    Series="{Binding Charts.PacketsOverTimeSeries}"
+                                    XAxes="{Binding Charts.PacketsOverTimeXAxes}"
+                                    YAxes="{Binding Charts.PacketsOverTimeYAxes}"
+                                    ZoomMode="None"
+                                    Height="220"
+                                    Margin="20,10,20,5"
+                                    TooltipPosition="Hidden"
+                                    AnimationsSpeed="00:00:00.5"/>
+
+                                <!-- Tooltip Bar -->
+                                <Border Grid.Row="2" Height="30" Margin="20,0,20,10" Background="#1C2128" CornerRadius="6" BorderBrush="#30363D" BorderThickness="1">
+                                    <TextBlock Text="{Binding Charts.PacketsOverTimeTooltip}" FontSize="11" FontWeight="Medium" Foreground="#F0F6FC" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,0"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+
+                        <!-- Row 6: Packet Table UserControl -->
+                        <ctrl:PacketTableControl Grid.Row="6" DataContext="{Binding}" />
+                    </Grid>
+                </ScrollViewer>
+            </TabItem>
+
+
+            <!-- Analysis Tabs with Badges -->
+            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding DashboardBadge}" FontSize="14" VerticalAlignment="Center"/>
+                        <TextBlock Text="📊 Dashboard" FontSize="13" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ns3:DashboardView DataContext="{Binding DashboardViewModel}" />
+            </TabItem>
+            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding ThreatsBadge}" FontSize="14" VerticalAlignment="Center"/>
+                        <TextBlock Text="🛡️ Security Threats" FontSize="13" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ns3:ThreatsView DataContext="{Binding ThreatsViewModel}" />
+            </TabItem>
+            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding AnomaliesBadge}" FontSize="14" VerticalAlignment="Center"/>
+                        <TextBlock Text="🔬 Anomalies" FontSize="13" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ns3:AnomalyView DataContext="{Binding AnomalyViewModel}" />
+            </TabItem>
+            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding VoiceQoSBadge}" FontSize="14" VerticalAlignment="Center"/>
+                        <TextBlock Text="📞 Voice / QoS" FontSize="13" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ns3:VoiceQoSView DataContext="{Binding VoiceQoSViewModel}" />
+            </TabItem>
+            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="{Binding CountryTrafficBadge}" FontSize="14" VerticalAlignment="Center"/>
+                        <TextBlock Text="🌍 Country Traffic" FontSize="13" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ns3:CountryTrafficView_Enhanced DataContext="{Binding CountryTrafficViewModel}" />
+            </TabItem>
+            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="🔍 Compare" FontSize="13" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ns3:CompareView DataContext="{Binding CompareViewModel}" />
+            </TabItem>
+            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="📈 Reports" FontSize="13" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ns3:ReportView DataContext="{Binding ReportViewModel}" />
+            </TabItem>
+            </TabControl>
+
+            <!-- ✅ GLOBAL PROGRESS OVERLAY PERMANENTLY REMOVED
+                 Progress now handled exclusively by FileSelectionControl in File Manager tab.
+                 This prevents the "popup keeps reappearing" bug by eliminating duplicate code paths.
+                 See: docs/ARCHITECTURE_REVIEW_2025-01-19.md - Critical Issue C1 -->
+        </Grid>
+    </DockPanel>
+</Window>
