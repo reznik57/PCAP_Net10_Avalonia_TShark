@@ -248,6 +248,13 @@ namespace PCAPAnalyzer.Core.Services
             if (packetCollection.Count == 0)
                 return statistics;
 
+            // ✅ FIX: Guard against duplicate GeoIP enrichment (was causing 2x AnalyzeCountryTrafficAsync calls)
+            if (statistics.IsGeoIPEnriched)
+            {
+                DebugLogger.Log($"[StatisticsService] ✓ GeoIP already enriched at {statistics.GeoIPEnrichmentTimestamp:HH:mm:ss} - skipping EnrichWithGeoAsync");
+                return statistics;
+            }
+
             var totalUniqueIPs = _geoIPEnricher.ExtractUniqueIPs(packetCollection);
             DebugLogger.Log($"[GeoIP Enrichment] Processing {totalUniqueIPs:N0} unique IPs...");
 

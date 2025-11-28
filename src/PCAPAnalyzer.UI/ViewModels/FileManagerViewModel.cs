@@ -12,6 +12,13 @@ using PCAPAnalyzer.UI.ViewModels.Components;
 
 namespace PCAPAnalyzer.UI.ViewModels;
 
+// Countdown settings
+internal static class CountdownSettings
+{
+    public const int CountdownSeconds = 3;
+    public const int TickIntervalMs = 100;
+}
+
 /// <summary>
 /// ViewModel for File Manager tab - provides file selection, information display, and quick statistics.
 /// Delegates to FileAnalysisViewModel for actual file operations while maintaining tab-specific UI state.
@@ -43,6 +50,25 @@ public partial class FileManagerViewModel : ObservableObject
     [ObservableProperty] private bool _isAnalyzing;
     [ObservableProperty] private string _lastAnalysisText = "";
 
+    // ==================== COUNTDOWN STATE ====================
+
+    private DispatcherTimer? _countdownTimer;
+    private double _countdownRemaining;
+
+    [ObservableProperty] private bool _isCountdownActive;
+    [ObservableProperty] private double _countdownProgress; // 0-100% for progress ring
+    [ObservableProperty] private string _countdownDisplay = ""; // "3", "2", "1"
+
+    /// <summary>
+    /// Notify dependent properties when countdown state changes.
+    /// </summary>
+    partial void OnIsCountdownActiveChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowBrowseMessage));
+        OnPropertyChanged(nameof(ShowFileInfo));
+        OnPropertyChanged(nameof(BrowseOrCancelCommand));
+    }
+
     // ==================== PROGRESS TRACKING ====================
 
     [ObservableProperty] private double _analysisProgress;
@@ -62,6 +88,7 @@ public partial class FileManagerViewModel : ObservableObject
     [ObservableProperty] private string _analysisTime = "00:00:00";
     [ObservableProperty] private string _firstPacketTime = "--:--:--";
     [ObservableProperty] private string _lastPacketTime = "--:--:--";
+    [ObservableProperty] private string _captureTimeRange = "";  // e.g., "04.07.2024 08:20 - 08:22"
 
     // ==================== DERIVED PROPERTIES ====================
 
@@ -90,14 +117,125 @@ public partial class FileManagerViewModel : ObservableObject
     public ICommand? BrowseCommand => _fileAnalysisViewModel.BrowseCommand;
     public ICommand? AnalyzeCommand => _fileAnalysisViewModel.AnalyzeCommand;
 
+    /// <summary>
+    /// Combined command: Browse when no countdown, Cancel when countdown active.
+    /// This allows clicking the upload area to either open file dialog or cancel countdown.
+    /// </summary>
+    public ICommand BrowseOrCancelCommand => IsCountdownActive
+        ? CancelCountdownCommand
+        : (BrowseCommand ?? new RelayCommand(() => { }));
+
+    /// <summary>
+    /// Show browse message when no file selected AND countdown not active.
+    /// </summary>
+    public bool ShowBrowseMessage => !HasFile && !IsCountdownActive;
+
+    /// <summary>
+    /// Show file info when file selected AND countdown not active.
+    /// </summary>
+    public bool ShowFileInfo => HasFile && !IsCountdownActive;
+
+    /// <summary>
+    /// Select a file from a given path (used by drag & drop).
+    /// </summary>
+    public bool SelectFile(string filePath) => _fileAnalysisViewModel.SelectFile(filePath);
+
+    /// <summary>
+    /// Check if a file has a valid PCAP extension.
+    /// </summary>
+    public static bool IsValidPcapFile(string filePath) => FileAnalysisViewModel.IsValidPcapFile(filePath);
+
     [RelayCommand]
     private void Clear()
     {
+        // Cancel any active countdown
+        CancelCountdown();
+
         // Clear FileAnalysisViewModel via its public command instead of private method
         if (_fileAnalysisViewModel.ClearCommand?.CanExecute(null) == true)
         {
             _fileAnalysisViewModel.ClearCommand.Execute(null);
         }
+    }
+
+    /// <summary>
+    /// Cancel the countdown timer and prevent auto-analysis.
+    /// </summary>
+    [RelayCommand]
+    private void CancelCountdown()
+    {
+        if (!IsCountdownActive) return;
+
+        _countdownTimer?.Stop();
+        _countdownTimer = null;
+        IsCountdownActive = false;
+        CountdownDisplay = "";
+        CountdownProgress = 0;
+        DebugLogger.Log("[FileManagerVM] ⏹️ Countdown cancelled by user");
+    }
+
+    /// <summary>
+    /// Start the countdown timer when a new file is selected.
+    /// </summary>
+    private void StartCountdown()
+    {
+        // Don't start countdown if already analyzing or countdown already running
+        if (_fileAnalysisViewModel.IsAnalyzing || IsCountdownActive)
+            return;
+
+        // Don't start if analysis is already complete for this file
+        if (_fileAnalysisViewModel.IsAnalysisComplete)
+            return;
+
+        _countdownRemaining = CountdownSettings.CountdownSeconds;
+        IsCountdownActive = true;
+        UpdateCountdownDisplay();
+
+        _countdownTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(CountdownSettings.TickIntervalMs)
+        };
+        _countdownTimer.Tick += OnCountdownTick;
+        _countdownTimer.Start();
+
+        DebugLogger.Log($"[FileManagerVM] ⏱️ Countdown started: {CountdownSettings.CountdownSeconds}s");
+    }
+
+    private void OnCountdownTick(object? sender, EventArgs e)
+    {
+        _countdownRemaining -= CountdownSettings.TickIntervalMs / 1000.0;
+
+        if (_countdownRemaining <= 0)
+        {
+            // Countdown complete - start analysis
+            _countdownTimer?.Stop();
+            _countdownTimer = null;
+            IsCountdownActive = false;
+            CountdownDisplay = "";
+            CountdownProgress = 0;
+
+            DebugLogger.Log("[FileManagerVM] ⏱️ Countdown complete - starting analysis");
+
+            // Execute analyze command
+            if (_fileAnalysisViewModel.AnalyzeCommand?.CanExecute(null) == true)
+            {
+                _fileAnalysisViewModel.AnalyzeCommand.Execute(null);
+            }
+        }
+        else
+        {
+            UpdateCountdownDisplay();
+        }
+    }
+
+    private void UpdateCountdownDisplay()
+    {
+        // Display whole seconds with "..." suffix
+        var seconds = (int)Math.Ceiling(_countdownRemaining);
+        CountdownDisplay = $"{seconds}...";
+
+        // Progress as percentage (100% at start, 0% at end)
+        CountdownProgress = (_countdownRemaining / CountdownSettings.CountdownSeconds) * 100;
     }
 
     [RelayCommand(CanExecute = nameof(CanExportReport))]
@@ -140,10 +278,19 @@ public partial class FileManagerViewModel : ObservableObject
         switch (e.PropertyName)
         {
             case nameof(FileAnalysisViewModel.SelectedFilePath):
+                // Cancel any existing countdown when file changes
+                CancelCountdown();
                 UpdateFileInfo();
                 OnPropertyChanged(nameof(HasFile));
+                OnPropertyChanged(nameof(ShowBrowseMessage));
+                OnPropertyChanged(nameof(ShowFileInfo));
                 OnPropertyChanged(nameof(ShouldShowStages)); // ✅ Notify UI that visibility should update
                 OnPropertyChanged(nameof(CanAnalyze));
+                // Start countdown for auto-analysis if a new file was selected
+                if (HasFile && !_fileAnalysisViewModel.IsAnalysisComplete)
+                {
+                    StartCountdown();
+                }
                 break;
 
             case nameof(FileAnalysisViewModel.Stages):
@@ -153,6 +300,9 @@ public partial class FileManagerViewModel : ObservableObject
 
             case nameof(FileAnalysisViewModel.IsAnalyzing):
                 IsAnalyzing = _fileAnalysisViewModel.IsAnalyzing;
+                // Cancel countdown if analysis starts (user clicked Analyze manually)
+                if (IsAnalyzing)
+                    CancelCountdown();
                 UpdateStatusText();
                 OnPropertyChanged(nameof(CanAnalyze));
                 break;
@@ -175,6 +325,9 @@ public partial class FileManagerViewModel : ObservableObject
 
             case nameof(FileAnalysisViewModel.ProgressPercentage):
                 AnalysisProgress = _fileAnalysisViewModel.ProgressPercentage;
+                // Update CurrentPhase immediately (not throttled) when progress changes
+                var activeStage = _fileAnalysisViewModel.Stages.FirstOrDefault(s => s.State == AnalysisStageState.Active);
+                CurrentPhase = activeStage?.Name ?? (IsAnalyzing ? "Processing..." : "Idle");
                 break;
 
             case nameof(FileAnalysisViewModel.PacketsProcessed):
@@ -196,6 +349,8 @@ public partial class FileManagerViewModel : ObservableObject
             case nameof(FileAnalysisViewModel.TotalPackets):
             case nameof(FileAnalysisViewModel.TotalTrafficVolume):
             case nameof(FileAnalysisViewModel.CaptureDuration):
+            case nameof(FileAnalysisViewModel.CaptureStartTime):
+            case nameof(FileAnalysisViewModel.CaptureEndTime):
             case nameof(FileAnalysisViewModel.UniqueProtocols):
             case nameof(FileAnalysisViewModel.QuickStats):
                 UpdateQuickStats();
@@ -350,14 +505,17 @@ public partial class FileManagerViewModel : ObservableObject
     {
         if (!_fileAnalysisViewModel.IsAnalysisComplete)
         {
-            // Clear stats if not complete
+            // Clear stats if not complete (but preserve capture time if available)
             PacketCount = "0";
             CaptureFileSize = FileSizeFormatted;  // Show PCAP file size
             Duration = "00:00:00";
             ProcessingRate = "0";
             AnalysisTime = "00:00:00";
-            FirstPacketTime = "--:--:--";
-            LastPacketTime = "--:--:--";
+
+            // Show capture time range if available (fetched during countdown)
+            var captureStart = _fileAnalysisViewModel.CaptureStartTime;
+            var captureEnd = _fileAnalysisViewModel.CaptureEndTime;
+            UpdateCaptureTimeDisplay(captureStart, captureEnd);
             return;
         }
 
@@ -391,10 +549,47 @@ public partial class FileManagerViewModel : ObservableObject
             ? NumberFormatter.FormatTimeSpan(_fileAnalysisViewModel.ElapsedTime)
             : "00:00:00";
 
-        // First/Last Packet Timestamps (from capture)
-        // FUTURE: Add FirstPacketTime/LastPacketTime properties to FileAnalysisViewModel
-        FirstPacketTime = "--:--:--";
-        LastPacketTime = "--:--:--";
+        // First/Last Packet Timestamps (from capture) - European format DD.MM.YYYY HH:mm
+        UpdateCaptureTimeDisplay(_fileAnalysisViewModel.CaptureStartTime, _fileAnalysisViewModel.CaptureEndTime);
+    }
+
+    /// <summary>
+    /// Updates capture time display properties from first/last packet timestamps.
+    /// Formats in European format (DD.MM.YYYY HH:mm).
+    /// </summary>
+    private void UpdateCaptureTimeDisplay(DateTime? captureStart, DateTime? captureEnd)
+    {
+        if (captureStart.HasValue && captureEnd.HasValue)
+        {
+            // Format: DD.MM.YYYY HH:mm
+            FirstPacketTime = captureStart.Value.ToString("dd.MM.yyyy HH:mm");
+            LastPacketTime = captureEnd.Value.ToString("dd.MM.yyyy HH:mm");
+
+            // Compact time range format: "04.07.2024 08:20 - 08:22" (same day) or "04.07.2024 08:20 - 05.07.2024 09:15" (different days)
+            if (captureStart.Value.Date == captureEnd.Value.Date)
+            {
+                // Same day: show date once, then time range
+                CaptureTimeRange = $"{captureStart.Value:dd.MM.yyyy} {captureStart.Value:HH:mm} - {captureEnd.Value:HH:mm}";
+            }
+            else
+            {
+                // Different days: show full date/time for both
+                CaptureTimeRange = $"{captureStart.Value:dd.MM.yyyy HH:mm} - {captureEnd.Value:dd.MM.yyyy HH:mm}";
+            }
+        }
+        else if (captureStart.HasValue)
+        {
+            // Only first packet time available (large file optimization)
+            FirstPacketTime = captureStart.Value.ToString("dd.MM.yyyy HH:mm");
+            LastPacketTime = "...";
+            CaptureTimeRange = $"{captureStart.Value:dd.MM.yyyy HH:mm} - ...";
+        }
+        else
+        {
+            FirstPacketTime = "--:--:--";
+            LastPacketTime = "--:--:--";
+            CaptureTimeRange = "";
+        }
     }
 
     /// <summary>
@@ -409,7 +604,7 @@ public partial class FileManagerViewModel : ObservableObject
             return;
         }
 
-        // Simple implementation - could be enhanced with relative time formatting
-        LastAnalysisText = $"Last analyzed: {DateTime.Now:HH:mm:ss}";
+        // Simple implementation - European date format
+        LastAnalysisText = $"Last analyzed: {DateTime.Now:dd.MM.yyyy HH:mm:ss}";
     }
 }

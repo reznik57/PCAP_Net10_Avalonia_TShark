@@ -63,15 +63,17 @@ public class PacketStatisticsCalculator : IPacketStatisticsCalculator
 
         try
         {
+            // Count ALL streams (TCP + UDP + other) - not just TCP
+            // A stream is a unique 4-tuple (SrcIP, SrcPort, DstIP, DstPort)
             return packets
-                .Where(p => p.Protocol == Protocol.TCP)
+                .Where(p => p.SourcePort > 0 && p.DestinationPort > 0) // Must have ports
                 .Select(p => (p.SourceIP, p.SourcePort, p.DestinationIP, p.DestinationPort))
                 .Distinct()
                 .Count();
         }
         catch (Exception ex)
         {
-            DebugLogger.Log($"[PacketStatisticsCalculator] Error calculating TCP conversations: {ex.Message}");
+            DebugLogger.Log($"[PacketStatisticsCalculator] Error calculating streams: {ex.Message}");
             return 0;
         }
     }
@@ -130,7 +132,8 @@ public class PacketStatisticsCalculator : IPacketStatisticsCalculator
                 if (packet.DestinationPort > 0)
                     uniquePorts.Add(packet.DestinationPort);
 
-                if (packet.Protocol == Protocol.TCP)
+                // Count ALL streams (not just TCP) - must have valid ports
+                if (packet.SourcePort > 0 && packet.DestinationPort > 0)
                     tcpConversations.Add((packet.SourceIP ?? "", packet.SourcePort, packet.DestinationIP ?? "", packet.DestinationPort));
 
                 if (!string.IsNullOrEmpty(packet.L7Protocol))

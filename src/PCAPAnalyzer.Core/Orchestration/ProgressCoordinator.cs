@@ -23,34 +23,43 @@ namespace PCAPAnalyzer.Core.Orchestration
 
         // Progress debouncing to prevent parallel task interference
         private int _lastReportedPercent = -1;
+        private int _highWaterMarkPercent = -1; // Track highest % ever reported (never go backwards)
         private DateTime _lastReportTime = DateTime.MinValue;
         private readonly object _progressLock = new();
         private const int MIN_REPORT_INTERVAL_MS = 150; // Don't report more than every 150ms
+        private bool _isComplete; // Prevent updates after completion
 
-        // Phase weights (must sum to 100) - BASED ON ACTUAL TIMINGS
-        // From 290MB file: Counting=44.7s (67%), Loading=13s (19%), Analysis=7s (10%), Finalizing=0.5s (1%)
-        private const int PHASE_COUNTING = 35;     // 0-35% (counting takes most time!)
-        private const int PHASE_LOADING = 35;      // 35-70% (loading is second longest)
-        private const int PHASE_STATISTICS = 10;   // 70-80% (parallel with threats/voip)
-        private const int PHASE_THREATS = 10;      // 80-90% (parallel execution)
-        private const int PHASE_VOICEQOS = 5;      // 90-95% (parallel, fastest)
-        private const int PHASE_FINALIZING = 5;    // 95-100% (quick caching)
+        // Console logging throttle - max once per second
+        private DateTime _lastLogTime = DateTime.MinValue;
+        private const int MIN_LOG_INTERVAL_MS = 1000; // Log max once per second
+
+        // Phase weights (must sum to 75 for pre-tab phases) - UPDATED FOR CAPINFOS
+        // With capinfos: Count=~2s (5%), Load=50s (50%), Stats=15s (15%), Tabs=25s (25%)
+        // capinfos reads pcap header instantly vs TShark reading all packets
+        private const int PHASE_COUNTING = 5;      // 0-5% (instant with capinfos)
+        private const int PHASE_LOADING = 50;      // 5-55% (loading packets - now bulk of time)
+        private const int PHASE_STATISTICS = 10;   // 55-65% (statistics calculation)
+        private const int PHASE_THREATS = 5;       // 65-70% (threat detection - parallel)
+        private const int PHASE_VOICEQOS = 3;      // 70-73% (VoIP analysis - parallel)
+        private const int PHASE_FINALIZING = 2;    // 73-75% (finalizing/caching)
+        // PHASE_TABS = 25                         // 75-100% (tab population - see StageRanges)
 
         /// <summary>
         /// Stage ranges for UI progress display. Maps stage keys to (Start%, End%) ranges.
         /// Used by FileAnalysisViewModel to calculate stage-relative percentages.
-        /// Total: 35 + 35 + 10 + 8 + 7 + 2 + 3 = 100%
+        /// UPDATED: capinfos provides instant packet count (~2s) vs TShark (~26-95s)
+        /// New percentages: Count=5% (instant), Load=50%, Stats+GeoIP+Flows=20%, Tabs=25%
         /// </summary>
         public static readonly IReadOnlyDictionary<string, (int Start, int End)> StageRanges =
             new Dictionary<string, (int, int)>
             {
-                { "count",    (0, 35) },    // Counting Packets: 0-35%
-                { "load",     (35, 70) },   // Loading Packets: 35-70%
-                { "stats",    (70, 80) },   // Analyzing Data: 70-80%
-                { "geoip",    (80, 88) },   // GeoIP Enrichment: 80-88%
-                { "flows",    (88, 95) },   // Traffic Flow Analysis: 88-95%
-                { "finalize", (95, 97) },   // Finalizing: 95-97%
-                { "tabs",     (97, 100) }   // Loading Tabs: 97-100%
+                { "count",    (0, 5) },     // Counting Packets: 0-5% (instant with capinfos)
+                { "load",     (5, 55) },    // Loading Packets: 5-55% (50% - now bulk of time)
+                { "stats",    (55, 65) },   // Analyzing Data: 55-65% (10%)
+                { "geoip",    (65, 70) },   // GeoIP Enrichment: 65-70% (5%)
+                { "flows",    (70, 73) },   // Traffic Flow Analysis: 70-73% (3%)
+                { "finalize", (73, 75) },   // Finalizing: 73-75% (2%)
+                { "tabs",     (75, 100) }   // Loading Tabs: 75-100% (25%)
             };
 
         /// <summary>
@@ -116,6 +125,21 @@ namespace PCAPAnalyzer.Core.Orchestration
         }
 
         /// <summary>
+        /// Check if enough time has elapsed to allow another console log (1 second throttle).
+        /// Returns true and updates timestamp if logging is allowed.
+        /// </summary>
+        private bool ShouldLogProgress()
+        {
+            var now = DateTime.Now;
+            if ((now - _lastLogTime).TotalMilliseconds >= MIN_LOG_INTERVAL_MS)
+            {
+                _lastLogTime = now;
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Initialize time estimates based on file size for smooth progress
         /// </summary>
         public void InitializeTimeEstimates(double fileSizeMB)
@@ -178,14 +202,15 @@ namespace PCAPAnalyzer.Core.Orchestration
 
             var overallPercent = (phasePercent * PHASE_COUNTING / 100);
 
-            // 🔍 DIAGNOSTIC: Log progress calculation details
-            DebugLogger.Log($"[ProgressCoordinator] 📊 Counting: child={childPercent}%, time={timeBasedPercent}%, phase={phasePercent}%, overall={overallPercent}%, packets={currentPackets:N0}");
+            // 🔍 DIAGNOSTIC: Log progress calculation details (throttled to 1/sec)
+            if (ShouldLogProgress())
+                DebugLogger.Log($"[ProgressCoordinator] 📊 Counting: child={childPercent}%, time={timeBasedPercent}%, phase={phasePercent}%, overall={overallPercent}%, packets={currentPackets:N0}");
 
             Report(overallPercent, 0, detail, "Counting Packets");
         }
 
         /// <summary>
-        /// Report progress for packet loading phase (35-70%) - HYBRID (packet-based + time-based)
+        /// Report progress for packet loading phase (5-55%) - HYBRID (packet-based + time-based)
         /// ✅ FIX: Uses packet count when available, falls back to time-based estimation
         /// </summary>
         public void ReportLoading(int packetsLoaded, string detail)
@@ -196,29 +221,41 @@ namespace PCAPAnalyzer.Core.Orchestration
 
             // ✅ FIX: Use packet-based progress when total packets known, otherwise time-based
             int phasePercent;
+            string? logMessage = null;
             if (_totalPackets > 0 && packetsLoaded > 0)
             {
                 // Packet-based progress (accurate, smooth)
                 var packetProgress = (double)packetsLoaded / _totalPackets;
                 phasePercent = Math.Min(99, (int)(packetProgress * 100));
-                DebugLogger.Log($"[ProgressCoordinator] 📊 Loading: packet-based {packetsLoaded:N0}/{_totalPackets:N0} = {phasePercent}%");
+                logMessage = $"[ProgressCoordinator] 📊 Loading: packet-based {packetsLoaded:N0}/{_totalPackets:N0} = {phasePercent}%";
             }
             else
             {
                 // Time-based progress fallback (when packet count unavailable)
                 var elapsed = GetPhaseElapsed("Loading Packets");
                 phasePercent = Math.Min(99, (int)((elapsed / _estimatedLoadingSeconds) * 100));
-                DebugLogger.Log($"[ProgressCoordinator] 📊 Loading: time-based {elapsed:F1}s/{_estimatedLoadingSeconds:F1}s = {phasePercent}%");
+                logMessage = $"[ProgressCoordinator] 📊 Loading: time-based {elapsed:F1}s/{_estimatedLoadingSeconds:F1}s = {phasePercent}%";
             }
 
-            var overallPercent = 35 + (phasePercent * PHASE_LOADING / 100);
+            // Throttled logging (max once per second)
+            if (ShouldLogProgress() && logMessage != null)
+                DebugLogger.Log(logMessage);
+
+            // Loading phase: 5-55% (50% range) - starts after PHASE_COUNTING
+            var overallPercent = PHASE_COUNTING + (phasePercent * PHASE_LOADING / 100);
 
             // Use debounced Report method for consistency
             Report(overallPercent, 0, detail, "Loading Packets");
         }
 
+        // Phase start offsets (calculated from cumulative weights)
+        private const int OFFSET_STATISTICS = PHASE_COUNTING + PHASE_LOADING;                 // 55%
+        private const int OFFSET_THREATS = OFFSET_STATISTICS + PHASE_STATISTICS;              // 65%
+        private const int OFFSET_VOICEQOS = OFFSET_THREATS + PHASE_THREATS;                   // 70%
+        private const int OFFSET_FINALIZING = OFFSET_VOICEQOS + PHASE_VOICEQOS;               // 73%
+
         /// <summary>
-        /// Report progress for statistics/GeoIP phase (70-80%)
+        /// Report progress for statistics/GeoIP phase (55-65%)
         /// Uses hybrid approach: child percent OR time-based if child is inaccurate
         /// </summary>
         public void ReportStatistics(int childPercent, string detail, string? subPhase = null)
@@ -232,12 +269,13 @@ namespace PCAPAnalyzer.Core.Orchestration
             // Use whichever is more conservative (prevents jumps)
             var phasePercent = Math.Min(childPercent, timeBasedPercent);
 
-            var overallPercent = 70 + (phasePercent * PHASE_STATISTICS / 100);
+            // Statistics phase: 55-65% (10% range)
+            var overallPercent = OFFSET_STATISTICS + (phasePercent * PHASE_STATISTICS / 100);
             Report(overallPercent, 0, detail, "Analyzing Data", subPhase);
         }
 
         /// <summary>
-        /// Report progress for threat detection phase (80-90%)
+        /// Report progress for threat detection phase (65-70%)
         /// Uses hybrid approach: child percent OR time-based if child is inaccurate
         /// </summary>
         public void ReportThreats(int childPercent, string detail, int threatsFound = 0)
@@ -253,12 +291,13 @@ namespace PCAPAnalyzer.Core.Orchestration
             // Use whichever is more conservative (prevents jumps)
             var phasePercent = Math.Min(childPercent, timeBasedPercent);
 
-            var overallPercent = 80 + (phasePercent * PHASE_THREATS / 100);
+            // Threats phase: 65-70% (5% range)
+            var overallPercent = OFFSET_THREATS + (phasePercent * PHASE_THREATS / 100);
             Report(overallPercent, 0, detail, "Threat Detection");
         }
 
         /// <summary>
-        /// Report progress for VoiceQoS analysis phase (90-95%)
+        /// Report progress for VoiceQoS analysis phase (70-73%)
         /// Uses hybrid approach: child percent OR time-based if child is inaccurate
         /// </summary>
         public void ReportVoiceQoS(int childPercent, string detail)
@@ -272,26 +311,81 @@ namespace PCAPAnalyzer.Core.Orchestration
             // Use whichever is more conservative (prevents jumps)
             var phasePercent = Math.Min(childPercent, timeBasedPercent);
 
-            var overallPercent = 90 + (phasePercent * PHASE_VOICEQOS / 100);
+            // VoiceQoS phase: 70-73% (3% range)
+            var overallPercent = OFFSET_VOICEQOS + (phasePercent * PHASE_VOICEQOS / 100);
             Report(overallPercent, 0, detail, "VoiceQoS Analysis");
         }
 
         /// <summary>
-        /// Report progress for finalizing phase (95-100%)
+        /// Report progress for finalizing phase (73-75%)
         /// </summary>
         public void ReportFinalizing(int childPercent, string detail)
         {
             if (childPercent == 0) StartPhase("Finalizing");
-            var overallPercent = 95 + (childPercent * PHASE_FINALIZING / 100);
+            // Finalizing phase: 73-75% (2% range)
+            var overallPercent = OFFSET_FINALIZING + (childPercent * PHASE_FINALIZING / 100);
             Report(overallPercent, 0, detail, "Finalizing");
         }
 
         /// <summary>
-        /// Report completion (100%)
+        /// Report pipeline completion (75%) - Loading Tabs phase handles 75-100%
         /// </summary>
         public void ReportComplete(string detail)
         {
             _totalStopwatch.Stop();
+            // Report 75% - Loading Tabs phase (75-100%) is handled separately
+            Report(75, 0, detail, "Complete");
+        }
+
+        /// <summary>
+        /// Mark the coordinator as fully complete - no more progress updates allowed.
+        /// Called after all tabs are loaded.
+        /// </summary>
+        public void MarkComplete()
+        {
+            lock (_progressLock)
+            {
+                _isComplete = true;
+            }
+        }
+
+        /// <summary>
+        /// Reset the coordinator for a new analysis.
+        /// </summary>
+        public void Reset()
+        {
+            lock (_progressLock)
+            {
+                _isComplete = false;
+                _lastReportedPercent = -1;
+                _highWaterMarkPercent = -1;
+                _lastReportTime = DateTime.MinValue;
+                _currentPhase = "";
+                _phaseStopwatches.Clear();
+                _phaseDurations.Clear();
+                _totalPackets = 0;
+                _totalMegabytes = 0;
+                _threatsDetected = 0;
+                _currentPacketsAnalyzed = 0;
+            }
+        }
+
+        /// <summary>
+        /// Report Loading Tabs phase progress (75-100%)
+        /// Called during tab population after pipeline completes.
+        /// </summary>
+        public void ReportTabLoading(int childPercent, string detail)
+        {
+            // Tab loading phase: 75-100% (25% range)
+            var overallPercent = 75 + (childPercent * 25 / 100);
+            Report(overallPercent, 0, detail, "Loading Tabs");
+        }
+
+        /// <summary>
+        /// Report final completion (100%) - called after all tabs are loaded
+        /// </summary>
+        public void ReportFullCompletion(string detail)
+        {
             Report(100, 0, detail, "Complete");
         }
 
@@ -326,25 +420,32 @@ namespace PCAPAnalyzer.Core.Orchestration
             // Debounce progress reports to prevent UI flooding from parallel tasks
             lock (_progressLock)
             {
+                // ✅ FIX: Prevent updates after completion (except for 100% completion itself)
+                if (_isComplete && percent < 100)
+                    return;
+
                 var now = DateTime.Now;
                 var timeSinceLastReport = (now - _lastReportTime).TotalMilliseconds;
 
-                // Only report if:
-                // 1. Percent increased by at least 1, OR
-                // 2. Sufficient time elapsed (150ms), OR
-                // 3. Phase changed
-                if (percent <= _lastReportedPercent &&
-                    timeSinceLastReport < MIN_REPORT_INTERVAL_MS &&
-                    phase == _currentPhase)
+                // ✅ FIX: Never report backwards - use high water mark
+                // This prevents race conditions where parallel phases report lower %
+                if (percent < _highWaterMarkPercent)
                 {
-                    // 🔍 DIAGNOSTIC: Log throttled updates (commented out to reduce spam)
-                    // DebugLogger.Log($"[ProgressCoordinator] ⏸️  THROTTLED: {percent}% (last={_lastReportedPercent}%, elapsed={timeSinceLastReport:F0}ms)");
-                    return; // Skip this update - too frequent
+                    percent = _highWaterMarkPercent; // Clamp to highest seen
                 }
 
-                // 🔍 DIAGNOSTIC: Log accepted progress reports
-                var direction = percent > _lastReportedPercent ? "⬆️" : percent < _lastReportedPercent ? "⬇️" : "➡️";
-                DebugLogger.Log($"[ProgressCoordinator] {direction} REPORT: {_lastReportedPercent}% → {percent}% | {phase} | {detail}");
+                // Only report if:
+                // 1. Percent increased by at least 1, OR
+                // 2. Sufficient time elapsed (150ms)
+                if (percent <= _lastReportedPercent &&
+                    timeSinceLastReport < MIN_REPORT_INTERVAL_MS)
+                {
+                    return; // Skip this update - too frequent or no progress
+                }
+
+                // Update high water mark
+                if (percent > _highWaterMarkPercent)
+                    _highWaterMarkPercent = percent;
 
                 _lastReportedPercent = percent;
                 _lastReportTime = now;
@@ -422,43 +523,25 @@ namespace PCAPAnalyzer.Core.Orchestration
 
         private TimeSpan CalculateRemainingTime(int currentPercent)
         {
+            // Skip ETA for edge cases (no logging - these are normal conditions)
             if (currentPercent <= 0 || currentPercent >= 100)
-            {
-                DebugLogger.Log($"[ProgressCoordinator] ETA calculation skipped: currentPercent={currentPercent} (outside 1-99% range)");
                 return TimeSpan.Zero;
-            }
 
             var elapsed = _totalStopwatch.Elapsed.TotalSeconds;
 
-            // ✅ FIX: Reduced to 1 second (was 2s) for faster ETA feedback
-            if (elapsed < 1.0)
-            {
-                DebugLogger.Log($"[ProgressCoordinator] ETA calculation skipped: elapsed={elapsed:F2}s (less than 1s threshold)");
+            // Need at least 1 second and 3% progress for reliable estimate
+            if (elapsed < 1.0 || currentPercent < 3)
                 return TimeSpan.Zero;
-            }
-
-            // ✅ FIX: Reduced to 3% (was 5%) for earlier reliable estimates
-            if (currentPercent < 3)
-            {
-                DebugLogger.Log($"[ProgressCoordinator] ETA calculation skipped: currentPercent={currentPercent}% (less than 3% threshold)");
-                return TimeSpan.Zero;
-            }
 
             var timePerPercent = elapsed / currentPercent;
             var remainingPercent = 100 - currentPercent;
             var remainingSeconds = timePerPercent * remainingPercent;
 
-            // ✅ FIX: Cap maximum ETA at 2 hours (prevent unrealistic estimates)
+            // Cap maximum ETA at 2 hours (prevent unrealistic estimates)
             if (remainingSeconds > 7200)
-            {
-                DebugLogger.Log($"[ProgressCoordinator] ETA capped at 2 hours (calculated {remainingSeconds:F1}s was too high)");
                 remainingSeconds = 7200;
-            }
 
-            var eta = TimeSpan.FromSeconds(remainingSeconds);
-            DebugLogger.Log($"[ProgressCoordinator] ✅ ETA CALCULATED: {eta.TotalSeconds:F1}s (progress={currentPercent}%, elapsed={elapsed:F1}s, rate={timePerPercent:F2}s/%)");
-
-            return eta;
+            return TimeSpan.FromSeconds(remainingSeconds);
         }
     }
 

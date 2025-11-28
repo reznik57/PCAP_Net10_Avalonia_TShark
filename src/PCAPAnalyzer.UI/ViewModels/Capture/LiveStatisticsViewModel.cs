@@ -148,7 +148,7 @@ public partial class LiveStatisticsViewModel : ViewModelBase, IDisposable
                 Values = _packetRateData,
                 Fill = null,
                 GeometrySize = 0,
-                LineSmoothness = 0.5,
+                LineSmoothness = 0,
                 Stroke = new SolidColorPaint(SKColors.CornflowerBlue) { StrokeThickness = 2 },
                 Name = "Packet Rate (pps)"
             }

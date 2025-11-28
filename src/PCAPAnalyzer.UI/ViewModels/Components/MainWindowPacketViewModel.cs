@@ -68,6 +68,12 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
     [ObservableProperty] private string _selectedStreamKey = string.Empty;
     [ObservableProperty] private int _bookmarkedPacketsCount;
 
+    /// <summary>
+    /// Timestamp of the first packet in the filtered dataset (for Time Delta calculation).
+    /// This is the reference point for all delta time calculations.
+    /// </summary>
+    [ObservableProperty] private DateTime? _firstPacketTimestamp;
+
     // Bookmarked packet frame numbers
     private readonly HashSet<uint> _bookmarkedFrames = new();
     public IReadOnlyCollection<uint> BookmarkedFrames => _bookmarkedFrames;
@@ -219,6 +225,9 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
                 .OrderBy(p => p.FrameNumber)
                 .ToList();
         }
+
+        // Set first packet timestamp for Time Delta calculations
+        FirstPacketTimestamp = _filteredPackets.Count > 0 ? _filteredPackets[0].Timestamp : null;
 
         TotalFilteredPackets = _filteredPackets.Count;
         UpdateFilteredStatistics();
@@ -542,6 +551,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
         FilterStatus = "No filters applied";
         IsFilterActive = false;
         AppliedFiltersText = string.Empty;
+        FirstPacketTimestamp = null;
 
         _currentFilter = new PacketFilter();
     }

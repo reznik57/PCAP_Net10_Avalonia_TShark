@@ -91,28 +91,78 @@ public sealed class HexDataService
         if (string.IsNullOrWhiteSpace(output))
             return result;
 
-        // Output format: frame_number\nhex_dump_lines\n\nframe_number\nhex_dump_lines\n...
-        var sections = output.Split(new[] { "\r\n\r\n", "\n\n" }, StringSplitOptions.RemoveEmptyEntries);
+        // TShark output with -T fields -e frame.number -x:
+        // <frame_number>\n<hex_dump_lines>\n<frame_number>\n<hex_dump_lines>...
+        // No blank lines between packets! Parse by detecting frame number lines vs hex offset lines.
+        var lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
 
-        foreach (var section in sections)
+        uint currentFrame = 0;
+        var currentHexLines = new List<string>();
+
+        foreach (var line in lines)
         {
-            var lines = section.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            if (lines.Length == 0)
+            var trimmed = line.Trim();
+            if (string.IsNullOrEmpty(trimmed))
                 continue;
 
-            // First line should be frame number
-            if (uint.TryParse(lines[0].Trim(), out var frameNum))
+            // Check if this line is a frame number (just digits, possibly with trailing tab from -T fields)
+            var cleanLine = trimmed.Split('\t')[0].Trim();
+            if (uint.TryParse(cleanLine, out var frameNum) && !IsHexDumpLine(trimmed))
             {
-                var hexLines = string.Join("\n", lines.Skip(1));
-                var bytes = ParseHexFromTextDump(hexLines);
-                if (bytes.Length > 0)
+                // Save previous frame's data if any
+                if (currentFrame > 0 && currentHexLines.Count > 0)
                 {
-                    result[frameNum] = bytes;
+                    var hexData = string.Join("\n", currentHexLines);
+                    var bytes = ParseHexFromTextDump(hexData);
+                    if (bytes.Length > 0)
+                    {
+                        result[currentFrame] = bytes;
+                    }
                 }
+
+                // Start new frame
+                currentFrame = frameNum;
+                currentHexLines.Clear();
+            }
+            else if (IsHexDumpLine(trimmed))
+            {
+                // This is a hex dump line (starts with hex offset like 0000, 0010, etc.)
+                currentHexLines.Add(trimmed);
+            }
+        }
+
+        // Don't forget the last frame
+        if (currentFrame > 0 && currentHexLines.Count > 0)
+        {
+            var hexData = string.Join("\n", currentHexLines);
+            var bytes = ParseHexFromTextDump(hexData);
+            if (bytes.Length > 0)
+            {
+                result[currentFrame] = bytes;
             }
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// Checks if a line is a hex dump line (starts with hex offset like "0000", "0010", etc.)
+    /// </summary>
+    private static bool IsHexDumpLine(string line)
+    {
+        if (line.Length < 4)
+            return false;
+
+        // Hex dump lines start with 4 hex characters (offset)
+        var prefix = line.AsSpan(0, 4);
+        foreach (var c in prefix)
+        {
+            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')))
+                return false;
+        }
+
+        // Must be followed by spaces (not just "1234" which could be a frame number)
+        return line.Length > 4 && (line[4] == ' ' || line[4] == '\t');
     }
 
     /// <summary>

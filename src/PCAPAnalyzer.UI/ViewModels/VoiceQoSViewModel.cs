@@ -627,6 +627,14 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
 
     public async Task AnalyzePacketsAsync(IReadOnlyList<PacketInfo> packets)
     {
+        // ✅ CACHE HIT CHECK: Skip if already populated via SetFromCacheAsync
+        // This prevents 25s re-analysis when session cache already has VoiceQoS data
+        if (_allQoSTraffic.Count > 0 || _allLatencyConnections.Count > 0 || _allJitterConnections.Count > 0)
+        {
+            DebugLogger.Log($"[VoiceQoSViewModel] ⏭️ Skipping AnalyzePacketsAsync - already populated ({_allQoSTraffic.Count} QoS, {_allLatencyConnections.Count} latency, {_allJitterConnections.Count} jitter)");
+            return;
+        }
+
         // Set UI state (UI thread safe)
         await Dispatcher.UIThread.InvokeAsync(() =>
         {

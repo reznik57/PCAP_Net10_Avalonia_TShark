@@ -274,9 +274,9 @@ namespace PCAPAnalyzer.UI.ViewModels
                     Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => UpdateConnectionsDisplay());
                     return;
                 }
-                
+
                 // Check if we have data from either source
-                if ((TopConversationsByBytes == null || !TopConversationsByBytes.Any()) && 
+                if ((TopConversationsByBytes == null || !TopConversationsByBytes.Any()) &&
                     (TopConversations == null || !TopConversations.Any()))
                 {
                     TopConnectionsByBytesDisplay = new ObservableCollection<ConnectionInfo>();
@@ -284,92 +284,118 @@ namespace PCAPAnalyzer.UI.ViewModels
                     TopConnectionsCount = 0;
                     return;
                 }
-                
-                // Create connections for bytes display from TopConversationsByBytes (already sorted by bytes)
-                var connectionsByBytes = new List<ConnectionInfo>();
-                if (TopConversationsByBytes != null && TopConversationsByBytes.Any())
+
+                // DASHBOARD: Aggregate by IP pair only (no ports) for high-level overview
+                // Step 1: Aggregate all conversations by IP pair
+                var ipPairStats = new Dictionary<string, (long Bytes, long Packets, string SrcIP, string DstIP, string Protocol)>();
+
+                if (TopConversationsByBytes != null)
                 {
-                    connectionsByBytes = TopConversationsByBytes
-                        .Take(ConnectionTableDisplayCount)
-                        .Select(c => new ConnectionInfo
-                        {
-                            SourceIP = ParseIP(c.SourceDisplay),
-                            SourcePort = ParsePort(c.SourceDisplay),
-                            DestIP = ParseIP(c.DestinationDisplay),
-                            DestPort = ParsePort(c.DestinationDisplay),
-                            Protocol = c.Protocol,
-                            ByteCount = c.ByteCount,
-                            PacketCount = c.PacketCount,
-#pragma warning disable CA5394 // Do not use insecure randomness - Used only for UI sample timestamp generation, not security
-                            FirstSeen = DateTime.Now.AddSeconds(-Random.Shared.Next(60, 3600)),
-#pragma warning restore CA5394
-                            LastSeen = DateTime.Now
-                        })
-                        .ToList();
+                    foreach (var c in TopConversationsByBytes)
+                    {
+                        var srcIP = ParseIP(c.SourceDisplay);
+                        var dstIP = ParseIP(c.DestinationDisplay);
+                        // Create sorted key for consistent IP pair identification
+                        var ips = new[] { srcIP, dstIP }.OrderBy(x => x).ToArray();
+                        var ipPairKey = $"{ips[0]}↔{ips[1]}";
+
+                        if (ipPairStats.TryGetValue(ipPairKey, out var existing))
+                            ipPairStats[ipPairKey] = (existing.Bytes + c.ByteCount, existing.Packets + (long)c.PacketCount, ips[0], ips[1], existing.Protocol);
+                        else
+                            ipPairStats[ipPairKey] = (c.ByteCount, (long)c.PacketCount, ips[0], ips[1], c.Protocol);
+                    }
                 }
-                
-                // Create connections for packets display from TopConversations (already sorted by packets)
-                var connectionsByPackets = new List<ConnectionInfo>();
-                if (TopConversations != null && TopConversations.Any())
+
+                // Also include conversations from packet-sorted list if not already present
+                if (TopConversations != null)
                 {
-                    connectionsByPackets = TopConversations
-                        .Take(ConnectionTableDisplayCount)
-                        .Select(c => new ConnectionInfo
-                        {
-                            SourceIP = ParseIP(c.SourceDisplay),
-                            SourcePort = ParsePort(c.SourceDisplay),
-                            DestIP = ParseIP(c.DestinationDisplay),
-                            DestPort = ParsePort(c.DestinationDisplay),
-                            Protocol = c.Protocol,
-                            ByteCount = c.ByteCount,
-                            PacketCount = c.PacketCount,
-#pragma warning disable CA5394 // Do not use insecure randomness - Used only for UI sample timestamp generation, not security
-                            FirstSeen = DateTime.Now.AddSeconds(-Random.Shared.Next(60, 3600)),
-#pragma warning restore CA5394
-                            LastSeen = DateTime.Now
-                        })
-                        .ToList();
+                    foreach (var c in TopConversations)
+                    {
+                        var srcIP = ParseIP(c.SourceDisplay);
+                        var dstIP = ParseIP(c.DestinationDisplay);
+                        var ips = new[] { srcIP, dstIP }.OrderBy(x => x).ToArray();
+                        var ipPairKey = $"{ips[0]}↔{ips[1]}";
+
+                        if (!ipPairStats.ContainsKey(ipPairKey))
+                            ipPairStats[ipPairKey] = (c.ByteCount, (long)c.PacketCount, ips[0], ips[1], c.Protocol);
+                    }
                 }
-                
+
+                // Step 2: Create display lists from aggregated IP pairs
+                var connectionsByBytes = ipPairStats
+                    .OrderByDescending(p => p.Value.Bytes)
+                    .Take(ConnectionTableDisplayCount)
+                    .Select(p => new ConnectionInfo
+                    {
+                        SourceIP = p.Value.SrcIP,
+                        SourcePort = 0, // No port for IP-pair aggregation
+                        DestIP = p.Value.DstIP,
+                        DestPort = 0,
+                        Protocol = p.Value.Protocol,
+                        ByteCount = p.Value.Bytes,
+                        PacketCount = (int)p.Value.Packets,
+#pragma warning disable CA5394 // Do not use insecure randomness - Used only for UI sample timestamp generation, not security
+                        FirstSeen = DateTime.Now.AddSeconds(-Random.Shared.Next(60, 3600)),
+#pragma warning restore CA5394
+                        LastSeen = DateTime.Now
+                    })
+                    .ToList();
+
+                var connectionsByPackets = ipPairStats
+                    .OrderByDescending(p => p.Value.Packets)
+                    .Take(ConnectionTableDisplayCount)
+                    .Select(p => new ConnectionInfo
+                    {
+                        SourceIP = p.Value.SrcIP,
+                        SourcePort = 0,
+                        DestIP = p.Value.DstIP,
+                        DestPort = 0,
+                        Protocol = p.Value.Protocol,
+                        ByteCount = p.Value.Bytes,
+                        PacketCount = (int)p.Value.Packets,
+#pragma warning disable CA5394 // Do not use insecure randomness - Used only for UI sample timestamp generation, not security
+                        FirstSeen = DateTime.Now.AddSeconds(-Random.Shared.Next(60, 3600)),
+#pragma warning restore CA5394
+                        LastSeen = DateTime.Now
+                    })
+                    .ToList();
+
                 // Calculate traffic percentages for bytes
                 var maxByteTraffic = connectionsByBytes.Any() ? connectionsByBytes.Max(c => c.ByteCount) : 1;
                 foreach (var conn in connectionsByBytes)
                 {
                     conn.TrafficPercentage = (conn.ByteCount * 100.0) / maxByteTraffic;
                 }
-                
+
                 // Calculate traffic percentages for packets
                 var maxPacketTraffic = connectionsByPackets.Any() ? connectionsByPackets.Max(c => c.PacketCount) : 1;
                 foreach (var conn in connectionsByPackets)
                 {
                     conn.TrafficPercentage = (conn.PacketCount * 100.0) / maxPacketTraffic;
                 }
-                
+
                 // Calculate percentage based on TOTAL bytes/packets from ALL traffic (not just top connections)
                 // Use the statistics totals for accurate percentages
                 var totalBytes = _currentStatistics?.TotalBytes ?? 0;
                 var totalPackets = _currentStatistics?.TotalPackets ?? 0;
-                
+
                 // Update percentages for display
                 foreach (var conn in connectionsByBytes)
                 {
                     conn.Percentage = totalBytes > 0 ? (conn.ByteCount * 100.0) / totalBytes : 0;
                 }
-                
+
                 foreach (var conn in connectionsByPackets)
                 {
                     conn.Percentage = totalPackets > 0 ? (conn.PacketCount * 100.0) / totalPackets : 0;
                 }
-                
+
                 // Update the display collections with properly sorted data
                 TopConnectionsByBytesDisplay = new ObservableCollection<ConnectionInfo>(connectionsByBytes);
                 TopConnectionsByPacketsDisplay = new ObservableCollection<ConnectionInfo>(connectionsByPackets);
-                
-                // Calculate total count from original data
-                TopConnectionsCount = Math.Max(
-                    TopConversationsByBytes?.Count ?? 0,
-                    TopConversations?.Count ?? 0
-                );
+
+                // Calculate total count from aggregated IP pairs
+                TopConnectionsCount = ipPairStats.Count;
             }
             catch (Exception ex)
             {
@@ -541,7 +567,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                             GeometryStroke = new SolidColorPaint(color) { StrokeThickness = 2 },
                             Stroke = new SolidColorPaint(color) { StrokeThickness = 2 },
                             Fill = null, // No fill for cleaner look with many lines
-                            LineSmoothness = 0.7,
+                            LineSmoothness = 0,
                             // Hide from legend if beyond top 3 to reduce visual clutter
                             IsVisibleAtLegend = (i < MaxLegendEntries),
                             YToolTipLabelFormatter = (coordinate) =>

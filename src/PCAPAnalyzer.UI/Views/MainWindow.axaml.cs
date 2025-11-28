@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,6 +19,8 @@ using PCAPAnalyzer.Core.Utilities;
 
 namespace PCAPAnalyzer.UI.Views;
 
+[SuppressMessage("Maintainability", "CA1506:Avoid excessive class coupling",
+    Justification = "MainWindow is the central UI coordinator - high coupling is expected for main window handling tabs, drag-drop, screenshots, chart interactions, and keyboard shortcuts")]
 public partial class MainWindow : Window
 {
     public MainWindow()
@@ -93,12 +96,27 @@ public partial class MainWindow : Window
     protected override void OnDataContextChanged(EventArgs e)
     {
         base.OnDataContextChanged(e);
-        
+
         // Find the TabControl and add selection changed handler
         var tabControl = this.FindControl<TabControl>("MainTabControl");
         if (tabControl != null)
         {
             tabControl.SelectionChanged += OnTabSelectionChanged;
+        }
+
+        // Subscribe to Charts ViewModel property changes to reset highlight when series are rebuilt
+        if (DataContext is MainWindowViewModel vm && vm.Charts != null)
+        {
+            vm.Charts.PropertyChanged += OnChartsPropertyChanged;
+        }
+    }
+
+    private void OnChartsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // Reset highlight references when the series collection is replaced
+        if (e.PropertyName == nameof(ViewModels.Components.MainWindowChartsViewModel.PacketsOverTimeSeries))
+        {
+            ResetPacketsChartHighlight();
         }
     }
     
@@ -453,11 +471,11 @@ public partial class MainWindow : Window
             }
             
             // Render to bitmap
-            var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
+            using var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
             content.Measure(content.Bounds.Size);
             content.Arrange(new Rect(content.Bounds.Size));
             bitmap.Render(content);
-            
+
             // Show save dialog
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
             {
@@ -476,17 +494,17 @@ public partial class MainWindow : Window
                 },
                 SuggestedFileName = $"PCAPAnalyzer_Screenshot_{DateTime.Now:yyyyMMdd_HHmmss}.jpg"
             });
-            
+
             if (file == null)
             {
                 DebugLogger.Log("[MainWindow] Screenshot save cancelled");
                 return false;
             }
-            
+
             // Save the bitmap
             await using var stream = await file.OpenWriteAsync();
             SaveBitmapToStream(bitmap, stream, file.Name);
-            
+
             DebugLogger.Log($"[MainWindow] Screenshot saved to {file.Name}");
             return true;
         }
@@ -581,70 +599,76 @@ public partial class MainWindow : Window
             // Check if the content is or contains a ScrollViewer
             var scrollViewer = visualContent as ScrollViewer ?? FindScrollViewer(visualContent);
             RenderTargetBitmap? bitmap = null;
-            
-            if (scrollViewer != null && scrollViewer.Content is Control scrollContent)
+
+            try
             {
-                DebugLogger.Log("[MainWindow] Found ScrollViewer, capturing full scrollable content");
-                
-                // Force layout update
-                scrollContent.InvalidateMeasure();
-                scrollContent.InvalidateArrange();
-                scrollViewer.InvalidateMeasure();
-                scrollViewer.InvalidateArrange();
-                
-                // Force rendering of all content
-                scrollContent.UpdateLayout();
-                scrollViewer.UpdateLayout();
-                await Task.Delay(300); // Increased delay for better rendering
-                
-                // Get the actual size of the content
-                var measureSize = new Size(scrollViewer.Viewport.Width, double.PositiveInfinity);
-                scrollContent.Measure(measureSize);
-                var contentSize = scrollContent.DesiredSize;
-                var viewportSize = scrollViewer.Viewport;
-                
-                // Use the actual measured size for height, viewport width
-                var fullSize = new PixelSize(
-                    Math.Max((int)viewportSize.Width, (int)contentSize.Width),
-                    Math.Max((int)contentSize.Height, (int)viewportSize.Height)
-                );
-                
-                // Ensure minimum size
-                if (fullSize.Width <= 0 || fullSize.Height <= 0)
+                if (scrollViewer != null && scrollViewer.Content is Control scrollContent)
                 {
-                    DebugLogger.Log($"[MainWindow] Invalid full content size: {fullSize.Width}x{fullSize.Height}");
-                    // Use reasonable defaults
-                    fullSize = new PixelSize(
-                        Math.Max((int)scrollViewer.Bounds.Width, 1920),
-                        Math.Max((int)scrollViewer.Bounds.Height, 2000)
+                    DebugLogger.Log("[MainWindow] Found ScrollViewer, capturing full scrollable content");
+
+                    // Force layout update
+                    scrollContent.InvalidateMeasure();
+                    scrollContent.InvalidateArrange();
+                    scrollViewer.InvalidateMeasure();
+                    scrollViewer.InvalidateArrange();
+
+                    // Force rendering of all content
+                    scrollContent.UpdateLayout();
+                    scrollViewer.UpdateLayout();
+                    await Task.Delay(300); // Increased delay for better rendering
+
+                    // Get the actual size of the content
+                    var measureSize = new Size(scrollViewer.Viewport.Width, double.PositiveInfinity);
+                    scrollContent.Measure(measureSize);
+                    var contentSize = scrollContent.DesiredSize;
+                    var viewportSize = scrollViewer.Viewport;
+
+                    // Use the actual measured size for height, viewport width
+                    var fullSize = new PixelSize(
+                        Math.Max((int)viewportSize.Width, (int)contentSize.Width),
+                        Math.Max((int)contentSize.Height, (int)viewportSize.Height)
                     );
+
+                    // Ensure minimum size
+                    if (fullSize.Width <= 0 || fullSize.Height <= 0)
+                    {
+                        DebugLogger.Log($"[MainWindow] Invalid full content size: {fullSize.Width}x{fullSize.Height}");
+                        // Use reasonable defaults
+                        fullSize = new PixelSize(
+                            Math.Max((int)scrollViewer.Bounds.Width, 1920),
+                            Math.Max((int)scrollViewer.Bounds.Height, 2000)
+                        );
+                    }
+
+                    DebugLogger.Log($"[MainWindow] Creating bitmap with size: {fullSize.Width}x{fullSize.Height}");
+                    bitmap = new RenderTargetBitmap(fullSize, new Vector(96, 96));
+                    bitmap.Render(scrollContent);
                 }
-                
-                DebugLogger.Log($"[MainWindow] Creating bitmap with size: {fullSize.Width}x{fullSize.Height}");
-                bitmap = new RenderTargetBitmap(fullSize, new Vector(96, 96));
-                bitmap.Render(scrollContent);
+                else
+                {
+                    // Standard rendering for non-scrollable content
+                    var size = new PixelSize((int)visualContent.Bounds.Width, (int)visualContent.Bounds.Height);
+                    bitmap = new RenderTargetBitmap(size, new Vector(96, 96));
+                    bitmap.Render(visualContent);
+                }
+
+                if (bitmap == null)
+                {
+                    DebugLogger.Log("[MainWindow] Failed to capture visual");
+                    return false;
+                }
+
+                // Save to file (use existing SaveBitmapToStream method for proper JPEG conversion)
+                await using var stream = await file.OpenWriteAsync();
+                SaveBitmapToStream(bitmap, stream, file.Name);
+
+                DebugLogger.Log($"[MainWindow] Screenshot saved to: {file.Path}");
+                return true;
             }
-            else
+            finally
             {
-                // Standard rendering for non-scrollable content
-                var size = new PixelSize((int)visualContent.Bounds.Width, (int)visualContent.Bounds.Height);
-                bitmap = new RenderTargetBitmap(size, new Vector(96, 96));
-                bitmap.Render(visualContent);
+                bitmap?.Dispose();
             }
-
-            if (bitmap == null)
-            {
-                DebugLogger.Log("[MainWindow] Failed to capture visual");
-                return false;
-            }
-
-            // Save to file (use existing SaveBitmapToStream method for proper JPEG conversion)
-            await using var stream = await file.OpenWriteAsync();
-            SaveBitmapToStream(bitmap, stream, file.Name);
-
-            bitmap.Dispose();
-            DebugLogger.Log($"[MainWindow] Screenshot saved to: {file.Path}");
-            return true;
         }
         catch (Exception ex)
         {
@@ -694,180 +718,187 @@ public partial class MainWindow : Window
             
             // Special handling for ScrollViewer content
             RenderTargetBitmap? bitmap = null;
-            
-            // Check if the content is or contains a ScrollViewer
-            var scrollViewer = content as ScrollViewer ?? FindScrollViewer(content);
-            
-            if (scrollViewer != null && scrollViewer.Content is Control scrollContent)
+
+            try
             {
-                DebugLogger.Log("[MainWindow] Found ScrollViewer, capturing full scrollable content");
+                // Check if the content is or contains a ScrollViewer
+                var scrollViewer = content as ScrollViewer ?? FindScrollViewer(content);
 
-                // ✅ FIX: Force complete layout cycle to ensure ItemsControls are realized
-                // FileManagerView uses ItemsControl for Analysis Stages which needs full realization
-                scrollContent.InvalidateMeasure();
-                scrollContent.InvalidateArrange();
-                scrollContent.InvalidateVisual();
-                scrollViewer.InvalidateMeasure();
-                scrollViewer.InvalidateArrange();
-                scrollViewer.InvalidateVisual();
+                if (scrollViewer != null && scrollViewer.Content is Control scrollContent)
+                {
+                    DebugLogger.Log("[MainWindow] Found ScrollViewer, capturing full scrollable content");
 
-                // Force multiple layout passes to ensure ItemsControl content is realized
-                for (int i = 0; i < 3; i++)
-                {
-                    scrollContent.UpdateLayout();
-                    scrollViewer.UpdateLayout();
-                    await Task.Delay(200); // Increased delay for better rendering
-                }
+                    // Force complete layout cycle to ensure ItemsControls are realized
+                    // FileManagerView uses ItemsControl for Analysis Stages which needs full realization
+                    scrollContent.InvalidateMeasure();
+                    scrollContent.InvalidateArrange();
+                    scrollContent.InvalidateVisual();
+                    scrollViewer.InvalidateMeasure();
+                    scrollViewer.InvalidateArrange();
+                    scrollViewer.InvalidateVisual();
 
-                // Get the actual size of the content
-                // For Dashboard, we need to measure the StackPanel inside the ScrollViewer
-                var measureSize = new Size(scrollViewer.Viewport.Width, double.PositiveInfinity);
-                scrollContent.Measure(measureSize);
-                var contentSize = scrollContent.DesiredSize;
-                var viewportSize = scrollViewer.Viewport;
-                
-                // Use the actual measured size for height, viewport width
-                var fullSize = new PixelSize(
-                    Math.Max((int)viewportSize.Width, (int)contentSize.Width),
-                    Math.Max((int)contentSize.Height, (int)viewportSize.Height)
-                );
-                
-                // Ensure minimum size
-                if (fullSize.Width <= 0 || fullSize.Height <= 0)
-                {
-                    DebugLogger.Log($"[MainWindow] Invalid full content size: {fullSize.Width}x{fullSize.Height}");
-                    // Use reasonable defaults
-                    fullSize = new PixelSize(
-                        Math.Max((int)scrollViewer.Bounds.Width, 1920),
-                        Math.Max((int)scrollViewer.Bounds.Height, 2000) // Increased height for dashboard
-                    );
-                }
-                
-                DebugLogger.Log($"[MainWindow] Capturing full content: {fullSize.Width}x{fullSize.Height}");
-                DebugLogger.Log($"[MainWindow] Content bounds: {scrollContent.Bounds}");
-                DebugLogger.Log($"[MainWindow] Content desired size: {contentSize}");
-                
-                // Create bitmap for full content
-                bitmap = new RenderTargetBitmap(fullSize, new Vector(96, 96));
-                
-                // Special handling for DashboardView
-                if (targetTabIndex == 1 || (targetTabIndex < 0 && tabControl.SelectedIndex == 1))
-                {
-                    DebugLogger.Log("[MainWindow] Special handling for Dashboard tab");
-                    
-                    // Store original scroll position
-                    var originalOffset = scrollViewer.Offset;
-                    
-                    // Scroll to top to ensure all content is visible
-                    scrollViewer.Offset = new Vector(0, 0);
-                    await Task.Delay(100);
-                    
-                    // Try rendering the scrollviewer with its full content
-                    try
+                    // Force multiple layout passes to ensure ItemsControl content is realized
+                    for (int i = 0; i < 3; i++)
                     {
-                        // Create a temporary container to hold the content
-                        var container = new Border
-                        {
-                            Width = fullSize.Width,
-                            Height = fullSize.Height,
-                            Background = null, // Transparent background
-                            Child = scrollContent
-                        };
-                        
-                        // Temporarily remove from scrollviewer
-                        scrollViewer.Content = null;
-                        
-                        // Measure and arrange the container
-                        container.Measure(new Size(fullSize.Width, fullSize.Height));
-                        container.Arrange(new Rect(0, 0, fullSize.Width, fullSize.Height));
-                        container.UpdateLayout();
-                        
-                        // Render the container
-                        bitmap.Render(container);
-                        
-                        // Restore content to scrollviewer
-                        scrollViewer.Content = scrollContent;
+                        scrollContent.UpdateLayout();
+                        scrollViewer.UpdateLayout();
+                        await Task.Delay(200); // Increased delay for better rendering
                     }
-                    catch
+
+                    // Get the actual size of the content
+                    // For Dashboard, we need to measure the StackPanel inside the ScrollViewer
+                    var measureSize = new Size(scrollViewer.Viewport.Width, double.PositiveInfinity);
+                    scrollContent.Measure(measureSize);
+                    var contentSize = scrollContent.DesiredSize;
+                    var viewportSize = scrollViewer.Viewport;
+
+                    // Use the actual measured size for height, viewport width
+                    var fullSize = new PixelSize(
+                        Math.Max((int)viewportSize.Width, (int)contentSize.Width),
+                        Math.Max((int)contentSize.Height, (int)viewportSize.Height)
+                    );
+
+                    // Ensure minimum size
+                    if (fullSize.Width <= 0 || fullSize.Height <= 0)
                     {
-                        // Fallback to direct content rendering
+                        DebugLogger.Log($"[MainWindow] Invalid full content size: {fullSize.Width}x{fullSize.Height}");
+                        // Use reasonable defaults
+                        fullSize = new PixelSize(
+                            Math.Max((int)scrollViewer.Bounds.Width, 1920),
+                            Math.Max((int)scrollViewer.Bounds.Height, 2000) // Increased height for dashboard
+                        );
+                    }
+
+                    DebugLogger.Log($"[MainWindow] Capturing full content: {fullSize.Width}x{fullSize.Height}");
+                    DebugLogger.Log($"[MainWindow] Content bounds: {scrollContent.Bounds}");
+                    DebugLogger.Log($"[MainWindow] Content desired size: {contentSize}");
+
+                    // Create bitmap for full content
+                    bitmap = new RenderTargetBitmap(fullSize, new Vector(96, 96));
+
+                    // Special handling for DashboardView
+                    if (targetTabIndex == 1 || (targetTabIndex < 0 && tabControl.SelectedIndex == 1))
+                    {
+                        DebugLogger.Log("[MainWindow] Special handling for Dashboard tab");
+
+                        // Store original scroll position
+                        var originalOffset = scrollViewer.Offset;
+
+                        // Scroll to top to ensure all content is visible
+                        scrollViewer.Offset = new Vector(0, 0);
+                        await Task.Delay(100);
+
+                        // Try rendering the scrollviewer with its full content
+                        try
+                        {
+                            // Create a temporary container to hold the content
+                            var container = new Border
+                            {
+                                Width = fullSize.Width,
+                                Height = fullSize.Height,
+                                Background = null, // Transparent background
+                                Child = scrollContent
+                            };
+
+                            // Temporarily remove from scrollviewer
+                            scrollViewer.Content = null;
+
+                            // Measure and arrange the container
+                            container.Measure(new Size(fullSize.Width, fullSize.Height));
+                            container.Arrange(new Rect(0, 0, fullSize.Width, fullSize.Height));
+                            container.UpdateLayout();
+
+                            // Render the container
+                            bitmap.Render(container);
+
+                            // Restore content to scrollviewer
+                            scrollViewer.Content = scrollContent;
+                        }
+                        catch
+                        {
+                            // Fallback to direct content rendering
+                            bitmap.Render(scrollContent);
+                        }
+
+                        // Restore scroll position
+                        scrollViewer.Offset = originalOffset;
+                    }
+                    else
+                    {
+                        // Render the content directly for other tabs
                         bitmap.Render(scrollContent);
                     }
-                    
-                    // Restore scroll position
-                    scrollViewer.Offset = originalOffset;
                 }
                 else
                 {
-                    // Render the content directly for other tabs
-                    bitmap.Render(scrollContent);
+                    // Fallback to regular screenshot for non-scrollable content
+                    DebugLogger.Log("[MainWindow] No ScrollViewer found, capturing visible content");
+
+                    // For UserControls, try to capture the UserControl itself, not just its content
+                    var targetControl = content;
+                    if (content is UserControl userControl)
+                    {
+                        DebugLogger.Log("[MainWindow] Capturing UserControl directly");
+                        targetControl = userControl;
+                    }
+
+                    var pixelSize = new PixelSize((int)targetControl.Bounds.Width, (int)targetControl.Bounds.Height);
+
+                    if (pixelSize.Width <= 0 || pixelSize.Height <= 0)
+                    {
+                        DebugLogger.Log($"[MainWindow] Invalid content size: {pixelSize.Width}x{pixelSize.Height}");
+                        return false;
+                    }
+
+                    bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
+                    bitmap.Render(targetControl);
                 }
-            }
-            else
-            {
-                // Fallback to regular screenshot for non-scrollable content
-                DebugLogger.Log("[MainWindow] No ScrollViewer found, capturing visible content");
-                
-                // For UserControls, try to capture the UserControl itself, not just its content
-                var targetControl = content;
-                if (content is UserControl userControl)
+
+                // Show save dialog
+                var storage = StorageProvider;
+                if (storage == null)
                 {
-                    DebugLogger.Log("[MainWindow] Capturing UserControl directly");
-                    targetControl = userControl;
-                }
-                
-                var pixelSize = new PixelSize((int)targetControl.Bounds.Width, (int)targetControl.Bounds.Height);
-                
-                if (pixelSize.Width <= 0 || pixelSize.Height <= 0)
-                {
-                    DebugLogger.Log($"[MainWindow] Invalid content size: {pixelSize.Width}x{pixelSize.Height}");
+                    DebugLogger.Log("[MainWindow] Storage provider not available");
                     return false;
                 }
-                
-                bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
-                bitmap.Render(targetControl);
-            }
-            
-            // Show save dialog
-            var storage = StorageProvider;
-            if (storage == null)
-            {
-                DebugLogger.Log("[MainWindow] Storage provider not available");
-                return false;
-            }
-            
-            var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
-            {
-                Title = "Save Full Page Screenshot",
-                DefaultExtension = "jpg",
-                FileTypeChoices = new[]
+
+                var file = await storage.SaveFilePickerAsync(new FilePickerSaveOptions
                 {
-                    new FilePickerFileType("JPEG Image") { Patterns = new[] { "*.jpg", "*.jpeg" } },
-                    new FilePickerFileType("PNG Image") { Patterns = new[] { "*.png" } }
-                },
-                SuggestedFileName = GetScreenshotFileName(targetTabIndex >= 0 ? targetTabIndex : tabControl.SelectedIndex)
-            });
-            
-            if (file == null)
-            {
-                DebugLogger.Log("[MainWindow] Screenshot save cancelled");
+                    Title = "Save Full Page Screenshot",
+                    DefaultExtension = "jpg",
+                    FileTypeChoices = new[]
+                    {
+                        new FilePickerFileType("JPEG Image") { Patterns = new[] { "*.jpg", "*.jpeg" } },
+                        new FilePickerFileType("PNG Image") { Patterns = new[] { "*.png" } }
+                    },
+                    SuggestedFileName = GetScreenshotFileName(targetTabIndex >= 0 ? targetTabIndex : tabControl.SelectedIndex)
+                });
+
+                if (file == null)
+                {
+                    DebugLogger.Log("[MainWindow] Screenshot save cancelled");
+                    // Restore original tab
+                    if (targetTabIndex >= 0)
+                        tabControl.SelectedIndex = currentTabIndex;
+                    return false;
+                }
+
+                // Save the bitmap
+                await using var stream = await file.OpenWriteAsync();
+                SaveBitmapToStream(bitmap, stream, file.Name);
+
+                DebugLogger.Log($"[MainWindow] Full screenshot saved to {file.Name}");
+
                 // Restore original tab
                 if (targetTabIndex >= 0)
                     tabControl.SelectedIndex = currentTabIndex;
-                return false;
+
+                return true;
             }
-            
-            // Save the bitmap
-            await using var stream = await file.OpenWriteAsync();
-            SaveBitmapToStream(bitmap, stream, file.Name);
-            
-            DebugLogger.Log($"[MainWindow] Full screenshot saved to {file.Name}");
-            
-            // Restore original tab
-            if (targetTabIndex >= 0)
-                tabControl.SelectedIndex = currentTabIndex;
-                
-            return true;
+            finally
+            {
+                bitmap?.Dispose();
+            }
         }
         catch (Exception ex)
         {
@@ -947,14 +978,34 @@ public partial class MainWindow : Window
         using var memoryStream = new System.IO.MemoryStream();
         source.Save(memoryStream);
         memoryStream.Seek(0, System.IO.SeekOrigin.Begin);
-        
+
         // Load into SkiaSharp
         using var skData = SKData.Create(memoryStream);
         using var codec = SKCodec.Create(skData);
         var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
         var skBitmap = new SKBitmap(info);
         codec.GetPixels(info, skBitmap.GetPixels());
-        
+
         return skBitmap;
+    }
+
+    /// <summary>
+    /// Handles click on the dark overlay behind DrillDown popup - closes the popup
+    /// </summary>
+    private void OnDrillDownOverlayPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel vm && vm.Charts?.DrillDown != null)
+        {
+            vm.Charts.DrillDown.IsVisible = false;
+        }
+    }
+
+    /// <summary>
+    /// Handles click on the popup itself - prevents event from bubbling to overlay
+    /// </summary>
+    private void OnDrillDownPopupPressed(object? sender, PointerPressedEventArgs e)
+    {
+        // Stop propagation so clicking on popup doesn't close it
+        e.Handled = true;
     }
 }

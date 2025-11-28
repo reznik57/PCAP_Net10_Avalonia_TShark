@@ -14,6 +14,8 @@
         <conv:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
         <conv:ByteSizeConverter x:Key="ByteSizeConverter"/>
         <conv:IntToBoolConverter x:Key="IntToBoolConverter"/>
+        <conv:IPValidationConverter x:Key="IPValidationConverter"/>
+        <conv:PortValidationConverter x:Key="PortValidationConverter"/>
     </Application.Resources>
 
     <Application.Styles>

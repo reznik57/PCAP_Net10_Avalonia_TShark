@@ -363,14 +363,16 @@ public partial class FileSelectionControlViewModel : ObservableObject, IDisposab
     }
 
     /// <summary>
-    /// Transition to FileSelected state (show file info + countdown)
+    /// Transition to FileSelected state (show file info)
+    /// NOTE: Countdown disabled here - FileManagerViewModel handles the visible countdown
     /// </summary>
     private void TransitionToFileSelected()
     {
         CurrentState = FileControlState.FileSelected;
         FileControlHeight = FileControlHeights.FileSelected;
         IsCollapsed = false;
-        StartCountdown(); // Start 2-second countdown
+        // ✅ FIX: Don't start countdown here - FileManagerViewModel handles it
+        // StartCountdown(); // Disabled - was causing duplicate countdown that fired early
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(IsFileSelected));
         OnPropertyChanged(nameof(IsAnalyzing));

@@ -45,61 +45,6 @@ public partial class PacketTableControl : UserControl
         }
     }
 
-    /// <summary>
-    /// Handles quick protocol filter button clicks
-    /// </summary>
-    private void QuickFilter_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
-    {
-        if (sender is Button { Tag: string protocol } &&
-            DataContext is MainWindowViewModel viewModel)
-        {
-            Console.WriteLine($"[FILTER] Quick filter clicked: '{protocol}'");
-
-            if (string.IsNullOrEmpty(protocol))
-            {
-                // "All" button - clear filter by applying empty filter
-                viewModel.PacketManager.ApplyFilter(new PacketFilter());
-            }
-            else
-            {
-                // Apply protocol filter
-                var filter = new PacketFilter();
-
-                // Handle different protocols
-                switch (protocol.ToUpperInvariant())
-                {
-                    case "TCP":
-                        filter.ProtocolFilter = Protocol.TCP;
-                        break;
-                    case "UDP":
-                        filter.ProtocolFilter = Protocol.UDP;
-                        break;
-                    case "ICMP":
-                        filter.ProtocolFilter = Protocol.ICMP;
-                        break;
-                    case "HTTP":
-                        // HTTP can be on any port, filter by L7 protocol name
-                        filter.CustomPredicate = p =>
-                            p.L7Protocol?.Contains("HTTP", StringComparison.OrdinalIgnoreCase) == true;
-                        break;
-                    case "DNS":
-                        filter.CustomPredicate = p =>
-                            p.L7Protocol?.Equals("DNS", StringComparison.OrdinalIgnoreCase) == true ||
-                            p.DestinationPort == 53 || p.SourcePort == 53;
-                        break;
-                    case "TLS":
-                        filter.CustomPredicate = p =>
-                            p.L7Protocol?.Contains("TLS", StringComparison.OrdinalIgnoreCase) == true ||
-                            p.L7Protocol?.Contains("SSL", StringComparison.OrdinalIgnoreCase) == true ||
-                            p.DestinationPort == 443 || p.SourcePort == 443;
-                        break;
-                }
-
-                viewModel.PacketManager.ApplyFilter(filter);
-            }
-        }
-    }
-
     #region Keyboard Navigation
 
     private async void PacketList_KeyDown(object? sender, KeyEventArgs e)

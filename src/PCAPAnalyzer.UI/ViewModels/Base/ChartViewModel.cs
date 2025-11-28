@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -10,6 +11,8 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
     /// Base class for ViewModels that display charts.
     /// Provides common chart configuration and helpers.
     /// </summary>
+    [SuppressMessage("Usage", "CA2214:Do not call overridable methods in constructors",
+        Justification = "InitializeAxes is a safe virtual call that only sets default axis configuration without accessing derived class state")]
     public abstract partial class ChartViewModel : ObservableObject
     {
         [ObservableProperty]

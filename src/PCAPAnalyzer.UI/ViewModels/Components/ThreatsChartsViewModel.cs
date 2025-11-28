@@ -249,7 +249,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
             GeometryStroke = new SolidColorPaint(color) { StrokeThickness = 2 },
             Stroke = new SolidColorPaint(color) { StrokeThickness = 2 },
             Fill = null,
-            LineSmoothness = 0.7
+            LineSmoothness = 0
         });
     }
 
@@ -548,7 +548,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
                 GeometryStroke = new SolidColorPaint(color) { StrokeThickness = 2 },
                 Stroke = new SolidColorPaint(color) { StrokeThickness = 2 },
                 Fill = null,
-                LineSmoothness = 0.7,
+                LineSmoothness = 0,
                 IsVisibleAtLegend = (i < 3) // Limit legend entries
             });
         }

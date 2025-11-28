@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -9,6 +10,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.Core.Utilities;
 
 namespace PCAPAnalyzer.TShark;
 
@@ -359,65 +361,26 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
 
 
     /// <summary>
-    /// Gets total packet count using tshark.
-    /// Same implementation as sequential service.
+    /// Gets total packet count using capinfos (fast) or tshark (fallback).
+    /// capinfos reads pcap header only (~1-2 seconds vs 30-95 seconds for tshark).
     /// Supports WSL path conversion for Windows + WSL2 environments
     /// </summary>
     public async Task<long> GetTotalPacketCountAsync(string pcapPath, PCAPAnalyzer.Core.Orchestration.ProgressCoordinator? progressCoordinator = null)
     {
-        var sw = System.Diagnostics.Stopwatch.StartNew();
+        var sw = Stopwatch.StartNew();
         try
         {
-            var effectivePcapPath = _tsharkInfo.ConvertPathIfNeeded(pcapPath);
-            var arguments = $"-r \"{effectivePcapPath}\" -T fields -e frame.number";
-            var startInfo = _tsharkInfo.CreateProcessStartInfo(arguments);
-
-            using var process = Process.Start(startInfo)!;
-
-            // Report initial progress
-            progressCoordinator?.ReportCounting(0, "Starting packet count...");
-
-            string? lastLine = null;
-            long lineCount = 0;
-            var lastProgressReport = DateTime.Now;
-
-            while (true)
+            // ✅ PERFORMANCE: Try capinfos first (reads pcap header, ~1-2 seconds vs 30-95 seconds)
+            var capinfosCount = await GetPacketCountViaCapinfosAsync(pcapPath, progressCoordinator);
+            if (capinfosCount > 0)
             {
-                var line = await process.StandardOutput.ReadLineAsync();
-                if (line == null) break;
-
-                if (!string.IsNullOrWhiteSpace(line))
-                {
-                    lastLine = line.Trim();
-                    lineCount++;
-
-                    // Report progress every 2 seconds to show activity
-                    var elapsed = (DateTime.Now - lastProgressReport).TotalSeconds;
-                    if (elapsed >= 2.0)
-                    {
-                        // Estimate progress based on elapsed time (rough approximation)
-                        var totalElapsed = sw.Elapsed.TotalSeconds;
-                        var estimatedProgress = Math.Min(95, (int)(totalElapsed / 0.3)); // Assume ~30s total, cap at 95%
-                        progressCoordinator?.ReportCounting(estimatedProgress, $"Counting packets... {lineCount:N0} detected", lineCount);
-                        lastProgressReport = DateTime.Now;
-                    }
-                }
+                _logger.LogDebug("Total packets via capinfos: {Count:N0} (took {Duration:F1}s)", capinfosCount, sw.Elapsed.TotalSeconds);
+                return capinfosCount;
             }
 
-            await process.WaitForExitAsync();
-
-            if (lastLine != null && long.TryParse(lastLine, out var count))
-            {
-                _logger.LogDebug("Total packet count ({Mode}): {Count:N0} (took {Duration:F1}s)", _tsharkInfo.Mode, count, sw.Elapsed.TotalSeconds);
-
-                // Report completion
-                progressCoordinator?.ReportCounting(100, $"Counted {count:N0} packets");
-
-                return count;
-            }
-
-            _logger.LogWarning("Failed to parse packet count from tshark output");
-            return 0;
+            // Fallback to TShark if capinfos unavailable or fails
+            DebugLogger.Log("[ParallelTSharkService] capinfos unavailable or failed, falling back to TShark packet count...");
+            return await GetPacketCountViaTSharkAsync(pcapPath, progressCoordinator, sw);
         }
         catch (Exception ex)
         {
@@ -430,12 +393,261 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
         }
     }
 
+    /// <summary>
+    /// Fast packet count using capinfos (reads pcap header only, ~1-2 seconds for any file size).
+    /// </summary>
+    private async Task<long> GetPacketCountViaCapinfosAsync(string pcapPath, PCAPAnalyzer.Core.Orchestration.ProgressCoordinator? progressCoordinator)
+    {
+        var capinfosInfo = WiresharkToolDetector.DetectCapinfos();
+        if (!capinfosInfo.IsAvailable)
+        {
+            DebugLogger.Log("[ParallelTSharkService] capinfos not available");
+            return 0;
+        }
+
+        progressCoordinator?.ReportCounting(10, "Reading packet count from PCAP header (fast)...");
+        DebugLogger.Log($"[ParallelTSharkService] Using capinfos for fast packet count: {capinfosInfo.Description}");
+
+        try
+        {
+            var convertedPath = capinfosInfo.ConvertPathIfNeeded(pcapPath);
+            // ✅ FIX: Use -Mc for machine-readable output (exact count without k/M suffixes)
+            var psi = capinfosInfo.CreateProcessStartInfo($"-Mc \"{convertedPath}\"");
+
+            using var process = Process.Start(psi);
+            if (process == null)
+            {
+                DebugLogger.Log("[ParallelTSharkService] Failed to start capinfos process");
+                return 0;
+            }
+
+            var output = await process.StandardOutput.ReadToEndAsync();
+            var errorOutput = await process.StandardError.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            if (process.ExitCode != 0)
+            {
+                DebugLogger.Log($"[ParallelTSharkService] capinfos failed with exit code {process.ExitCode}: {errorOutput}");
+                return 0;
+            }
+
+            // Parse output - look for "Number of packets" line
+            // With -M flag: exact number "5835139", without: may show "5835 k" suffix
+            foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (line.Contains("Number of packets", StringComparison.OrdinalIgnoreCase))
+                {
+                    var parts = line.Split(new[] { '=', ':' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length >= 2)
+                    {
+                        var numberPart = parts[^1].Trim();
+                        var count = ParseCapinfosPacketCount(numberPart);
+                        if (count > 0)
+                        {
+                            progressCoordinator?.ReportCounting(100, $"Counted {count:N0} packets (via capinfos)");
+                            DebugLogger.Log($"[ParallelTSharkService] ⚡ capinfos packet count: {count:N0}");
+                            return count;
+                        }
+                    }
+                }
+            }
+
+            DebugLogger.Log($"[ParallelTSharkService] capinfos output parsing failed: {output}");
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            DebugLogger.Log($"[ParallelTSharkService] capinfos exception: {ex.Message}");
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Parses capinfos packet count format which uses k/M suffixes with space.
+    /// Examples: "5835139" → 5835139, "5835 k" → 5835000, "5 M" → 5000000
+    /// </summary>
+    private static long ParseCapinfosPacketCount(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return 0;
+
+        value = value.Trim();
+
+        // Check for k (thousands) or M (millions) suffix
+        long multiplier = 1;
+        if (value.EndsWith(" k", StringComparison.OrdinalIgnoreCase) ||
+            value.EndsWith("k", StringComparison.OrdinalIgnoreCase))
+        {
+            multiplier = 1000;
+            value = value.TrimEnd('k', 'K', ' ');
+        }
+        else if (value.EndsWith(" M", StringComparison.OrdinalIgnoreCase) ||
+                 value.EndsWith("M", StringComparison.OrdinalIgnoreCase))
+        {
+            multiplier = 1_000_000;
+            value = value.TrimEnd('m', 'M', ' ');
+        }
+
+        // Remove any remaining whitespace and commas
+        value = value.Trim().Replace(",", "", StringComparison.Ordinal).Replace(" ", "", StringComparison.Ordinal);
+
+        if (long.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var count))
+        {
+            return count * multiplier;
+        }
+
+        return 0;
+    }
+
+    /// <summary>
+    /// Slow packet count using TShark (reads all packets, can take 30-95 seconds for large files).
+    /// </summary>
+    private async Task<long> GetPacketCountViaTSharkAsync(string pcapPath, PCAPAnalyzer.Core.Orchestration.ProgressCoordinator? progressCoordinator, Stopwatch sw)
+    {
+        var effectivePcapPath = _tsharkInfo.ConvertPathIfNeeded(pcapPath);
+        var arguments = $"-r \"{effectivePcapPath}\" -T fields -e frame.number";
+        var startInfo = _tsharkInfo.CreateProcessStartInfo(arguments);
+
+        using var process = Process.Start(startInfo)!;
+
+        progressCoordinator?.ReportCounting(0, "Starting packet count (slow method)...");
+
+        string? lastLine = null;
+        long lineCount = 0;
+        var lastProgressReport = DateTime.Now;
+
+        while (true)
+        {
+            var line = await process.StandardOutput.ReadLineAsync();
+            if (line == null) break;
+
+            if (!string.IsNullOrWhiteSpace(line))
+            {
+                lastLine = line.Trim();
+                lineCount++;
+
+                var elapsed = (DateTime.Now - lastProgressReport).TotalSeconds;
+                if (elapsed >= 2.0)
+                {
+                    var totalElapsed = sw.Elapsed.TotalSeconds;
+                    var estimatedProgress = Math.Min(95, (int)(totalElapsed / 0.3));
+                    progressCoordinator?.ReportCounting(estimatedProgress, $"Counting packets... {lineCount:N0} detected", lineCount);
+                    lastProgressReport = DateTime.Now;
+                }
+            }
+        }
+
+        await process.WaitForExitAsync();
+
+        if (lastLine != null && long.TryParse(lastLine, out var count))
+        {
+            _logger.LogDebug("Total packet count ({Mode}): {Count:N0} (took {Duration:F1}s)", _tsharkInfo.Mode, count, sw.Elapsed.TotalSeconds);
+            progressCoordinator?.ReportCounting(100, $"Counted {count:N0} packets");
+            return count;
+        }
+
+        _logger.LogWarning("Failed to parse packet count from tshark output");
+        return 0;
+    }
+
     public Task StopAnalysisAsync()
     {
         _isAnalyzing = false;
         _packetChannel.Writer.TryComplete();
         _logger.LogInformation("Analysis stopped");
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Extracts capture time range (first/last packet timestamps) from a PCAP file.
+    /// </summary>
+    public async Task<(DateTime? FirstPacketTime, DateTime? LastPacketTime)> GetCaptureTimeRangeAsync(string pcapPath)
+    {
+        try
+        {
+            if (!File.Exists(pcapPath))
+            {
+                return (null, null);
+            }
+
+            // Get first packet timestamp
+            var firstPacketTime = await GetFirstPacketTimestampAsync(pcapPath);
+
+            // For last packet, skip for large files > 500MB
+            // 500MB files typically complete in 2-3 seconds
+            var fileSize = new FileInfo(pcapPath).Length;
+            DateTime? lastPacketTime = null;
+
+            if (fileSize < 500 * 1024 * 1024)
+            {
+                lastPacketTime = await GetLastPacketTimestampAsync(pcapPath);
+            }
+
+            return (firstPacketTime, lastPacketTime);
+        }
+        catch
+        {
+            return (null, null);
+        }
+    }
+
+    private async Task<DateTime?> GetFirstPacketTimestampAsync(string pcapPath)
+    {
+        try
+        {
+            var effectivePath = _tsharkInfo.ConvertPathIfNeeded(pcapPath);
+            var arguments = $"-r \"{effectivePath}\" -T fields -e frame.time_epoch -c 1";
+            var startInfo = _tsharkInfo.CreateProcessStartInfo(arguments);
+
+            using var process = Process.Start(startInfo);
+            if (process == null) return null;
+
+            var output = await process.StandardOutput.ReadToEndAsync();
+            await process.WaitForExitAsync();
+
+            if (double.TryParse(output.Trim(), System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var epoch))
+            {
+                return DateTimeOffset.FromUnixTimeMilliseconds((long)(epoch * 1000)).LocalDateTime;
+            }
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private async Task<DateTime?> GetLastPacketTimestampAsync(string pcapPath)
+    {
+        try
+        {
+            var effectivePath = _tsharkInfo.ConvertPathIfNeeded(pcapPath);
+            var arguments = $"-r \"{effectivePath}\" -T fields -e frame.time_epoch";
+            var startInfo = _tsharkInfo.CreateProcessStartInfo(arguments);
+
+            using var process = Process.Start(startInfo);
+            if (process == null) return null;
+
+            string? lastLine = null;
+            while (await process.StandardOutput.ReadLineAsync() is { } line)
+            {
+                if (!string.IsNullOrWhiteSpace(line))
+                    lastLine = line;
+            }
+            await process.WaitForExitAsync();
+
+            if (lastLine != null && double.TryParse(lastLine.Trim(), System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var epoch))
+            {
+                return DateTimeOffset.FromUnixTimeMilliseconds((long)(epoch * 1000)).LocalDateTime;
+            }
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public void ResetService()

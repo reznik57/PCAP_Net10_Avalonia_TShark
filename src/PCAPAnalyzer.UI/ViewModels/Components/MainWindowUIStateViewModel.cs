@@ -346,9 +346,10 @@ public partial class MainWindowUIStateViewModel : ObservableObject
     {
         try
         {
-            // Subscribe to memory pressure events
+            // Subscribe to memory pressure events (including Emergency which was previously unhandled!)
             MemoryPressureDetector.Instance.MemoryPressureWarning += OnMemoryPressureWarning;
             MemoryPressureDetector.Instance.MemoryPressureCritical += OnMemoryPressureCritical;
+            MemoryPressureDetector.Instance.MemoryPressureEmergency += OnMemoryPressureEmergency;
             MemoryPressureDetector.Instance.MemoryPressureRelieved += OnMemoryPressureRelieved;
 
             // Start monitoring timer
@@ -399,7 +400,37 @@ public partial class MainWindowUIStateViewModel : ObservableObject
     private void OnMemoryPressureCritical(object? sender, EventArgs e)
     {
         DetailedLogger.Instance.Error("MEMORY", "Critical memory pressure detected");
-        Status = "⚠️ Critical memory pressure";
+        Status = "⚠️ Critical memory pressure - optimizing...";
+
+        // ✅ FIX: Trigger GC on critical pressure (was just logging before)
+        Task.Run(() =>
+        {
+            GC.Collect(2, GCCollectionMode.Optimized, blocking: false);
+            GC.WaitForPendingFinalizers();
+            DebugLogger.Log("[MEMORY] Critical: GC triggered (optimized mode)");
+        });
+    }
+
+    private void OnMemoryPressureEmergency(object? sender, EventArgs e)
+    {
+        DetailedLogger.Instance.Error("MEMORY", "🚨 EMERGENCY memory pressure detected!");
+        Status = "🚨 Emergency memory pressure - aggressive GC";
+
+        // ✅ FIX: Emergency was completely unhandled before - now triggers aggressive GC
+        Task.Run(() =>
+        {
+            var before = GC.GetTotalMemory(false);
+
+            // Aggressive collection with LOH compaction
+            System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect(2, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+            GC.WaitForPendingFinalizers();
+            GC.Collect(2, GCCollectionMode.Aggressive, blocking: true, compacting: true);
+
+            var after = GC.GetTotalMemory(true);
+            var freedMB = (before - after) / 1_000_000;
+            DebugLogger.Log($"[MEMORY] 🚨 Emergency GC complete: freed {freedMB}MB");
+        });
     }
 
     private void OnMemoryPressureRelieved(object? sender, EventArgs e)

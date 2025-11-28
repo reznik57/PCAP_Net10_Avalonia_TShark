@@ -5,10 +5,12 @@ using Avalonia.Threading;
 using Avalonia.ReactiveUI;
 using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Monitoring;
+using PCAPAnalyzer.Core.Services.Cache;
 using PCAPAnalyzer.UI.Views;
 using ReactiveUI;
 using System;
 using System.Reactive.Concurrency;
+using System.Threading.Tasks;
 using PCAPAnalyzer.Core.Utilities;
 
 namespace PCAPAnalyzer.UI;
@@ -73,9 +75,12 @@ public partial class App : Application
                 // Set window properties for better stability
                 desktop.MainWindow.WindowStartupLocation = Avalonia.Controls.WindowStartupLocation.CenterScreen;
                 desktop.MainWindow.CanResize = true;
-                
+
                 DebugLogger.Log($"[App] Window Title: {desktop.MainWindow.Title}");
                 DebugLogger.Log($"[App] Window Size: {desktop.MainWindow.Width}x{desktop.MainWindow.Height}");
+
+                // Clear old analysis cache on startup (fire-and-forget, non-blocking)
+                _ = ClearOldCacheOnStartupAsync();
             }
             else
             {
@@ -89,14 +94,41 @@ public partial class App : Application
         {
             DebugLogger.Log($"[App] Error in OnFrameworkInitializationCompleted: {ex.Message}");
             DebugLogger.Log($"[App] Stack trace: {ex.StackTrace}");
-            
+
             if (ex.InnerException != null)
             {
                 DebugLogger.Log($"[App] Inner exception: {ex.InnerException.Message}");
                 DebugLogger.Log($"[App] Inner stack trace: {ex.InnerException.StackTrace}");
             }
-            
+
             throw;
+        }
+    }
+
+    /// <summary>
+    /// Clears all old analysis cache entries on startup.
+    /// Runs asynchronously to avoid blocking app startup.
+    /// </summary>
+    private static async Task ClearOldCacheOnStartupAsync()
+    {
+        try
+        {
+            DebugLogger.Log("[App] Clearing old analysis cache on startup...");
+            var cacheService = Services.GetService<IAnalysisCacheService>();
+            if (cacheService != null)
+            {
+                var deletedCount = await cacheService.ClearAllCacheAsync();
+                DebugLogger.Log($"[App] Cleared {deletedCount} old cache entries on startup");
+            }
+            else
+            {
+                DebugLogger.Log("[App] Cache service not available - skipping cleanup");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Don't fail startup if cache cleanup fails
+            DebugLogger.Log($"[App] Warning: Cache cleanup failed: {ex.Message}");
         }
     }
 }

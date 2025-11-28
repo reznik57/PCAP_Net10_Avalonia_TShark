@@ -11,6 +11,8 @@ namespace PCAPAnalyzer.Core.Security;
 /// </summary>
 [SuppressMessage("Performance", "CA1810:Initialize reference type static fields inline",
     Justification = "Static constructor is required to build the port database from categorized AddPort calls")]
+[SuppressMessage("Maintainability", "CA1505:Avoid unmaintainable code",
+    Justification = "Large port database (~800 entries) is intentional for comprehensive service identification")]
 public static class PortDatabase
 {
     /// <summary>
@@ -478,6 +480,246 @@ public static class PortDatabase
         AddPort(ports, 6653, TransportProtocol.TCP, "OpenFlow-IANA", "OpenFlow (IANA)", PortRisk.Medium, "Network");
         AddPort(ports, 8000, TransportProtocol.TCP, "HTTP-Alt", "HTTP Alternate", PortRisk.High, "Network");
         AddPort(ports, 8443, TransportProtocol.TCP, "HTTPS-Alt", "HTTPS Alternate", PortRisk.Low, "Network");
+
+        // ===========================================
+        // CITRIX
+        // ===========================================
+        AddPort(ports, 1494, TransportProtocol.Both, "Citrix-ICA", "Citrix ICA Protocol", PortRisk.Medium, "Citrix", "Use SSL/TLS with NetScaler");
+        AddPort(ports, 2598, TransportProtocol.Both, "Citrix-CGP", "Citrix CGP (Session Reliability)", PortRisk.Medium, "Citrix", "Session reliability/reconnect");
+        AddPort(ports, 2512, TransportProtocol.TCP, "Citrix-Admin", "Citrix Management Console", PortRisk.Medium, "Citrix");
+        AddPort(ports, 2513, TransportProtocol.TCP, "Citrix-SMA", "Citrix SMA Service", PortRisk.Medium, "Citrix");
+        AddPort(ports, 2071, TransportProtocol.TCP, "Citrix-ADF", "Citrix ADF Service", PortRisk.Medium, "Citrix");
+        AddPort(ports, 80, TransportProtocol.TCP, "Citrix-StoreFront", "Citrix StoreFront HTTP", PortRisk.High, "Citrix");
+        AddPort(ports, 443, TransportProtocol.TCP, "Citrix-NetScaler", "Citrix NetScaler Gateway", PortRisk.Low, "Citrix");
+        AddPort(ports, 8008, TransportProtocol.TCP, "Citrix-XenApp", "Citrix XenApp Services", PortRisk.Medium, "Citrix");
+        AddPort(ports, 27000, TransportProtocol.TCP, "Citrix-License", "Citrix License Server", PortRisk.Medium, "Citrix");
+        AddPort(ports, 7279, TransportProtocol.TCP, "Citrix-License-Vendor", "Citrix License Vendor Daemon", PortRisk.Medium, "Citrix");
+        AddPort(ports, 8082, TransportProtocol.TCP, "Citrix-License-Web", "Citrix License Web Interface", PortRisk.Medium, "Citrix");
+        AddPort(ports, 8083, TransportProtocol.TCP, "Citrix-License-WS", "Citrix License Web Service", PortRisk.Medium, "Citrix");
+        AddPort(ports, 9028, TransportProtocol.TCP, "Citrix-WEM", "Citrix WEM Infrastructure", PortRisk.Medium, "Citrix");
+
+        // ===========================================
+        // MICROSOFT TEAMS / SKYPE FOR BUSINESS
+        // ===========================================
+        AddPort(ports, 3478, TransportProtocol.UDP, "Teams-STUN", "MS Teams STUN/TURN", PortRisk.Low, "Teams");
+        AddPort(ports, 3479, TransportProtocol.UDP, "Teams-Audio", "MS Teams Audio", PortRisk.Low, "Teams");
+        AddPort(ports, 3480, TransportProtocol.UDP, "Teams-Video", "MS Teams Video", PortRisk.Low, "Teams");
+        AddPort(ports, 3481, TransportProtocol.UDP, "Teams-Sharing", "MS Teams Screen Sharing", PortRisk.Low, "Teams");
+        // Teams UDP media range
+        AddPort(ports, 50000, TransportProtocol.UDP, "Teams-Media-Low", "MS Teams Media Range Start", PortRisk.Low, "Teams");
+        AddPort(ports, 50019, TransportProtocol.UDP, "Teams-Media-High", "MS Teams Media Range End", PortRisk.Low, "Teams");
+        AddPort(ports, 443, TransportProtocol.TCP, "Teams-Signaling", "MS Teams Signaling", PortRisk.Low, "Teams");
+        AddPort(ports, 5061, TransportProtocol.TCP, "Skype-SIP-TLS", "Skype for Business SIP TLS", PortRisk.Low, "Teams");
+        AddPort(ports, 444, TransportProtocol.TCP, "Skype-Certs", "Skype for Business Certificates", PortRisk.Low, "Teams");
+        AddPort(ports, 5063, TransportProtocol.TCP, "Skype-SIP-MTLS", "Skype for Business SIP MTLS", PortRisk.Low, "Teams");
+        AddPort(ports, 5064, TransportProtocol.TCP, "Skype-Internal", "Skype for Business Internal", PortRisk.Medium, "Teams");
+        AddPort(ports, 5065, TransportProtocol.TCP, "Skype-External", "Skype for Business External", PortRisk.Medium, "Teams");
+        AddPort(ports, 5066, TransportProtocol.TCP, "Skype-Focus", "Skype for Business Focus", PortRisk.Medium, "Teams");
+        AddPort(ports, 5067, TransportProtocol.TCP, "Skype-SRTP", "Skype for Business SRTP", PortRisk.Low, "Teams");
+        AddPort(ports, 5068, TransportProtocol.TCP, "Skype-SRTP-Video", "Skype for Business Video SRTP", PortRisk.Low, "Teams");
+        AddPort(ports, 5070, TransportProtocol.TCP, "Skype-CAA", "Skype for Business CAA", PortRisk.Medium, "Teams");
+        AddPort(ports, 5071, TransportProtocol.TCP, "Skype-Autodiscover", "Skype for Business Autodiscover", PortRisk.Medium, "Teams");
+        AddPort(ports, 57501, TransportProtocol.TCP, "Skype-Apps-Share", "Skype for Business App Sharing", PortRisk.Medium, "Teams");
+
+        // ===========================================
+        // ZOOM VIDEO CONFERENCING
+        // ===========================================
+        AddPort(ports, 8801, TransportProtocol.UDP, "Zoom-Media-1", "Zoom Media UDP", PortRisk.Low, "Zoom");
+        AddPort(ports, 8802, TransportProtocol.UDP, "Zoom-Media-2", "Zoom Media UDP Alt", PortRisk.Low, "Zoom");
+        AddPort(ports, 8803, TransportProtocol.TCP, "Zoom-Media-TCP", "Zoom Media TCP Fallback", PortRisk.Low, "Zoom");
+        AddPort(ports, 9000, TransportProtocol.UDP, "Zoom-QoS", "Zoom QoS/Media", PortRisk.Low, "Zoom");
+        AddPort(ports, 443, TransportProtocol.TCP, "Zoom-HTTPS", "Zoom HTTPS Signaling", PortRisk.Low, "Zoom");
+        AddPort(ports, 5090, TransportProtocol.TCP, "Zoom-H323", "Zoom H.323 ALT", PortRisk.Medium, "Zoom");
+        AddPort(ports, 5091, TransportProtocol.TCP, "Zoom-H323-TLS", "Zoom H.323 TLS", PortRisk.Low, "Zoom");
+
+        // ===========================================
+        // CISCO WEBEX
+        // ===========================================
+        AddPort(ports, 9000, TransportProtocol.UDP, "Webex-Media", "Cisco Webex Media", PortRisk.Low, "Webex");
+        AddPort(ports, 5004, TransportProtocol.UDP, "Webex-RTP", "Webex RTP Media", PortRisk.Medium, "Webex");
+        AddPort(ports, 443, TransportProtocol.TCP, "Webex-HTTPS", "Webex HTTPS", PortRisk.Low, "Webex");
+        AddPort(ports, 5060, TransportProtocol.TCP, "Webex-SIP", "Webex SIP Signaling", PortRisk.Medium, "Webex");
+        AddPort(ports, 5061, TransportProtocol.TCP, "Webex-SIP-TLS", "Webex SIP TLS", PortRisk.Low, "Webex");
+
+        // ===========================================
+        // TEAMVIEWER & REMOTE SUPPORT TOOLS
+        // ===========================================
+        AddPort(ports, 5938, TransportProtocol.TCP, "TeamViewer", "TeamViewer Connection", PortRisk.Medium, "RemoteSupport", "Monitor for unauthorized use");
+        AddPort(ports, 443, TransportProtocol.TCP, "TeamViewer-HTTPS", "TeamViewer HTTPS Fallback", PortRisk.Medium, "RemoteSupport");
+        AddPort(ports, 80, TransportProtocol.TCP, "TeamViewer-HTTP", "TeamViewer HTTP Fallback", PortRisk.High, "RemoteSupport");
+        AddPort(ports, 7070, TransportProtocol.Both, "AnyDesk", "AnyDesk Connection", PortRisk.Medium, "RemoteSupport", "Monitor for unauthorized use");
+        AddPort(ports, 6568, TransportProtocol.TCP, "AnyDesk-Direct", "AnyDesk Direct Connection", PortRisk.Medium, "RemoteSupport");
+        AddPort(ports, 4100, TransportProtocol.TCP, "Splashtop", "Splashtop Remote", PortRisk.Medium, "RemoteSupport");
+        AddPort(ports, 4101, TransportProtocol.TCP, "Splashtop-Gateway", "Splashtop Gateway", PortRisk.Medium, "RemoteSupport");
+        AddPort(ports, 4102, TransportProtocol.TCP, "Splashtop-SOS", "Splashtop SOS", PortRisk.Medium, "RemoteSupport");
+        AddPort(ports, 5500, TransportProtocol.TCP, "VNC-Reverse", "VNC Reverse Connection", PortRisk.High, "RemoteSupport");
+        AddPort(ports, 3283, TransportProtocol.TCP, "Apple-Remote", "Apple Remote Desktop", PortRisk.Medium, "RemoteSupport");
+        AddPort(ports, 5988, TransportProtocol.TCP, "WBEM-HTTP", "WBEM CIM/HTTP", PortRisk.Medium, "RemoteSupport");
+        AddPort(ports, 5989, TransportProtocol.TCP, "WBEM-HTTPS", "WBEM CIM/HTTPS", PortRisk.Low, "RemoteSupport");
+        AddPort(ports, 4899, TransportProtocol.TCP, "Radmin", "Radmin Remote Admin", PortRisk.Medium, "RemoteSupport");
+        AddPort(ports, 4070, TransportProtocol.TCP, "LogMeIn", "LogMeIn Hamachi", PortRisk.Medium, "RemoteSupport");
+        AddPort(ports, 8200, TransportProtocol.TCP, "GoToMyPC", "GoToMyPC", PortRisk.Medium, "RemoteSupport");
+        AddPort(ports, 1585, TransportProtocol.TCP, "Bomgar", "BeyondTrust Remote Support", PortRisk.Medium, "RemoteSupport");
+        AddPort(ports, 1586, TransportProtocol.TCP, "Bomgar-HTTPS", "BeyondTrust HTTPS", PortRisk.Low, "RemoteSupport");
+
+        // ===========================================
+        // VMWARE VSPHERE / ESXI
+        // ===========================================
+        AddPort(ports, 902, TransportProtocol.Both, "VMware-Auth", "VMware ESXi Auth/Console", PortRisk.Medium, "VMware");
+        AddPort(ports, 903, TransportProtocol.TCP, "VMware-Console", "VMware Remote Console", PortRisk.Medium, "VMware");
+        AddPort(ports, 443, TransportProtocol.TCP, "VMware-vCenter", "VMware vCenter HTTPS", PortRisk.Low, "VMware");
+        AddPort(ports, 5480, TransportProtocol.TCP, "VMware-VAMI", "VMware VAMI", PortRisk.Medium, "VMware");
+        AddPort(ports, 9443, TransportProtocol.TCP, "VMware-vSphere", "VMware vSphere Web Client", PortRisk.Low, "VMware");
+        AddPort(ports, 8000, TransportProtocol.TCP, "VMware-vMotion", "VMware vMotion", PortRisk.Medium, "VMware");
+        AddPort(ports, 8100, TransportProtocol.TCP, "VMware-Fault-Tolerance", "VMware FT Traffic", PortRisk.Medium, "VMware");
+        AddPort(ports, 8200, TransportProtocol.TCP, "VMware-FT-Logging", "VMware FT Logging", PortRisk.Medium, "VMware");
+        AddPort(ports, 8300, TransportProtocol.TCP, "VMware-vSAN", "VMware vSAN Cluster", PortRisk.Medium, "VMware");
+        AddPort(ports, 12345, TransportProtocol.UDP, "VMware-vSAN-UDP", "VMware vSAN UDP", PortRisk.Medium, "VMware");
+        AddPort(ports, 23451, TransportProtocol.UDP, "VMware-vSAN-Transport", "VMware vSAN Transport", PortRisk.Medium, "VMware");
+        AddPort(ports, 5989, TransportProtocol.TCP, "VMware-CIM", "VMware CIM Server", PortRisk.Medium, "VMware");
+        AddPort(ports, 427, TransportProtocol.Both, "VMware-SLP", "VMware SLP Discovery", PortRisk.Medium, "VMware");
+        AddPort(ports, 514, TransportProtocol.UDP, "VMware-Syslog", "VMware Syslog", PortRisk.Medium, "VMware");
+        AddPort(ports, 2012, TransportProtocol.TCP, "VMware-VCHA", "VMware vCenter HA", PortRisk.Medium, "VMware");
+        AddPort(ports, 2014, TransportProtocol.TCP, "VMware-VCHA-Witness", "VMware vCenter HA Witness", PortRisk.Medium, "VMware");
+        AddPort(ports, 2020, TransportProtocol.TCP, "VMware-VCHA-DB", "VMware vCenter HA DB", PortRisk.Medium, "VMware");
+
+        // ===========================================
+        // SAP / ERP SYSTEMS
+        // ===========================================
+        AddPort(ports, 3200, TransportProtocol.TCP, "SAP-Dispatcher", "SAP Dispatcher (00)", PortRisk.Medium, "SAP");
+        AddPort(ports, 3201, TransportProtocol.TCP, "SAP-Dispatcher-01", "SAP Dispatcher (01)", PortRisk.Medium, "SAP");
+        AddPort(ports, 3202, TransportProtocol.TCP, "SAP-Dispatcher-02", "SAP Dispatcher (02)", PortRisk.Medium, "SAP");
+        AddPort(ports, 3300, TransportProtocol.TCP, "SAP-Gateway", "SAP Gateway (00)", PortRisk.Medium, "SAP");
+        AddPort(ports, 3301, TransportProtocol.TCP, "SAP-Gateway-01", "SAP Gateway (01)", PortRisk.Medium, "SAP");
+        AddPort(ports, 3600, TransportProtocol.TCP, "SAP-Message-Server", "SAP Message Server", PortRisk.Medium, "SAP");
+        AddPort(ports, 3601, TransportProtocol.TCP, "SAP-Message-Server-01", "SAP Message Server Int", PortRisk.Medium, "SAP");
+        AddPort(ports, 8000, TransportProtocol.TCP, "SAP-ICM-HTTP", "SAP ICM HTTP", PortRisk.High, "SAP");
+        AddPort(ports, 8001, TransportProtocol.TCP, "SAP-ICM-HTTP-01", "SAP ICM HTTP Alt", PortRisk.High, "SAP");
+        AddPort(ports, 44300, TransportProtocol.TCP, "SAP-ICM-HTTPS", "SAP ICM HTTPS (00)", PortRisk.Low, "SAP");
+        AddPort(ports, 44301, TransportProtocol.TCP, "SAP-ICM-HTTPS-01", "SAP ICM HTTPS (01)", PortRisk.Low, "SAP");
+        AddPort(ports, 8100, TransportProtocol.TCP, "SAP-Router", "SAProuter Admin", PortRisk.Medium, "SAP");
+        AddPort(ports, 3299, TransportProtocol.TCP, "SAProuter", "SAProuter Connection", PortRisk.Medium, "SAP");
+        AddPort(ports, 3298, TransportProtocol.TCP, "SAProuter-NI", "SAProuter NI", PortRisk.Medium, "SAP");
+        AddPort(ports, 3203, TransportProtocol.TCP, "SAP-Dispatcher-03", "SAP Dispatcher (03)", PortRisk.Medium, "SAP");
+        AddPort(ports, 50000, TransportProtocol.TCP, "SAP-Startup", "SAP J2EE HTTP", PortRisk.High, "SAP");
+        AddPort(ports, 50001, TransportProtocol.TCP, "SAP-Startup-HTTPS", "SAP J2EE HTTPS", PortRisk.Low, "SAP");
+        AddPort(ports, 50013, TransportProtocol.TCP, "SAP-StartService", "SAP Start Service HTTP", PortRisk.Medium, "SAP");
+        AddPort(ports, 50014, TransportProtocol.TCP, "SAP-StartService-HTTPS", "SAP Start Service HTTPS", PortRisk.Low, "SAP");
+        AddPort(ports, 4700, TransportProtocol.TCP, "SAP-HANA", "SAP HANA Index Server", PortRisk.Medium, "SAP");
+        AddPort(ports, 30015, TransportProtocol.TCP, "SAP-HANA-SQL", "SAP HANA SQL/MDX", PortRisk.Medium, "SAP");
+        AddPort(ports, 30013, TransportProtocol.TCP, "SAP-HANA-SQL-System", "SAP HANA System DB SQL", PortRisk.Medium, "SAP");
+        AddPort(ports, 30017, TransportProtocol.TCP, "SAP-HANA-HTTP", "SAP HANA HTTP (XS)", PortRisk.High, "SAP");
+        AddPort(ports, 30041, TransportProtocol.TCP, "SAP-HANA-Cockpit", "SAP HANA Cockpit", PortRisk.Medium, "SAP");
+
+        // ===========================================
+        // SERVER MANAGEMENT (iLO, iDRAC, IPMI)
+        // ===========================================
+        AddPort(ports, 17988, TransportProtocol.TCP, "iLO-Virtual-Media", "HPE iLO Virtual Media", PortRisk.Medium, "Management");
+        AddPort(ports, 17990, TransportProtocol.TCP, "iLO-Remote-Console", "HPE iLO Remote Console", PortRisk.Medium, "Management");
+        AddPort(ports, 443, TransportProtocol.TCP, "iLO-HTTPS", "HPE iLO Web HTTPS", PortRisk.Low, "Management");
+        AddPort(ports, 22, TransportProtocol.TCP, "iLO-SSH", "HPE iLO SSH", PortRisk.Low, "Management");
+        AddPort(ports, 80, TransportProtocol.TCP, "iLO-HTTP", "HPE iLO Web HTTP", PortRisk.High, "Management", "Use HTTPS");
+        AddPort(ports, 443, TransportProtocol.TCP, "iDRAC-HTTPS", "Dell iDRAC HTTPS", PortRisk.Low, "Management");
+        AddPort(ports, 5900, TransportProtocol.TCP, "iDRAC-VNC", "Dell iDRAC Virtual Console", PortRisk.Medium, "Management");
+        AddPort(ports, 5901, TransportProtocol.TCP, "iDRAC-VNC-SSL", "Dell iDRAC Virtual Console SSL", PortRisk.Low, "Management");
+        AddPort(ports, 623, TransportProtocol.UDP, "IPMI-RMCP", "IPMI Remote Management", PortRisk.High, "Management", "Vulnerable - isolate");
+        AddPort(ports, 664, TransportProtocol.TCP, "IPMI-Serial", "IPMI Serial Over LAN", PortRisk.High, "Management");
+        AddPort(ports, 443, TransportProtocol.TCP, "IMM-HTTPS", "Lenovo IMM HTTPS", PortRisk.Low, "Management");
+        AddPort(ports, 7578, TransportProtocol.TCP, "IMM-Remote", "Lenovo IMM Remote Presence", PortRisk.Medium, "Management");
+        AddPort(ports, 5120, TransportProtocol.TCP, "IMM-Virtual-Media", "Lenovo IMM Virtual Media", PortRisk.Medium, "Management");
+        AddPort(ports, 8889, TransportProtocol.TCP, "Supermicro-IPMI", "Supermicro IPMI", PortRisk.High, "Management");
+
+        // ===========================================
+        // ADDITIONAL VPN VENDORS
+        // ===========================================
+        AddPort(ports, 541, TransportProtocol.TCP, "FortiGate-Admin", "FortiGate Management", PortRisk.Medium, "VPN");
+        AddPort(ports, 10443, TransportProtocol.TCP, "FortiGate-SSL-VPN", "FortiGate SSL VPN", PortRisk.Low, "VPN");
+        AddPort(ports, 8443, TransportProtocol.TCP, "PaloAlto-HTTPS", "Palo Alto Management", PortRisk.Low, "VPN");
+        AddPort(ports, 443, TransportProtocol.TCP, "PaloAlto-GP", "Palo Alto GlobalProtect", PortRisk.Low, "VPN");
+        AddPort(ports, 4443, TransportProtocol.TCP, "F5-SSL-VPN", "F5 BIG-IP SSL VPN", PortRisk.Low, "VPN");
+        AddPort(ports, 943, TransportProtocol.TCP, "OpenVPN-AS-Admin", "OpenVPN Access Server Admin", PortRisk.Medium, "VPN");
+        AddPort(ports, 1195, TransportProtocol.UDP, "OpenVPN-Alt", "OpenVPN Alternate", PortRisk.Low, "VPN");
+        AddPort(ports, 500, TransportProtocol.UDP, "Check-Point-IKE", "Check Point IKE", PortRisk.Low, "VPN");
+        AddPort(ports, 264, TransportProtocol.TCP, "Check-Point-FWA", "Check Point FWA", PortRisk.Medium, "VPN");
+        AddPort(ports, 18181, TransportProtocol.TCP, "Check-Point-CPMI", "Check Point Management", PortRisk.Medium, "VPN");
+        AddPort(ports, 18182, TransportProtocol.TCP, "Check-Point-CPMI-ALT", "Check Point Mgmt Alt", PortRisk.Medium, "VPN");
+        AddPort(ports, 18183, TransportProtocol.TCP, "Check-Point-Log", "Check Point Log Server", PortRisk.Medium, "VPN");
+        AddPort(ports, 18184, TransportProtocol.TCP, "Check-Point-CPCA", "Check Point CA", PortRisk.Medium, "VPN");
+        AddPort(ports, 18191, TransportProtocol.TCP, "Check-Point-CPD", "Check Point CPD", PortRisk.Medium, "VPN");
+        AddPort(ports, 18192, TransportProtocol.TCP, "Check-Point-CPRID", "Check Point CPRID", PortRisk.Medium, "VPN");
+        AddPort(ports, 19009, TransportProtocol.TCP, "Check-Point-SIC", "Check Point SIC", PortRisk.Medium, "VPN");
+        AddPort(ports, 444, TransportProtocol.TCP, "SonicWall-HTTPS", "SonicWall Management", PortRisk.Low, "VPN");
+        AddPort(ports, 60443, TransportProtocol.TCP, "SonicWall-SSLVPN", "SonicWall SSL VPN", PortRisk.Low, "VPN");
+
+        // ===========================================
+        // ADDITIONAL MICROSOFT SERVICES
+        // ===========================================
+        AddPort(ports, 8530, TransportProtocol.TCP, "SCCM-HTTP", "SCCM/MECM HTTP", PortRisk.Medium, "Microsoft");
+        AddPort(ports, 8531, TransportProtocol.TCP, "SCCM-HTTPS", "SCCM/MECM HTTPS", PortRisk.Low, "Microsoft");
+        AddPort(ports, 10123, TransportProtocol.TCP, "SCCM-CMG", "SCCM Cloud Management Gateway", PortRisk.Low, "Microsoft");
+        AddPort(ports, 10124, TransportProtocol.TCP, "SCCM-CMG-CDP", "SCCM CMG CDP", PortRisk.Low, "Microsoft");
+        AddPort(ports, 4022, TransportProtocol.TCP, "SQL-Service-Broker", "SQL Server Service Broker", PortRisk.Medium, "Microsoft");
+        AddPort(ports, 1431, TransportProtocol.TCP, "SQL-DAC", "SQL Server DAC", PortRisk.Medium, "Microsoft");
+        AddPort(ports, 135, TransportProtocol.TCP, "DCOM-RPC", "DCOM/RPC Endpoint", PortRisk.Medium, "Microsoft");
+        AddPort(ports, 464, TransportProtocol.Both, "Kpasswd", "Kerberos Password Change", PortRisk.Low, "Microsoft");
+        AddPort(ports, 3268, TransportProtocol.TCP, "AD-GC", "Active Directory GC", PortRisk.Medium, "Microsoft");
+        AddPort(ports, 3269, TransportProtocol.TCP, "AD-GC-SSL", "Active Directory GC SSL", PortRisk.Low, "Microsoft");
+        AddPort(ports, 9389, TransportProtocol.TCP, "ADWS", "AD Web Services", PortRisk.Medium, "Microsoft");
+        AddPort(ports, 5722, TransportProtocol.TCP, "DFS-R", "DFS Replication", PortRisk.Medium, "Microsoft");
+        AddPort(ports, 1801, TransportProtocol.TCP, "MSMQ", "Microsoft Message Queue", PortRisk.Medium, "Microsoft");
+        AddPort(ports, 2103, TransportProtocol.TCP, "MSMQ-RPC", "MSMQ RPC", PortRisk.Medium, "Microsoft");
+        AddPort(ports, 2105, TransportProtocol.TCP, "MSMQ-Remote", "MSMQ Remote Read", PortRisk.Medium, "Microsoft");
+        AddPort(ports, 2107, TransportProtocol.TCP, "MSMQ-Mgmt", "MSMQ Management", PortRisk.Medium, "Microsoft");
+
+        // ===========================================
+        // IOT & SMART DEVICES
+        // ===========================================
+        AddPort(ports, 5683, TransportProtocol.UDP, "CoAP", "Constrained Application Protocol", PortRisk.Medium, "IoT");
+        AddPort(ports, 5684, TransportProtocol.UDP, "CoAPs", "CoAP over DTLS", PortRisk.Low, "IoT");
+        AddPort(ports, 6668, TransportProtocol.TCP, "IoT-Gateway", "Generic IoT Gateway", PortRisk.Medium, "IoT");
+        AddPort(ports, 8266, TransportProtocol.TCP, "ESP8266", "ESP8266 OTA Update", PortRisk.High, "IoT");
+        AddPort(ports, 4840, TransportProtocol.TCP, "OPC-UA-IoT", "OPC UA for IoT", PortRisk.Medium, "IoT");
+        AddPort(ports, 1400, TransportProtocol.TCP, "Sonos", "Sonos Speaker Control", PortRisk.Medium, "IoT");
+        AddPort(ports, 8008, TransportProtocol.TCP, "Chromecast", "Google Chromecast", PortRisk.Medium, "IoT");
+        AddPort(ports, 8009, TransportProtocol.TCP, "Chromecast-Cast", "Google Cast Protocol", PortRisk.Medium, "IoT");
+        AddPort(ports, 8443, TransportProtocol.TCP, "UniFi-Controller", "Ubiquiti UniFi Controller", PortRisk.Low, "IoT");
+        AddPort(ports, 8080, TransportProtocol.TCP, "UniFi-HTTP", "UniFi Controller HTTP", PortRisk.High, "IoT");
+        AddPort(ports, 6789, TransportProtocol.TCP, "UniFi-Mobile", "UniFi Mobile Speed Test", PortRisk.Medium, "IoT");
+        AddPort(ports, 10001, TransportProtocol.UDP, "UniFi-Discovery", "UniFi Device Discovery", PortRisk.Medium, "IoT");
+        AddPort(ports, 3702, TransportProtocol.UDP, "WS-Discovery", "Web Services Discovery", PortRisk.Medium, "IoT");
+        AddPort(ports, 21027, TransportProtocol.UDP, "Syncthing", "Syncthing Discovery", PortRisk.Medium, "IoT");
+        AddPort(ports, 22000, TransportProtocol.TCP, "Syncthing-Transfer", "Syncthing File Transfer", PortRisk.Medium, "IoT");
+
+        // ===========================================
+        // GAME SERVERS (for detecting gaming traffic)
+        // ===========================================
+        AddPort(ports, 27015, TransportProtocol.UDP, "Steam-Game", "Steam Game Server", PortRisk.Low, "Gaming");
+        AddPort(ports, 27016, TransportProtocol.UDP, "Steam-Game-Alt", "Steam Game Server Alt", PortRisk.Low, "Gaming");
+        AddPort(ports, 27017, TransportProtocol.UDP, "Steam-Master", "Steam Master Server", PortRisk.Low, "Gaming");
+        AddPort(ports, 3074, TransportProtocol.Both, "Xbox-Live", "Xbox Live", PortRisk.Low, "Gaming");
+        AddPort(ports, 3478, TransportProtocol.UDP, "PlayStation-PSN", "PlayStation Network", PortRisk.Low, "Gaming");
+        AddPort(ports, 3479, TransportProtocol.UDP, "PlayStation-PSN-Alt", "PlayStation Network Alt", PortRisk.Low, "Gaming");
+        AddPort(ports, 3480, TransportProtocol.UDP, "PlayStation-PSN-2", "PlayStation Network 2", PortRisk.Low, "Gaming");
+        AddPort(ports, 25565, TransportProtocol.TCP, "Minecraft", "Minecraft Server", PortRisk.Low, "Gaming");
+        AddPort(ports, 19132, TransportProtocol.UDP, "Minecraft-Bedrock", "Minecraft Bedrock", PortRisk.Low, "Gaming");
+
+        // ===========================================
+        // MISCELLANEOUS ENTERPRISE
+        // ===========================================
+        AddPort(ports, 1270, TransportProtocol.TCP, "SCOM-Agent", "SCOM Agent", PortRisk.Medium, "Enterprise");
+        AddPort(ports, 1433, TransportProtocol.TCP, "SQL-Browser", "SQL Server Browser", PortRisk.Medium, "Enterprise");
+        AddPort(ports, 2701, TransportProtocol.TCP, "SMS-Remote", "SMS Remote Control", PortRisk.Medium, "Enterprise");
+        AddPort(ports, 5985, TransportProtocol.TCP, "WS-Mgmt", "WS-Management HTTP", PortRisk.Medium, "Enterprise");
+        AddPort(ports, 5986, TransportProtocol.TCP, "WS-Mgmt-HTTPS", "WS-Management HTTPS", PortRisk.Low, "Enterprise");
+        AddPort(ports, 9998, TransportProtocol.TCP, "Splunk-Collect", "Splunk Data Collection", PortRisk.Medium, "Enterprise");
+        AddPort(ports, 8880, TransportProtocol.TCP, "WebSphere-SOAP", "WebSphere SOAP Connector", PortRisk.Medium, "Enterprise");
+        AddPort(ports, 9060, TransportProtocol.TCP, "WebSphere-Admin", "WebSphere Admin Console", PortRisk.Medium, "Enterprise");
+        AddPort(ports, 9043, TransportProtocol.TCP, "WebSphere-Admin-SSL", "WebSphere Admin SSL", PortRisk.Low, "Enterprise");
+        AddPort(ports, 7001, TransportProtocol.TCP, "WebLogic", "Oracle WebLogic", PortRisk.Medium, "Enterprise");
+        AddPort(ports, 7002, TransportProtocol.TCP, "WebLogic-SSL", "Oracle WebLogic SSL", PortRisk.Low, "Enterprise");
+        AddPort(ports, 4848, TransportProtocol.TCP, "GlassFish", "GlassFish Admin", PortRisk.Medium, "Enterprise");
+        AddPort(ports, 8161, TransportProtocol.TCP, "ActiveMQ-Web", "Apache ActiveMQ Web", PortRisk.Medium, "Enterprise");
+        AddPort(ports, 61616, TransportProtocol.TCP, "ActiveMQ-OpenWire", "Apache ActiveMQ OpenWire", PortRisk.Medium, "Enterprise");
 
         // Build frozen dictionaries for fast lookup
         _portDatabase = ports.ToFrozenDictionary();

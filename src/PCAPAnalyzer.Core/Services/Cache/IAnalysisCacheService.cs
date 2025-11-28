@@ -96,5 +96,13 @@ namespace PCAPAnalyzer.Core.Services.Cache
         /// </summary>
         /// <param name="cancellationToken">Cancellation token</param>
         Task OptimizeDatabaseAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Clears ALL cache entries from the database.
+        /// Used on app startup and Clear button to ensure fresh state.
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Number of entries deleted</returns>
+        Task<int> ClearAllCacheAsync(CancellationToken cancellationToken = default);
     }
 }

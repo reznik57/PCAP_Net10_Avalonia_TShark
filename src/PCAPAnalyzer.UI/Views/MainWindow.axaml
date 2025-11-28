@@ -23,6 +23,10 @@
         <ns2:StageProgressVisibilityConverter x:Key="StageProgressVisibilityConverter" />
         <ns2:BoolToTextConverter x:Key="BoolToTextConverter" />
         <ns2:BoolToOpacityConverter x:Key="BoolToOpacityConverter" />
+        <ns2:ThroughputModeConverter x:Key="ThroughputModeConverter" />
+        <ns2:PortTimelineCountConverter x:Key="PortTimelineCountConverter" />
+        <ns2:TrafficIntensityGradientConverter x:Key="TrafficIntensityGradientConverter" />
+        <ns2:PercentageToWidthConverter x:Key="PercentageToWidthConverter" />
     </Window.Resources>
 
     <Window.Styles>
@@ -44,6 +48,11 @@
             <Setter Property="FontSize" Value="32" />
             <Setter Property="FontWeight" Value="Bold" />
             <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+        <Style Selector="ScrollViewer.fixed-height-table">
+            <Setter Property="Height" Value="440"/>
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
         </Style>
     </Window.Styles>
 
@@ -189,7 +198,7 @@
                     </StackPanel>
                 </TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="{DynamicResource BackgroundDarkest}">
-                    <Grid Margin="24" RowDefinitions="Auto,16,Auto,16,Auto,16,Auto">
+                    <Grid Margin="24" RowDefinitions="Auto,16,Auto,16,Auto,16,Auto,16,Auto">
                         <!-- ✅ CLEANUP: FileSelectionControl removed (now in File Manager tab with awesome progress panel) -->
 
                         <!-- Row 0: Filter Panel UserControl -->
@@ -200,13 +209,14 @@
 
                         <!-- Row 4: Packets Over Time Chart (filtered packets only) -->
                         <Border Grid.Row="4" Background="#0D1117" CornerRadius="8" BorderBrush="#30363D" BorderThickness="1"
-                                MinHeight="320" IsVisible="{Binding Charts.HasPacketData}">
-                            <Grid RowDefinitions="Auto,*,Auto">
+                                MinHeight="340" IsVisible="{Binding Charts.HasPacketData}">
+                            <Grid RowDefinitions="Auto,Auto,*,Auto">
                                 <!-- Chart Header -->
                                 <Border Grid.Row="0" Background="#161B22" CornerRadius="8,8,0,0" BorderBrush="#30363D" BorderThickness="0,0,0,1" Padding="0">
                                     <Grid Margin="20,12">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
@@ -216,7 +226,29 @@
                                                 <TextBlock Text="{Binding Charts.FilteredPacketCount, StringFormat='{}Filtered: {0:N0}'}" FontSize="11" Foreground="#58A6FF" FontWeight="Medium"/>
                                             </Border>
                                         </StackPanel>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                        <!-- Toggle Buttons: Packets/Throughput and Top5/Top10 -->
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="0,0,12,0" VerticalAlignment="Center">
+                                            <ToggleButton IsChecked="{Binding Charts.ShowStreamActivityAsThroughput}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="10,4" CornerRadius="4" ToolTip.Tip="Toggle Packets/Throughput">
+                                                <TextBlock FontSize="11" Foreground="#8B949E">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}{0}">
+                                                            <Binding Path="Charts.ShowStreamActivityAsThroughput" Converter="{StaticResource ThroughputModeConverter}"/>
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                            </ToggleButton>
+                                            <ToggleButton IsChecked="{Binding Charts.ShowTop10Streams}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="10,4" CornerRadius="4" ToolTip.Tip="Toggle Top 5/Top 10">
+                                                <TextBlock FontSize="11" Foreground="#8B949E">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}{0}">
+                                                            <Binding Path="Charts.ShowTop10Streams" Converter="{StaticResource PortTimelineCountConverter}"/>
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                            </ToggleButton>
+                                        </StackPanel>
+                                        <!-- Zoom Buttons -->
+                                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                                             <Button Command="{Binding Charts.ZoomInPacketsTimelineCommand}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom In">
                                                 <TextBlock Text="🔍+" FontSize="12" Foreground="#8B949E"/>
                                             </Button>
@@ -230,27 +262,175 @@
                                     </Grid>
                                 </Border>
 
-                                <!-- Chart -->
-                                <lvc:CartesianChart Grid.Row="1"
+                                <!-- Custom Interactive Legend (horizontal, above chart) - Two-line format for streams -->
+                                <Border Grid.Row="1" Background="#161B22" CornerRadius="6" Margin="20,10,20,0" Padding="12,6">
+                                    <Grid ColumnDefinitions="Auto,*">
+                                        <TextBlock Grid.Column="0" Text="Series:" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <ItemsControl Grid.Column="1" ItemsSource="{Binding Charts.LegendItems}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <WrapPanel Orientation="Horizontal"/>
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Margin="4,2" Padding="8,5" CornerRadius="4" Cursor="Hand" BorderThickness="1" ToolTip.Tip="{Binding Name}">
+                                                        <Border.Background>
+                                                            <SolidColorBrush Color="{Binding Color}" Opacity="0.15"/>
+                                                        </Border.Background>
+                                                        <Border.BorderBrush>
+                                                            <SolidColorBrush Color="{Binding Color}" Opacity="0.4"/>
+                                                        </Border.BorderBrush>
+                                                        <Border.Styles>
+                                                            <Style Selector="Border:pointerover">
+                                                                <Setter Property="Opacity" Value="0.8"/>
+                                                            </Style>
+                                                        </Border.Styles>
+                                                        <Grid ColumnDefinitions="Auto,Auto,Auto">
+                                                            <CheckBox Grid.Column="0" IsChecked="{Binding IsVisible}" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                                                            <Border Grid.Column="1" Width="14" Height="3" CornerRadius="1.5" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                                <Border.Background>
+                                                                    <SolidColorBrush Color="{Binding Color}"/>
+                                                                </Border.Background>
+                                                            </Border>
+                                                            <!-- Two-line layout for streams, single line for Total -->
+                                                            <StackPanel Grid.Column="2" Orientation="Vertical" Spacing="1" VerticalAlignment="Center">
+                                                                <!-- Line 1: Source IP (or "Total" for non-streams) - colored to match series -->
+                                                                <TextBlock Text="{Binding SourceIP, FallbackValue='Total', TargetNullValue='Total'}"
+                                                                           FontSize="11" FontWeight="SemiBold" Foreground="{Binding ColorBrush}"/>
+                                                                <!-- Line 2: Arrow + Dest IP (hidden for Total) - dimmed series color -->
+                                                                <TextBlock IsVisible="{Binding IsStream}" FontSize="10" Foreground="{Binding ColorBrushDimmed}">
+                                                                    <Run Text="→ "/><Run Text="{Binding DestIP}"/>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Chart with interactive hover/click -->
+                                <lvc:CartesianChart Grid.Row="2"
                                     x:Name="PacketsOverTimeChart"
                                     Series="{Binding Charts.PacketsOverTimeSeries}"
                                     XAxes="{Binding Charts.PacketsOverTimeXAxes}"
                                     YAxes="{Binding Charts.PacketsOverTimeYAxes}"
                                     ZoomMode="None"
-                                    Height="220"
-                                    Margin="20,10,20,5"
+                                    Height="200"
+                                    Margin="20,8,20,5"
                                     TooltipPosition="Hidden"
-                                    AnimationsSpeed="00:00:00.5"/>
+                                    AnimationsSpeed="00:00:00.5"
+                                    PointerMoved="OnPacketsChartPointerMoved"
+                                    PointerExited="OnPacketsChartPointerExited"
+                                    PointerPressed="OnPacketsChartPointerPressed"
+                                    LegendPosition="Hidden"/>
 
-                                <!-- Tooltip Bar -->
-                                <Border Grid.Row="2" Height="30" Margin="20,0,20,10" Background="#1C2128" CornerRadius="6" BorderBrush="#30363D" BorderThickness="1">
-                                    <TextBlock Text="{Binding Charts.PacketsOverTimeTooltip}" FontSize="11" FontWeight="Medium" Foreground="#F0F6FC" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,0"/>
+                                <!-- Tooltip Bar with colored inline text (shows Total + Top 5 streams) -->
+                                <Border Grid.Row="3" Height="36" Margin="20,0,20,10" Background="#1C2128" CornerRadius="6" BorderBrush="#30363D" BorderThickness="1">
+                                    <TextBlock x:Name="PacketsOverTimeTooltipText" FontSize="11" FontWeight="Medium" Foreground="#F0F6FC" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
                                 </Border>
                             </Grid>
                         </Border>
 
-                        <!-- Row 6: Packet Table UserControl -->
-                        <ctrl:PacketTableControl Grid.Row="6" DataContext="{Binding}" />
+                        <!-- Row 6: Top Streams Tables (exact copy of Dashboard Top Connections) -->
+                        <Grid Grid.Row="6" Margin="0,0,0,24" IsVisible="{Binding Charts.HasPacketData}">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+
+                            <!-- By Packets -->
+                            <Border Grid.Column="0" Classes="modern-card-unified" Margin="0,0,12,0">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                                    <Border Grid.Row="0" Classes="table-header-unified">
+                                        <Grid Margin="20,0">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#06B6D4" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Streams by Packets" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                        </Grid>
+                                    </Border>
+                                    <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                        <ItemsControl ItemsSource="{Binding Charts.TopStreamsByPackets}" Margin="0,8,0,8">
+                                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Classes="ranked-table-row">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="220"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                            <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2">
+                                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                    <TextBlock FontSize="11" Foreground="#F0F6FC"><Run Text="{Binding SourceIP}"/><Run Text=":" Foreground="#8B949E"/><Run Text="{Binding SourcePort}" Foreground="#06B6D4"/></TextBlock>
+                                                                    <TextBlock Text="{Binding ServiceName}" FontSize="9" Foreground="#8B5CF6" VerticalAlignment="Center" IsVisible="{Binding ServiceName.Length}"/>
+                                                                </StackPanel>
+                                                                <TextBlock FontSize="10" Foreground="#8B949E"><Run Text="↔ "/><Run Text="{Binding DestinationIP}"/><Run Text=":"/><Run Text="{Binding DestPort}" Foreground="#06B6D4"/></TextBlock>
+                                                            </StackPanel>
+                                                            <Grid Grid.Column="2" Margin="8,0">
+                                                                <Border Classes="percentage-track">
+                                                                    <Grid>
+                                                                        <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                        <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                                    </Grid>
+                                                                </Border>
+                                                            </Grid>
+                                                            <TextBlock Grid.Column="3" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="12" FontWeight="SemiBold" Foreground="#06B6D4" HorizontalAlignment="Right"/>
+                                                            <Button Grid.Column="4" Command="{Binding $parent[Window].DataContext.Charts.ShowStreamDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Border>
+
+                            <!-- By Bytes -->
+                            <Border Grid.Column="1" Classes="modern-card-unified" Margin="12,0,0,0">
+                                <Grid>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                                    <Border Grid.Row="0" Classes="table-header-unified">
+                                        <Grid Margin="20,0">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#14B8A6" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Streams by Bytes" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                        </Grid>
+                                    </Border>
+                                    <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
+                                        <ItemsControl ItemsSource="{Binding Charts.TopStreamsByBytes}" Margin="0,8,0,8">
+                                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Classes="ranked-table-row">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions><ColumnDefinition Width="30"/><ColumnDefinition Width="220"/><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/><ColumnDefinition Width="60"/></Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
+                                                            <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2">
+                                                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                                                    <TextBlock FontSize="11" Foreground="#F0F6FC"><Run Text="{Binding SourceIP}"/><Run Text=":" Foreground="#8B949E"/><Run Text="{Binding SourcePort}" Foreground="#14B8A6"/></TextBlock>
+                                                                    <TextBlock Text="{Binding ServiceName}" FontSize="9" Foreground="#8B5CF6" VerticalAlignment="Center" IsVisible="{Binding ServiceName.Length}"/>
+                                                                </StackPanel>
+                                                                <TextBlock FontSize="10" Foreground="#8B949E"><Run Text="↔ "/><Run Text="{Binding DestinationIP}"/><Run Text=":"/><Run Text="{Binding DestPort}" Foreground="#14B8A6"/></TextBlock>
+                                                            </StackPanel>
+                                                            <Grid Grid.Column="2" Margin="8,0">
+                                                                <Border Classes="percentage-track">
+                                                                    <Grid>
+                                                                        <Border Background="{Binding Percentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=130}"/>
+                                                                        <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
+                                                                    </Grid>
+                                                                </Border>
+                                                            </Grid>
+                                                            <TextBlock Grid.Column="3" Text="{Binding ByteCountFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#14B8A6" HorizontalAlignment="Right"/>
+                                                            <Button Grid.Column="4" Command="{Binding $parent[Window].DataContext.Charts.ShowStreamDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                </Grid>
+                            </Border>
+                        </Grid>
+
+                        <!-- Row 8: Packet Table UserControl -->
+                        <ctrl:PacketTableControl Grid.Row="8" DataContext="{Binding}" />
                     </Grid>
                 </ScrollViewer>
             </TabItem>
@@ -324,6 +504,109 @@
                  Progress now handled exclusively by FileSelectionControl in File Manager tab.
                  This prevents the "popup keeps reappearing" bug by eliminating duplicate code paths.
                  See: docs/ARCHITECTURE_REVIEW_2025-01-19.md - Critical Issue C1 -->
+
+            <!-- Stream Analysis Popup Overlay (for Packets Over Time chart click - stream-focused) -->
+            <Border Background="#80000000" IsVisible="{Binding Charts.IsStreamPopupOpen}"
+                    PointerPressed="OnStreamPopupBackgroundPressed">
+                <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Background="#0D1117" CornerRadius="8" BorderBrush="#30363D" BorderThickness="1"
+                        MinWidth="400" MaxWidth="500" Padding="16"
+                        DataContext="{Binding Charts.StreamPopupViewModel}">
+                    <StackPanel Spacing="16">
+                        <!-- Header -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="{Binding TimeDisplay, StringFormat='Time: {0}'}"
+                                       FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                            <Button Grid.Column="1" Command="{Binding CloseCommand}"
+                                    Background="Transparent" BorderThickness="0" Foreground="#8B949E"
+                                    FontSize="14" Padding="4" Cursor="Hand" Content="✕">
+                                <Button.Styles>
+                                    <Style Selector="Button:pointerover">
+                                        <Setter Property="Foreground" Value="#F0F6FC"/>
+                                    </Style>
+                                </Button.Styles>
+                            </Button>
+                        </Grid>
+
+                        <!-- Traffic Summary -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="TRAFFIC SUMMARY" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
+                            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
+                                <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="Packets:" Foreground="#8B949E" FontSize="12"/>
+                                    <TextBlock Text="{Binding TotalPackets, StringFormat='{}{0:N0}'}" Foreground="#F0F6FC" FontSize="12" FontWeight="SemiBold"/>
+                                </StackPanel>
+                                <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="Traffic:" Foreground="#8B949E" FontSize="12"/>
+                                    <TextBlock Text="{Binding TotalBytesDisplay}" Foreground="#F0F6FC" FontSize="12" FontWeight="SemiBold"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Top Streams -->
+                        <StackPanel Spacing="8" IsVisible="{Binding Streams.Count}">
+                            <TextBlock Text="TOP STREAMS" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
+                            <ItemsControl ItemsSource="{Binding Streams}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="Transparent" Padding="4,4" Margin="0,2" IsVisible="{Binding IsValid}">
+                                            <Grid ColumnDefinitions="Auto,*,80,80">
+                                                <!-- Color indicator -->
+                                                <Border Grid.Column="0" Width="4" CornerRadius="2" Margin="0,0,10,0" VerticalAlignment="Stretch">
+                                                    <Border.Background>
+                                                        <SolidColorBrush Color="{Binding Color}"/>
+                                                    </Border.Background>
+                                                </Border>
+                                                <!-- Stream name -->
+                                                <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="12" Foreground="#58A6FF"
+                                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                                                <!-- Packet count -->
+                                                <TextBlock Grid.Column="2" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}"
+                                                           FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                                <!-- Bytes -->
+                                                <TextBlock Grid.Column="3" Text="{Binding DisplayBytes}" FontSize="11" Foreground="#8B949E"
+                                                           HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <!-- Action Buttons -->
+                        <Border Background="#161B22" CornerRadius="4" Padding="8">
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                <Button Command="{Binding CopyCommand}" Background="#21262D" BorderBrush="#30363D" BorderThickness="1"
+                                        CornerRadius="4" Padding="12,6" Cursor="Hand" Content="Copy">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover">
+                                            <Setter Property="Background" Value="#30363D"/>
+                                        </Style>
+                                    </Button.Styles>
+                                </Button>
+                                <Button Command="{Binding CloseCommand}" Background="#238636" BorderThickness="0"
+                                        CornerRadius="4" Padding="12,6" Cursor="Hand" Content="Close" Foreground="White">
+                                    <Button.Styles>
+                                        <Style Selector="Button:pointerover">
+                                            <Setter Property="Background" Value="#2EA043"/>
+                                        </Style>
+                                    </Button.Styles>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+            </Border>
+
+            <!-- DrillDown Detail Popup Overlay (for Top Streams Details - Dashboard-style) -->
+            <!-- Click on dark overlay closes the popup -->
+            <Border Background="#80000000" IsVisible="{Binding Charts.DrillDown.IsVisible}"
+                    PointerPressed="OnDrillDownOverlayPressed">
+                <Border HorizontalAlignment="Center" VerticalAlignment="Center"
+                        PointerPressed="OnDrillDownPopupPressed">
+                    <ns4:DrillDownPopupView DataContext="{Binding Charts.DrillDown}"/>
+                </Border>
+            </Border>
         </Grid>
     </DockPanel>
 </Window>

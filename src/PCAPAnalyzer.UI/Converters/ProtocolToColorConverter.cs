@@ -46,7 +46,7 @@ public class ProtocolToColorConverter : IMultiValueConverter
             if (l7Upper == "TLS" || l7Upper == "SSL") return TlsBrush;
             if (l7Upper == "DNS" || l7Upper == "MDNS") return DnsBrush;
             if (l7Upper == "SSH") return SshBrush;
-            if (l7Upper.StartsWith("FTP")) return FtpBrush;
+            if (l7Upper.StartsWith("FTP", StringComparison.Ordinal)) return FtpBrush;
             if (l7Upper == "SMTP" || l7Upper == "IMAP" || l7Upper == "POP3") return SmtpBrush;
             if (l7Upper == "SIP") return SipBrush;
             if (l7Upper == "RTP" || l7Upper == "RTCP") return RtpBrush;
@@ -173,8 +173,8 @@ public class BookmarkVisibilityConverter : IMultiValueConverter
 }
 
 /// <summary>
-/// Calculates time delta from first packet in collection.
-/// Shows elapsed time since first packet on current page.
+/// Calculates time delta from first packet in the filtered dataset.
+/// Shows elapsed time since first packet on the first page (absolute reference).
 /// </summary>
 public class TimeDeltaConverter : IMultiValueConverter
 {
@@ -182,24 +182,11 @@ public class TimeDeltaConverter : IMultiValueConverter
     {
         if (values.Count < 2) return "";
 
-        // Values: 0 = packet timestamp, 1 = packets collection
+        // Values: 0 = packet timestamp, 1 = first packet timestamp (DateTime?)
         if (values[0] is not DateTime timestamp) return "";
-        if (values[1] is not System.Collections.IEnumerable collection) return "";
+        if (values[1] is not DateTime firstTimestamp) return "";
 
-        // Get first packet timestamp from collection
-        DateTime? firstTimestamp = null;
-        foreach (var item in collection)
-        {
-            if (item is PacketInfo pkt)
-            {
-                firstTimestamp = pkt.Timestamp;
-                break;
-            }
-        }
-
-        if (firstTimestamp == null) return "";
-
-        var delta = timestamp - firstTimestamp.Value;
+        var delta = timestamp - firstTimestamp;
 
         // Format based on magnitude
         if (delta.TotalSeconds < 1)

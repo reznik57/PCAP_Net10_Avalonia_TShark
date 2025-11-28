@@ -24,7 +24,7 @@
 
         <!-- Top Pane: Packet Table -->
         <Border Grid.Row="0" Classes="modern-card-unified" Margin="0,0,0,0" MinHeight="300" Padding="0">
-        <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
+        <Grid RowDefinitions="Auto,Auto,Auto,*">
             <Border Grid.Row="0" Classes="table-header-unified">
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
@@ -37,43 +37,8 @@
                 </Grid>
             </Border>
 
-            <!-- Quick Protocol Filters -->
-            <Border Grid.Row="1" Background="#0D1117" Padding="12,8" BorderBrush="#21262D" BorderThickness="0,0,0,1">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="Quick Filter:" FontSize="11" Foreground="#8B949E" VerticalAlignment="Center" Margin="0,0,4,0"/>
-                    <Button x:Name="FilterAllBtn" Content="All" Click="QuickFilter_Click" Tag=""
-                            FontSize="10" Padding="10,4" MinWidth="40" CornerRadius="4"
-                            Background="#238636" Foreground="White" FontWeight="SemiBold"
-                            ToolTip.Tip="Show all packets (clear filter)"/>
-                    <Button x:Name="FilterTcpBtn" Content="TCP" Click="QuickFilter_Click" Tag="TCP"
-                            FontSize="10" Padding="10,4" MinWidth="40" CornerRadius="4"
-                            Background="#21262D" Foreground="#3FB950" FontWeight="SemiBold"
-                            ToolTip.Tip="Show only TCP packets"/>
-                    <Button x:Name="FilterUdpBtn" Content="UDP" Click="QuickFilter_Click" Tag="UDP"
-                            FontSize="10" Padding="10,4" MinWidth="40" CornerRadius="4"
-                            Background="#21262D" Foreground="#58A6FF" FontWeight="SemiBold"
-                            ToolTip.Tip="Show only UDP packets"/>
-                    <Button x:Name="FilterHttpBtn" Content="HTTP" Click="QuickFilter_Click" Tag="HTTP"
-                            FontSize="10" Padding="10,4" MinWidth="45" CornerRadius="4"
-                            Background="#21262D" Foreground="#A371F7" FontWeight="SemiBold"
-                            ToolTip.Tip="Show only HTTP/HTTPS packets"/>
-                    <Button x:Name="FilterDnsBtn" Content="DNS" Click="QuickFilter_Click" Tag="DNS"
-                            FontSize="10" Padding="10,4" MinWidth="40" CornerRadius="4"
-                            Background="#21262D" Foreground="#FFA657" FontWeight="SemiBold"
-                            ToolTip.Tip="Show only DNS packets"/>
-                    <Button x:Name="FilterTlsBtn" Content="TLS" Click="QuickFilter_Click" Tag="TLS"
-                            FontSize="10" Padding="10,4" MinWidth="40" CornerRadius="4"
-                            Background="#21262D" Foreground="#C69026" FontWeight="SemiBold"
-                            ToolTip.Tip="Show only TLS/SSL packets"/>
-                    <Button x:Name="FilterIcmpBtn" Content="ICMP" Click="QuickFilter_Click" Tag="ICMP"
-                            FontSize="10" Padding="10,4" MinWidth="45" CornerRadius="4"
-                            Background="#21262D" Foreground="#F78166" FontWeight="SemiBold"
-                            ToolTip.Tip="Show only ICMP packets"/>
-                </StackPanel>
-            </Border>
-
             <!-- Pagination Controls -->
-            <Border Grid.Row="2" Classes="pagination-controls">
+            <Border Grid.Row="1" Classes="pagination-controls">
                 <Grid ColumnDefinitions="*,Auto,*">
                     <!-- Left side: Empty spacer -->
                     <Border Grid.Column="0"/>
@@ -140,7 +105,7 @@
             </Border>
 
             <!-- Column Headers -->
-            <Border Grid.Row="3" Background="#0D1117" BorderBrush="#21262D" BorderThickness="0,0,0,1" Padding="20,8,20,8">
+            <Border Grid.Row="2" Background="#0D1117" BorderBrush="#21262D" BorderThickness="0,0,0,1" Padding="20,8,20,8">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="110"/>  <!-- Frame Number -->
@@ -158,7 +123,7 @@
 
                     <TextBlock Grid.Column="0" Text="FRAME #" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     <TextBlock Grid.Column="1" Text="TIME" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="2" Text="DELTA" FontSize="10" FontWeight="SemiBold" Foreground="#22C55E" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="Time since first packet on page"/>
+                    <TextBlock Grid.Column="2" Text="DELTA" FontSize="10" FontWeight="SemiBold" Foreground="#22C55E" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="Time since first packet in filter"/>
                     <TextBlock Grid.Column="3" Text="SOURCE IP" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     <TextBlock Grid.Column="4" Text="SRC PORT" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     <TextBlock Grid.Column="5" Text="DESTINATION IP" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
@@ -171,7 +136,7 @@
             </Border>
 
             <!-- Packet List (ItemsControl) with keyboard navigation -->
-            <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="600"
+            <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxHeight="600"
                           Focusable="True" x:Name="PacketScrollViewer" KeyDown="PacketList_KeyDown">
                 <ItemsControl ItemsSource="{Binding Packets}" Margin="0,8,0,8">
                     <ItemsControl.ItemTemplate>
@@ -233,12 +198,12 @@
                                             <TextBlock Text="{Binding FrameNumber, StringFormat='{}{0:N0}'}" FontSize="11" FontWeight="Medium" Foreground="#8B949E"/>
                                         </StackPanel>
                                         <TextBlock Grid.Column="1" Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}" FontSize="12" Foreground="#C9D1D9" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                        <!-- Delta Time Column -->
+                                        <!-- Delta Time Column (relative to first packet in dataset) -->
                                         <TextBlock Grid.Column="2" FontSize="11" Foreground="#22C55E" HorizontalAlignment="Left" VerticalAlignment="Center">
                                             <TextBlock.Text>
                                                 <MultiBinding Converter="{StaticResource TimeDeltaConverter}">
                                                     <Binding Path="Timestamp"/>
-                                                    <Binding Path="DataContext.Packets" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
+                                                    <Binding Path="DataContext.PacketManager.FirstPacketTimestamp" RelativeSource="{RelativeSource AncestorType=UserControl}"/>
                                                 </MultiBinding>
                                             </TextBlock.Text>
                                         </TextBlock>

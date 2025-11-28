@@ -38,16 +38,19 @@ public static class NumberFormatter
     }
 
     /// <summary>
-    /// Formats TimeSpan to HH:MM:SS or MM:SS depending on duration.
-    /// Uses shorter format for durations under 1 hour.
+    /// Formats TimeSpan to HH:MM:SS format for capture durations.
+    /// Always shows full format for clarity.
     /// </summary>
     /// <param name="timeSpan">TimeSpan to format</param>
-    /// <returns>Formatted time string</returns>
+    /// <returns>Formatted time string in HH:MM:SS format</returns>
     public static string FormatTimeSpan(TimeSpan timeSpan)
     {
-        return timeSpan.TotalHours >= 1
-            ? timeSpan.ToString(@"hh\:mm\:ss")
-            : timeSpan.ToString(@"mm\:ss");
+        // Always use full format for capture duration clarity
+        // For very long captures (24+ hours), show total hours
+        if (timeSpan.TotalHours >= 24)
+            return $"{(int)timeSpan.TotalHours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
+
+        return timeSpan.ToString(@"hh\:mm\:ss");
     }
 
     /// <summary>

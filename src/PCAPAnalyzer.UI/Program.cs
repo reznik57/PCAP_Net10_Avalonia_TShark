@@ -1,6 +1,7 @@
 using Avalonia;
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -43,8 +44,13 @@ public static class Program
             }
             
             // Redirect standard output to console
-            Console.SetOut(new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true });
-            Console.SetError(new StreamWriter(Console.OpenStandardError()) { AutoFlush = true });
+            // Note: These StreamWriters intentionally not disposed - they're set as Console streams for app lifetime
+#pragma warning disable CA2000 // Dispose objects before losing scope - StreamWriters are intentionally kept for app lifetime as Console streams
+            var stdOutWriter = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
+            var stdErrWriter = new StreamWriter(Console.OpenStandardError()) { AutoFlush = true };
+#pragma warning restore CA2000
+            Console.SetOut(stdOutWriter);
+            Console.SetError(stdErrWriter);
         }
         
         // Set up global exception handlers FIRST
@@ -146,9 +152,9 @@ Inner Stack:
         
         try
         {
-            var tsharkService = new TSharkService(NullLogger<TSharkService>.Instance);
-            var cts = new CancellationTokenSource();
-            
+            using var tsharkService = new TSharkService(NullLogger<TSharkService>.Instance);
+            using var cts = new CancellationTokenSource();
+
             // Get total packet count
             DebugLogger.Log("[CLI] Getting packet count...");
             var totalPackets = await tsharkService.GetTotalPacketCountAsync(pcapFile);

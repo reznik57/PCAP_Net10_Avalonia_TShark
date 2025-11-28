@@ -206,22 +206,26 @@
                 <StackPanel Spacing="20">
                     <TextBlock Text="📂 File Upload &amp; Analysis" Classes="SectionHeader" HorizontalAlignment="Center"/>
 
-                    <!-- Clickable File Upload Area -->
-                    <Button Command="{Binding BrowseCommand}"
-                            Background="#0D1117"
-                            BorderBrush="#58A6FF"
+                    <!-- Clickable File Upload Area with Drag & Drop Support -->
+                    <!-- Command switches between Browse and Cancel based on countdown state -->
+                    <Button Command="{Binding BrowseOrCancelCommand}"
+                            Background="{Binding IsCountdownActive, Converter={x:Static converters:BoolToColorConverter.CountdownBackground}}"
+                            BorderBrush="{Binding IsCountdownActive, Converter={x:Static converters:BoolToColorConverter.CountdownBorder}}"
                             BorderThickness="2"
                             CornerRadius="8"
                             Padding="32,24"
                             HorizontalAlignment="Stretch"
                             Cursor="Hand"
-                            HorizontalContentAlignment="Stretch">
+                            HorizontalContentAlignment="Stretch"
+                            DragDrop.AllowDrop="True"
+                            DragDrop.DragOver="OnDragOver"
+                            DragDrop.Drop="OnDrop">
                         <Button.Styles>
                             <Style Selector="Button">
                                 <Setter Property="Transitions">
                                     <Transitions>
-                                        <BrushTransition Property="Background" Duration="0:0:0.15"/>
-                                        <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                                        <BrushTransition Property="Background" Duration="0:0:0.25"/>
+                                        <BrushTransition Property="BorderBrush" Duration="0:0:0.25"/>
                                         <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
                                     </Transitions>
                                 </Setter>
@@ -238,16 +242,59 @@
                         </Button.Styles>
 
                         <Grid RowDefinitions="Auto,Auto">
-                            <!-- Browse Icon & Message (when no file) -->
+                            <!-- COUNTDOWN OVERLAY - shown when countdown active -->
+                            <StackPanel Grid.Row="0"
+                                        Grid.RowSpan="2"
+                                        IsVisible="{Binding IsCountdownActive}"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Spacing="8">
+                                <!-- Large countdown number with pulsing opacity animation -->
+                                <TextBlock Text="{Binding CountdownDisplay}"
+                                          FontSize="72"
+                                          FontWeight="Bold"
+                                          Foreground="White"
+                                          HorizontalAlignment="Center">
+                                    <TextBlock.Styles>
+                                        <Style Selector="TextBlock">
+                                            <Style.Animations>
+                                                <Animation Duration="0:0:1" IterationCount="Infinite">
+                                                    <KeyFrame Cue="0%">
+                                                        <Setter Property="Opacity" Value="1.0"/>
+                                                    </KeyFrame>
+                                                    <KeyFrame Cue="50%">
+                                                        <Setter Property="Opacity" Value="0.5"/>
+                                                    </KeyFrame>
+                                                    <KeyFrame Cue="100%">
+                                                        <Setter Property="Opacity" Value="1.0"/>
+                                                    </KeyFrame>
+                                                </Animation>
+                                            </Style.Animations>
+                                        </Style>
+                                    </TextBlock.Styles>
+                                </TextBlock>
+                                <TextBlock Text="Starting analysis..."
+                                          FontSize="16"
+                                          FontWeight="SemiBold"
+                                          Foreground="#FFC9C9"
+                                          HorizontalAlignment="Center"/>
+                                <TextBlock Text="Click anywhere to cancel"
+                                          FontSize="12"
+                                          Foreground="#FF9999"
+                                          HorizontalAlignment="Center"
+                                          Margin="0,8,0,0"/>
+                            </StackPanel>
+
+                            <!-- Browse Icon & Message (when no file AND no countdown) -->
                             <StackPanel Grid.Row="0"
                                        Spacing="12"
                                        HorizontalAlignment="Center"
-                                       IsVisible="{Binding !HasFile}">
+                                       IsVisible="{Binding ShowBrowseMessage}">
                                 <TextBlock Text="📁"
                                           FontSize="48"
                                           HorizontalAlignment="Center"
                                           Opacity="0.8"/>
-                                <TextBlock Text="Click anywhere to browse for PCAP file"
+                                <TextBlock Text="Click to browse or drag &amp; drop PCAP file"
                                           FontSize="16"
                                           FontWeight="Medium"
                                           Foreground="#58A6FF"
@@ -259,8 +306,9 @@
                             </StackPanel>
 
                             <!-- ✅ REDESIGNED: Selected File Info (centered, harmonized layout) -->
+                            <!-- Hidden during countdown to show countdown overlay instead -->
                             <StackPanel Grid.Row="0"
-                                        IsVisible="{Binding HasFile}"
+                                        IsVisible="{Binding ShowFileInfo}"
                                         HorizontalAlignment="Center"
                                         MaxWidth="700">
 
@@ -281,7 +329,7 @@
 
                                 <!-- Secondary: File size (medium prominence) -->
                                 <TextBlock HorizontalAlignment="Center"
-                                          Margin="0,0,0,12">
+                                          Margin="0,0,0,8">
                                     <Run Text="💾"
                                          FontSize="14"/>
                                     <Run Text="{Binding FileSizeFormatted}"
@@ -290,12 +338,24 @@
                                          Foreground="#58A6FF"/>
                                 </TextBlock>
 
-                                <!-- Tertiary: Metadata row (timestamps + status) -->
+                                <!-- Capture Time Range (prominent, own line) -->
+                                <TextBlock HorizontalAlignment="Center"
+                                          Margin="0,0,0,12"
+                                          IsVisible="{Binding CaptureTimeRange, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                    <Run Text="📡" FontSize="16"/>
+                                    <Run Text=" "/>
+                                    <Run Text="{Binding CaptureTimeRange}"
+                                         FontSize="16"
+                                         FontWeight="SemiBold"
+                                         Foreground="#58A6FF"/>
+                                </TextBlock>
+
+                                <!-- Tertiary: Metadata row (file timestamps) -->
                                 <StackPanel Orientation="Horizontal"
                                             HorizontalAlignment="Center"
                                             Spacing="24">
 
-                                    <!-- Created timestamp -->
+                                    <!-- File Created timestamp (European format) -->
                                     <StackPanel Orientation="Horizontal"
                                                 Spacing="6">
                                         <TextBlock Text="📅"
@@ -306,13 +366,13 @@
                                                   Foreground="#8B949E"
                                                   VerticalAlignment="Center">
                                             <Run Text="Created:"/>
-                                            <Run Text="{Binding FileCreatedDate, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"
+                                            <Run Text="{Binding FileCreatedDate, StringFormat='{}{0:dd.MM.yyyy HH:mm:ss}'}"
                                                  Foreground="#2EA043"
                                                  FontWeight="Medium"/>
                                         </TextBlock>
                                     </StackPanel>
 
-                                    <!-- Modified timestamp -->
+                                    <!-- File Modified timestamp (European format) -->
                                     <StackPanel Orientation="Horizontal"
                                                 Spacing="6">
                                         <TextBlock Text="🕐"
@@ -323,7 +383,7 @@
                                                   Foreground="#8B949E"
                                                   VerticalAlignment="Center">
                                             <Run Text="Modified:"/>
-                                            <Run Text="{Binding FileModifiedDate, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}"
+                                            <Run Text="{Binding FileModifiedDate, StringFormat='{}{0:dd.MM.yyyy HH:mm:ss}'}"
                                                  Foreground="#F78166"
                                                  FontWeight="Medium"/>
                                         </TextBlock>
@@ -363,17 +423,14 @@
                                 Command="{Binding AnalyzeCommand}"
                                 Classes="ActionButton Primary"
                                 IsEnabled="{Binding CanAnalyze}"
+                                IsVisible="{Binding !IsCountdownActive}"
                                 MinWidth="120"/>
                         <Button Content="🗑️ Clear"
                                 Command="{Binding ClearCommand}"
                                 Classes="ActionButton Secondary"
                                 IsEnabled="{Binding HasFile}"
                                 MinWidth="100"/>
-                        <Button Content="📄 Export Report"
-                                Command="{Binding ExportReportCommand}"
-                                Classes="ActionButton Secondary"
-                                IsEnabled="{Binding IsAnalysisComplete}"
-                                MinWidth="140"/>
+                        <!-- Export Report button removed per user request -->
                     </StackPanel>
 
                     <!-- Last Analysis Info -->
@@ -416,17 +473,6 @@
                                     <StackPanel Spacing="2">
                                         <TextBlock Text="Elapsed" FontSize="10" Foreground="#8B949E" HorizontalAlignment="Center"/>
                                         <TextBlock Text="{Binding ElapsedTimeFormatted}"
-                                                  FontSize="12"
-                                                  FontWeight="Medium"
-                                                  Foreground="#C9D1D9"
-                                                  HorizontalAlignment="Center"/>
-                                    </StackPanel>
-
-                                    <TextBlock Text="•" Foreground="#8B949E" VerticalAlignment="Center"/>
-
-                                    <StackPanel Spacing="2">
-                                        <TextBlock Text="ETA" FontSize="10" Foreground="#8B949E" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="{Binding EstimatedTimeRemaining}"
                                                   FontSize="12"
                                                   FontWeight="Medium"
                                                   Foreground="#C9D1D9"
@@ -537,7 +583,22 @@
             <!-- ✅ FIX: Visible when file loaded OR analysis complete (OR logic in ShouldShowStages property) -->
             <Border Classes="Card" IsVisible="{Binding ShouldShowStages}">
                 <StackPanel Spacing="12">
-                    <TextBlock Text="📊 Analysis Stages" Classes="SectionHeader"/>
+                    <!-- Header with optional capture time range -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" Text="📊 Analysis Stages" Classes="SectionHeader"/>
+                        <!-- PCAP Capture Time Period (shown when available) -->
+                        <TextBlock Grid.Column="1"
+                                  IsVisible="{Binding CaptureTimeRange, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                                  VerticalAlignment="Center"
+                                  Margin="0,0,0,12">
+                            <Run Text="📡" FontSize="14"/>
+                            <Run Text=" "/>
+                            <Run Text="{Binding CaptureTimeRange}"
+                                 FontSize="14"
+                                 FontWeight="SemiBold"
+                                 Foreground="#58A6FF"/>
+                        </TextBlock>
+                    </Grid>
 
                     <!-- ✅ FIX: Added ScrollViewer to ensure all 7 stages are visible -->
                     <ScrollViewer HorizontalScrollBarVisibility="Disabled"

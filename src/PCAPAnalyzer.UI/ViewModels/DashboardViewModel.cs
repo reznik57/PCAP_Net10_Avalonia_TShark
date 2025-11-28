@@ -886,13 +886,13 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             }
             if (FilterLinkLocalToggle)
             {
-                smartFilters.Add(p => p.SourceIP.StartsWith("169.254.") || p.DestinationIP.StartsWith("169.254.") ||
-                                      p.SourceIP.StartsWith("fe80:") || p.DestinationIP.StartsWith("fe80:"));
+                smartFilters.Add(p => p.SourceIP.StartsWith("169.254.", StringComparison.Ordinal) || p.DestinationIP.StartsWith("169.254.", StringComparison.Ordinal) ||
+                                      p.SourceIP.StartsWith("fe80:", StringComparison.Ordinal) || p.DestinationIP.StartsWith("fe80:", StringComparison.Ordinal));
                 filterDescriptions.Add("Link-Local");
             }
             if (FilterLoopbackToggle)
             {
-                smartFilters.Add(p => p.SourceIP.StartsWith("127.") || p.DestinationIP.StartsWith("127.") ||
+                smartFilters.Add(p => p.SourceIP.StartsWith("127.", StringComparison.Ordinal) || p.DestinationIP.StartsWith("127.", StringComparison.Ordinal) ||
                                       p.SourceIP == "::1" || p.DestinationIP == "::1");
                 filterDescriptions.Add("Loopback");
             }

@@ -150,8 +150,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         Filter.DisplayCountChanged += OnDisplayCountChanged;
         UIState.ContinentChanged += OnContinentChanged;
 
-        // Initialize GeoIP service
-        _ = _geoIPService.InitializeAsync();
+        // GeoIP service is initialized via DI (ServiceConfiguration.cs) - no duplicate init needed
 
         // Subscribe to filter service changes
         if (_filterService != null)

@@ -23,6 +23,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
         private readonly ConcurrentDictionary<string, CachedGeoLocation> _cache = new();
         private readonly GeoIPConfiguration _configuration;
         private readonly ILogger? _logger;
+        private readonly System.Threading.SemaphoreSlim _initLock = new(1, 1);
         private bool _isInitialized;
         private bool _disposed;
 
@@ -122,26 +123,43 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
 
         public async Task InitializeAsync()
         {
+            // Fast path: already initialized (no lock needed)
             if (_isInitialized) return;
 
-            DebugLogger.Log($"[UnifiedGeoIPService] Initializing {_providers.Count} provider(s)");
-
-            foreach (var provider in _providers)
+            // Acquire lock to prevent race condition with concurrent callers
+            await _initLock.WaitAsync().ConfigureAwait(false);
+            try
             {
-                try
+                // Double-check after acquiring lock (another thread may have completed init)
+                if (_isInitialized)
                 {
-                    var success = await provider.InitializeAsync();
-                    DebugLogger.Log($"[UnifiedGeoIPService] Provider {provider.ProviderName}: {(success ? "SUCCESS" : "FAILED")}");
+                    DebugLogger.Log("[UnifiedGeoIPService] ⚡ InitializeAsync: Already initialized (after lock)");
+                    return;
                 }
-                catch (Exception ex)
-                {
-                    DebugLogger.Log($"[UnifiedGeoIPService] Provider {provider.ProviderName} initialization error: {ex.Message}");
-                }
-            }
 
-            _isInitialized = true;
-            var readyCount = _providers.Count(p => p.IsReady);
-            DebugLogger.Log($"[UnifiedGeoIPService] Initialization complete: {readyCount}/{_providers.Count} providers ready");
+                DebugLogger.Log($"[UnifiedGeoIPService] Initializing {_providers.Count} provider(s)");
+
+                foreach (var provider in _providers)
+                {
+                    try
+                    {
+                        var success = await provider.InitializeAsync().ConfigureAwait(false);
+                        DebugLogger.Log($"[UnifiedGeoIPService] Provider {provider.ProviderName}: {(success ? "SUCCESS" : "FAILED")}");
+                    }
+                    catch (Exception ex)
+                    {
+                        DebugLogger.Log($"[UnifiedGeoIPService] Provider {provider.ProviderName} initialization error: {ex.Message}");
+                    }
+                }
+
+                _isInitialized = true;
+                var readyCount = _providers.Count(p => p.IsReady);
+                DebugLogger.Log($"[UnifiedGeoIPService] Initialization complete: {readyCount}/{_providers.Count} providers ready");
+            }
+            finally
+            {
+                _initLock.Release();
+            }
         }
 
         public async Task<GeoLocation?> GetLocationAsync(string ipAddress)
@@ -404,11 +422,13 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             DebugLogger.Log($"[UnifiedGeoIPService] PARALLEL IP lookups complete: {successCount}/{uniqueIPs.Count} IPs resolved in {lookupElapsed:F2}s ({(uniqueIPs.Count / lookupElapsed):F0} lookups/s)");
 
             // ✅ DIAGNOSTIC: Report cache performance after lookups
+            // Note: Use resolved IPs vs unique IPs for accurate hit calculation
+            // (Don't use _cacheMissCount - it may include concurrent flow analysis lookups)
             var postCacheStats = GetCacheStatistics();
-            var cacheMisses = _cacheMissCount;
-            var cacheHits = uniqueIPs.Count - cacheMisses;
-            var hitRate = uniqueIPs.Count > 0 ? (double)cacheHits / uniqueIPs.Count * 100 : 0;
-            DebugLogger.Log($"[GeoIP Cache] 📊 POST-LOOKUP Stats: {postCacheStats.TotalEntries} entries, {cacheHits}/{uniqueIPs.Count} hits ({hitRate:F1}%), {cacheMisses} misses");
+            var actualResolved = ipToCountry.Count;  // IPs successfully resolved
+            var actualMisses = uniqueIPs.Count - actualResolved;  // IPs that failed to resolve
+            var hitRate = uniqueIPs.Count > 0 ? (double)actualResolved / uniqueIPs.Count * 100 : 0;
+            DebugLogger.Log($"[GeoIP Cache] 📊 POST-LOOKUP Stats: {postCacheStats.TotalEntries} entries, {actualResolved}/{uniqueIPs.Count} resolved ({hitRate:F1}%), {actualMisses} failed");
 
             // Analyze packets by country using parallel processing
             var aggregationStart = DateTime.Now;
@@ -925,6 +945,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
 
             _cache.Clear();
             _providers.Clear();
+            _initLock.Dispose();
             DebugLogger.Log("[UnifiedGeoIPService] Disposed asynchronously");
 
             _disposed = true;
@@ -963,6 +984,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
 
                 _cache.Clear();
                 _providers.Clear();
+                _initLock.Dispose();
                 DebugLogger.Log("[UnifiedGeoIPService] Disposed synchronously (aggressive cleanup)");
             }
 

@@ -697,6 +697,31 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         var startTime = DateTime.Now;
         DebugLogger.Log("[PopulateViewModels] Populating all tabs via coordinator...");
 
+        // Update UI state
+        UIState.HasResults = true;
+        EnhancedFilterViewModel.IsAnalyzing = false;
+        EnhancedFilterViewModel.CanApplyFilters = true;
+
+        // ✅ PACKET LIST: Populate packet list for Packet Analysis tab
+        if (PacketManager != null)
+        {
+            await PacketManager.PopulateFullPacketListAsync(result.Statistics);
+            PacketManager.ApplyFilter(new PacketFilter());
+            var filteredCount = PacketManager.GetFilteredPackets().Count;
+            UIState.UpdatePaginationInfo(filteredCount);
+            UIState.GoToPage(1);
+            UpdatePacketAnalysisStats();
+        }
+
+        // ✅ CHARTS: Update charts with statistics from TShark service
+        var packetStats = _tsharkService.GetStatistics();
+        Charts.UpdateCharts(packetStats);
+        if (PacketManager != null)
+        {
+            var filteredPackets = PacketManager.GetFilteredPackets();
+            Charts.UpdatePacketsOverTimeChart(filteredPackets);
+        }
+
         // ✅ COORDINATOR: Parallel tab population (Dashboard, Threats, VoiceQoS, CountryTraffic)
         if (_analysisCoordinator != null)
         {
@@ -798,8 +823,31 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
                 DebugLogger.Log($"[OnFileAnalysisCompleted] ✓ Inserted {args.Packets.Count:N0} packets into store in {(DateTime.Now - insertStart).TotalSeconds:F2}s");
             }
 
-            // Populate all tabs using existing OnAnalysisCompleted logic
-            OnAnalysisCompleted(this, args.Statistics);
+            // ✅ PERFORMANCE FIX: Use cached AnalysisResult for fast parallel tab population (~1s vs ~27s)
+            var cachedResult = _sessionCache.Get();
+            if (cachedResult != null)
+            {
+                var tabPopStart = DateTime.Now;
+                DebugLogger.Log("[OnFileAnalysisCompleted] ⚡ Using cached AnalysisResult for fast tab population");
+
+                // Report tab loading progress
+                FileAnalysisViewModel?.ReportTabLoadingProgress(0, "Populating tabs from cache...");
+
+                await PopulateViewModelsFromCacheAsync(cachedResult);
+
+                // Complete analysis stage
+                FileAnalysisViewModel?.ReportTabLoadingProgress(100, "Tabs populated");
+                FileAnalysisViewModel?.CompleteAnalysis();
+
+                var tabPopElapsed = (DateTime.Now - tabPopStart).TotalSeconds;
+                DebugLogger.Log($"[OnFileAnalysisCompleted] ⚡ Fast tab population completed in {tabPopElapsed:F2}s");
+            }
+            else
+            {
+                // Fallback to legacy path if cache miss (shouldn't happen normally)
+                DebugLogger.Log("[OnFileAnalysisCompleted] ⚠️ Cache miss - using legacy OnAnalysisCompleted (slow path)");
+                OnAnalysisCompleted(this, args.Statistics);
+            }
 
             // Calculate quick stats (deferred for performance)
             if (FileAnalysisViewModel != null && args.Packets != null)
@@ -810,6 +858,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             // CRITICAL FIX: Enable tabs after loading completes
             DebugLogger.Log($"[MainWindowViewModel] 🔓 Enabling tabs access (CanAccessAnalysisTabs = true)");
             UIState.CanAccessAnalysisTabs = true;
+            UIState.HasResults = true;
             UIState.UpdateStatus($"Analysis complete: {args.Packets?.Count ?? 0:N0} packets analyzed", "#4ADE80");
 
             DebugLogger.Log($"[MainWindowViewModel] ✓ Results propagated in {args.TotalDuration.TotalSeconds:F2}s - Tabs enabled");
@@ -897,101 +946,119 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
                 var filteredPacketsForChart = PacketManager.GetFilteredPackets();
                 Charts.UpdatePacketsOverTimeChart(filteredPacketsForChart);
 
-                // Phase 2: Dashboard (second tab - heavy statistics calculation) - 15-40% of tab loading
-                FileAnalysisViewModel?.ReportTabLoadingProgress(15, "Loading Dashboard tab...");
-                var phase2Start = DateTime.Now;
-                DebugLogger.Log($"[{phase2Start:HH:mm:ss.fff}] [TAB-ANALYSIS] Phase 2/6: Dashboard - Starting...");
-                Analysis.ReportTabProgress(Analysis.GetDashboardStageKey(), 0, "Calculating dashboard statistics...");
+                // ═══════════════════════════════════════════════════════════════════════════════
+                // PARALLEL TAB LOADING - Phases 2-5 run concurrently for ~65% time reduction
+                // Dependencies: CountryTraffic needs Dashboard's enriched stats, so they run sequentially
+                // Independent: Threats, Anomaly, VoiceQoS can run in parallel with Dashboard chain
+                // ═══════════════════════════════════════════════════════════════════════════════
 
-                // Update charts with current statistics
+                FileAnalysisViewModel?.ReportTabLoadingProgress(15, "Loading tabs in parallel...");
+                var parallelStart = DateTime.Now;
+                var packets = PacketManager.GetFilteredPackets().ToList();
+                DebugLogger.Log($"[{parallelStart:HH:mm:ss.fff}] [TAB-ANALYSIS] ═══ PARALLEL PHASE START ═══ ({packets.Count:N0} packets)");
+
+                // Update charts with current statistics (quick, do first)
                 var stats = _tsharkService.GetStatistics();
-                Analysis.ReportTabProgress(Analysis.GetDashboardStageKey(), 30, "Updating charts...");
                 Charts.UpdateCharts(stats);
 
-                Analysis.ReportTabProgress(Analysis.GetDashboardStageKey(), 60, "Loading dashboard data...");
-                await UpdateDashboardAsync(forceUpdate: true);
-                var phase2Elapsed = (DateTime.Now - phase2Start).TotalSeconds;
-                DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [TAB-ANALYSIS] Phase 2/6: Dashboard - Completed in {phase2Elapsed:F2}s");
-                Analysis.CompleteTabStage(Analysis.GetDashboardStageKey(), $"Dashboard ready ({phase2Elapsed:F1}s)");
-                FileAnalysisViewModel?.ReportTabLoadingProgress(40, "Dashboard loaded");
-
-                // Phase 3: Security Threats (third tab) - 40-60% of tab loading
-                FileAnalysisViewModel?.ReportTabLoadingProgress(40, "Loading Security Threats tab...");
-                var phase3Start = DateTime.Now;
-                DebugLogger.Log($"[{phase3Start:HH:mm:ss.fff}] [TAB-ANALYSIS] Phase 3/6: Security Threats - Starting...");
-                Analysis.ReportTabProgress(Analysis.GetThreatsStageKey(), 0, "Scanning for threats...");
-                if (ThreatsViewModel != null)
+                // ─── Task A: Dashboard → CountryTraffic (sequential chain) ───
+                var dashboardCountryTask = Task.Run(async () =>
                 {
-                    var packets = PacketManager.GetFilteredPackets().ToList();
-                    DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [TAB-ANALYSIS] Security Threats analyzing {packets.Count:N0} packets...");
-                    Analysis.ReportTabProgress(Analysis.GetThreatsStageKey(), 40, "Analyzing threats...");
-                    await ThreatsViewModel.UpdateThreatsAsync(packets);
-                }
-                var phase3Elapsed = (DateTime.Now - phase3Start).TotalSeconds;
-                DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [TAB-ANALYSIS] Phase 3/6: Security Threats - Completed in {phase3Elapsed:F2}s");
-                Analysis.CompleteTabStage(Analysis.GetThreatsStageKey(), $"Threats detected ({phase3Elapsed:F1}s)");
-                FileAnalysisViewModel?.ReportTabLoadingProgress(60, "Security Threats loaded");
+                    var taskStart = DateTime.Now;
+                    DebugLogger.Log($"[{taskStart:HH:mm:ss.fff}] [PARALLEL] Task A: Dashboard+Country - Starting...");
 
-                // Phase 3.5: Anomaly Detection - update AnomalyViewModel and Dashboard summary
-                var anomalyStart = DateTime.Now;
-                DebugLogger.Log($"[{anomalyStart:HH:mm:ss.fff}] [TAB-ANALYSIS] Anomaly Detection - Starting...");
-                var anomalyPackets = PacketManager.GetFilteredPackets().ToList();
-                var detectedAnomalies = await _anomalyService.DetectAllAnomaliesAsync(anomalyPackets);
-                DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [TAB-ANALYSIS] Anomaly Detection - Detected {detectedAnomalies.Count} anomalies");
+                    // Dashboard first
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
+                    {
+                        await UpdateDashboardAsync(forceUpdate: true);
+                    });
+                    var dashboardElapsed = (DateTime.Now - taskStart).TotalSeconds;
+                    DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [PARALLEL] Task A: Dashboard completed in {dashboardElapsed:F2}s");
 
-                // Update AnomalyViewModel
-                if (AnomalyViewModel != null)
+                    // Country Traffic after Dashboard (needs enriched stats)
+                    if (CountryTrafficViewModel != null)
+                    {
+                        await Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            CountryTrafficViewModel.SetPackets(packets);
+                            var enrichedStats = DashboardViewModel?.CurrentStatistics ?? statistics;
+                            await CountryTrafficViewModel.UpdateStatistics(enrichedStats);
+                        });
+                    }
+                    var totalElapsed = (DateTime.Now - taskStart).TotalSeconds;
+                    DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [PARALLEL] Task A: Dashboard+Country completed in {totalElapsed:F2}s");
+                    return totalElapsed;
+                });
+
+                // ─── Task B: Security Threats ───
+                var threatsTask = Task.Run(async () =>
                 {
-                    AnomalyViewModel.UpdateAnomalies(detectedAnomalies);
-                }
+                    var taskStart = DateTime.Now;
+                    DebugLogger.Log($"[{taskStart:HH:mm:ss.fff}] [PARALLEL] Task B: Threats - Starting ({packets.Count:N0} packets)...");
 
-                // Update Dashboard AnomalySummary widget
-                if (DashboardViewModel != null)
+                    if (ThreatsViewModel != null)
+                    {
+                        await ThreatsViewModel.UpdateThreatsAsync(packets);
+                    }
+
+                    var elapsed = (DateTime.Now - taskStart).TotalSeconds;
+                    DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [PARALLEL] Task B: Threats completed in {elapsed:F2}s");
+                    return elapsed;
+                });
+
+                // ─── Task C: Anomaly Detection ───
+                var anomalyTask = Task.Run(async () =>
                 {
-                    DashboardViewModel.UpdateAnomalySummary(detectedAnomalies);
-                }
+                    var taskStart = DateTime.Now;
+                    DebugLogger.Log($"[{taskStart:HH:mm:ss.fff}] [PARALLEL] Task C: Anomaly - Starting ({packets.Count:N0} packets)...");
 
-                var anomalyElapsed = (DateTime.Now - anomalyStart).TotalSeconds;
-                DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [TAB-ANALYSIS] Anomaly Detection - Completed in {anomalyElapsed:F2}s");
+                    var detectedAnomalies = await _anomalyService.DetectAllAnomaliesAsync(packets);
+                    DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [PARALLEL] Task C: Anomaly detected {detectedAnomalies.Count} anomalies");
 
-                // Phase 4: Voice/QoS Analysis (fourth tab) - 60-80% of tab loading
-                FileAnalysisViewModel?.ReportTabLoadingProgress(60, "Loading Voice/QoS tab...");
-                var phase4Start = DateTime.Now;
-                DebugLogger.Log($"[{phase4Start:HH:mm:ss.fff}] [TAB-ANALYSIS] Phase 4/6: Voice/QoS - Starting...");
-                Analysis.ReportTabProgress(Analysis.GetVoiceQoSStageKey(), 0, "Analyzing QoS traffic...");
-                if (VoiceQoSViewModel != null)
+                    // Update ViewModels on UI thread
+                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    {
+                        AnomalyViewModel?.UpdateAnomalies(detectedAnomalies);
+                        DashboardViewModel?.UpdateAnomalySummary(detectedAnomalies);
+                    });
+
+                    var elapsed = (DateTime.Now - taskStart).TotalSeconds;
+                    DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [PARALLEL] Task C: Anomaly completed in {elapsed:F2}s");
+                    return elapsed;
+                });
+
+                // ─── Task D: VoiceQoS Analysis ───
+                var voiceQoSTask = Task.Run(async () =>
                 {
-                    var packets = PacketManager.GetFilteredPackets().ToList();
-                    DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [TAB-ANALYSIS] Voice/QoS analyzing {packets.Count:N0} packets...");
-                    Analysis.ReportTabProgress(Analysis.GetVoiceQoSStageKey(), 50, "Processing VoIP flows...");
-                    await VoiceQoSViewModel.AnalyzePacketsAsync(packets);
-                }
-                var phase4Elapsed = (DateTime.Now - phase4Start).TotalSeconds;
-                DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [TAB-ANALYSIS] Phase 4/6: Voice/QoS - Completed in {phase4Elapsed:F2}s");
-                Analysis.CompleteTabStage(Analysis.GetVoiceQoSStageKey(), $"VoIP analysis complete ({phase4Elapsed:F1}s)");
-                FileAnalysisViewModel?.ReportTabLoadingProgress(80, "Voice/QoS loaded");
+                    var taskStart = DateTime.Now;
+                    DebugLogger.Log($"[{taskStart:HH:mm:ss.fff}] [PARALLEL] Task D: VoiceQoS - Starting ({packets.Count:N0} packets)...");
 
-                // Phase 5: Country Traffic Analysis (fifth tab) - 80-95% of tab loading
-                FileAnalysisViewModel?.ReportTabLoadingProgress(80, "Loading Country Traffic tab...");
-                var phase5Start = DateTime.Now;
-                DebugLogger.Log($"[{phase5Start:HH:mm:ss.fff}] [TAB-ANALYSIS] Phase 5/6: Country Traffic - Starting...");
-                Analysis.ReportTabProgress(Analysis.GetCountryTrafficStageKey(), 0, "Mapping geographic traffic...");
-                if (CountryTrafficViewModel != null)
-                {
-                    var packets = PacketManager.GetFilteredPackets().ToList();
-                    DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [TAB-ANALYSIS] Country Traffic analyzing {packets.Count:N0} packets...");
-                    Analysis.ReportTabProgress(Analysis.GetCountryTrafficStageKey(), 30, "Loading GeoIP data...");
-                    CountryTrafficViewModel.SetPackets(packets);
-                    // CRITICAL: Use enriched statistics from Dashboard (has GeoIP data)
-                    // The preliminary 'statistics' parameter doesn't have country data yet
-                    var enrichedStats = DashboardViewModel?.CurrentStatistics ?? statistics;
-                    Analysis.ReportTabProgress(Analysis.GetCountryTrafficStageKey(), 60, "Building country statistics...");
-                    await CountryTrafficViewModel.UpdateStatistics(enrichedStats);
-                }
-                var phase5Elapsed = (DateTime.Now - phase5Start).TotalSeconds;
-                DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [TAB-ANALYSIS] Phase 5/6: Country Traffic - Completed in {phase5Elapsed:F2}s");
-                Analysis.CompleteTabStage(Analysis.GetCountryTrafficStageKey(), $"Geographic analysis complete ({phase5Elapsed:F1}s)");
-                FileAnalysisViewModel?.ReportTabLoadingProgress(95, "Country Traffic loaded");
+                    if (VoiceQoSViewModel != null)
+                    {
+                        await VoiceQoSViewModel.AnalyzePacketsAsync(packets);
+                    }
+
+                    var elapsed = (DateTime.Now - taskStart).TotalSeconds;
+                    DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [PARALLEL] Task D: VoiceQoS completed in {elapsed:F2}s");
+                    return elapsed;
+                });
+
+                // ═══ Wait for all parallel tasks ═══
+                FileAnalysisViewModel?.ReportTabLoadingProgress(50, "Analyzing Dashboard, Threats, VoiceQoS, Country...");
+                var results = await Task.WhenAll(dashboardCountryTask, threatsTask, anomalyTask, voiceQoSTask);
+
+                var parallelElapsed = (DateTime.Now - parallelStart).TotalSeconds;
+                var sequentialWouldBe = results.Sum();
+                var savedTime = sequentialWouldBe - parallelElapsed;
+                DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [TAB-ANALYSIS] ═══ PARALLEL PHASE COMPLETE ═══");
+                DebugLogger.Log($"[TAB-ANALYSIS] Parallel time: {parallelElapsed:F2}s | Sequential would be: {sequentialWouldBe:F2}s | Saved: {savedTime:F2}s ({(savedTime/sequentialWouldBe*100):F0}%)");
+
+                // Complete stage tracking for UI
+                Analysis.CompleteTabStage(Analysis.GetDashboardStageKey(), $"Dashboard ready");
+                Analysis.CompleteTabStage(Analysis.GetThreatsStageKey(), $"Threats detected");
+                Analysis.CompleteTabStage(Analysis.GetVoiceQoSStageKey(), $"VoIP analysis complete");
+                Analysis.CompleteTabStage(Analysis.GetCountryTrafficStageKey(), $"Geographic analysis complete");
+                FileAnalysisViewModel?.ReportTabLoadingProgress(95, "All tabs loaded");
 
                 // Phase 6: Finalization - AFTER all other stages (95-100% of tab loading)
                 FileAnalysisViewModel?.ReportTabLoadingProgress(95, "Finalizing analysis...");
@@ -1381,17 +1448,17 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             PacketAnalysisStats.AddStat("DEST PORTS", data.TotalDestPorts.ToString("N0", germanCulture), "🔌", "#58A6FF");
         }
 
-        // Stat 5: TCP Conversations (Total + Filtered with percentage)
+        // Stat 5: Streams (Total + Filtered with percentage) - All protocols (TCP + UDP + other)
         if (data.FilterActive)
         {
             var totalConvs = $"Total: {data.TotalConversations.ToString("N0", germanCulture)}";
             var convPct = data.TotalConversations > 0 ? (data.FilteredConversations * 100.0 / data.TotalConversations) : 0.0;
             var filtered = $"Filtered: {data.FilteredConversations.ToString("N0", germanCulture)} ({convPct:F1}%)";
-            PacketAnalysisStats.AddStat("CONVERSATIONS", totalConvs, "💬", "#58A6FF", filtered, "#3FB950");
+            PacketAnalysisStats.AddStat("STREAMS", totalConvs, "💬", "#58A6FF", filtered, "#3FB950");
         }
         else
         {
-            PacketAnalysisStats.AddStat("CONVERSATIONS", data.TotalConversations.ToString("N0", germanCulture), "💬", "#58A6FF");
+            PacketAnalysisStats.AddStat("STREAMS", data.TotalConversations.ToString("N0", germanCulture), "💬", "#58A6FF");
         }
     }
 

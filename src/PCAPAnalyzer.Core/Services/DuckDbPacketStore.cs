@@ -16,7 +16,6 @@ namespace PCAPAnalyzer.Core.Services;
 public sealed class DuckDbPacketStore : IPacketStore
 {
     private const string ThreatConditionSql = "(protocol = 'ICMP' OR src_port IN (445, 139) OR dst_port IN (445, 139) OR LOWER(info) LIKE '%scan%' OR LOWER(info) LIKE '%attack%' OR LOWER(info) LIKE '%malware%' OR LOWER(info) LIKE '%suspicious%')";
-    private const int MaxPageSize = 5000;
 
     private DuckDBConnection? _connection;
     private string _databasePath = string.Empty;
@@ -143,7 +142,7 @@ public sealed class DuckDbPacketStore : IPacketStore
         if (_connection == null)
             throw new InvalidOperationException("Packet store is not initialized");
 
-        var pageSize = query.PageSize <= 0 ? 100 : Math.Min(query.PageSize, MaxPageSize);
+        var pageSize = query.PageSize <= 0 ? 100 : query.PageSize; // No upper limit - let caller decide page size
         var pageNumber = query.PageNumber <= 0 ? 1 : query.PageNumber;
         var includeSummary = query.IncludeSummary;
         var includePackets = query.IncludePackets;

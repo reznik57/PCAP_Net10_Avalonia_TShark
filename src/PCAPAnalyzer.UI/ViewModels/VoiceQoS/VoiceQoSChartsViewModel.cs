@@ -223,7 +223,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                         GeometrySize = 4,
                         GeometryStroke = new SolidColorPaint(SKColor.Parse("#3FB950")) { StrokeThickness = 1.5f },
                         GeometryFill = new SolidColorPaint(SKColor.Parse("#3FB950")),
-                        LineSmoothness = 0.65,
+                        LineSmoothness = 0, // Performance: disabled Bezier curves
                         Stroke = new SolidColorPaint(SKColor.Parse("#3FB950")) { StrokeThickness = 2.5f },
                         Fill = new SolidColorPaint(SKColor.Parse("#3FB950").WithAlpha(15)),
                         ScalesYAt = 0, // Left Y-axis
@@ -248,7 +248,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 4,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#58A6FF")) { StrokeThickness = 2f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#58A6FF")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#58A6FF")) { StrokeThickness = 3f },
                             Fill = null,
                             ScalesYAt = 1, // Right Y-axis
@@ -274,7 +274,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 5,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#1F6FEB")) { StrokeThickness = 2f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#1F6FEB")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#1F6FEB")) { StrokeThickness = 3.5f },
                             Fill = null,
                             ScalesYAt = 1, // Right Y-axis
@@ -300,7 +300,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 4,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#003366")) { StrokeThickness = 2f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#003366")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#003366")) { StrokeThickness = 3f },
                             Fill = null,
                             ScalesYAt = 1, // Right Y-axis
@@ -326,7 +326,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 4,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#FFD700")) { StrokeThickness = 2f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#FFD700")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#FFD700")) { StrokeThickness = 3f },
                             Fill = null,
                             ScalesYAt = 1, // Right Y-axis
@@ -352,7 +352,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 5,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#FF8C00")) { StrokeThickness = 2f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#FF8C00")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#FF8C00")) { StrokeThickness = 3.5f },
                             Fill = null,
                             ScalesYAt = 1, // Right Y-axis
@@ -378,7 +378,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 4,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#DC143C")) { StrokeThickness = 2f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#DC143C")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#DC143C")) { StrokeThickness = 3f },
                             Fill = null,
                             ScalesYAt = 1, // Right Y-axis
@@ -404,7 +404,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 3,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#87CEEB")) { StrokeThickness = 1.5f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#87CEEB")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#87CEEB")) { StrokeThickness = 2f },
                             Fill = null,
                             ScalesYAt = 1,
@@ -430,7 +430,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 3,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#4682B4")) { StrokeThickness = 1.5f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#4682B4")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#4682B4")) { StrokeThickness = 2f },
                             Fill = null,
                             ScalesYAt = 1,
@@ -456,7 +456,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 3,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#FFFACD")) { StrokeThickness = 1.5f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#FFFACD")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#FFFACD")) { StrokeThickness = 2f },
                             Fill = null,
                             ScalesYAt = 1,
@@ -482,7 +482,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 3,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#FF6347")) { StrokeThickness = 1.5f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#FF6347")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#FF6347")) { StrokeThickness = 2f },
                             Fill = null,
                             ScalesYAt = 1,
@@ -587,7 +587,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                         GeometrySize = 4,
                         GeometryStroke = new SolidColorPaint(SKColor.Parse("#3FB950")) { StrokeThickness = 1.5f },
                         GeometryFill = new SolidColorPaint(SKColor.Parse("#3FB950")),
-                        LineSmoothness = 0.65,
+                        LineSmoothness = 0, // Performance: disabled Bezier curves
                         Stroke = new SolidColorPaint(SKColor.Parse("#3FB950")) { StrokeThickness = 2.5f },
                         Fill = new SolidColorPaint(SKColor.Parse("#3FB950").WithAlpha(15)),
                         ScalesYAt = 0, // Left Y-axis
@@ -612,7 +612,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 4,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#58A6FF")) { StrokeThickness = 2f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#58A6FF")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#58A6FF")) { StrokeThickness = 3f },
                             Fill = null,
                             ScalesYAt = 1, // Right Y-axis
@@ -638,7 +638,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 5,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#1F6FEB")) { StrokeThickness = 2f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#1F6FEB")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#1F6FEB")) { StrokeThickness = 3.5f },
                             Fill = null,
                             ScalesYAt = 1, // Right Y-axis
@@ -664,7 +664,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 4,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#003366")) { StrokeThickness = 2f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#003366")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#003366")) { StrokeThickness = 3f },
                             Fill = null,
                             ScalesYAt = 1, // Right Y-axis
@@ -690,7 +690,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 4,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#FFD700")) { StrokeThickness = 2f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#FFD700")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#FFD700")) { StrokeThickness = 3f },
                             Fill = null,
                             ScalesYAt = 1, // Right Y-axis
@@ -716,7 +716,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 5,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#FF8C00")) { StrokeThickness = 2f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#FF8C00")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#FF8C00")) { StrokeThickness = 3.5f },
                             Fill = null,
                             ScalesYAt = 1, // Right Y-axis
@@ -742,7 +742,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 4,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#DC143C")) { StrokeThickness = 2f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#DC143C")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#DC143C")) { StrokeThickness = 3f },
                             Fill = null,
                             ScalesYAt = 1, // Right Y-axis
@@ -768,7 +768,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 3,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#87CEEB")) { StrokeThickness = 1.5f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#87CEEB")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#87CEEB")) { StrokeThickness = 2f },
                             Fill = null,
                             ScalesYAt = 1,
@@ -794,7 +794,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 3,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#4682B4")) { StrokeThickness = 1.5f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#4682B4")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#4682B4")) { StrokeThickness = 2f },
                             Fill = null,
                             ScalesYAt = 1,
@@ -820,7 +820,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 3,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#FFFACD")) { StrokeThickness = 1.5f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#FFFACD")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#FFFACD")) { StrokeThickness = 2f },
                             Fill = null,
                             ScalesYAt = 1,
@@ -846,7 +846,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                             GeometrySize = 3,
                             GeometryStroke = new SolidColorPaint(SKColor.Parse("#FF6347")) { StrokeThickness = 1.5f },
                             GeometryFill = new SolidColorPaint(SKColor.Parse("#FF6347")),
-                            LineSmoothness = 0.65,
+                            LineSmoothness = 0, // Performance: disabled Bezier curves
                             Stroke = new SolidColorPaint(SKColor.Parse("#FF6347")) { StrokeThickness = 2f },
                             Fill = null,
                             ScalesYAt = 1,
@@ -915,7 +915,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                         GeometrySize = 4,
                         GeometryStroke = new SolidColorPaint(SKColor.Parse("#3FB950")) { StrokeThickness = 1.5f },
                         GeometryFill = new SolidColorPaint(SKColor.Parse("#3FB950")),
-                        LineSmoothness = 0.65,
+                        LineSmoothness = 0, // Performance: disabled Bezier curves
                         Stroke = new SolidColorPaint(SKColor.Parse("#3FB950")) { StrokeThickness = 2.5f },
                         ScalesYAt = 0,
                         DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)

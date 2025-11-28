@@ -68,6 +68,12 @@ namespace PCAPAnalyzer.Core.Services.Cache
             return Task.FromResult(0);
         }
 
+        public Task<int> ClearAllCacheAsync(CancellationToken cancellationToken = default)
+        {
+            // No-op - nothing to clear
+            return Task.FromResult(0);
+        }
+
         public Task<long> GetCacheSizeMBAsync(CancellationToken cancellationToken = default)
         {
             // Always return 0 - no cache

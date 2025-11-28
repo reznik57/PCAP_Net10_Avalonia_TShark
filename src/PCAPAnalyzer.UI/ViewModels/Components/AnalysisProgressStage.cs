@@ -18,6 +18,7 @@ public partial class AnalysisProgressStage : ObservableObject
     private DateTime? _startTime;
     private DateTime? _endTime;
     private DispatcherTimer? _elapsedTimer;
+    private int _lastLoggedSecond = -1; // Track last logged 5-second interval
 
     public AnalysisProgressStage(string key, string name, string description, bool showProgressBar = false)
     {
@@ -115,17 +116,22 @@ public partial class AnalysisProgressStage : ObservableObject
 
         _startTime = DateTime.Now;
         _endTime = null;
-        ElapsedTime = string.Empty;
+
+        // ✅ FIX: Show initial "0.0s" immediately so timer doesn't appear stuck
+        ElapsedTime = "0.0s";
 
         DebugLogger.Log($"[TIMING] [{Name}] ⏱️  START TIMING at {_startTime:HH:mm:ss.fff}");
 
-        // Start timer for real-time elapsed time updates (every 500ms)
+        // Start timer for real-time elapsed time updates (every 100ms for responsiveness)
         _elapsedTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromMilliseconds(500)
+            Interval = TimeSpan.FromMilliseconds(100)
         };
         _elapsedTimer.Tick += (s, e) => UpdateElapsedTime();
         _elapsedTimer.Start();
+
+        // ✅ FIX: Force immediate first update to show "0.0s" → "0.1s" quickly
+        UpdateElapsedTime();
     }
 
     /// <summary>
@@ -169,10 +175,12 @@ public partial class AnalysisProgressStage : ObservableObject
 
         var newElapsedTime = Helpers.TimeFormatter.FormatAsSeconds(elapsed);
 
-        // Only update and log if the value changed significantly (avoid spam)
-        if (ElapsedTime != newElapsedTime && elapsed.TotalSeconds % 5 < 0.6) // Log every ~5 seconds
+        // Log only once per 5-second interval (e.g., at 0s, 5s, 10s, 15s...)
+        var currentInterval = (int)(elapsed.TotalSeconds / 5);
+        if (currentInterval != _lastLoggedSecond)
         {
-            DebugLogger.Log($"[TIMING] [{Name}] 🕐 Elapsed: {newElapsedTime} (running for {elapsed.TotalSeconds:F1}s)");
+            _lastLoggedSecond = currentInterval;
+            DebugLogger.Log($"[TIMING] [{Name}] 🕐 Elapsed: {newElapsedTime}");
         }
 
         ElapsedTime = newElapsedTime;
@@ -195,6 +203,7 @@ public partial class AnalysisProgressStage : ObservableObject
 
         _startTime = null;
         _endTime = null;
+        _lastLoggedSecond = -1;
         ElapsedTime = string.Empty;
 
         DebugLogger.Log($"[TIMING] [{Name}] 🔄 RESET TIMING - Previous: {previousElapsedTime ?? "(none)"}, HadStartTime: {hadStartTime}");

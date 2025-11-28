@@ -17,8 +17,9 @@ using PCAPAnalyzer.UI.Services;
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
 /// <summary>
-/// ViewModel for packet details panel displaying protocol tree, hex dump, and flow info.
-/// Manages 3 tabs: Protocol Details, Hex Dump, Flow Info.
+/// ViewModel for packet details panel with 2 tabs:
+/// - Packet Analysis: Quick Summary (instant) + Cleartext Detection + Protocol Layers (on-demand TShark)
+/// - Stream Context: Stream navigation, statistics, security analysis, traffic direction
 /// </summary>
 public partial class PacketDetailsViewModel : ObservableObject
 {
@@ -27,6 +28,7 @@ public partial class PacketDetailsViewModel : ObservableObject
     private readonly PCAPAnalyzer.Core.Services.HexDataService? _hexDataService;
     private readonly StreamAnalyzer _streamAnalyzer;
     private readonly ProtocolDeepDiveService? _deepDiveService;
+    private readonly StreamSecurityAnalyzer _streamSecurityAnalyzer = new();
     private string? _currentPcapPath;
     private IPacketStore? _packetStore;
 
@@ -41,16 +43,16 @@ public partial class PacketDetailsViewModel : ObservableObject
     [ObservableProperty] private bool _hasPacket;
     [ObservableProperty] private string _emptyStateMessage = "Select a packet to view details";
 
-    // Protocol Tree Tab
+    // Packet Analysis Tab - Protocol Layers section
     [ObservableProperty] private ObservableCollection<ProtocolTreeItemViewModel> _protocolTree = new();
 
-    // Hex Dump Tab
+    // Hex data for deep analysis (internal use, no dedicated tab)
     [ObservableProperty] private ObservableCollection<HexDumpLineViewModel> _hexDumpLines = new();
     [ObservableProperty] private bool _hexDumpAvailable;
     [ObservableProperty] private bool _hexDumpLoading;
-    [ObservableProperty] private string _hexDumpPlaceholder = "Click 'Load Hex Dump' to fetch raw packet bytes.\n\nHex dump is loaded on-demand to maintain performance.";
+    [ObservableProperty] private string _hexDumpPlaceholder = "Hex data available for protocol analysis.";
 
-    // Flow Info Tab
+    // Stream Context Tab
     [ObservableProperty] private string _flowStreamId = "--";
     [ObservableProperty] private string _flowConversation = "--";
     [ObservableProperty] private string _flowPacketCount = "--";
@@ -70,6 +72,21 @@ public partial class PacketDetailsViewModel : ObservableObject
     [ObservableProperty] private ObservableCollection<string> _securityWarnings = new();
     [ObservableProperty] private bool _hasSecurityWarnings;
 
+    // Enhanced Security Analysis (StreamSecurityAnalyzer)
+    [ObservableProperty] private int _streamRiskScore;
+    [ObservableProperty] private string _streamRiskScoreDisplay = "0";
+    [ObservableProperty] private string _encryptionStatus = "Unknown";
+    [ObservableProperty] private string _encryptionStatusColor = "#6E7681";
+    [ObservableProperty] private string _encryptionProtocol = "";
+    [ObservableProperty] private bool _beaconingDetected;
+    [ObservableProperty] private string _beaconingInterval = "Not detected";
+    [ObservableProperty] private string _beaconingConfidence = "";
+    [ObservableProperty] private string _beaconingColor = "#22C55E";
+    [ObservableProperty] private string _uploadDownloadRatio = "--";
+    [ObservableProperty] private bool _dataExfiltrationIndicator;
+    [ObservableProperty] private string _exfiltrationColor = "#22C55E";
+    [ObservableProperty] private bool _hasEnhancedSecurityAnalysis;
+
     // Directional Metrics
     [ObservableProperty] private string _clientTraffic = "--";
     [ObservableProperty] private string _serverTraffic = "--";
@@ -83,13 +100,20 @@ public partial class PacketDetailsViewModel : ObservableObject
     [ObservableProperty] private bool _canNavigatePrevious;
     [ObservableProperty] private bool _canNavigateNext;
 
-    // Protocol Deep Dive Tab
+    // Packet Analysis Tab - Protocol Layers (TShark deep dissection)
     [ObservableProperty] private bool _deepDiveAvailable;
     [ObservableProperty] private bool _deepDiveLoading;
     [ObservableProperty] private string _deepDiveProtocol = "";
     [ObservableProperty] private string _deepDiveIcon = "📦";
     [ObservableProperty] private ObservableCollection<ProtocolSummaryItem> _deepDiveSummary = new();
     [ObservableProperty] private ObservableCollection<ProtocolLayerViewModel> _deepDiveLayers = new();
+
+    // Packet Analysis Tab - Cleartext Detection section
+    [ObservableProperty] private bool _hasCleartextCredentials;
+    [ObservableProperty] private string _cleartextSeverityColor = "#6E7681";
+    [ObservableProperty] private string _cleartextSeverityText = "";
+    [ObservableProperty] private ObservableCollection<CleartextContentViewModel> _cleartextContents = new();
+    [ObservableProperty] private int _totalCredentialsCount;
 
     // Event raised when user requests to filter by current stream
     public event EventHandler<PacketFilter>? FilterByStreamRequested;
@@ -259,11 +283,53 @@ public partial class PacketDetailsViewModel : ObservableObject
                         DeepDiveLayers.Add(layerVm);
                     }
 
+                    // Update cleartext content and credentials
+                    CleartextContents.Clear();
+                    var totalCreds = 0;
+                    foreach (var content in result.CleartextContent)
+                    {
+                        var contentVm = new CleartextContentViewModel
+                        {
+                            Protocol = content.Protocol,
+                            ContentType = content.ContentType,
+                            Description = content.Description,
+                            RawContent = content.RawContent,
+                            Severity = content.Severity,
+                            Credentials = new ObservableCollection<CleartextCredentialViewModel>(
+                                content.Credentials.Select(c => new CleartextCredentialViewModel
+                                {
+                                    Protocol = c.Protocol,
+                                    CredentialType = c.CredentialType,
+                                    FieldName = c.FieldName,
+                                    Value = c.Value,
+                                    IsPassword = c.IsPassword,
+                                    SecurityWarning = c.SecurityWarning
+                                }))
+                        };
+                        totalCreds += content.Credentials.Count;
+                        CleartextContents.Add(contentVm);
+                    }
+
+                    HasCleartextCredentials = result.HasCleartextCredentials;
+                    TotalCredentialsCount = totalCreds;
+                    CleartextSeverityText = result.MaxSeverity switch
+                    {
+                        CleartextSeverity.Critical => "CRITICAL - Credentials Exposed",
+                        CleartextSeverity.Warning => "WARNING - Sensitive Data",
+                        _ => "INFO - Cleartext Content"
+                    };
+                    CleartextSeverityColor = result.MaxSeverity switch
+                    {
+                        CleartextSeverity.Critical => "#EF4444",
+                        CleartextSeverity.Warning => "#F59E0B",
+                        _ => "#3B82F6"
+                    };
+
                     DeepDiveAvailable = true;
                     DeepDiveLoading = false;
                 });
 
-                DebugLogger.Log($"[DeepDive] Loaded {result.Layers.Count} protocol layers");
+                DebugLogger.Log($"[DeepDive] Loaded {result.Layers.Count} protocol layers, {result.CleartextContent.Sum(c => c.Credentials.Count)} credentials detected");
             }
             else
             {
@@ -387,6 +453,11 @@ public partial class PacketDetailsViewModel : ObservableObject
                 DeepDiveIcon = "📦";
                 DeepDiveSummary.Clear();
                 DeepDiveLayers.Clear();
+                HasCleartextCredentials = false;
+                TotalCredentialsCount = 0;
+                CleartextSeverityText = "";
+                CleartextSeverityColor = "#6E7681";
+                CleartextContents.Clear();
             });
         }
 
@@ -457,10 +528,15 @@ public partial class PacketDetailsViewModel : ObservableObject
         DeepDiveLoading = false;
         DeepDiveProtocol = "";
         DeepDiveIcon = "📦";
+        HasCleartextCredentials = false;
+        TotalCredentialsCount = 0;
+        CleartextSeverityText = "";
+        CleartextSeverityColor = "#6E7681";
         Dispatcher.UIThread.Post(() =>
         {
             DeepDiveSummary.Clear();
             DeepDiveLayers.Clear();
+            CleartextContents.Clear();
         });
     }
 
@@ -788,6 +864,18 @@ public partial class PacketDetailsViewModel : ObservableObject
             dstGeo = FormatGeoInfo(analysis.Security.DestinationGeoInfo);
         }
 
+        // Enhanced Security Analysis (StreamSecurityAnalyzer)
+        StreamSecurityResult? enhancedSecurity = null;
+        if (streamPackets != null && streamPackets.Count > 0)
+        {
+            enhancedSecurity = _streamSecurityAnalyzer.Analyze(
+                streamPackets,
+                currentPacket.SourceIP ?? "",
+                currentPacket.SourcePort,
+                currentPacket.DestinationIP ?? "",
+                currentPacket.DestinationPort);
+        }
+
         // Directional metrics
         string clientTraffic = "--", serverTraffic = "--", direction = "--", position = "--", age = "--";
         if (analysis.Directional != null)
@@ -820,6 +908,40 @@ public partial class PacketDetailsViewModel : ObservableObject
             SecurityWarnings.Clear();
             foreach (var w in warnings) SecurityWarnings.Add(w);
             HasSecurityWarnings = warnings.Count > 0;
+
+            // Enhanced Security Analysis
+            if (enhancedSecurity != null)
+            {
+                HasEnhancedSecurityAnalysis = true;
+                StreamRiskScore = enhancedSecurity.RiskScore;
+                StreamRiskScoreDisplay = enhancedSecurity.RiskScore.ToString();
+
+                // Encryption status
+                EncryptionStatus = GetEncryptionStatusText(enhancedSecurity.EncryptionStatus);
+                EncryptionStatusColor = GetEncryptionStatusColor(enhancedSecurity.EncryptionStatus);
+                EncryptionProtocol = enhancedSecurity.EncryptionProtocol ?? "";
+
+                // Beaconing
+                BeaconingDetected = enhancedSecurity.BeaconingDetected;
+                BeaconingInterval = enhancedSecurity.BeaconingDetected
+                    ? $"{enhancedSecurity.BeaconingInterval:F1}s"
+                    : "Not detected";
+                BeaconingConfidence = enhancedSecurity.BeaconingDetected
+                    ? $"({enhancedSecurity.BeaconingConfidence:F0}%)"
+                    : "";
+                BeaconingColor = enhancedSecurity.BeaconingDetected ? "#FFA726" : "#22C55E";
+
+                // Exfiltration
+                UploadDownloadRatio = double.IsInfinity(enhancedSecurity.UploadDownloadRatio)
+                    ? "∞:1 (upload only)"
+                    : $"{enhancedSecurity.UploadDownloadRatio:F1}:1";
+                DataExfiltrationIndicator = enhancedSecurity.DataExfiltrationIndicator;
+                ExfiltrationColor = enhancedSecurity.DataExfiltrationIndicator ? "#FFA726" : "#22C55E";
+            }
+            else
+            {
+                HasEnhancedSecurityAnalysis = false;
+            }
 
             // Directional metrics
             ClientTraffic = clientTraffic;
@@ -874,6 +996,36 @@ public partial class PacketDetailsViewModel : ObservableObject
         if (ts.TotalMinutes < 1) return $"{ts.TotalSeconds:F1} sec";
         if (ts.TotalHours < 1) return $"{ts.TotalMinutes:F1} min";
         return $"{ts.TotalHours:F1} hours";
+    }
+
+    /// <summary>
+    /// Gets display text for encryption status.
+    /// </summary>
+    private static string GetEncryptionStatusText(EncryptionStatus status)
+    {
+        return status switch
+        {
+            Core.Services.EncryptionStatus.Encrypted => "Encrypted",
+            Core.Services.EncryptionStatus.LikelyEncrypted => "Likely Encrypted",
+            Core.Services.EncryptionStatus.LikelyUnencrypted => "Likely Unencrypted",
+            Core.Services.EncryptionStatus.Unencrypted => "Unencrypted",
+            _ => "Unknown"
+        };
+    }
+
+    /// <summary>
+    /// Gets color for encryption status.
+    /// </summary>
+    private static string GetEncryptionStatusColor(EncryptionStatus status)
+    {
+        return status switch
+        {
+            Core.Services.EncryptionStatus.Encrypted => "#22C55E",        // Green
+            Core.Services.EncryptionStatus.LikelyEncrypted => "#8BC34A",  // Light Green
+            Core.Services.EncryptionStatus.LikelyUnencrypted => "#FFA726",// Orange
+            Core.Services.EncryptionStatus.Unencrypted => "#EF5350",      // Red
+            _ => "#6E7681"                                                 // Gray
+        };
     }
 
     /// <summary>
@@ -1047,4 +1199,54 @@ public class ProtocolFieldViewModel
     public int IndentPixels => IndentLevel * 16;
     public string NameColor => IsHighlighted ? "#58A6FF" : "#8B949E";
     public string ValueColor => IsHighlighted ? "#F0F6FC" : "#C9D1D9";
+}
+
+/// <summary>
+/// ViewModel for cleartext content display in Protocol Deep Dive.
+/// </summary>
+public class CleartextContentViewModel
+{
+    public string Protocol { get; set; } = "";
+    public string ContentType { get; set; } = "";
+    public string Description { get; set; } = "";
+    public string RawContent { get; set; } = "";
+    public CleartextSeverity Severity { get; set; }
+    public ObservableCollection<CleartextCredentialViewModel> Credentials { get; set; } = new();
+
+    public bool HasCredentials => Credentials.Count > 0;
+    public string SeverityIcon => Severity switch
+    {
+        CleartextSeverity.Critical => "🔴",
+        CleartextSeverity.Warning => "🟡",
+        _ => "🔵"
+    };
+    public string SeverityColor => Severity switch
+    {
+        CleartextSeverity.Critical => "#EF4444",
+        CleartextSeverity.Warning => "#F59E0B",
+        _ => "#3B82F6"
+    };
+    public string HeaderColor => Severity switch
+    {
+        CleartextSeverity.Critical => "#7F1D1D",
+        CleartextSeverity.Warning => "#78350F",
+        _ => "#1E3A5F"
+    };
+}
+
+/// <summary>
+/// ViewModel for individual cleartext credential display.
+/// </summary>
+public class CleartextCredentialViewModel
+{
+    public string Protocol { get; set; } = "";
+    public string CredentialType { get; set; } = "";
+    public string FieldName { get; set; } = "";
+    public string Value { get; set; } = "";
+    public bool IsPassword { get; set; }
+    public string SecurityWarning { get; set; } = "";
+
+    public string FieldColor => IsPassword ? "#EF4444" : "#F0F6FC";
+    public string ValueColor => IsPassword ? "#FCA5A5" : "#C9D1D9";
+    public string Icon => IsPassword ? "🔑" : "👤";
 }

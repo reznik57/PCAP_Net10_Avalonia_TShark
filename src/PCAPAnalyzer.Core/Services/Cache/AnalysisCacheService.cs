@@ -556,6 +556,37 @@ namespace PCAPAnalyzer.Core.Services.Cache
             }
         }
 
+        public async Task<int> ClearAllCacheAsync(CancellationToken cancellationToken = default)
+        {
+            await EnsureInitializedAsync(cancellationToken);
+
+            DebugLogger.Log("[AnalysisCacheService] Clearing ALL cache entries...");
+
+            await _dbLock.WaitAsync(cancellationToken);
+            try
+            {
+                using var connection = new SqliteConnection(_connectionString);
+                await connection.OpenAsync(cancellationToken);
+
+                using var cmd = connection.CreateCommand();
+                cmd.CommandText = "DELETE FROM AnalysisCache";
+
+                var deletedCount = await cmd.ExecuteNonQueryAsync(cancellationToken);
+
+                // Vacuum to reclaim space
+                using var vacuumCmd = connection.CreateCommand();
+                vacuumCmd.CommandText = "VACUUM";
+                await vacuumCmd.ExecuteNonQueryAsync(cancellationToken);
+
+                DebugLogger.Log($"[AnalysisCacheService] Cleared ALL {deletedCount} cache entries and vacuumed database");
+                return deletedCount;
+            }
+            finally
+            {
+                _dbLock.Release();
+            }
+        }
+
         private static async Task UpdateLastAccessedAsync(string cacheKey, string analysisType, SqliteConnection connection, CancellationToken cancellationToken)
         {
             using var updateCmd = connection.CreateCommand();

@@ -163,7 +163,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     Fill = null,
                     Stroke = new SolidColorPaint(SKColor.Parse("#3B82F6"), 2),
                     GeometrySize = 0,
-                    LineSmoothness = 0.5,
+                    LineSmoothness = 0,
                     Name = "Throughput"
                 };
 

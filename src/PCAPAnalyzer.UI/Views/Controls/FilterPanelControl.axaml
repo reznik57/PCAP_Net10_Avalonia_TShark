@@ -27,25 +27,31 @@
                         <!-- Source IP -->
                         <StackPanel Grid.Column="0" Spacing="6">
                             <TextBlock Text="Source IP" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding SourceIPFilter}" Watermark="e.g. 192.168.1.1,10.0.0.1" FontSize="12"/>
+                            <TextBox Text="{Binding SourceIPFilter}" Watermark="e.g. 192.168.1.1,10.0.0.1" FontSize="12" KeyDown="FilterTextBox_KeyDown"
+                                     BorderBrush="{Binding SourceIPFilter, Converter={StaticResource IPValidationConverter}}"
+                                     ToolTip.Tip="Enter IP, comma-separated IPs, CIDR (192.168.0.0/24), or wildcard (192.168.*.*)"/>
                         </StackPanel>
 
                         <!-- Destination IP -->
                         <StackPanel Grid.Column="2" Spacing="6">
                             <TextBlock Text="Destination IP" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding DestinationIPFilter}" Watermark="e.g. 10.0.0.1" FontSize="12"/>
+                            <TextBox Text="{Binding DestinationIPFilter}" Watermark="e.g. 10.0.0.1" FontSize="12" KeyDown="FilterTextBox_KeyDown"
+                                     BorderBrush="{Binding DestinationIPFilter, Converter={StaticResource IPValidationConverter}}"
+                                     ToolTip.Tip="Enter IP, comma-separated IPs, CIDR (10.0.0.0/8), or wildcard (10.*.*.*)"/>
                         </StackPanel>
 
                         <!-- Port Range -->
                         <StackPanel Grid.Column="4" Spacing="6">
                             <TextBlock Text="Port Range" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding PortRangeFilter}" Watermark="e.g. 80,443,137-139" FontSize="12"/>
+                            <TextBox Text="{Binding PortRangeFilter}" Watermark="e.g. 80,443,137-139" FontSize="12" KeyDown="FilterTextBox_KeyDown"
+                                     BorderBrush="{Binding PortRangeFilter, Converter={StaticResource PortValidationConverter}}"
+                                     ToolTip.Tip="Enter port, comma-separated ports, or range (8000-8100)"/>
                         </StackPanel>
 
                         <!-- Protocol Type -->
                         <StackPanel Grid.Column="6" Spacing="6">
                             <TextBlock Text="Protocol Type (L4 / L7)" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding ProtocolFilter}" Watermark="e.g. TCP, HTTP" FontSize="12"/>
+                            <TextBox Text="{Binding ProtocolFilter}" Watermark="e.g. TCP, HTTP" FontSize="12" KeyDown="FilterTextBox_KeyDown"/>
                         </StackPanel>
                     </Grid>
                 </Grid>
@@ -70,25 +76,31 @@
                         <!-- NOT Source IP -->
                         <StackPanel Grid.Column="0" Spacing="6">
                             <TextBlock Text="NOT Source IP" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding NotSourceIPFilter}" Watermark="e.g. 192.168.1.0/24" FontSize="12"/>
+                            <TextBox Text="{Binding NotSourceIPFilter}" Watermark="e.g. 192.168.1.0/24" FontSize="12" KeyDown="FilterTextBox_KeyDown"
+                                     BorderBrush="{Binding NotSourceIPFilter, Converter={StaticResource IPValidationConverter}}"
+                                     ToolTip.Tip="Exclude IP, comma-separated IPs, CIDR, or wildcard"/>
                         </StackPanel>
 
                         <!-- NOT Destination IP -->
                         <StackPanel Grid.Column="2" Spacing="6">
                             <TextBlock Text="NOT Destination IP" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding NotDestinationIPFilter}" Watermark="e.g. 10.0.0.0/8" FontSize="12"/>
+                            <TextBox Text="{Binding NotDestinationIPFilter}" Watermark="e.g. 10.0.0.0/8" FontSize="12" KeyDown="FilterTextBox_KeyDown"
+                                     BorderBrush="{Binding NotDestinationIPFilter, Converter={StaticResource IPValidationConverter}}"
+                                     ToolTip.Tip="Exclude IP, comma-separated IPs, CIDR, or wildcard"/>
                         </StackPanel>
 
                         <!-- NOT Port Range -->
                         <StackPanel Grid.Column="4" Spacing="6">
                             <TextBlock Text="NOT Port Range" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding NotPortRangeFilter}" Watermark="e.g. 137-139" FontSize="12"/>
+                            <TextBox Text="{Binding NotPortRangeFilter}" Watermark="e.g. 137-139" FontSize="12" KeyDown="FilterTextBox_KeyDown"
+                                     BorderBrush="{Binding NotPortRangeFilter, Converter={StaticResource PortValidationConverter}}"
+                                     ToolTip.Tip="Exclude port, comma-separated ports, or range"/>
                         </StackPanel>
 
                         <!-- NOT Protocol Type -->
                         <StackPanel Grid.Column="6" Spacing="6">
                             <TextBlock Text="NOT Protocol Type (L4 / L7)" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding NotProtocolFilter}" Watermark="e.g. ICMP" FontSize="12"/>
+                            <TextBox Text="{Binding NotProtocolFilter}" Watermark="e.g. ICMP" FontSize="12" KeyDown="FilterTextBox_KeyDown"/>
                         </StackPanel>
                     </Grid>
                 </Grid>
@@ -129,6 +141,25 @@
                     </StackPanel>
                 </Button>
             </Grid>
+
+            <!-- Stream Filter Active Banner -->
+            <Border Background="#1A1A0A" BorderBrush="#F59E0B" BorderThickness="2"
+                    CornerRadius="6" Padding="12,10" IsVisible="{Binding PacketManager.HasStreamFilter}"
+                    BoxShadow="0 0 12 #F59E0B60">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="🔗" FontSize="14"/>
+                        <TextBlock Text="STREAM FILTER ACTIVE" FontSize="12" FontWeight="Bold" Foreground="#F59E0B" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="{Binding UIState.StreamSearchStatus}" FontSize="11" Foreground="#FCD34D"
+                               VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="SemiBold"/>
+                    <Button Grid.Column="2" Command="{Binding ClearStreamSearchCommand}"
+                            Background="#0D1117" BorderBrush="#EF4444" BorderThickness="1"
+                            Padding="8,4" CornerRadius="4" ToolTip.Tip="Clear stream filter">
+                        <TextBlock Text="✕ Clear" FontSize="10" Foreground="#EF4444"/>
+                    </Button>
+                </Grid>
+            </Border>
 
             <!-- Active INCLUDE Filter Groups (AND groups) -->
             <Border Background="#0D1117" BorderBrush="#3B82F6" BorderThickness="2"

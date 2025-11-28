@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Threading;
@@ -28,6 +31,9 @@ namespace PCAPAnalyzer.UI.ViewModels;
 public partial class FileAnalysisViewModel : ObservableObject, IDisposable
 {
     private readonly Services.IFileDialogService? _fileDialogService;
+    private readonly ITSharkService _tsharkService;
+    private readonly ISessionAnalysisCache _sessionCache;
+    private readonly AnalysisOrchestrator? _orchestrator;
     private CancellationTokenSource? _analysisCts;
     private readonly DispatcherTimer _progressTimer;
     private readonly Stopwatch _analysisStopwatch = new();
@@ -109,6 +115,8 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
     [ObservableProperty] private long _totalPackets;
     [ObservableProperty] private string _totalTrafficVolume = "0 B";
     [ObservableProperty] private TimeSpan _captureDuration;
+    [ObservableProperty] private DateTime? _captureStartTime;
+    [ObservableProperty] private DateTime? _captureEndTime;
     [ObservableProperty] private int _uniqueProtocols;
     [ObservableProperty] private int _uniqueIPs;
     [ObservableProperty] private int _uniquePorts;
@@ -131,10 +139,15 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
     public FileAnalysisViewModel(
         ITSharkService tsharkService,
         IStatisticsService statisticsService,
+        ISessionAnalysisCache sessionCache,
         MainWindowAnalysisViewModel? analysisVm = null,
-        Services.IFileDialogService? fileDialogService = null)
+        Services.IFileDialogService? fileDialogService = null,
+        AnalysisOrchestrator? orchestrator = null)
     {
         _fileDialogService = fileDialogService;
+        _tsharkService = tsharkService;
+        _sessionCache = sessionCache ?? throw new ArgumentNullException(nameof(sessionCache));
+        _orchestrator = orchestrator;
 
         // Initialize component ViewModels
         ProgressViewModel = new FileAnalysisProgressViewModel();
@@ -143,6 +156,21 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
 
         // Wire up stages to progress for notifications
         ProgressViewModel.SetStagesCollection(StagesViewModel.Stages);
+
+        // Forward property changes from ProgressViewModel for UI binding
+        ProgressViewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(FileAnalysisProgressViewModel.ProgressPercentage))
+                OnPropertyChanged(nameof(ProgressPercentage));
+            else if (e.PropertyName == nameof(FileAnalysisProgressViewModel.PacketsProcessed))
+                OnPropertyChanged(nameof(PacketsProcessed));
+            else if (e.PropertyName == nameof(FileAnalysisProgressViewModel.PacketsPerSecond))
+                OnPropertyChanged(nameof(PacketsPerSecond));
+            else if (e.PropertyName == nameof(FileAnalysisProgressViewModel.ElapsedTime))
+                OnPropertyChanged(nameof(ElapsedTime));
+            else if (e.PropertyName == nameof(FileAnalysisProgressViewModel.RemainingTimeFormatted))
+                OnPropertyChanged(nameof(RemainingTimeFormatted));
+        };
 
         // Wire up analysis VM for global overlay
         if (analysisVm != null)
@@ -196,6 +224,9 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
 
     // ==================== COMMANDS ====================
 
+    // Valid PCAP file extensions for drag & drop validation
+    private static readonly string[] ValidPcapExtensions = { ".pcap", ".pcapng", ".cap" };
+
     [RelayCommand]
     private async Task BrowseAsync()
     {
@@ -212,10 +243,77 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
 
         if (!string.IsNullOrEmpty(filePath))
         {
-            SelectedFilePath = filePath;
-            SelectedFileName = Path.GetFileName(filePath);
-            DebugLogger.Log($"[FileAnalysisViewModel] File selected: {filePath}");
+            SelectFile(filePath);
         }
+    }
+
+    /// <summary>
+    /// Select a file from a given path (used by drag & drop).
+    /// Validates file extension before accepting.
+    /// </summary>
+    /// <param name="filePath">Full path to the PCAP file</param>
+    /// <returns>True if file was accepted, false if invalid extension</returns>
+    public bool SelectFile(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath))
+            return false;
+
+        var extension = Path.GetExtension(filePath).ToLowerInvariant();
+        if (!Array.Exists(ValidPcapExtensions, ext => ext == extension))
+        {
+            DebugLogger.Log($"[FileAnalysisViewModel] Invalid file extension: {extension}");
+            return false;
+        }
+
+        if (!File.Exists(filePath))
+        {
+            DebugLogger.Log($"[FileAnalysisViewModel] File does not exist: {filePath}");
+            return false;
+        }
+
+        SelectedFilePath = filePath;
+        SelectedFileName = Path.GetFileName(filePath);
+        DebugLogger.Log($"[FileAnalysisViewModel] File selected: {filePath}");
+
+        // Fetch capture time range in background (shown during countdown)
+        _ = FetchCaptureTimeRangeAsync(filePath);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Fetches capture time range from PCAP file in background.
+    /// Called when a file is selected, before analysis starts.
+    /// </summary>
+    private async Task FetchCaptureTimeRangeAsync(string filePath)
+    {
+        try
+        {
+            var (firstTime, lastTime) = await _tsharkService.GetCaptureTimeRangeAsync(filePath);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                CaptureStartTime = firstTime;
+                CaptureEndTime = lastTime;
+                DebugLogger.Log($"[FileAnalysisViewModel] Capture time range: {firstTime:dd.MM.yyyy HH:mm} - {lastTime:dd.MM.yyyy HH:mm}");
+            });
+        }
+        catch (Exception ex)
+        {
+            DebugLogger.Log($"[FileAnalysisViewModel] Failed to fetch capture time range: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Check if a file has a valid PCAP extension.
+    /// </summary>
+    public static bool IsValidPcapFile(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath))
+            return false;
+
+        var extension = Path.GetExtension(filePath).ToLowerInvariant();
+        return Array.Exists(ValidPcapExtensions, ext => ext == extension);
     }
 
     [RelayCommand(CanExecute = nameof(CanAnalyze))]
@@ -233,13 +331,22 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
         _analysisStopwatch.Restart();
         _progressTimer.Start();
 
+        var overallStartTime = DateTime.Now;
+
+        // ✅ PERFORMANCE FIX: Use orchestrator when available for complete analysis including VoiceQoS
+        // This ensures VoiceQoS data is cached, preventing 25s re-analysis during tab population
+        if (_orchestrator != null)
+        {
+            await AnalyzeWithOrchestratorAsync(overallStartTime);
+            return;
+        }
+
+        // Legacy pipeline path (fallback when orchestrator not available)
         // Create shared ProgressCoordinator
         var coordinator = new ProgressCoordinator(new Progress<AnalysisProgress>(ProgressViewModel.OnProgressUpdate));
         var fileInfo = new FileInfo(SelectedFilePath);
         coordinator.InitializeTimeEstimates(fileInfo.Length / 1024.0 / 1024.0);
         PipelineViewModel.Initialize(coordinator);
-
-        var overallStartTime = DateTime.Now;
 
         try
         {
@@ -273,8 +380,13 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
                 statistics,
                 OnFinalized);
 
-            // Set to 95% (tab loading continues to 100%)
-            ProgressViewModel.ProgressPercentage = 95;
+            // Cache result (without VoiceQoS - legacy path)
+            var analysisResult = BuildAnalysisResult(SelectedFilePath!, packets, statistics, totalBytes, overallStartTime);
+            _sessionCache.Set(analysisResult);
+            DebugLogger.Log($"[FileAnalysisViewModel] ⚡ Cached AnalysisResult (legacy): {packets.Count:N0} packets");
+
+            // Set to 75% - tab loading phase starts here
+            ProgressViewModel.ProgressPercentage = 75;
 
             // Fire completion event
             PipelineViewModel.FireAnalysisCompleted(
@@ -302,6 +414,77 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
         }
     }
 
+    /// <summary>
+    /// ✅ PERFORMANCE FIX: Use orchestrator for complete analysis with VoiceQoS included.
+    /// This caches VoiceQoS data during main analysis, preventing 25s re-analysis during tab population.
+    /// </summary>
+    private async Task AnalyzeWithOrchestratorAsync(DateTime overallStartTime)
+    {
+        try
+        {
+            DebugLogger.Log("[FileAnalysisViewModel] Using orchestrator for complete analysis (includes VoiceQoS)");
+
+            // Progress reporter forwards to UI
+            var progress = new Progress<AnalysisProgress>(p =>
+            {
+                ProgressViewModel.OnProgressUpdate(p);
+                StagesViewModel.SyncStageFromOrchestrator(p.Phase, (int)p.Percent, p.Detail);
+            });
+
+            // Run orchestrator analysis - includes VoiceQoS
+            var result = await _orchestrator!.AnalyzeFileAsync(SelectedFilePath!, progress, _analysisCts!.Token);
+
+            // Cache is already set by orchestrator, but ensure it's there
+            if (_sessionCache.Get() == null)
+            {
+                _sessionCache.Set(result);
+            }
+
+            DebugLogger.Log($"[FileAnalysisViewModel] ⚡ Orchestrator complete: {result.TotalPackets:N0} packets, VoiceQoS={result.VoiceQoSData != null}");
+
+            // ✅ FIX: Set UI properties from orchestrator result (was missing - caused 00:00:00 duration)
+            TotalPackets = result.TotalPackets;
+            TotalTrafficVolume = NumberFormatter.FormatBytes(result.TotalBytes);
+            CaptureDuration = result.Statistics.Duration;
+            CaptureStartTime = result.Statistics.FirstPacketTime;
+            CaptureEndTime = result.Statistics.LastPacketTime;
+            UniqueProtocols = result.Statistics.ProtocolStats?.Count ?? 0;
+            UniqueIPs = result.Statistics.AllUniqueIPs?.Count ?? 0;
+            UniquePorts = result.Statistics.UniquePortCount;
+            AveragePacketSize = result.TotalPackets > 0
+                ? NumberFormatter.FormatBytes(result.TotalBytes / result.TotalPackets)
+                : "0 B";
+
+            // Set to 75% - tab loading starts
+            ProgressViewModel.ProgressPercentage = 75;
+
+            // Fire completion event with orchestrator results
+            PipelineViewModel.FireAnalysisCompleted(
+                overallStartTime,
+                SelectedFilePath!,
+                result.TotalBytes,
+                result.AllPackets,
+                result.Statistics,
+                TimeSpan.Zero, // Orchestrator doesn't track per-stage durations
+                TimeSpan.Zero,
+                TimeSpan.Zero,
+                TimeSpan.Zero,
+                true,
+                null);
+        }
+        catch (OperationCanceledException)
+        {
+            PipelineViewModel.HandleCancellation();
+            await HandleAnalysisCancellation();
+        }
+        catch (Exception ex)
+        {
+            DebugLogger.Critical($"[FileAnalysisViewModel] Orchestrator analysis failed: {ex.Message}");
+            PipelineViewModel.HandleError(ex, overallStartTime, SelectedFilePath ?? "unknown");
+            await HandleAnalysisError();
+        }
+    }
+
     private async Task UpdateUIAfterCounting(long totalPackets)
     {
         await Dispatcher.UIThread.InvokeAsync(() =>
@@ -320,11 +503,13 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
         });
     }
 
-    private void OnFinalized(long totalPackets, string trafficVolume, TimeSpan duration, int protocols, int ips, int ports, string avgSize)
+    private void OnFinalized(long totalPackets, string trafficVolume, TimeSpan duration, int protocols, int ips, int ports, string avgSize, DateTime? captureStart, DateTime? captureEnd)
     {
         TotalPackets = totalPackets;
         TotalTrafficVolume = trafficVolume;
         CaptureDuration = duration;
+        CaptureStartTime = captureStart;
+        CaptureEndTime = captureEnd;
         UniqueProtocols = protocols;
         UniqueIPs = ips;
         UniquePorts = ports;
@@ -350,6 +535,71 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
         });
     }
 
+    /// <summary>
+    /// Builds a complete AnalysisResult for session caching.
+    /// PERFORMANCE: Enables instant tab switching without redundant analysis.
+    /// </summary>
+    private static AnalysisResult BuildAnalysisResult(
+        string filePath,
+        List<PacketInfo> packets,
+        NetworkStatistics statistics,
+        long totalBytes,
+        DateTime startTime)
+    {
+        var fileHash = ComputeFileHash(filePath);
+        var duration = DateTime.Now - startTime;
+
+        return new AnalysisResult
+        {
+            // Core data
+            AllPackets = packets,
+            Statistics = statistics,
+            Threats = statistics.DetectedThreats?.ToList() ?? new List<SecurityThreat>(),
+
+            // Tab-specific data (from statistics)
+            CountryTraffic = statistics.CountryStatistics ?? new Dictionary<string, CountryTrafficStatistics>(),
+            TrafficFlows = statistics.TrafficFlows ?? new List<TrafficFlowDirection>(),
+
+            // Metadata
+            FilePath = filePath,
+            FileHash = fileHash,
+            AnalyzedAt = DateTime.UtcNow,
+            AnalysisDuration = duration,
+            TotalPackets = packets.Count,
+            TotalBytes = totalBytes
+        };
+    }
+
+    /// <summary>
+    /// Computes a fast hash of the file for cache validation.
+    /// Uses first 64KB + file size for speed (not cryptographic security).
+    /// </summary>
+    private static string ComputeFileHash(string filePath)
+    {
+        try
+        {
+            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var sha = SHA256.Create();
+
+            // Fast hash: first 64KB + file size
+            var buffer = new byte[Math.Min(65536, stream.Length)];
+            var bytesRead = stream.Read(buffer, 0, buffer.Length);
+
+            // Include file size in hash for uniqueness
+            var sizeBytes = BitConverter.GetBytes(stream.Length);
+            sha.TransformBlock(buffer, 0, bytesRead, null, 0);
+            sha.TransformFinalBlock(sizeBytes, 0, sizeBytes.Length);
+
+            return Convert.ToHexString(sha.Hash!)[..16]; // Short 16-char hash
+        }
+        catch
+        {
+            // Fallback to file name + size
+            var info = new FileInfo(filePath);
+            return $"{info.Name}_{info.Length}";
+        }
+    }
+
     [RelayCommand(CanExecute = nameof(CanStop))]
     private void Stop()
     {
@@ -366,6 +616,9 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
         IsAnalysisComplete = false;
         ProgressViewModel.ResetMetrics();
         ResetSummaryStats();
+        // CRITICAL FIX: Reset all stages including their timers
+        StagesViewModel.ClearAllStages();
+        DebugLogger.Log("[FileAnalysisViewModel] Clear command executed - all stages and timers reset");
     }
 
     // ==================== NAVIGATION COMMANDS ====================
@@ -417,6 +670,8 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
         TotalPackets = 0;
         TotalTrafficVolume = "0 B";
         CaptureDuration = TimeSpan.Zero;
+        CaptureStartTime = null;
+        CaptureEndTime = null;
         UniqueProtocols = 0;
         UniqueIPs = 0;
         UniquePorts = 0;

@@ -126,10 +126,15 @@ namespace PCAPAnalyzer.UI.Views
             {
                 var position = e.GetPosition(chart);
 
-                // Get the actual plot area bounds (accounting for axes)
-                var plotAreaMargin = 50; // Approximate margin for Y axis
-                var plotAreaWidth = chart.Bounds.Width - plotAreaMargin - 20; // Right margin
-                var adjustedX = position.X - plotAreaMargin;
+                // Get the actual plot area bounds from LiveCharts Core (accurate drawable area)
+                var drawMargin = chart.CoreChart.DrawMarginLocation;
+                var drawSize = chart.CoreChart.DrawMarginSize;
+
+                // Use actual drawable area if available, otherwise fall back to approximation
+                double plotAreaLeft = drawMargin.X > 0 ? drawMargin.X : 50;
+                double plotAreaWidth = drawSize.Width > 0 ? drawSize.Width : chart.Bounds.Width - 70;
+
+                var adjustedX = position.X - plotAreaLeft;
 
                 // Calculate relative X position (0 to 1) within the plot area
                 var relativeX = Math.Max(0, Math.Min(1, adjustedX / plotAreaWidth));
@@ -323,10 +328,15 @@ namespace PCAPAnalyzer.UI.Views
             {
                 var position = e.GetPosition(chart);
 
-                // Get the actual plot area bounds (accounting for axes)
-                var plotAreaMargin = 50; // Approximate margin for Y axis
-                var plotAreaWidth = chart.Bounds.Width - plotAreaMargin - 20; // Right margin
-                var adjustedX = position.X - plotAreaMargin;
+                // Get the actual plot area bounds from LiveCharts Core (accurate drawable area)
+                var drawMargin = chart.CoreChart.DrawMarginLocation;
+                var drawSize = chart.CoreChart.DrawMarginSize;
+
+                // Use actual drawable area if available, otherwise fall back to approximation
+                double plotAreaLeft = drawMargin.X > 0 ? drawMargin.X : 50;
+                double plotAreaWidth = drawSize.Width > 0 ? drawSize.Width : chart.Bounds.Width - 70;
+
+                var adjustedX = position.X - plotAreaLeft;
 
                 // Calculate relative X position (0 to 1) within the plot area
                 var relativeX = Math.Max(0, Math.Min(1, adjustedX / plotAreaWidth));

@@ -1,10 +1,132 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using PCAPAnalyzer.Core.Utilities;
 
 namespace PCAPAnalyzer.UI.Models
 {
+    /// <summary>
+    /// Data for a single stream in the popup
+    /// </summary>
+    public class StreamPopupItem
+    {
+        public string SourceIP { get; set; } = "";
+        public string DestIP { get; set; } = "";
+        public string StreamKey { get; set; } = "";
+        public int PacketCount { get; set; }
+        public long ByteCount { get; set; }
+        public double Percentage { get; set; }
+        public string Color { get; set; } = "#58A6FF";
+        public string Protocol { get; set; } = "TCP";
+
+        /// <summary>
+        /// Display name with fallback for empty IPs
+        /// </summary>
+        public string DisplayName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(SourceIP) && string.IsNullOrEmpty(DestIP))
+                    return StreamKey ?? "Unknown Stream";
+                if (string.IsNullOrEmpty(SourceIP))
+                    return $"? → {DestIP}";
+                if (string.IsNullOrEmpty(DestIP))
+                    return $"{SourceIP} → ?";
+                return $"{SourceIP} → {DestIP}";
+            }
+        }
+
+        public string DisplayBytes => NumberFormatter.FormatBytes(ByteCount);
+
+        /// <summary>
+        /// Returns true if this stream has valid data to display
+        /// </summary>
+        public bool IsValid => PacketCount > 0 && (!string.IsNullOrEmpty(SourceIP) || !string.IsNullOrEmpty(DestIP));
+    }
+
+    /// <summary>
+    /// View model for the Packets Over Time chart popup
+    /// </summary>
+    public class StreamChartPopupViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
+    {
+        private DateTime _timestamp;
+        private int _totalPackets;
+        private long _totalBytes;
+        private ObservableCollection<StreamPopupItem> _streams = new();
+        private CommunityToolkit.Mvvm.Input.IRelayCommand? _closeCommand;
+
+        public DateTime Timestamp
+        {
+            get => _timestamp;
+            set => SetProperty(ref _timestamp, value);
+        }
+
+        public int TotalPackets
+        {
+            get => _totalPackets;
+            set => SetProperty(ref _totalPackets, value);
+        }
+
+        public long TotalBytes
+        {
+            get => _totalBytes;
+            set => SetProperty(ref _totalBytes, value);
+        }
+
+        public ObservableCollection<StreamPopupItem> Streams
+        {
+            get => _streams;
+            set => SetProperty(ref _streams, value);
+        }
+
+        public CommunityToolkit.Mvvm.Input.IRelayCommand? CloseCommand
+        {
+            get => _closeCommand;
+            set => SetProperty(ref _closeCommand, value);
+        }
+
+        private CommunityToolkit.Mvvm.Input.IRelayCommand? _copyCommand;
+        public CommunityToolkit.Mvvm.Input.IRelayCommand? CopyCommand
+        {
+            get => _copyCommand;
+            set => SetProperty(ref _copyCommand, value);
+        }
+
+        public string TimeDisplay => Timestamp != default ? Timestamp.ToString("HH:mm:ss") : "";
+
+        /// <summary>
+        /// Display string for Total Bytes card (just bytes, no packet count)
+        /// </summary>
+        public string TotalBytesDisplay => NumberFormatter.FormatBytes(TotalBytes);
+
+        /// <summary>
+        /// Legacy display string (for backward compatibility if needed)
+        /// </summary>
+        public string TotalDisplay => NumberFormatter.FormatBytes(TotalBytes);
+
+        /// <summary>
+        /// Generates clipboard text for copy operation
+        /// </summary>
+        public string GetClipboardText()
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"Stream Analysis - {TimeDisplay}");
+            sb.AppendLine($"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+            sb.AppendLine($"Total Packets: {TotalPackets:N0}");
+            sb.AppendLine($"Total Bytes: {TotalBytesDisplay}");
+            sb.AppendLine();
+            sb.AppendLine("Top Streams:");
+            foreach (var stream in Streams.Where(s => s.IsValid))
+            {
+                sb.AppendLine($"  {stream.DisplayName} [{stream.Protocol}]");
+                sb.AppendLine($"    Packets: {stream.PacketCount:N0} ({stream.Percentage:F1}%)");
+                sb.AppendLine($"    Bytes: {stream.DisplayBytes}");
+            }
+            return sb.ToString();
+        }
+    }
+
     /// <summary>
     /// Represents data for a specific point in time on a chart
     /// </summary>

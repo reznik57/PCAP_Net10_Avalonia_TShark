@@ -111,6 +111,15 @@ public static class WiresharkToolDetector
     }
 
     /// <summary>
+    /// Detects capinfos availability and execution mode.
+    /// capinfos provides fast packet count from pcap headers (milliseconds vs seconds).
+    /// </summary>
+    public static WiresharkToolInfo DetectCapinfos()
+    {
+        return DetectTool("capinfos", "capinfos.exe");
+    }
+
+    /// <summary>
     /// Generic tool detection logic
     /// </summary>
     private static WiresharkToolInfo DetectTool(string toolName, string windowsExeName)

@@ -17,10 +17,10 @@ namespace PCAPAnalyzer.UI.ViewModels.FileAnalysis;
 
 /// <summary>
 /// Manages the 4-stage analysis pipeline execution:
-/// Stage 0: Counting Packets (0-35%)
-/// Stage 1: Loading Packets (35-70%)
-/// Stage 2: Statistics (70-95%)
-/// Stage 3: Finalization (95-97%)
+/// Stage 0: Reading Capture (0-35%)
+/// Stage 1: Parsing Packets (35-70%)
+/// Stage 2: Analyzing Traffic (70-95%)
+/// Stage 3: Building Views (95-100%)
 ///
 /// Extracted from FileAnalysisViewModel to isolate pipeline logic from UI state.
 /// </summary>
@@ -126,6 +126,15 @@ public partial class FileAnalysisPipelineViewModel : ObservableObject
             }
         }
 
+        // ✅ MEMORY OPTIMIZATION: Trim excess capacity from pre-allocated list
+        // Pre-allocation estimates may overshoot - release unused memory
+        var capacityBefore = packets.Capacity;
+        packets.TrimExcess();
+        if (capacityBefore > packets.Count)
+        {
+            DebugLogger.Log($"[Pipeline] 🧹 TrimExcess: {capacityBefore:N0} → {packets.Count:N0} (freed {(capacityBefore - packets.Count) * 100L:N0} bytes est.)");
+        }
+
         var duration = DateTime.Now - _stageStartTime;
         StageDurationUpdated?.Invoke("Parsing", duration);
 
@@ -160,20 +169,42 @@ public partial class FileAnalysisPipelineViewModel : ObservableObject
 
     /// <summary>
     /// Stage 3: Finalization - prepare results for display (95-97% progress).
+    /// Callback includes: totalPackets, trafficVolume, duration, protocols, ips, ports, avgSize, captureStart, captureEnd
     /// </summary>
     public async Task ExecuteFinalizationStageAsync(
         List<PacketInfo> packets,
         long totalBytes,
         NetworkStatistics statistics,
-        Action<long, string, TimeSpan, int, int, int, string>? onFinalized = null)
+        Action<long, string, TimeSpan, int, int, int, string, DateTime?, DateTime?>? onFinalized = null)
     {
         _analysisCoordinator?.ReportFinalizing(0, "Preparing results...");
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var captureDuration = packets.Count > 1 && packets[^1].Timestamp > packets[0].Timestamp
-                ? packets[^1].Timestamp - packets[0].Timestamp
-                : TimeSpan.Zero;
+            // Calculate actual min/max timestamps (don't assume packet order)
+            var captureDuration = TimeSpan.Zero;
+            DateTime? minTimestamp = null;
+            DateTime? maxTimestamp = null;
+
+            if (packets.Count > 0)
+            {
+                minTimestamp = packets[0].Timestamp;
+                maxTimestamp = packets[0].Timestamp;
+
+                foreach (var packet in packets)
+                {
+                    if (packet.Timestamp < minTimestamp)
+                        minTimestamp = packet.Timestamp;
+                    if (packet.Timestamp > maxTimestamp)
+                        maxTimestamp = packet.Timestamp;
+                }
+
+                if (maxTimestamp > minTimestamp)
+                {
+                    captureDuration = maxTimestamp.Value - minTimestamp.Value;
+                    DebugLogger.Log($"[Pipeline] Capture duration: {captureDuration.TotalSeconds:F3}s (First: {minTimestamp:O}, Last: {maxTimestamp:O})");
+                }
+            }
 
             var avgPacketSize = packets.Count > 0
                 ? NumberFormatter.FormatBytes(totalBytes / packets.Count)
@@ -186,7 +217,9 @@ public partial class FileAnalysisPipelineViewModel : ObservableObject
                 statistics.ProtocolStats.Count,
                 statistics.AllUniqueIPs.Count,
                 statistics.UniquePortCount,
-                avgPacketSize);
+                avgPacketSize,
+                minTimestamp,
+                maxTimestamp);
         });
 
         var duration = DateTime.Now - _stageStartTime;

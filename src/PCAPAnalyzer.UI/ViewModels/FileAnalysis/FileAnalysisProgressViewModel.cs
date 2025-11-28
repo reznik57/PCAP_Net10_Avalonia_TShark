@@ -204,9 +204,14 @@ public partial class FileAnalysisProgressViewModel : ObservableObject
                 {
                     if (_stages[i].State != AnalysisStageState.Completed)
                     {
+                        // ✅ FIX: Only StopTiming if stage was Active (had StartTiming called)
+                        // Stages that were Pending (skipped) should not call StopTiming
+                        if (_stages[i].State == AnalysisStageState.Active)
+                        {
+                            _stages[i].StopTiming();
+                        }
                         _stages[i].State = AnalysisStageState.Completed;
                         _stages[i].PercentComplete = 100;
-                        _stages[i].StopTiming();
                         stagesMutated = true;
                     }
                 }
@@ -214,15 +219,23 @@ public partial class FileAnalysisProgressViewModel : ObservableObject
         }
 
         // Special handling for Complete phase
+        // ✅ FIX: Skip "Building Views" stage - it's handled separately by ReportTabLoadingProgress/CompleteAnalysis
         if (progress.Phase == "Complete" || progress.Percent >= 100)
         {
             foreach (var stage in _stages)
             {
+                // Skip "views" stage - Building Views is managed by ReportTabLoadingProgress and CompleteAnalysis
+                if (stage.Key == "views") continue;
+
                 if (stage.State != AnalysisStageState.Completed)
                 {
+                    // ✅ FIX: Only StopTiming if stage was Active (had StartTiming called)
+                    if (stage.State == AnalysisStageState.Active)
+                    {
+                        stage.StopTiming();
+                    }
                     stage.State = AnalysisStageState.Completed;
                     stage.PercentComplete = 100;
-                    stage.StopTiming();
                     stagesMutated = true;
                 }
             }

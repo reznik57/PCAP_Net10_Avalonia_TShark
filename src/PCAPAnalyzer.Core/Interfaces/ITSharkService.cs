@@ -16,4 +16,12 @@ public interface ITSharkService : IDisposable, IAsyncDisposable
     bool IsAnalyzing { get; }
     Task<long> GetTotalPacketCountAsync(string pcapPath, ProgressCoordinator? progressCoordinator = null);
     void ResetService();
+
+    /// <summary>
+    /// Quickly extracts capture time range (first/last packet timestamps) from a PCAP file.
+    /// Uses TShark to read only first and last packet without full analysis.
+    /// </summary>
+    /// <param name="pcapPath">Path to PCAP file</param>
+    /// <returns>Tuple of (FirstPacketTime, LastPacketTime) or (null, null) if unavailable</returns>
+    Task<(DateTime? FirstPacketTime, DateTime? LastPacketTime)> GetCaptureTimeRangeAsync(string pcapPath);
 }

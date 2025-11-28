@@ -188,27 +188,32 @@ namespace PCAPAnalyzer.Core.Monitoring
         {
             DebugLogger.Log("[MEMORY] Starting memory optimization...");
 
-            // Step 1: Request garbage collection
+            // Step 1: Request garbage collection - use aggressive mode for emergency
             var gen0Before = GC.CollectionCount(0);
             var gen1Before = GC.CollectionCount(1);
             var gen2Before = GC.CollectionCount(2);
 
-            GC.Collect(2, GCCollectionMode.Optimized);
+            // ✅ FIX: Use Aggressive mode for Emergency level (was always Optimized)
+            var gcMode = _currentLevel >= MemoryPressureLevel.Emergency
+                ? GCCollectionMode.Aggressive
+                : GCCollectionMode.Optimized;
+
+            GC.Collect(2, gcMode, blocking: _currentLevel >= MemoryPressureLevel.Critical);
             await Task.Delay(100); // Let GC complete
             GC.WaitForPendingFinalizers();
-            GC.Collect(2, GCCollectionMode.Optimized);
+            GC.Collect(2, gcMode, blocking: _currentLevel >= MemoryPressureLevel.Critical);
 
             var gen0After = GC.CollectionCount(0);
             var gen1After = GC.CollectionCount(1);
             var gen2After = GC.CollectionCount(2);
 
-            DebugLogger.Log($"[MEMORY] GC Collections - Gen0: {gen0After - gen0Before}, Gen1: {gen1After - gen1Before}, Gen2: {gen2After - gen2Before}");
+            DebugLogger.Log($"[MEMORY] GC Collections ({gcMode}) - Gen0: {gen0After - gen0Before}, Gen1: {gen1After - gen1Before}, Gen2: {gen2After - gen2Before}");
 
-            // Step 2: Compact LOH if critical
+            // Step 2: Compact LOH if critical or emergency
             if (_currentLevel >= MemoryPressureLevel.Critical)
             {
                 GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-                GC.Collect(2, GCCollectionMode.Forced);
+                GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
                 DebugLogger.Log("[MEMORY] Large Object Heap compacted");
             }
 

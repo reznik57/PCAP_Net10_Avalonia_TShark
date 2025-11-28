@@ -490,8 +490,10 @@ namespace PCAPAnalyzer.UI
             {
                 var tshark = provider.GetRequiredService<ITSharkService>();
                 var stats = provider.GetRequiredService<IStatisticsService>();
+                var sessionCache = provider.GetRequiredService<ISessionAnalysisCache>();
                 var fileDialog = provider.GetRequiredService<IFileDialogService>();
-                return new FileAnalysisViewModel(tshark, stats, null, fileDialog);
+                var orchestrator = provider.GetRequiredService<AnalysisOrchestrator>();
+                return new FileAnalysisViewModel(tshark, stats, sessionCache, null, fileDialog, orchestrator);
             });
             services.AddTransient<DashboardViewModel>();
             services.AddTransient<CountryTrafficViewModel>();

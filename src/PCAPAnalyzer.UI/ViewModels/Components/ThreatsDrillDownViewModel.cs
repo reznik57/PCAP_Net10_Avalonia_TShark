@@ -528,7 +528,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
         }
 
         // Vulnerabilities as IOCs
-        foreach (var vuln in threat.Vulnerabilities.Where(v => v.StartsWith("CVE-")))
+        foreach (var vuln in threat.Vulnerabilities.Where(v => v.StartsWith("CVE-", StringComparison.Ordinal)))
         {
             iocs.Add(new IOCItem
             {

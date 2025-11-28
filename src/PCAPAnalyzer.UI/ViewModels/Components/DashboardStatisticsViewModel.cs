@@ -29,6 +29,20 @@ public partial class DashboardStatisticsViewModel : ObservableObject
     [ObservableProperty] private bool _hasThreats;
     [ObservableProperty] private bool _isLoadingStats = false;
 
+    /// <summary>
+    /// Indicates if filter application is allowed (for FilterPanelControl binding).
+    /// Returns true when not loading stats.
+    /// </summary>
+    [ObservableProperty] private bool _canApplyFilters = true;
+
+    /// <summary>
+    /// Syncs CanApplyFilters with IsLoadingStats - disable filters during loading.
+    /// </summary>
+    partial void OnIsLoadingStatsChanged(bool value)
+    {
+        CanApplyFilters = !value;
+    }
+
     // ==================== QUICK STATS ====================
 
     [ObservableProperty] private DateTime _lastUpdateTime = DateTime.Now;

@@ -228,7 +228,7 @@ public sealed class InMemoryPacketStore : IPacketStore
             return Array.Empty<PacketInfo>();
 
         pageNumber = Math.Max(1, pageNumber);
-        pageSize = Math.Clamp(pageSize, 1, 5000);
+        pageSize = Math.Max(1, pageSize); // No upper limit - let caller decide page size
 
         var totalCount = packets.Count;
         if (!sortDescending)
