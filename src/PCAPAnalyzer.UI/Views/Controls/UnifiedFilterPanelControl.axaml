@@ -129,43 +129,43 @@
                             <!-- Protocols Row -->
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Protocols" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
-                                <WrapPanel>
-                                    <Button Classes="filter-chip" Content="TCP"
-                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="TCP"/>
-                                    <Button Classes="filter-chip" Content="UDP"
-                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="UDP"/>
-                                    <Button Classes="filter-chip" Content="ICMP"
-                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="ICMP"/>
-                                    <Button Classes="filter-chip" Content="DNS"
-                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="DNS"/>
-                                    <Button Classes="filter-chip" Content="HTTP"
-                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="HTTP"/>
-                                    <Button Classes="filter-chip" Content="HTTPS"
-                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="HTTPS"/>
-                                    <Button Classes="filter-chip" Content="TLS"
-                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="TLS"/>
-                                    <Button Classes="filter-chip" Content="SSH"
-                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="SSH"/>
-                                    <Button Classes="filter-chip" Content="FTP"
-                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="FTP"/>
-                                    <Button Classes="filter-chip" Content="SMTP"
-                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="SMTP"/>
-                                </WrapPanel>
+                                <ItemsControl ItemsSource="{Binding ProtocolChips}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding ToggleCommand}"
+                                                    Classes="filter-chip"
+                                                    Classes.chip-included="{Binding IsIncluded}"
+                                                    Classes.chip-excluded="{Binding IsExcluded}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
 
                             <!-- Security Row -->
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Security" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
-                                <WrapPanel>
-                                    <Button Classes="filter-chip" Content="Insecure"
-                                            Command="{Binding ToggleQuickFilterCommand}" CommandParameter="Insecure"/>
-                                    <Button Classes="filter-chip" Content="Anomalies"
-                                            Command="{Binding ToggleQuickFilterCommand}" CommandParameter="Anomalies"/>
-                                    <Button Classes="filter-chip" Content="Suspicious"
-                                            Command="{Binding ToggleQuickFilterCommand}" CommandParameter="Suspicious"/>
-                                    <Button Classes="filter-chip" Content="TCP Issues"
-                                            Command="{Binding ToggleQuickFilterCommand}" CommandParameter="TCP Issues"/>
-                                </WrapPanel>
+                                <ItemsControl ItemsSource="{Binding SecurityChips}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding ToggleCommand}"
+                                                    Classes="filter-chip"
+                                                    Classes.chip-included="{Binding IsIncluded}"
+                                                    Classes.chip-excluded="{Binding IsExcluded}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
 
                             <!-- IP/Port Inputs (Press Enter to add) -->
@@ -215,48 +215,55 @@
                             <!-- Severity Row -->
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Severity" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
-                                <WrapPanel>
-                                    <Button Classes="filter-chip" Content="Critical"
-                                            Command="{Binding ToggleSeverityCommand}" CommandParameter="Critical"/>
-                                    <Button Classes="filter-chip" Content="High"
-                                            Command="{Binding ToggleSeverityCommand}" CommandParameter="High"/>
-                                    <Button Classes="filter-chip" Content="Medium"
-                                            Command="{Binding ToggleSeverityCommand}" CommandParameter="Medium"/>
-                                    <Button Classes="filter-chip" Content="Low"
-                                            Command="{Binding ToggleSeverityCommand}" CommandParameter="Low"/>
-                                </WrapPanel>
+                                <ItemsControl ItemsSource="{Binding SeverityChips}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding ToggleCommand}"
+                                                    Classes="filter-chip"
+                                                    Classes.chip-included="{Binding IsIncluded}"
+                                                    Classes.chip-excluded="{Binding IsExcluded}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
 
                             <!-- Category Row -->
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Category" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
-                                <WrapPanel>
-                                    <Button Classes="filter-chip" Content="Network"
-                                            Command="{Binding ToggleThreatCategoryCommand}" CommandParameter="Network"/>
-                                    <Button Classes="filter-chip" Content="Application"
-                                            Command="{Binding ToggleThreatCategoryCommand}" CommandParameter="Application"/>
-                                    <Button Classes="filter-chip" Content="Crypto"
-                                            Command="{Binding ToggleThreatCategoryCommand}" CommandParameter="Crypto"/>
-                                    <Button Classes="filter-chip" Content="Exfiltration"
-                                            Command="{Binding ToggleThreatCategoryCommand}" CommandParameter="Exfiltration"/>
-                                    <Button Classes="filter-chip" Content="IoT"
-                                            Command="{Binding ToggleThreatCategoryCommand}" CommandParameter="IoT"/>
-                                    <Button Classes="filter-chip" Content="VoIP"
-                                            Command="{Binding ToggleThreatCategoryCommand}" CommandParameter="VoIP"/>
-                                </WrapPanel>
+                                <ItemsControl ItemsSource="{Binding ThreatCategoryChips}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding ToggleCommand}"
+                                                    Classes="filter-chip"
+                                                    Classes.chip-included="{Binding IsIncluded}"
+                                                    Classes.chip-excluded="{Binding IsExcluded}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
 
                             <!-- Search Input -->
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Search" FontSize="11" Foreground="#8B949E"/>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBox Grid.Column="0" Text="{Binding SearchInput}"
-                                             Watermark="e.g. Port Scan, Cleartext Auth"
-                                             Classes="filter-input"/>
-                                    <Button Grid.Column="1" Classes="add-button"
-                                            Command="{Binding SearchCommand}"
-                                            Content="+" Margin="4,0,0,0"/>
-                                </Grid>
+                                <TextBlock Text="Search (Enter to add)" FontSize="11" Foreground="#8B949E"/>
+                                <TextBox Text="{Binding SearchInput}"
+                                         Watermark="e.g. Port Scan, Cleartext Auth"
+                                         Classes="filter-input">
+                                    <TextBox.KeyBindings>
+                                        <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}"/>
+                                    </TextBox.KeyBindings>
+                                </TextBox>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -267,73 +274,87 @@
                             <!-- Codecs Row -->
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Codecs" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
-                                <WrapPanel>
-                                    <Button Classes="filter-chip" Content="G.711"
-                                            Command="{Binding ToggleCodecCommand}" CommandParameter="G.711"/>
-                                    <Button Classes="filter-chip" Content="G.729"
-                                            Command="{Binding ToggleCodecCommand}" CommandParameter="G.729"/>
-                                    <Button Classes="filter-chip" Content="Opus"
-                                            Command="{Binding ToggleCodecCommand}" CommandParameter="Opus"/>
-                                    <Button Classes="filter-chip" Content="H.264"
-                                            Command="{Binding ToggleCodecCommand}" CommandParameter="H.264"/>
-                                    <Button Classes="filter-chip" Content="VP8"
-                                            Command="{Binding ToggleCodecCommand}" CommandParameter="VP8"/>
-                                    <Button Classes="filter-chip" Content="VP9"
-                                            Command="{Binding ToggleCodecCommand}" CommandParameter="VP9"/>
-                                </WrapPanel>
+                                <ItemsControl ItemsSource="{Binding CodecChips}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding ToggleCommand}"
+                                                    Classes="filter-chip"
+                                                    Classes.chip-included="{Binding IsIncluded}"
+                                                    Classes.chip-excluded="{Binding IsExcluded}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
 
                             <!-- Quality Row -->
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Quality" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
-                                <WrapPanel>
-                                    <Button Classes="filter-chip" Content="Poor"
-                                            Command="{Binding ToggleQualityLevelCommand}" CommandParameter="Poor"/>
-                                    <Button Classes="filter-chip" Content="Fair"
-                                            Command="{Binding ToggleQualityLevelCommand}" CommandParameter="Fair"/>
-                                    <Button Classes="filter-chip" Content="Good"
-                                            Command="{Binding ToggleQualityLevelCommand}" CommandParameter="Good"/>
-                                    <Button Classes="filter-chip" Content="Excellent"
-                                            Command="{Binding ToggleQualityLevelCommand}" CommandParameter="Excellent"/>
-                                </WrapPanel>
+                                <ItemsControl ItemsSource="{Binding QualityChips}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding ToggleCommand}"
+                                                    Classes="filter-chip"
+                                                    Classes.chip-included="{Binding IsIncluded}"
+                                                    Classes.chip-excluded="{Binding IsExcluded}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
 
                             <!-- Issues Row -->
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Issues" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
-                                <WrapPanel>
-                                    <Button Classes="filter-chip" Content="High Jitter"
-                                            Command="{Binding ToggleVoipIssueCommand}" CommandParameter="High Jitter"/>
-                                    <Button Classes="filter-chip" Content="High Latency"
-                                            Command="{Binding ToggleVoipIssueCommand}" CommandParameter="High Latency"/>
-                                    <Button Classes="filter-chip" Content="Packet Loss"
-                                            Command="{Binding ToggleVoipIssueCommand}" CommandParameter="Packet Loss"/>
-                                </WrapPanel>
+                                <ItemsControl ItemsSource="{Binding IssueChips}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding ToggleCommand}"
+                                                    Classes="filter-chip"
+                                                    Classes.chip-included="{Binding IsIncluded}"
+                                                    Classes.chip-excluded="{Binding IsExcluded}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
 
                             <!-- Threshold Inputs -->
                             <Grid ColumnDefinitions="*,16,*">
                                 <StackPanel Grid.Column="0" Spacing="4">
-                                    <TextBlock Text="Jitter Threshold" FontSize="11" Foreground="#8B949E"/>
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBox Grid.Column="0" Text="{Binding JitterThresholdInput}"
-                                                 Watermark="e.g. 30 ms"
-                                                 Classes="filter-input"/>
-                                        <Button Grid.Column="1" Classes="add-button"
-                                                Command="{Binding SetJitterThresholdCommand}"
-                                                Content="+" Margin="4,0,0,0"/>
-                                    </Grid>
+                                    <TextBlock Text="Jitter Threshold (Enter to set)" FontSize="11" Foreground="#8B949E"/>
+                                    <TextBox Text="{Binding JitterThresholdInput}"
+                                             Watermark="e.g. 30 ms"
+                                             Classes="filter-input">
+                                        <TextBox.KeyBindings>
+                                            <KeyBinding Gesture="Enter" Command="{Binding SetJitterThresholdCommand}"/>
+                                        </TextBox.KeyBindings>
+                                    </TextBox>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" Spacing="4">
-                                    <TextBlock Text="Latency Threshold" FontSize="11" Foreground="#8B949E"/>
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBox Grid.Column="0" Text="{Binding LatencyThresholdInput}"
-                                                 Watermark="e.g. 150 ms"
-                                                 Classes="filter-input"/>
-                                        <Button Grid.Column="1" Classes="add-button"
-                                                Command="{Binding SetLatencyThresholdCommand}"
-                                                Content="+" Margin="4,0,0,0"/>
-                                    </Grid>
+                                    <TextBlock Text="Latency Threshold (Enter to set)" FontSize="11" Foreground="#8B949E"/>
+                                    <TextBox Text="{Binding LatencyThresholdInput}"
+                                             Watermark="e.g. 150 ms"
+                                             Classes="filter-input">
+                                        <TextBox.KeyBindings>
+                                            <KeyBinding Gesture="Enter" Command="{Binding SetLatencyThresholdCommand}"/>
+                                        </TextBox.KeyBindings>
+                                    </TextBox>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
@@ -345,75 +366,76 @@
                             <!-- Direction Row -->
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Direction" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
-                                <WrapPanel>
-                                    <Button Classes="filter-chip" Content="Inbound"
-                                            Command="{Binding ToggleDirectionCommand}" CommandParameter="Inbound"/>
-                                    <Button Classes="filter-chip" Content="Outbound"
-                                            Command="{Binding ToggleDirectionCommand}" CommandParameter="Outbound"/>
-                                    <Button Classes="filter-chip" Content="Internal"
-                                            Command="{Binding ToggleDirectionCommand}" CommandParameter="Internal"/>
-                                </WrapPanel>
+                                <ItemsControl ItemsSource="{Binding DirectionChips}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding ToggleCommand}"
+                                                    Classes="filter-chip"
+                                                    Classes.chip-included="{Binding IsIncluded}"
+                                                    Classes.chip-excluded="{Binding IsExcluded}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
 
                             <!-- Regions Row -->
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Regions" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
-                                <WrapPanel>
-                                    <Button Classes="filter-chip" Content="North America"
-                                            Command="{Binding ToggleRegionCommand}" CommandParameter="North America"/>
-                                    <Button Classes="filter-chip" Content="Europe"
-                                            Command="{Binding ToggleRegionCommand}" CommandParameter="Europe"/>
-                                    <Button Classes="filter-chip" Content="Asia"
-                                            Command="{Binding ToggleRegionCommand}" CommandParameter="Asia"/>
-                                    <Button Classes="filter-chip" Content="Middle East"
-                                            Command="{Binding ToggleRegionCommand}" CommandParameter="Middle East"/>
-                                    <Button Classes="filter-chip" Content="Africa"
-                                            Command="{Binding ToggleRegionCommand}" CommandParameter="Africa"/>
-                                    <Button Classes="filter-chip" Content="South America"
-                                            Command="{Binding ToggleRegionCommand}" CommandParameter="South America"/>
-                                    <Button Classes="filter-chip" Content="Oceania"
-                                            Command="{Binding ToggleRegionCommand}" CommandParameter="Oceania"/>
-                                </WrapPanel>
+                                <ItemsControl ItemsSource="{Binding RegionChips}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding ToggleCommand}"
+                                                    Classes="filter-chip"
+                                                    Classes.chip-included="{Binding IsIncluded}"
+                                                    Classes.chip-excluded="{Binding IsExcluded}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
 
                             <!-- Countries Row -->
                             <StackPanel Spacing="6">
                                 <TextBlock Text="Countries" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
-                                <WrapPanel>
-                                    <Button Classes="filter-chip" Content="US"
-                                            Command="{Binding ToggleCountryCommand}" CommandParameter="US"/>
-                                    <Button Classes="filter-chip" Content="CN"
-                                            Command="{Binding ToggleCountryCommand}" CommandParameter="CN"/>
-                                    <Button Classes="filter-chip" Content="RU"
-                                            Command="{Binding ToggleCountryCommand}" CommandParameter="RU"/>
-                                    <Button Classes="filter-chip" Content="DE"
-                                            Command="{Binding ToggleCountryCommand}" CommandParameter="DE"/>
-                                    <Button Classes="filter-chip" Content="GB"
-                                            Command="{Binding ToggleCountryCommand}" CommandParameter="GB"/>
-                                    <Button Classes="filter-chip" Content="FR"
-                                            Command="{Binding ToggleCountryCommand}" CommandParameter="FR"/>
-                                    <Button Classes="filter-chip" Content="JP"
-                                            Command="{Binding ToggleCountryCommand}" CommandParameter="JP"/>
-                                    <Button Classes="filter-chip" Content="IN"
-                                            Command="{Binding ToggleCountryCommand}" CommandParameter="IN"/>
-                                    <Button Classes="filter-chip" Content="BR"
-                                            Command="{Binding ToggleCountryCommand}" CommandParameter="BR"/>
-                                    <Button Classes="filter-chip" Content="AU"
-                                            Command="{Binding ToggleCountryCommand}" CommandParameter="AU"/>
-                                </WrapPanel>
+                                <ItemsControl ItemsSource="{Binding CountryChips}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding ToggleCommand}"
+                                                    Classes="filter-chip"
+                                                    Classes.chip-included="{Binding IsIncluded}"
+                                                    Classes.chip-excluded="{Binding IsExcluded}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
                             </StackPanel>
 
                             <!-- Country Search Input -->
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Country Search" FontSize="11" Foreground="#8B949E"/>
-                                <Grid ColumnDefinitions="*,Auto">
-                                    <TextBox Grid.Column="0" Text="{Binding CountrySearchInput}"
-                                             Watermark="e.g. CA, NL, SE"
-                                             Classes="filter-input"/>
-                                    <Button Grid.Column="1" Classes="add-button"
-                                            Command="{Binding AddCountryCommand}"
-                                            Content="+" Margin="4,0,0,0"/>
-                                </Grid>
+                                <TextBlock Text="Country Search (Enter to add)" FontSize="11" Foreground="#8B949E"/>
+                                <TextBox Text="{Binding CountrySearchInput}"
+                                         Watermark="e.g. CA, NL, SE"
+                                         Classes="filter-input">
+                                    <TextBox.KeyBindings>
+                                        <KeyBinding Gesture="Enter" Command="{Binding AddCountryCommand}"/>
+                                    </TextBox.KeyBindings>
+                                </TextBox>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -454,11 +476,11 @@
             <Setter Property="Opacity" Value="1"/>
         </Style>
 
-        <!-- Filter Chip Buttons -->
+        <!-- Filter Chip Buttons - Base Style -->
         <Style Selector="Button.filter-chip">
             <Setter Property="Background" Value="#21262D"/>
             <Setter Property="BorderBrush" Value="#30363D"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderThickness" Value="2"/>
             <Setter Property="Foreground" Value="#8B949E"/>
             <Setter Property="Padding" Value="10,5"/>
             <Setter Property="Margin" Value="0,0,6,6"/>
@@ -469,6 +491,28 @@
         <Style Selector="Button.filter-chip:pointerover">
             <Setter Property="Background" Value="#30363D"/>
             <Setter Property="BorderBrush" Value="#484F58"/>
+        </Style>
+
+        <!-- Chip INCLUDED state (green) -->
+        <Style Selector="Button.filter-chip.chip-included">
+            <Setter Property="Background" Value="#1A3D1A"/>
+            <Setter Property="BorderBrush" Value="#2EA043"/>
+            <Setter Property="Foreground" Value="#7EE787"/>
+        </Style>
+        <Style Selector="Button.filter-chip.chip-included:pointerover">
+            <Setter Property="Background" Value="#2A4D2A"/>
+            <Setter Property="BorderBrush" Value="#3FB950"/>
+        </Style>
+
+        <!-- Chip EXCLUDED state (red) -->
+        <Style Selector="Button.filter-chip.chip-excluded">
+            <Setter Property="Background" Value="#3D1A1A"/>
+            <Setter Property="BorderBrush" Value="#F85149"/>
+            <Setter Property="Foreground" Value="#FF7B72"/>
+        </Style>
+        <Style Selector="Button.filter-chip.chip-excluded:pointerover">
+            <Setter Property="Background" Value="#4D2A2A"/>
+            <Setter Property="BorderBrush" Value="#F97583"/>
         </Style>
 
         <!-- Filter Input TextBox -->
