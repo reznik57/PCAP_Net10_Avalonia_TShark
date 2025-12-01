@@ -121,41 +121,54 @@
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="models:PortActivityData">
                                         <Border Classes="data-item">
-                                            <Grid ColumnDefinitions="Auto,*,Auto">
-                                                <StackPanel Grid.Column="0">
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding Port}" 
-                                                                 FontSize="13" 
-                                                                 FontWeight="SemiBold" 
-                                                                 Foreground="#F0F6FC"/>
-                                                        <TextBlock Text="/" 
-                                                                 FontSize="11" 
-                                                                 Foreground="#484F58" 
-                                                                 Margin="2,0"/>
-                                                        <TextBlock Text="{Binding Protocol}" 
-                                                                 FontSize="11" 
-                                                                 Foreground="#8B949E"/>
-                                                    </StackPanel>
-                                                    <TextBlock Text="{Binding ServiceName}" 
-                                                             FontSize="10" 
-                                                             Foreground="#484F58"/>
-                                                </StackPanel>
-                                                
-                                                <StackPanel Grid.Column="2" HorizontalAlignment="Right">
-                                                    <TextBlock Text="{Binding DisplayBytes}" 
-                                                             FontSize="12" 
-                                                             Foreground="#F0F6FC" 
-                                                             HorizontalAlignment="Right"/>
-                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                                        <TextBlock Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" 
-                                                                 FontSize="10" 
-                                                                 Foreground="#8B949E"/>
-                                                        <TextBlock Text="{Binding Percentage, StringFormat=' ({0:F1}%)'}" 
-                                                                 FontSize="10" 
+                                            <StackPanel Spacing="6">
+                                                <!-- Row 1: Port info, percentage bar, percentage value -->
+                                                <Grid ColumnDefinitions="120,*,60">
+                                                    <StackPanel Grid.Column="0">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding Port}"
+                                                                     FontSize="13"
+                                                                     FontWeight="SemiBold"
+                                                                     Foreground="#F0F6FC"/>
+                                                            <TextBlock Text="/"
+                                                                     FontSize="11"
+                                                                     Foreground="#484F58"
+                                                                     Margin="2,0"/>
+                                                            <TextBlock Text="{Binding Protocol}"
+                                                                     FontSize="11"
+                                                                     Foreground="#8B949E"/>
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding ServiceName}"
+                                                                 FontSize="10"
                                                                  Foreground="#484F58"/>
                                                     </StackPanel>
-                                                </StackPanel>
-                                            </Grid>
+
+                                                    <!-- Percentage bar -->
+                                                    <Border Grid.Column="1" Height="8" Background="#21262D" CornerRadius="4" Margin="8,0">
+                                                        <Border Background="#58A6FF" CornerRadius="4" HorizontalAlignment="Left"
+                                                                Width="{Binding Percentage}"/>
+                                                    </Border>
+
+                                                    <!-- Percentage value -->
+                                                    <TextBlock Grid.Column="2"
+                                                             Text="{Binding Percentage, StringFormat='{}{0:F1}%'}"
+                                                             FontSize="11"
+                                                             Foreground="#8B949E"
+                                                             HorizontalAlignment="Right"/>
+                                                </Grid>
+
+                                                <!-- Row 2: Packet count and size -->
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                                                        <TextBlock Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}"
+                                                                 FontSize="10"
+                                                                 Foreground="#8B949E"/>
+                                                        <TextBlock Text="{Binding DisplayBytes}"
+                                                                 FontSize="10"
+                                                                 Foreground="#8B949E"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </StackPanel>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -164,43 +177,56 @@
                         
                         <!-- Template for when Source IPs is selected -->
                         <DataTemplate DataType="models:ChartPopupViewModel">
-                            <ItemsControl ItemsSource="{Binding DisplayItems}" 
+                            <ItemsControl ItemsSource="{Binding DisplayItems}"
                                         IsVisible="{Binding SelectedDataType, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Source IPs}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="models:IPAddressData">
                                         <Border Classes="data-item">
-                                            <Grid ColumnDefinitions="Auto,*,Auto">
-                                                <StackPanel Grid.Column="0">
-                                                    <TextBlock Text="{Binding Address}" 
-                                                             FontSize="13" 
-                                                             FontWeight="SemiBold" 
-                                                             Foreground="#F0F6FC"/>
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding Country}" 
-                                                                 FontSize="10" 
-                                                                 Foreground="#8B949E"/>
-                                                        <TextBlock Text="{Binding City, StringFormat=' - {0}'}" 
-                                                                 FontSize="10" 
-                                                                 Foreground="#484F58"
-                                                                 IsVisible="{Binding City, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                            <StackPanel Spacing="6">
+                                                <!-- Row 1: IP address, percentage bar, percentage value -->
+                                                <Grid ColumnDefinitions="160,*,60">
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="{Binding Address}"
+                                                                 FontSize="13"
+                                                                 FontWeight="SemiBold"
+                                                                 Foreground="#F0F6FC"/>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding Country}"
+                                                                     FontSize="10"
+                                                                     Foreground="#8B949E"/>
+                                                            <TextBlock Text="{Binding City, StringFormat=' - {0}'}"
+                                                                     FontSize="10"
+                                                                     Foreground="#484F58"
+                                                                     IsVisible="{Binding City, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                                        </StackPanel>
                                                     </StackPanel>
-                                                </StackPanel>
-                                                
-                                                <StackPanel Grid.Column="2" HorizontalAlignment="Right">
-                                                    <TextBlock Text="{Binding DisplayBytes}" 
-                                                             FontSize="12" 
-                                                             Foreground="#F0F6FC" 
+
+                                                    <!-- Percentage bar -->
+                                                    <Border Grid.Column="1" Height="8" Background="#21262D" CornerRadius="4" Margin="8,0">
+                                                        <Border Background="#3FB950" CornerRadius="4" HorizontalAlignment="Left"
+                                                                Width="{Binding Percentage}"/>
+                                                    </Border>
+
+                                                    <!-- Percentage value -->
+                                                    <TextBlock Grid.Column="2"
+                                                             Text="{Binding Percentage, StringFormat='{}{0:F1}%'}"
+                                                             FontSize="11"
+                                                             Foreground="#8B949E"
                                                              HorizontalAlignment="Right"/>
-                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                                        <TextBlock Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" 
-                                                                 FontSize="10" 
+                                                </Grid>
+
+                                                <!-- Row 2: Packet count and size -->
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                                                        <TextBlock Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}"
+                                                                 FontSize="10"
                                                                  Foreground="#8B949E"/>
-                                                        <TextBlock Text="{Binding Percentage, StringFormat=' ({0:F1}%)'}" 
-                                                                 FontSize="10" 
-                                                                 Foreground="#484F58"/>
+                                                        <TextBlock Text="{Binding DisplayBytes}"
+                                                                 FontSize="10"
+                                                                 Foreground="#8B949E"/>
                                                     </StackPanel>
-                                                </StackPanel>
-                                            </Grid>
+                                                </Grid>
+                                            </StackPanel>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
@@ -209,43 +235,56 @@
                         
                         <!-- Template for when Destination IPs is selected -->
                         <DataTemplate DataType="models:ChartPopupViewModel">
-                            <ItemsControl ItemsSource="{Binding DisplayItems}" 
+                            <ItemsControl ItemsSource="{Binding DisplayItems}"
                                         IsVisible="{Binding SelectedDataType, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Destination IPs}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="models:IPAddressData">
                                         <Border Classes="data-item">
-                                            <Grid ColumnDefinitions="Auto,*,Auto">
-                                                <StackPanel Grid.Column="0">
-                                                    <TextBlock Text="{Binding Address}" 
-                                                             FontSize="13" 
-                                                             FontWeight="SemiBold" 
-                                                             Foreground="#F0F6FC"/>
-                                                    <StackPanel Orientation="Horizontal">
-                                                        <TextBlock Text="{Binding Country}" 
-                                                                 FontSize="10" 
-                                                                 Foreground="#8B949E"/>
-                                                        <TextBlock Text="{Binding City, StringFormat=' - {0}'}" 
-                                                                 FontSize="10" 
-                                                                 Foreground="#484F58"
-                                                                 IsVisible="{Binding City, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                            <StackPanel Spacing="6">
+                                                <!-- Row 1: IP address, percentage bar, percentage value -->
+                                                <Grid ColumnDefinitions="160,*,60">
+                                                    <StackPanel Grid.Column="0">
+                                                        <TextBlock Text="{Binding Address}"
+                                                                 FontSize="13"
+                                                                 FontWeight="SemiBold"
+                                                                 Foreground="#F0F6FC"/>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding Country}"
+                                                                     FontSize="10"
+                                                                     Foreground="#8B949E"/>
+                                                            <TextBlock Text="{Binding City, StringFormat=' - {0}'}"
+                                                                     FontSize="10"
+                                                                     Foreground="#484F58"
+                                                                     IsVisible="{Binding City, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                                        </StackPanel>
                                                     </StackPanel>
-                                                </StackPanel>
-                                                
-                                                <StackPanel Grid.Column="2" HorizontalAlignment="Right">
-                                                    <TextBlock Text="{Binding DisplayBytes}" 
-                                                             FontSize="12" 
-                                                             Foreground="#F0F6FC" 
+
+                                                    <!-- Percentage bar -->
+                                                    <Border Grid.Column="1" Height="8" Background="#21262D" CornerRadius="4" Margin="8,0">
+                                                        <Border Background="#3FB950" CornerRadius="4" HorizontalAlignment="Left"
+                                                                Width="{Binding Percentage}"/>
+                                                    </Border>
+
+                                                    <!-- Percentage value -->
+                                                    <TextBlock Grid.Column="2"
+                                                             Text="{Binding Percentage, StringFormat='{}{0:F1}%'}"
+                                                             FontSize="11"
+                                                             Foreground="#8B949E"
                                                              HorizontalAlignment="Right"/>
-                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                                        <TextBlock Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" 
-                                                                 FontSize="10" 
+                                                </Grid>
+
+                                                <!-- Row 2: Packet count and size -->
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                                                        <TextBlock Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}"
+                                                                 FontSize="10"
                                                                  Foreground="#8B949E"/>
-                                                        <TextBlock Text="{Binding Percentage, StringFormat=' ({0:F1}%)'}" 
-                                                                 FontSize="10" 
-                                                                 Foreground="#484F58"/>
+                                                        <TextBlock Text="{Binding DisplayBytes}"
+                                                                 FontSize="10"
+                                                                 Foreground="#8B949E"/>
                                                     </StackPanel>
-                                                </StackPanel>
-                                            </Grid>
+                                                </Grid>
+                                            </StackPanel>
                                         </Border>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>

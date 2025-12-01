@@ -174,9 +174,16 @@ namespace PCAPAnalyzer.UI.Services
         /// <summary>
         /// Builds a PacketFilter from a single FilterChipItem.
         /// Supports field types: "Src IP", "Dest IP", "Port", "Protocol"
+        /// Also handles Quick Filter chips (IPv4, IPv6, Retransmissions, etc.)
         /// </summary>
         public PacketFilter BuildFilterFromChip(FilterChipItem chip)
         {
+            // ✅ Handle Quick Filter chips (those with QuickFilterCodeName set)
+            if (!string.IsNullOrEmpty(chip.QuickFilterCodeName))
+            {
+                return BuildFilterFromQuickFilterChip(chip);
+            }
+
             // ✅ SECURITY FIX: Use OrdinalIgnoreCase instead of culture-aware comparison
             // Prevents Turkish "I" problem and improves performance
             return chip.FieldName switch
@@ -215,6 +222,130 @@ namespace PCAPAnalyzer.UI.Services
                     },
 
                 _ => new PacketFilter { Description = chip.DisplayLabel }
+            };
+        }
+
+        /// <summary>
+        /// Builds a PacketFilter from a Quick Filter chip (IPv4, IPv6, RFC1918, etc.)
+        /// Uses NetworkFilterHelper for consistent IP classification.
+        /// </summary>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "CA1502:Avoid excessive complexity",
+            Justification = "Switch expression for quick filter types is intentionally comprehensive")]
+        private static PacketFilter BuildFilterFromQuickFilterChip(FilterChipItem chip)
+        {
+            Func<PacketInfo, bool> predicate = chip.QuickFilterCodeName switch
+            {
+                // ==================== NETWORK TYPE FILTERS ====================
+                "IPv4" => p => Core.Services.NetworkFilterHelper.IsIPv4(p.SourceIP) ||
+                               Core.Services.NetworkFilterHelper.IsIPv4(p.DestinationIP),
+                "IPv6" => p => Core.Services.NetworkFilterHelper.IsIPv6(p.SourceIP) ||
+                               Core.Services.NetworkFilterHelper.IsIPv6(p.DestinationIP),
+                "RFC1918" => p => Core.Services.NetworkFilterHelper.IsRFC1918(p.SourceIP) ||
+                                  Core.Services.NetworkFilterHelper.IsRFC1918(p.DestinationIP),
+                "PublicIP" => p => !Core.Services.NetworkFilterHelper.IsRFC1918(p.SourceIP) &&
+                                   !Core.Services.NetworkFilterHelper.IsLoopback(p.SourceIP) &&
+                                   !Core.Services.NetworkFilterHelper.IsLinkLocal(p.SourceIP),
+                "APIPA" => p => Core.Services.NetworkFilterHelper.IsLinkLocal(p.SourceIP) ||
+                                Core.Services.NetworkFilterHelper.IsLinkLocal(p.DestinationIP),
+                "Multicast" => p => Core.Services.NetworkFilterHelper.IsMulticast(p.SourceIP) ||
+                                    Core.Services.NetworkFilterHelper.IsMulticast(p.DestinationIP),
+                "Broadcast" => p => Core.Services.NetworkFilterHelper.IsBroadcast(p.SourceIP) ||
+                                    Core.Services.NetworkFilterHelper.IsBroadcast(p.DestinationIP),
+                "Anycast" => p => Core.Services.NetworkFilterHelper.IsAnycast(p.SourceIP) ||
+                                  Core.Services.NetworkFilterHelper.IsAnycast(p.DestinationIP),
+                "Loopback" => p => Core.Services.NetworkFilterHelper.IsLoopback(p.SourceIP) ||
+                                   Core.Services.NetworkFilterHelper.IsLoopback(p.DestinationIP),
+                "LinkLocal" => p => Core.Services.NetworkFilterHelper.IsLinkLocal(p.SourceIP) ||
+                                    Core.Services.NetworkFilterHelper.IsLinkLocal(p.DestinationIP),
+
+                // ==================== TRAFFIC DIRECTION FILTERS ====================
+                "PrivateToPublic" => p => Core.Services.NetworkFilterHelper.IsRFC1918(p.SourceIP) &&
+                                          !Core.Services.NetworkFilterHelper.IsRFC1918(p.DestinationIP) &&
+                                          !Core.Services.NetworkFilterHelper.IsLoopback(p.DestinationIP),
+                "PublicToPrivate" => p => !Core.Services.NetworkFilterHelper.IsRFC1918(p.SourceIP) &&
+                                          Core.Services.NetworkFilterHelper.IsRFC1918(p.DestinationIP),
+
+                // ==================== PROTOCOL FILTERS ====================
+                "TCP" => p => p.Protocol == Protocol.TCP,
+                "UDP" => p => p.Protocol == Protocol.UDP,
+                "ICMP" => p => p.Protocol == Protocol.ICMP,
+                "HTTP" => p => p.L7Protocol?.Contains("HTTP", StringComparison.OrdinalIgnoreCase) == true &&
+                               p.L7Protocol?.Contains("HTTPS", StringComparison.OrdinalIgnoreCase) != true,
+                "HTTPS" => p => p.L7Protocol?.Contains("HTTPS", StringComparison.OrdinalIgnoreCase) == true ||
+                                p.L7Protocol?.Contains("TLS", StringComparison.OrdinalIgnoreCase) == true,
+                "DNS" => p => p.L7Protocol?.Contains("DNS", StringComparison.OrdinalIgnoreCase) == true ||
+                              p.SourcePort == 53 || p.DestinationPort == 53,
+                "SSH" => p => p.SourcePort == 22 || p.DestinationPort == 22,
+                "FTP" => p => p.SourcePort == 21 || p.DestinationPort == 21 ||
+                              p.SourcePort == 20 || p.DestinationPort == 20,
+                "SMTP" => p => p.SourcePort == 25 || p.DestinationPort == 25 ||
+                               p.SourcePort == 587 || p.DestinationPort == 587,
+                "SNMP" => p => p.SourcePort == 161 || p.DestinationPort == 161 ||
+                               p.SourcePort == 162 || p.DestinationPort == 162,
+                "DHCP" => p => p.SourcePort == 67 || p.DestinationPort == 67 ||
+                               p.SourcePort == 68 || p.DestinationPort == 68,
+                "STUN" => p => p.SourcePort == 3478 || p.DestinationPort == 3478,
+
+                // ==================== TLS VERSION FILTERS ====================
+                "TlsV10" => p => p.L7Protocol?.Contains("TLS 1.0", StringComparison.OrdinalIgnoreCase) == true ||
+                                 p.L7Protocol?.Contains("TLSv1.0", StringComparison.OrdinalIgnoreCase) == true,
+                "TlsV11" => p => p.L7Protocol?.Contains("TLS 1.1", StringComparison.OrdinalIgnoreCase) == true ||
+                                 p.L7Protocol?.Contains("TLSv1.1", StringComparison.OrdinalIgnoreCase) == true,
+                "TlsV12" => p => p.L7Protocol?.Contains("TLS 1.2", StringComparison.OrdinalIgnoreCase) == true ||
+                                 p.L7Protocol?.Contains("TLSv1.2", StringComparison.OrdinalIgnoreCase) == true,
+                "TlsV13" => p => p.L7Protocol?.Contains("TLS 1.3", StringComparison.OrdinalIgnoreCase) == true ||
+                                 p.L7Protocol?.Contains("TLSv1.3", StringComparison.OrdinalIgnoreCase) == true,
+
+                // ==================== VPN PROTOCOL FILTERS ====================
+                "WireGuard" => p => p.SourcePort == 51820 || p.DestinationPort == 51820,
+                "OpenVPN" => p => p.SourcePort == 1194 || p.DestinationPort == 1194,
+                "IKEv2" => p => p.SourcePort == 500 || p.DestinationPort == 500 ||
+                                p.SourcePort == 4500 || p.DestinationPort == 4500,
+                "IPSec" => p => p.Protocol.ToString().Contains("ESP", StringComparison.OrdinalIgnoreCase) ||
+                                p.Protocol.ToString().Contains("AH", StringComparison.OrdinalIgnoreCase),
+                "L2TP" => p => p.SourcePort == 1701 || p.DestinationPort == 1701,
+                "PPTP" => p => p.SourcePort == 1723 || p.DestinationPort == 1723,
+
+                // ==================== SECURITY FILTERS ====================
+                "Insecure" => p => Core.Services.NetworkFilterHelper.IsInsecureProtocol(
+                                       p.L7Protocol ?? p.Protocol.ToString()),
+
+                // ==================== TCP PERFORMANCE FILTERS ====================
+                "Retransmissions" => p => p.Info?.Contains("Retransmission", StringComparison.OrdinalIgnoreCase) == true,
+                "ZeroWindow" => p => p.Info?.Contains("Zero window", StringComparison.OrdinalIgnoreCase) == true ||
+                                     p.Info?.Contains("ZeroWindow", StringComparison.OrdinalIgnoreCase) == true,
+                "KeepAlive" => p => p.Info?.Contains("Keep-Alive", StringComparison.OrdinalIgnoreCase) == true,
+                "ConnectionRefused" => p => p.Info?.Contains("RST", StringComparison.OrdinalIgnoreCase) == true,
+                "WindowFull" => p => p.Info?.Contains("Window full", StringComparison.OrdinalIgnoreCase) == true,
+
+                // ==================== SECURITY AUDIT FILTERS ====================
+                "CleartextAuth" => p => p.Info?.Contains("AUTH", StringComparison.OrdinalIgnoreCase) == true ||
+                                        p.Info?.Contains("USER", StringComparison.OrdinalIgnoreCase) == true ||
+                                        p.Info?.Contains("PASS", StringComparison.OrdinalIgnoreCase) == true,
+                "ObsoleteCrypto" => p => p.L7Protocol?.Contains("SSL", StringComparison.OrdinalIgnoreCase) == true ||
+                                         p.L7Protocol?.Contains("TLS 1.0", StringComparison.OrdinalIgnoreCase) == true ||
+                                         p.L7Protocol?.Contains("TLS 1.1", StringComparison.OrdinalIgnoreCase) == true,
+                "SmbV1" => p => p.L7Protocol?.Contains("SMBv1", StringComparison.OrdinalIgnoreCase) == true ||
+                                p.L7Protocol?.Contains("SMB1", StringComparison.OrdinalIgnoreCase) == true,
+
+                // ==================== SIZE FILTERS ====================
+                "JumboFrames" => p => p.Length > 1500,
+
+                // ==================== PROTOCOL ERROR FILTERS ====================
+                "HTTPErrors" => p => p.Info?.Contains(" 4", StringComparison.OrdinalIgnoreCase) == true ||
+                                     p.Info?.Contains(" 5", StringComparison.OrdinalIgnoreCase) == true,
+                "DNSFailures" => p => p.Info?.Contains("NXDOMAIN", StringComparison.OrdinalIgnoreCase) == true ||
+                                      p.Info?.Contains("SERVFAIL", StringComparison.OrdinalIgnoreCase) == true,
+                "ICMPUnreachable" => p => p.Info?.Contains("unreachable", StringComparison.OrdinalIgnoreCase) == true,
+
+                // Default: no filter (match all)
+                _ => _ => true
+            };
+
+            return new PacketFilter
+            {
+                CustomPredicate = predicate,
+                Description = chip.DisplayLabel
             };
         }
 

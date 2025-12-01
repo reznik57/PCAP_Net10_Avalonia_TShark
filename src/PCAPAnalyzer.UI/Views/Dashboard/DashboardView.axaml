@@ -118,11 +118,25 @@
             </Grid>
         </Border>
 
+        <!-- Filter Progress Bar -->
+        <Border Grid.Row="0" Background="#1C1F26" BorderBrush="#3B82F6" BorderThickness="0,0,0,2" Padding="16,10" IsVisible="{Binding IsFilteringInProgress}">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="200"/></Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="🔍" FontSize="16" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <TextBlock Grid.Column="1" Text="Applying filters..." FontSize="13" FontWeight="Medium" Foreground="#3B82F6" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="2" Text="{Binding FilterProgress, StringFormat='{}{0:P0}'}" FontSize="12" FontWeight="Medium" Foreground="#8B949E" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <ProgressBar Grid.Column="3" Value="{Binding FilterProgress}" Minimum="0" Maximum="1" Height="6" Foreground="#3B82F6" Background="#21262D" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="24,24,24,24" Spacing="24" MaxWidth="{Binding $parent[Grid].Bounds.Width}">
 
                 <!-- FilterPanelControl for sophisticated filtering -->
                 <ctrl:FilterPanelControl DataContext="{Binding}" Margin="0,0,0,10" />
+
+                <!-- NOTE: Active filter badges are now shown in FilterPanelControl's
+                     INCLUDE/EXCLUDE sections with color-coded chips -->
 
                 <!-- Sampling Indicator Banner (shown for large captures) -->
                 <Border IsVisible="{Binding UsingStatisticsSample}"
@@ -151,11 +165,96 @@
                         <TextBlock Grid.Row="2" Grid.ColumnSpan="5" Text="NETWORK STATISTICS" FontSize="13" FontWeight="Bold" Foreground="#E6EDF3"/>
 
                         <!-- Single Row: All Stats -->
-                        <Border Grid.Row="4" Grid.Column="0" Classes="stat-card-modern" Margin="0,0,8,0"><StackPanel><TextBlock Text="TOTAL PACKETS" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding Statistics.TotalPackets, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#3B82F6"/></StackPanel></Border>
-                        <Border Grid.Row="4" Grid.Column="1" Classes="stat-card-modern" Margin="4,0"><StackPanel><TextBlock Text="TOTAL TRAFFIC" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding Statistics.TotalBytesFormatted}" FontSize="24" FontWeight="SemiBold" Foreground="#10B981"/></StackPanel></Border>
-                        <Border Grid.Row="4" Grid.Column="2" Classes="stat-card-modern" Margin="4,0"><StackPanel><TextBlock Text="UNIQUE IPs" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding Statistics.UniqueIPs, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#F59E0B"/></StackPanel></Border>
-                        <Border Grid.Row="4" Grid.Column="3" Classes="stat-card-modern" Margin="4,0"><StackPanel><TextBlock Text="CONVERSATIONS" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding Statistics.ActiveConversations, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#06B6D4"/></StackPanel></Border>
-                        <Border Grid.Row="4" Grid.Column="4" Classes="stat-card-modern" Margin="8,0,0,0"><StackPanel><TextBlock Text="UNIQUE PROTOCOLS" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/><TextBlock Text="{Binding Statistics.UniqueProtocols, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#EC4899"/></StackPanel></Border>
+                        <Border Grid.Row="4" Grid.Column="0" Classes="stat-card-modern" Margin="0,0,8,0">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="TOTAL PACKETS" FontSize="11" Foreground="#8B949E"/>
+                                    <TextBlock Text=" 🔍" FontSize="11" Foreground="#3B82F6" IsVisible="{Binding IsFilterActive}"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding FilteredTotalPackets, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#3B82F6" IsVisible="{Binding IsFilterActive}"/>
+                                <TextBlock Text="{Binding Statistics.TotalPackets, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#3B82F6" IsVisible="{Binding !IsFilterActive}"/>
+                                <TextBlock FontSize="11" Foreground="#8B949E" Margin="0,4,0,0" IsVisible="{Binding IsFilterActive}">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}of {0:N0} ({1:F1}%)">
+                                            <Binding Path="Statistics.TotalPackets"/>
+                                            <Binding Path="FilteredPacketsPercentage"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Row="4" Grid.Column="1" Classes="stat-card-modern" Margin="4,0">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="TOTAL TRAFFIC" FontSize="11" Foreground="#8B949E"/>
+                                    <TextBlock Text=" 🔍" FontSize="11" Foreground="#10B981" IsVisible="{Binding IsFilterActive}"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding FilteredTotalBytesFormatted}" FontSize="24" FontWeight="SemiBold" Foreground="#10B981" IsVisible="{Binding IsFilterActive}"/>
+                                <TextBlock Text="{Binding Statistics.TotalBytesFormatted}" FontSize="24" FontWeight="SemiBold" Foreground="#10B981" IsVisible="{Binding !IsFilterActive}"/>
+                                <TextBlock FontSize="11" Foreground="#8B949E" Margin="0,4,0,0" IsVisible="{Binding IsFilterActive}">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}of {0} ({1:F1}%)">
+                                            <Binding Path="Statistics.TotalBytesFormatted"/>
+                                            <Binding Path="FilteredTrafficPercentage"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Row="4" Grid.Column="2" Classes="stat-card-modern" Margin="4,0">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="UNIQUE IPs" FontSize="11" Foreground="#8B949E"/>
+                                    <TextBlock Text=" 🔍" FontSize="11" Foreground="#F59E0B" IsVisible="{Binding IsFilterActive}"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding FilteredUniqueIPs, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#F59E0B" IsVisible="{Binding IsFilterActive}"/>
+                                <TextBlock Text="{Binding Statistics.UniqueIPs, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#F59E0B" IsVisible="{Binding !IsFilterActive}"/>
+                                <TextBlock FontSize="11" Foreground="#8B949E" Margin="0,4,0,0" IsVisible="{Binding IsFilterActive}">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}of {0:N0} ({1:F1}%)">
+                                            <Binding Path="Statistics.UniqueIPs"/>
+                                            <Binding Path="FilteredIPsPercentage"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Row="4" Grid.Column="3" Classes="stat-card-modern" Margin="4,0">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="STREAMS" FontSize="11" Foreground="#8B949E"/>
+                                    <TextBlock Text=" 🔍" FontSize="11" Foreground="#06B6D4" IsVisible="{Binding IsFilterActive}"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding FilteredConversationCount, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#06B6D4" IsVisible="{Binding IsFilterActive}"/>
+                                <TextBlock Text="{Binding Statistics.ActiveConversations, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#06B6D4" IsVisible="{Binding !IsFilterActive}"/>
+                                <TextBlock FontSize="11" Foreground="#8B949E" Margin="0,4,0,0" IsVisible="{Binding IsFilterActive}">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}of {0:N0} ({1:F1}%)">
+                                            <Binding Path="Statistics.ActiveConversations"/>
+                                            <Binding Path="FilteredConversationsPercentage"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Row="4" Grid.Column="4" Classes="stat-card-modern" Margin="8,0,0,0">
+                            <StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock Text="DESTINATION PORTS" FontSize="11" Foreground="#8B949E"/>
+                                    <TextBlock Text=" 🔍" FontSize="11" Foreground="#EC4899" IsVisible="{Binding IsFilterActive}"/>
+                                </StackPanel>
+                                <TextBlock Text="{Binding FilteredDifferentPorts, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#EC4899" IsVisible="{Binding IsFilterActive}"/>
+                                <TextBlock Text="{Binding Statistics.DifferentPorts, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="SemiBold" Foreground="#EC4899" IsVisible="{Binding !IsFilterActive}"/>
+                                <TextBlock FontSize="11" Foreground="#8B949E" Margin="0,4,0,0" IsVisible="{Binding IsFilterActive}">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}of {0:N0} ({1:F1}%)">
+                                            <Binding Path="Statistics.DifferentPorts"/>
+                                            <Binding Path="FilteredDifferentPortsPercentage"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
                     </Grid>
                 </Border>
 
@@ -650,9 +749,8 @@
                         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
                         <Border Grid.Row="0" Classes="table-header-unified">
                             <Grid Margin="20,0">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#3FB950" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Packet Size Distribution" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
-                                <Button Grid.Column="1" Background="Transparent" BorderThickness="0" Padding="8,4" Cursor="Hand" ToolTip.Tip="Histogram showing packet count by size buckets (bytes)"><TextBlock Text="ⓘ" FontSize="14" Foreground="#8B949E"/></Button>
                             </Grid>
                         </Border>
                         <lvc:CartesianChart Grid.Row="1" Series="{Binding Charts.PacketSizeSeries}" XAxes="{Binding Charts.PacketSizeXAxes}" YAxes="{Binding Charts.PacketSizeYAxes}" ZoomMode="None" Height="320" Margin="20,20,20,10" TooltipPosition="Hidden" AnimationsSpeed="00:00:00.5"/>

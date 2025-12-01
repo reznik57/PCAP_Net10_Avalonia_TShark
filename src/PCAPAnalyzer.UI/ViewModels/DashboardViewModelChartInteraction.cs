@@ -37,7 +37,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 var windowStart = timestamp.AddSeconds(-1);
                 var windowEnd = timestamp.AddSeconds(1);
                 
-                var windowPackets = _currentPackets?
+                var windowPackets = CurrentPackets.ToList()?
                     .Where(p => p.Timestamp >= windowStart && p.Timestamp <= windowEnd)
                     .ToList() ?? new List<PacketInfo>();
                 
@@ -146,7 +146,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 var windowStart = timestamp.AddSeconds(-1);
                 var windowEnd = timestamp.AddSeconds(1);
                 
-                var windowPackets = _currentPackets?
+                var windowPackets = CurrentPackets.ToList()?
                     .Where(p => p.Timestamp >= windowStart && p.Timestamp <= windowEnd)
                     .ToList() ?? new List<PacketInfo>();
                 

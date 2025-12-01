@@ -110,6 +110,9 @@ namespace PCAPAnalyzer.Core.Services
                 stats.TopConversations = topConversations;
                 stats.TotalConversationCount = totalConversationCount;
 
+                // Calculate directional stream count (4-tuple) for Packet Analysis tab compatibility
+                stats.TotalStreamCount = CalculateDirectionalStreamCount(packetList);
+
                 var (topPorts, uniquePortCount) = _statisticsCalculator.CalculateTopPortsWithCount(packetList, _wellKnownPorts);
                 stats.TopPorts = topPorts;
                 stats.UniquePortCount = uniquePortCount;
@@ -588,6 +591,30 @@ namespace PCAPAnalyzer.Core.Services
             }
 
             return insights;
+        }
+
+        /// <summary>
+        /// Calculate directional stream count (unique 4-tuple: SrcIP, SrcPort, DstIP, DstPort).
+        /// This matches the calculation used by Packet Analysis tab for consistency.
+        /// Note: This is different from TotalConversationCount which groups bidirectionally.
+        /// </summary>
+        private static int CalculateDirectionalStreamCount(List<PacketInfo> packets)
+        {
+            try
+            {
+                // Count ALL directional streams (TCP + UDP + other) - not just TCP
+                // A stream is a unique 4-tuple (SrcIP, SrcPort, DstIP, DstPort) - DIRECTIONAL
+                return packets
+                    .Where(p => p.SourcePort > 0 && p.DestinationPort > 0) // Must have ports
+                    .Select(p => (p.SourceIP, p.SourcePort, p.DestinationIP, p.DestinationPort))
+                    .Distinct()
+                    .Count();
+            }
+            catch (Exception ex)
+            {
+                DebugLogger.Log($"[StatisticsService] Error calculating directional streams: {ex.Message}");
+                return 0;
+            }
         }
     }
 }

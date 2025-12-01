@@ -57,17 +57,50 @@ public partial class DashboardSmartFilters : ObservableObject
     [ObservableProperty] private bool _dnsAnomalies;
     [ObservableProperty] private bool _portScans;
 
+    // ==================== TCP PERFORMANCE FILTERS ====================
+    [ObservableProperty] private bool _retransmissions;
+    [ObservableProperty] private bool _zeroWindow;
+    [ObservableProperty] private bool _keepAlive;
+    [ObservableProperty] private bool _connectionRefused;
+    [ObservableProperty] private bool _windowFull;
+
+    // ==================== SECURITY AUDIT FILTERS ====================
+    [ObservableProperty] private bool _cleartextAuth;
+    [ObservableProperty] private bool _obsoleteCrypto;
+    [ObservableProperty] private bool _dnsTunneling;
+    [ObservableProperty] private bool _scanTraffic;
+    [ObservableProperty] private bool _nonStandardPorts;
+    [ObservableProperty] private bool _smbV1;
+
+    // ==================== CLEAN VIEW (NOISE REDUCTION) ====================
+    [ObservableProperty] private bool _hideBroadcast;
+    [ObservableProperty] private bool _applicationDataOnly;
+    [ObservableProperty] private bool _hideTunnelOverhead;
+
+    // ==================== PROTOCOL ERROR FILTERS ====================
+    [ObservableProperty] private bool _httpErrors;
+    [ObservableProperty] private bool _dnsFailures;
+    [ObservableProperty] private bool _icmpUnreachable;
+
     /// <summary>
     /// Check if any filters are active.
     /// </summary>
-    [SuppressMessage("Maintainability", "CA1502:Avoid excessive class coupling", Justification = "Filter aggregation requires checking all 38 filter flags - complexity is inherent to the domain")]
+    [SuppressMessage("Maintainability", "CA1502:Avoid excessive class coupling", Justification = "Filter aggregation requires checking all filter flags - complexity is inherent to the domain")]
     public bool HasActiveFilters =>
         Rfc1918 || PublicIP || Apipa || Ipv4 || Ipv6 || Multicast || Broadcast || Anycast ||
         Insecure || Anomalies ||
         TlsV10 || TlsV11 || TlsV12 || TlsV13 || Http || Https || Dns || Snmp || Ssh || Ftp || Smtp || Stun || Dhcp ||
         WireGuard || OpenVPN || IkeV2 || Ipsec || L2tp || Pptp ||
         JumboFrames || PrivateToPublic || PublicToPrivate || LinkLocal || Loopback ||
-        Suspicious || TcpIssues || DnsAnomalies || PortScans;
+        Suspicious || TcpIssues || DnsAnomalies || PortScans ||
+        // TCP Performance
+        Retransmissions || ZeroWindow || KeepAlive || ConnectionRefused || WindowFull ||
+        // Security Audit
+        CleartextAuth || ObsoleteCrypto || DnsTunneling || ScanTraffic || NonStandardPorts || SmbV1 ||
+        // Clean View
+        HideBroadcast || ApplicationDataOnly || HideTunnelOverhead ||
+        // Protocol Errors
+        HttpErrors || DnsFailures || IcmpUnreachable;
 
     /// <summary>
     /// Clear all filter selections.
@@ -80,5 +113,13 @@ public partial class DashboardSmartFilters : ObservableObject
         WireGuard = OpenVPN = IkeV2 = Ipsec = L2tp = Pptp = false;
         JumboFrames = PrivateToPublic = PublicToPrivate = LinkLocal = Loopback = false;
         Suspicious = TcpIssues = DnsAnomalies = PortScans = false;
+        // TCP Performance
+        Retransmissions = ZeroWindow = KeepAlive = ConnectionRefused = WindowFull = false;
+        // Security Audit
+        CleartextAuth = ObsoleteCrypto = DnsTunneling = ScanTraffic = NonStandardPorts = SmbV1 = false;
+        // Clean View
+        HideBroadcast = ApplicationDataOnly = HideTunnelOverhead = false;
+        // Protocol Errors
+        HttpErrors = DnsFailures = IcmpUnreachable = false;
     }
 }

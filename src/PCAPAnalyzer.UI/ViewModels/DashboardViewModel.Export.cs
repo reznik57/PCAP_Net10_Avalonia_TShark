@@ -88,11 +88,11 @@ public partial class DashboardViewModel
     [RelayCommand]
     private Task ShowPortDetails(object? parameter)
     {
-        if (parameter is TopPortViewModelExtended port && _currentPackets != null)
+        if (parameter is TopPortViewModelExtended port && CurrentPackets.Any())
         {
             DebugLogger.Log($"[DashboardViewModel] Show DrillDown for Port {port.Port}/{port.Protocol} ({port.ServiceName})");
             // Pass pre-calculated stats from Dashboard table to ensure consistency
-            DrillDown.ShowForPort(port.Port, port.Protocol, _currentPackets, port.PacketCount, port.ByteCount);
+            DrillDown.ShowForPort(port.Port, port.Protocol, CurrentPackets, port.PacketCount, port.ByteCount);
         }
         return Task.CompletedTask;
     }
@@ -100,11 +100,11 @@ public partial class DashboardViewModel
     [RelayCommand]
     private Task ShowIPDetails(object? parameter)
     {
-        if (parameter is EndpointViewModelExtended endpoint && _currentPackets != null)
+        if (parameter is EndpointViewModelExtended endpoint && CurrentPackets.Any())
         {
             DebugLogger.Log($"[DashboardViewModel] Show DrillDown for IP {endpoint.Address} ({endpoint.Country})");
             // Pass pre-calculated stats from Dashboard table to ensure consistency
-            DrillDown.ShowForIP(endpoint.Address, _currentPackets, endpoint.PacketCount, endpoint.ByteCount);
+            DrillDown.ShowForIP(endpoint.Address, CurrentPackets, endpoint.PacketCount, endpoint.ByteCount);
         }
         return Task.CompletedTask;
     }
@@ -112,10 +112,10 @@ public partial class DashboardViewModel
     [RelayCommand]
     private Task ShowConnectionDetails(object? parameter)
     {
-        if (parameter is ConnectionViewModelExtended connection && _currentPackets != null)
+        if (parameter is ConnectionViewModelExtended connection && CurrentPackets.Any())
         {
             DebugLogger.Log($"[DashboardViewModel] Show DrillDown for connection {connection.SourceIP}:{connection.SourcePort} → {connection.DestinationIP}:{connection.DestinationPort}");
-            DrillDown.ShowForConnection(connection.SourceIP, connection.SourcePort, connection.DestinationIP, connection.DestinationPort, _currentPackets);
+            DrillDown.ShowForConnection(connection.SourceIP, connection.SourcePort, connection.DestinationIP, connection.DestinationPort, CurrentPackets);
         }
         return Task.CompletedTask;
     }

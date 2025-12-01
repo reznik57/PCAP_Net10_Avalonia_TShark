@@ -62,7 +62,7 @@
                             <Button Command="{Binding DataContext.FilterByPortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding Port}"
                                     Classes="row-btn" ToolTip.Tip="Click to view packets for this port">
-                                <Grid ColumnDefinitions="80,*,60">
+                                <Grid ColumnDefinitions="80,*,50,70,70">
                                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
                                         <TextBlock Text="{Binding Port}" FontSize="12" Foreground="#58A6FF" FontWeight="SemiBold"/>
                                         <TextBlock Text="{Binding ServiceName, StringFormat='({0})'}" FontSize="10" Foreground="#8B949E"
@@ -73,6 +73,8 @@
                                                 Width="{Binding Percentage}"/>
                                     </Border>
                                     <TextBlock Grid.Column="2" Text="{Binding Percentage, StringFormat='{}{0:F0}%'}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="10" Foreground="#6E7681" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding BytesFormatted}" FontSize="10" Foreground="#6E7681" HorizontalAlignment="Right"/>
                                 </Grid>
                             </Button>
                         </DataTemplate>
@@ -89,10 +91,15 @@
                             <Button Command="{Binding DataContext.FilterByIPCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding IP}"
                                     Classes="row-btn" ToolTip.Tip="Click to view packets for this IP">
-                                <Grid ColumnDefinitions="*,80,80">
-                                    <TextBlock Grid.Column="0" Text="{Binding IP}" FontSize="12" Foreground="#58A6FF" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding BytesFormatted}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
+                                <Grid ColumnDefinitions="120,*,50,70,70">
+                                    <TextBlock Grid.Column="0" Text="{Binding IP}" FontSize="12" Foreground="#3FB950" TextTrimming="CharacterEllipsis"/>
+                                    <Border Grid.Column="1" Height="8" Background="#21262D" CornerRadius="4" Margin="8,0">
+                                        <Border Background="#3FB950" CornerRadius="4" HorizontalAlignment="Left"
+                                                Width="{Binding Percentage}"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="2" Text="{Binding Percentage, StringFormat='{}{0:F0}%'}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="10" Foreground="#6E7681" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding BytesFormatted}" FontSize="10" Foreground="#6E7681" HorizontalAlignment="Right"/>
                                 </Grid>
                             </Button>
                         </DataTemplate>
@@ -100,19 +107,24 @@
                 </ItemsControl>
             </StackPanel>
 
-            <!-- Top Conversations (clickable) -->
+            <!-- Top Streams (clickable) -->
             <StackPanel Spacing="8" IsVisible="{Binding TopConversations.Count}">
-                <TextBlock Text="TOP CONVERSATIONS" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
+                <TextBlock Text="TOP STREAMS" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
                 <ItemsControl ItemsSource="{Binding TopConversations}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Button Command="{Binding DataContext.FilterByConversationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding}"
-                                    Classes="row-btn" ToolTip.Tip="Click to view packets for this conversation">
-                                <Grid ColumnDefinitions="*,60,60">
-                                    <TextBlock Grid.Column="0" Text="{Binding DisplayText}" FontSize="11" Foreground="#58A6FF" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Grid.Column="1" Text="{Binding PacketCount, StringFormat='{}{0:N0}'}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
-                                    <TextBlock Grid.Column="2" Text="{Binding BytesFormatted}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
+                                    Classes="row-btn" ToolTip.Tip="Click to view packets for this stream">
+                                <Grid ColumnDefinitions="180,*,50,50,60">
+                                    <TextBlock Grid.Column="0" Text="{Binding DisplayText}" FontSize="10" Foreground="#F0883E" TextTrimming="CharacterEllipsis"/>
+                                    <Border Grid.Column="1" Height="8" Background="#21262D" CornerRadius="4" Margin="8,0">
+                                        <Border Background="#F0883E" CornerRadius="4" HorizontalAlignment="Left"
+                                                Width="{Binding Percentage}"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="2" Text="{Binding Percentage, StringFormat='{}{0:F0}%'}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="3" Text="{Binding PacketCount, StringFormat='{}{0:N0}'}" FontSize="10" Foreground="#6E7681" HorizontalAlignment="Right"/>
+                                    <TextBlock Grid.Column="4" Text="{Binding BytesFormatted}" FontSize="10" Foreground="#6E7681" HorizontalAlignment="Right"/>
                                 </Grid>
                             </Button>
                         </DataTemplate>

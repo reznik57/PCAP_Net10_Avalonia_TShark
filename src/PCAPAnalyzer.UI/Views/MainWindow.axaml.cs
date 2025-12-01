@@ -776,58 +776,23 @@ public partial class MainWindow : Window
                     // Create bitmap for full content
                     bitmap = new RenderTargetBitmap(fullSize, new Vector(96, 96));
 
-                    // Special handling for DashboardView
-                    if (targetTabIndex == 1 || (targetTabIndex < 0 && tabControl.SelectedIndex == 1))
-                    {
-                        DebugLogger.Log("[MainWindow] Special handling for Dashboard tab");
+                    // Store original scroll position
+                    var originalOffset = scrollViewer.Offset;
 
-                        // Store original scroll position
-                        var originalOffset = scrollViewer.Offset;
+                    // Scroll to top to ensure all content is visible
+                    scrollViewer.Offset = new Vector(0, 0);
+                    await Task.Delay(100);
 
-                        // Scroll to top to ensure all content is visible
-                        scrollViewer.Offset = new Vector(0, 0);
-                        await Task.Delay(100);
+                    // Force one more layout pass after scrolling
+                    scrollContent.UpdateLayout();
+                    await Task.Delay(50);
 
-                        // Try rendering the scrollviewer with its full content
-                        try
-                        {
-                            // Create a temporary container to hold the content
-                            var container = new Border
-                            {
-                                Width = fullSize.Width,
-                                Height = fullSize.Height,
-                                Background = null, // Transparent background
-                                Child = scrollContent
-                            };
+                    // Render the content directly
+                    // This works for all tabs including Dashboard
+                    bitmap.Render(scrollContent);
 
-                            // Temporarily remove from scrollviewer
-                            scrollViewer.Content = null;
-
-                            // Measure and arrange the container
-                            container.Measure(new Size(fullSize.Width, fullSize.Height));
-                            container.Arrange(new Rect(0, 0, fullSize.Width, fullSize.Height));
-                            container.UpdateLayout();
-
-                            // Render the container
-                            bitmap.Render(container);
-
-                            // Restore content to scrollviewer
-                            scrollViewer.Content = scrollContent;
-                        }
-                        catch
-                        {
-                            // Fallback to direct content rendering
-                            bitmap.Render(scrollContent);
-                        }
-
-                        // Restore scroll position
-                        scrollViewer.Offset = originalOffset;
-                    }
-                    else
-                    {
-                        // Render the content directly for other tabs
-                        bitmap.Render(scrollContent);
-                    }
+                    // Restore scroll position
+                    scrollViewer.Offset = originalOffset;
                 }
                 else
                 {

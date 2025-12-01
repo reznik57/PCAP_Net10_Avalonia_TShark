@@ -4,10 +4,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
-using PCAPAnalyzer.Core.Security;
 using PCAPAnalyzer.Core.Utilities;
 using Avalonia;
-using Avalonia.Media;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -19,40 +17,10 @@ public partial class DrillDownPopupViewModel : ObservableObject
 {
     private readonly Action<string, string>? _navigateWithFilter;
     private readonly IGeoIPService? _geoIPService;
-    private readonly StreamSecurityAnalyzer _securityAnalyzer = new();
-    private List<PacketInfo>? _currentStreamPackets;
-    private string _currentSourceIP = "";
-    private int _currentSourcePort;
-    private string _currentDestIP = "";
-    private int _currentDestPort;
 
     [ObservableProperty] private bool _isVisible;
     [ObservableProperty] private string _title = "";
     [ObservableProperty] private DrillDownEntityType _entityType;
-
-    // Tab selection (0 = Stream Context, 1 = Security Analysis)
-    [ObservableProperty] private int _selectedTab;
-    [ObservableProperty] private bool _isSecurityTabVisible;
-
-    // Security Analysis Results
-    [ObservableProperty] private int _riskScore;
-    [ObservableProperty] private string _riskLevel = "";
-    [ObservableProperty] private IBrush _riskLevelColor = new SolidColorBrush(Color.Parse("#8B949E"));
-    [ObservableProperty] private string _encryptionStatus = "";
-    [ObservableProperty] private IBrush _encryptionStatusColor = new SolidColorBrush(Color.Parse("#8B949E"));
-    [ObservableProperty] private string _encryptionProtocol = "";
-    [ObservableProperty] private bool _beaconingDetected;
-    [ObservableProperty] private string _beaconingInterval = "";
-    [ObservableProperty] private string _beaconingConfidence = "";
-    [ObservableProperty] private IBrush _beaconingColor = new SolidColorBrush(Color.Parse("#4CAF50"));
-    [ObservableProperty] private string _uploadDownloadRatio = "";
-    [ObservableProperty] private bool _dataExfiltrationIndicator;
-    [ObservableProperty] private IBrush _exfiltrationColor = new SolidColorBrush(Color.Parse("#4CAF50"));
-    [ObservableProperty] private string _protocolSecurityLevel = "";
-    [ObservableProperty] private IBrush _protocolSecurityColor = new SolidColorBrush(Color.Parse("#8B949E"));
-    [ObservableProperty] private string _protocolSecurityReason = "";
-    [ObservableProperty] private string _protocolRecommendation = "";
-    [ObservableProperty] private ObservableCollection<SecurityFindingDisplay> _securityFindings = new();
 
     // Summary Stats
     [ObservableProperty] private int _totalPackets;
@@ -208,10 +176,22 @@ public partial class DrillDownPopupViewModel : ObservableObject
         ShowSamplingWarning = false; // No sampling - using all packets
         CalculateStatistics(packets);
 
-        // Connections don't need port/endpoint breakdown, but show conversations
+        // Show Top Talkers (the 2 IPs with directional traffic breakdown)
+        var toDestPackets = packets.Where(p => p.SourceIP == srcIP && p.SourcePort == srcPort).ToList();
+        var toSrcPackets = packets.Where(p => p.SourceIP == dstIP && p.SourcePort == dstPort).ToList();
+
+        var endpoints = new List<EndpointBreakdownItem>
+        {
+            new() { IP = $"{srcIP} → {dstIP}", PacketCount = toDestPackets.Count, Bytes = toDestPackets.Sum(p => (long)p.Length) },
+            new() { IP = $"{dstIP} → {srcIP}", PacketCount = toSrcPackets.Count, Bytes = toSrcPackets.Sum(p => (long)p.Length) }
+        };
+        ConnectedEndpoints = new ObservableCollection<EndpointBreakdownItem>(endpoints.Where(e => e.PacketCount > 0));
+
+        // Show Top Streams (the conversation)
+        CalculateTopConversations(packets);
+
+        // Clear ports breakdown (not relevant for specific connection)
         TopPorts.Clear();
-        ConnectedEndpoints.Clear();
-        TopConversations.Clear();
 
         IsVisible = true;
     }
@@ -266,13 +246,13 @@ public partial class DrillDownPopupViewModel : ObservableObject
         if (hasPort)
         {
             var portItems = new List<PortBreakdownItem>();
-            var srcPortCount = packets.Count(p => p.SourcePort == sourcePort || p.DestinationPort == sourcePort);
-            var dstPortCount = packets.Count(p => p.SourcePort == destPort || p.DestinationPort == destPort);
+            var srcPortPackets = packets.Where(p => p.SourcePort == sourcePort || p.DestinationPort == sourcePort).ToList();
+            var dstPortPackets = packets.Where(p => p.SourcePort == destPort || p.DestinationPort == destPort).ToList();
 
             if (sourcePort > 0)
-                portItems.Add(new PortBreakdownItem { Port = sourcePort, ServiceName = GetServiceName(sourcePort), PacketCount = srcPortCount, Percentage = packets.Count > 0 ? srcPortCount * 100.0 / packets.Count : 0 });
+                portItems.Add(new PortBreakdownItem { Port = sourcePort, ServiceName = GetServiceName(sourcePort), PacketCount = srcPortPackets.Count, Bytes = srcPortPackets.Sum(p => (long)p.Length), Percentage = packets.Count > 0 ? srcPortPackets.Count * 100.0 / packets.Count : 0 });
             if (destPort > 0 && destPort != sourcePort)
-                portItems.Add(new PortBreakdownItem { Port = destPort, ServiceName = GetServiceName(destPort), PacketCount = dstPortCount, Percentage = packets.Count > 0 ? dstPortCount * 100.0 / packets.Count : 0 });
+                portItems.Add(new PortBreakdownItem { Port = destPort, ServiceName = GetServiceName(destPort), PacketCount = dstPortPackets.Count, Bytes = dstPortPackets.Sum(p => (long)p.Length), Percentage = packets.Count > 0 ? dstPortPackets.Count * 100.0 / packets.Count : 0 });
 
             TopPorts = new ObservableCollection<PortBreakdownItem>(portItems.OrderByDescending(p => p.PacketCount));
         }
@@ -303,18 +283,6 @@ public partial class DrillDownPopupViewModel : ObservableObject
         };
         ConnectedEndpoints = new ObservableCollection<EndpointBreakdownItem>(endpoints.Where(e => e.PacketCount > 0));
 
-        // Store stream info for security analysis
-        _currentStreamPackets = packets;
-        _currentSourceIP = sourceIP;
-        _currentSourcePort = sourcePort;
-        _currentDestIP = destIP;
-        _currentDestPort = destPort;
-
-        // Perform security analysis
-        PerformSecurityAnalysis(packets, sourceIP, sourcePort, destIP, destPort);
-        IsSecurityTabVisible = true;
-        SelectedTab = 0; // Default to Stream Context tab
-
         IsVisible = true;
     }
 
@@ -328,8 +296,12 @@ public partial class DrillDownPopupViewModel : ObservableObject
         _currentFilterKey = "time";
         _currentFilterValue = timestamp.ToString("HH:mm:ss");
 
-        var startTime = timestamp - window;
-        var endTime = timestamp + window;
+        // Filter to exact second only (not a range)
+        // Start of the clicked second (e.g., 08:21:06.000)
+        var startTime = new DateTime(timestamp.Year, timestamp.Month, timestamp.Day,
+                                      timestamp.Hour, timestamp.Minute, timestamp.Second, 0);
+        // End of the clicked second (e.g., 08:21:06.999)
+        var endTime = startTime.AddSeconds(1).AddTicks(-1);
 
         var packets = allPackets
             .Where(p => p.Timestamp >= startTime && p.Timestamp <= endTime)
@@ -438,142 +410,6 @@ public partial class DrillDownPopupViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
-    private void SelectStreamContextTab()
-    {
-        SelectedTab = 0;
-    }
-
-    [RelayCommand]
-    private void SelectSecurityTab()
-    {
-        SelectedTab = 1;
-    }
-
-    [RelayCommand]
-    private void FindSimilarStreams()
-    {
-        // Navigate to Packet Analysis with filter for similar traffic patterns
-        // Similar = same destination port (service) OR same destination IP
-        if (_currentDestPort > 0)
-        {
-            _navigateWithFilter?.Invoke("PacketAnalysis", $"port={_currentDestPort}");
-        }
-        else if (!string.IsNullOrEmpty(_currentDestIP))
-        {
-            _navigateWithFilter?.Invoke("PacketAnalysis", $"ip={_currentDestIP}");
-        }
-        Close();
-    }
-
-    // ==================== SECURITY ANALYSIS ====================
-
-    private void PerformSecurityAnalysis(List<PacketInfo> packets, string sourceIP, int sourcePort, string destIP, int destPort)
-    {
-        var result = _securityAnalyzer.Analyze(packets, sourceIP, sourcePort, destIP, destPort);
-
-        // Update risk score and level
-        RiskScore = result.RiskScore;
-        RiskLevel = result.RiskLevel.ToString();
-        RiskLevelColor = new SolidColorBrush(GetRiskLevelColor(result.RiskLevel));
-
-        // Update encryption status
-        EncryptionStatus = GetEncryptionStatusText(result.EncryptionStatus);
-        EncryptionStatusColor = new SolidColorBrush(GetEncryptionStatusColor(result.EncryptionStatus));
-        EncryptionProtocol = result.EncryptionProtocol ?? "";
-
-        // Update beaconing info
-        BeaconingDetected = result.BeaconingDetected;
-        BeaconingInterval = result.BeaconingDetected ? $"{result.BeaconingInterval:F1}s" : "Not detected";
-        BeaconingConfidence = result.BeaconingDetected ? $"{result.BeaconingConfidence:F0}%" : "";
-        BeaconingColor = new SolidColorBrush(result.BeaconingDetected ? Color.Parse("#FFA726") : Color.Parse("#4CAF50"));
-
-        // Update data exfiltration info
-        UploadDownloadRatio = double.IsInfinity(result.UploadDownloadRatio)
-            ? "∞:1 (upload only)"
-            : $"{result.UploadDownloadRatio:F1}:1";
-        DataExfiltrationIndicator = result.DataExfiltrationIndicator;
-        ExfiltrationColor = new SolidColorBrush(result.DataExfiltrationIndicator ? Color.Parse("#FFA726") : Color.Parse("#4CAF50"));
-
-        // Update protocol security
-        ProtocolSecurityLevel = ProtocolSecurityEvaluator.GetSecurityLevelString(result.ProtocolSecurityLevel);
-        ProtocolSecurityColor = new SolidColorBrush(Color.Parse(ProtocolSecurityEvaluator.GetSecurityLevelColor(result.ProtocolSecurityLevel)));
-        ProtocolSecurityReason = result.ProtocolSecurityReason;
-        ProtocolRecommendation = result.ProtocolRecommendation;
-
-        // Update findings
-        SecurityFindings = new ObservableCollection<SecurityFindingDisplay>(
-            result.Findings.Select(f => new SecurityFindingDisplay
-            {
-                Type = f.Type.ToString(),
-                Severity = f.Severity.ToString(),
-                SeverityColor = new SolidColorBrush(GetSeverityColor(f.Severity)),
-                Title = f.Title,
-                Description = f.Description,
-                Recommendation = f.Recommendation,
-                Vulnerabilities = f.Vulnerabilities.Any() ? string.Join(", ", f.Vulnerabilities) : ""
-            }));
-    }
-
-    private static Color GetRiskLevelColor(StreamRiskLevel level)
-    {
-        return level switch
-        {
-            StreamRiskLevel.Critical => Color.Parse("#B71C1C"), // Dark Red
-            StreamRiskLevel.High => Color.Parse("#EF5350"),     // Red
-            StreamRiskLevel.Medium => Color.Parse("#FFA726"),   // Orange
-            StreamRiskLevel.Low => Color.Parse("#8BC34A"),      // Light Green
-            StreamRiskLevel.Safe => Color.Parse("#4CAF50"),     // Green
-            _ => Color.Parse("#9E9E9E")                          // Gray
-        };
-    }
-
-    private static string GetEncryptionStatusText(Core.Services.EncryptionStatus status)
-    {
-        return status switch
-        {
-            Core.Services.EncryptionStatus.Encrypted => "Encrypted",
-            Core.Services.EncryptionStatus.LikelyEncrypted => "Likely Encrypted",
-            Core.Services.EncryptionStatus.LikelyUnencrypted => "Likely Unencrypted",
-            Core.Services.EncryptionStatus.Unencrypted => "Unencrypted",
-            _ => "Unknown"
-        };
-    }
-
-    private static Color GetEncryptionStatusColor(Core.Services.EncryptionStatus status)
-    {
-        return status switch
-        {
-            Core.Services.EncryptionStatus.Encrypted => Color.Parse("#4CAF50"),        // Green
-            Core.Services.EncryptionStatus.LikelyEncrypted => Color.Parse("#8BC34A"),  // Light Green
-            Core.Services.EncryptionStatus.LikelyUnencrypted => Color.Parse("#FFA726"),// Orange
-            Core.Services.EncryptionStatus.Unencrypted => Color.Parse("#EF5350"),      // Red
-            _ => Color.Parse("#9E9E9E")                                                 // Gray
-        };
-    }
-
-    private static Color GetSeverityColor(StreamFindingSeverity severity)
-    {
-        return severity switch
-        {
-            StreamFindingSeverity.Critical => Color.Parse("#B71C1C"),
-            StreamFindingSeverity.High => Color.Parse("#EF5350"),
-            StreamFindingSeverity.Medium => Color.Parse("#FFA726"),
-            StreamFindingSeverity.Low => Color.Parse("#8BC34A"),
-            StreamFindingSeverity.Info => Color.Parse("#58A6FF"),
-            _ => Color.Parse("#9E9E9E")
-        };
-    }
-
-    private void ResetSecurityAnalysis()
-    {
-        IsSecurityTabVisible = false;
-        SelectedTab = 0;
-        RiskScore = 0;
-        RiskLevel = "";
-        SecurityFindings.Clear();
-    }
-
     // ==================== CALCULATION HELPERS ====================
 
     private void CalculateStatistics(List<PacketInfo> packets)
@@ -620,19 +456,21 @@ public partial class DrillDownPopupViewModel : ObservableObject
 
     private void CalculatePortBreakdown(List<PacketInfo> packets)
     {
-        // O(n) single-pass aggregation for port breakdown
-        var portStats = new Dictionary<int, int>();
+        // O(n) single-pass aggregation for port breakdown with packet count and bytes
+        var portStats = new Dictionary<int, (int Count, long Bytes)>();
         foreach (var p in packets)
         {
             var seenPorts = new HashSet<int>();
             if (p.SourcePort > 0)
             {
                 seenPorts.Add(p.SourcePort);
-                portStats[p.SourcePort] = portStats.GetValueOrDefault(p.SourcePort) + 1;
+                var existing = portStats.GetValueOrDefault(p.SourcePort);
+                portStats[p.SourcePort] = (existing.Count + 1, existing.Bytes + p.Length);
             }
             if (p.DestinationPort > 0 && !seenPorts.Contains(p.DestinationPort))
             {
-                portStats[p.DestinationPort] = portStats.GetValueOrDefault(p.DestinationPort) + 1;
+                var existing = portStats.GetValueOrDefault(p.DestinationPort);
+                portStats[p.DestinationPort] = (existing.Count + 1, existing.Bytes + p.Length);
             }
         }
 
@@ -641,8 +479,9 @@ public partial class DrillDownPopupViewModel : ObservableObject
             {
                 Port = kv.Key,
                 ServiceName = GetServiceName(kv.Key),
-                PacketCount = kv.Value,
-                Percentage = packets.Count > 0 ? (kv.Value * 100.0 / packets.Count) : 0
+                PacketCount = kv.Value.Count,
+                Bytes = kv.Value.Bytes,
+                Percentage = packets.Count > 0 ? (kv.Value.Count * 100.0 / packets.Count) : 0
             })
             .OrderByDescending(x => x.PacketCount)
             .Take(5)
@@ -674,7 +513,8 @@ public partial class DrillDownPopupViewModel : ObservableObject
             {
                 IP = kv.Key,
                 PacketCount = kv.Value.Count,
-                Bytes = kv.Value.Bytes
+                Bytes = kv.Value.Bytes,
+                Percentage = packets.Count > 0 ? (kv.Value.Count * 100.0 / packets.Count) : 0
             })
             .ToList();
 
@@ -709,7 +549,8 @@ public partial class DrillDownPopupViewModel : ObservableObject
             {
                 IP = kv.Key,
                 PacketCount = kv.Value.Count,
-                Bytes = kv.Value.Bytes
+                Bytes = kv.Value.Bytes,
+                Percentage = packets.Count > 0 ? (kv.Value.Count * 100.0 / packets.Count) : 0
             })
             .ToList();
 
@@ -748,7 +589,8 @@ public partial class DrillDownPopupViewModel : ObservableObject
                 DestinationIP = kv.Value.DstIP,
                 DestinationPort = kv.Value.DstPort,
                 PacketCount = kv.Value.Count,
-                Bytes = kv.Value.Bytes
+                Bytes = kv.Value.Bytes,
+                Percentage = packets.Count > 0 ? (kv.Value.Count * 100.0 / packets.Count) : 0
             })
             .ToList();
 
@@ -779,7 +621,18 @@ public class PortBreakdownItem
     public int Port { get; set; }
     public string ServiceName { get; set; } = "";
     public int PacketCount { get; set; }
+    public long Bytes { get; set; }
     public double Percentage { get; set; }
+    public string BytesFormatted => FormatBytes(Bytes);
+
+    private static string FormatBytes(long bytes)
+    {
+        string[] sizes = { "B", "KB", "MB", "GB" };
+        double len = bytes;
+        int order = 0;
+        while (len >= 1024 && order < sizes.Length - 1) { order++; len /= 1024; }
+        return $"{len:F1} {sizes[order]}";
+    }
 }
 
 public class EndpointBreakdownItem
@@ -787,6 +640,7 @@ public class EndpointBreakdownItem
     public string IP { get; set; } = "";
     public int PacketCount { get; set; }
     public long Bytes { get; set; }
+    public double Percentage { get; set; }
     public string BytesFormatted => FormatBytes(Bytes);
 
     private static string FormatBytes(long bytes)
@@ -807,6 +661,7 @@ public class ConversationBreakdownItem
     public int DestinationPort { get; set; }
     public int PacketCount { get; set; }
     public long Bytes { get; set; }
+    public double Percentage { get; set; }
     public string BytesFormatted => FormatBytes(Bytes);
     public string DisplayText => $"{SourceIP}:{SourcePort} ↔ {DestinationIP}:{DestinationPort}";
 
@@ -818,19 +673,4 @@ public class ConversationBreakdownItem
         while (len >= 1024 && order < sizes.Length - 1) { order++; len /= 1024; }
         return $"{len:F1} {sizes[order]}";
     }
-}
-
-/// <summary>
-/// Display model for security findings in the UI.
-/// </summary>
-public class SecurityFindingDisplay
-{
-    public string Type { get; set; } = "";
-    public string Severity { get; set; } = "";
-    public IBrush SeverityColor { get; set; } = new SolidColorBrush(Color.Parse("#8B949E"));
-    public string Title { get; set; } = "";
-    public string Description { get; set; } = "";
-    public string Recommendation { get; set; } = "";
-    public string Vulnerabilities { get; set; } = "";
-    public bool HasVulnerabilities => !string.IsNullOrEmpty(Vulnerabilities);
 }

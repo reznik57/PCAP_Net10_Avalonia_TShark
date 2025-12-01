@@ -87,8 +87,11 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             {
                 if (_config.EnableMetrics)
                     _metrics.RecordHit();
+                PCAPAnalyzer.Core.Utilities.DebugLogger.Log($"[CachedStats] CACHE HIT for {packetList.Count:N0} packets, returning cached stats with {cached.TotalPackets:N0} total, TopSources: {cached.TopSources?.Count ?? 0}");
                 return cached!;
             }
+
+            PCAPAnalyzer.Core.Utilities.DebugLogger.Log($"[CachedStats] CACHE MISS for {packetList.Count:N0} packets - will calculate fresh");
 
             if (_config.EnableMetrics)
                 _metrics.RecordMiss();
@@ -108,6 +111,11 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                 // ✅ TIMING FIX: Pass stage references through to inner service
                 // Calculate and cache
                 var result = await _inner.CalculateStatisticsAsync(packetList, geoIPStage, flowStage);
+
+                // Log what we calculated
+                var topSrc = result.TopSources?.FirstOrDefault();
+                PCAPAnalyzer.Core.Utilities.DebugLogger.Log($"[CachedStats] CALCULATED fresh stats: TotalPackets={result.TotalPackets:N0}, TopSources={result.TopSources?.Count ?? 0}, FirstTopSource={topSrc?.Address ?? "none"}({topSrc?.PacketCount ?? 0:N0} packets)");
+
                 SetCache(cacheKey, result, estimatedSize);
                 return result;
             }

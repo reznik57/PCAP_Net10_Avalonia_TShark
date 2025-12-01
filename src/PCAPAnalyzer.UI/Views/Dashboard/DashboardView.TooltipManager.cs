@@ -48,10 +48,6 @@ namespace PCAPAnalyzer.UI.Views
 
                 if (isTraffic)
                 {
-                    // Hide port chart highlights
-                    SetSeriesVisibility(_portHighlightScatter, false);
-                    SetSeriesVisibility(_portHighlightLine, false);
-
                     // Use the maximum across ALL traffic axes for the vertical line
                     // This ensures the line spans the full chart height
                     var minY = Math.Min(_cachedThroughputMinY, Math.Min(_cachedPacketsMinY, _cachedAnomaliesMinY));
@@ -113,23 +109,22 @@ namespace PCAPAnalyzer.UI.Views
                 }
                 else
                 {
-                    // Hide traffic chart highlights
-                    SetSeriesVisibility(_trafficHighlightScatter, false);
-                    SetSeriesVisibility(_trafficHighlightLine, false);
-
+                    // Port Activity chart: Use min/max from cached port data for vertical line
                     var minY = _cachedPortMinY;
-                    var maxY = Math.Max(_cachedPortMaxY, value);
+                    var maxY = _cachedPortMaxY;
+
+                    // Ensure we have a valid range
                     if (Math.Abs(maxY - minY) < 0.0001)
                     {
                         maxY = minY + 1;
                     }
 
-                    // Create or update scatter series for highlight dot (using ObservablePoint for port chart)
+                    // Create or update scatter series for highlight dot (on max value line)
                     if (_portHighlightScatter == null)
                     {
-                        _portHighlightScatter = new ScatterSeries<ObservablePoint>
+                        _portHighlightScatter = new ScatterSeries<DateTimePoint>
                         {
-                            Values = new ObservableCollection<ObservablePoint> { new(timestamp.Ticks, value) },
+                            Values = new ObservableCollection<DateTimePoint> { new(timestamp, value) },
                             GeometrySize = 12,
                             Fill = new SolidColorPaint(SKColor.Parse("#FFD700")),
                             Stroke = new SolidColorPaint(SKColor.Parse("#FFA500")) { StrokeThickness = 2 },
@@ -142,19 +137,19 @@ namespace PCAPAnalyzer.UI.Views
                         vm.PortActivitySeries?.Add(_portHighlightScatter);
                     }
 
-                    UpdateObservablePoint(_portHighlightScatter, timestamp.Ticks, value);
+                    UpdateScatterPoint(_portHighlightScatter, timestamp, value);
 
-                    // Create or update line series for vertical line (using ObservablePoint for port chart, prominent yellow marker)
+                    // Create or update line series for vertical line (yellow marker)
                     if (_portHighlightLine == null)
                     {
-                        _portHighlightLine = new LineSeries<ObservablePoint>
+                        _portHighlightLine = new LineSeries<DateTimePoint>
                         {
-                            Values = new ObservableCollection<ObservablePoint>
+                            Values = new ObservableCollection<DateTimePoint>
                             {
-                                new(timestamp.Ticks, minY),
-                                new(timestamp.Ticks, maxY)
+                                new(timestamp, minY),
+                                new(timestamp, maxY)
                             },
-                            Stroke = new SolidColorPaint(SKColor.Parse("#FFD700")) { StrokeThickness = 2.5f },  // Thicker for better visibility
+                            Stroke = new SolidColorPaint(SKColor.Parse("#FFD700")) { StrokeThickness = 4f },  // Thick yellow line
                             Fill = null,
                             GeometrySize = 0,
                             LineSmoothness = 0,
@@ -167,7 +162,7 @@ namespace PCAPAnalyzer.UI.Views
                         vm.PortActivitySeries?.Add(_portHighlightLine);
                     }
 
-                    UpdateObservableLine(_portHighlightLine, timestamp.Ticks, minY, maxY);
+                    UpdateLinePoints(_portHighlightLine, timestamp, minY, maxY);
 
                     SetSeriesVisibility(_portHighlightScatter, true);
                     SetSeriesVisibility(_portHighlightLine, true);
@@ -269,57 +264,6 @@ namespace PCAPAnalyzer.UI.Views
                 {
                     new DateTimePoint(timestamp, minY),
                     new DateTimePoint(timestamp, maxY)
-                };
-            }
-        }
-
-        /// <summary>
-        /// Updates a scatter series point for ObservablePoint data
-        /// </summary>
-        private static void UpdateObservablePoint(ScatterSeries<ObservablePoint> series, long ticks, double value)
-        {
-            if (series.Values is IList<ObservablePoint> list)
-            {
-                if (list.Count == 0)
-                {
-                    list.Add(new ObservablePoint(ticks, value));
-                }
-                else
-                {
-                    list[0] = new ObservablePoint(ticks, value);
-                }
-            }
-            else
-            {
-                series.Values = new ObservableCollection<ObservablePoint> { new ObservablePoint(ticks, value) };
-            }
-        }
-
-        /// <summary>
-        /// Updates a line series points for vertical line (ObservablePoint data)
-        /// </summary>
-        private static void UpdateObservableLine(LineSeries<ObservablePoint> series, long ticks, double minY, double maxY)
-        {
-            if (series.Values is IList<ObservablePoint> list)
-            {
-                if (list.Count < 2)
-                {
-                    list.Clear();
-                    list.Add(new ObservablePoint(ticks, minY));
-                    list.Add(new ObservablePoint(ticks, maxY));
-                }
-                else
-                {
-                    list[0] = new ObservablePoint(ticks, minY);
-                    list[1] = new ObservablePoint(ticks, maxY);
-                }
-            }
-            else
-            {
-                series.Values = new ObservableCollection<ObservablePoint>
-                {
-                    new ObservablePoint(ticks, minY),
-                    new ObservablePoint(ticks, maxY)
                 };
             }
         }

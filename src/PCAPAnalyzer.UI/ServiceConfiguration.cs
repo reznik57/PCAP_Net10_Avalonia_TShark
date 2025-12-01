@@ -540,6 +540,7 @@ namespace PCAPAnalyzer.UI
             // Filter Panel ViewModels (Transient - one per filter panel instance)
             services.AddTransient<FilterSummaryViewModel>();
             services.AddTransient<UnifiedFilterPanelViewModel>();
+            services.AddTransient<GeneralFilterTabViewModel>();
 
             // Note: Add more ViewModels as they are migrated to DI
         }

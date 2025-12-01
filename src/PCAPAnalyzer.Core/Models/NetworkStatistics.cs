@@ -23,7 +23,8 @@ namespace PCAPAnalyzer.Core.Models
         public List<ConversationStatistics> TopConversations { get; set; } = new();
         public List<PortStatistics> TopPorts { get; set; } = new();
         public int UniquePortCount { get; set; }  // Total count of unique ports (not just top N)
-        public int TotalConversationCount { get; set; }  // Total count of all unique conversations (not just top N)
+        public int TotalConversationCount { get; set; }  // Total count of all unique BIDIRECTIONAL conversations (grouped by normalized IP pair + ports)
+        public int TotalStreamCount { get; set; }  // Total count of all unique DIRECTIONAL streams (4-tuple: SrcIP, SrcPort, DstIP, DstPort)
         public List<ServiceStatistics> TopServices => ServiceStats?.Values.OrderByDescending(s => s.PacketCount).Take(10).ToList() ?? new();
         public List<TimeSeriesDataPoint> ThroughputTimeSeries { get; set; } = new();
         public List<TimeSeriesDataPoint> PacketsPerSecondTimeSeries { get; set; } = new();

@@ -57,8 +57,8 @@ namespace PCAPAnalyzer.UI.Views
         // Highlight series for visual feedback
         private ScatterSeries<DateTimePoint>? _trafficHighlightScatter;
         private LineSeries<DateTimePoint>? _trafficHighlightLine;
-        private ScatterSeries<ObservablePoint>? _portHighlightScatter;
-        private LineSeries<ObservablePoint>? _portHighlightLine;
+        private ScatterSeries<DateTimePoint>? _portHighlightScatter;
+        private LineSeries<DateTimePoint>? _portHighlightLine;
         private int _lastHighlightedIndex = -1;
 
         /// <summary>

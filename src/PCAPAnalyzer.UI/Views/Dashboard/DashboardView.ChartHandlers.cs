@@ -351,8 +351,8 @@ namespace PCAPAnalyzer.UI.Views
                 // First, try to get data directly from the ViewModel (most reliable)
                 if (DataContext is DashboardViewModel vm && vm.PortActivitySeries != null && vm.PortActivitySeries.Count > 0)
                 {
-                    // Skip the highlight series if it exists
-                    var dataSeries = vm.PortActivitySeries.Where(s => s.Name != "Highlight").ToList();
+                    // Skip the highlight and vertical line series
+                    var dataSeries = vm.PortActivitySeries.Where(s => s.Name != "Highlight" && s.Name != "VerticalLine").ToList();
 
                     foreach (var s in dataSeries)
                     {

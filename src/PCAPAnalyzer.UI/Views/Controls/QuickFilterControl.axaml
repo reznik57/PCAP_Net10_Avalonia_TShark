@@ -1,0 +1,136 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="60"
+             x:Class="PCAPAnalyzer.UI.Views.Controls.QuickFilterControl">
+
+    <Border Background="#0D1620" BorderBrush="#10B981" BorderThickness="1"
+            CornerRadius="6" Padding="12,8">
+        <Grid RowDefinitions="Auto,8,Auto">
+            <!-- Header -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="⚡ QUICK FILTERS" FontSize="11" FontWeight="Bold" Foreground="#10B981" VerticalAlignment="Center"/>
+                <Border Background="#1C2128" BorderBrush="#10B981" BorderThickness="1"
+                        CornerRadius="3" Padding="4,1" VerticalAlignment="Center">
+                    <TextBlock Text="Click to toggle • Multiple = OR" FontSize="8" Foreground="#34D399"/>
+                </Border>
+            </StackPanel>
+
+            <!-- Filter Toggles - Compact Single Row -->
+            <WrapPanel Grid.Row="2" Orientation="Horizontal">
+                <!-- Core Network Filters -->
+                <ToggleButton IsChecked="{Binding Rfc1918Toggle}" Classes="qf blue" Margin="0,0,4,4"
+                              ToolTip.Tip="Private IPs (10.x, 172.16-31.x, 192.168.x)">
+                    <TextBlock Text="RFC1918" FontSize="10"/>
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding PublicIpToggle}" Classes="qf blue" Margin="0,0,4,4"
+                              ToolTip.Tip="Public/Internet-routable IPs">
+                    <TextBlock Text="Public" FontSize="10"/>
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding PrivateToPublicToggle}" Classes="qf green" Margin="0,0,4,4"
+                              ToolTip.Tip="Egress: Private → Public (outbound to internet)">
+                    <TextBlock Text="Egress" FontSize="10"/>
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding PublicToPrivateToggle}" Classes="qf green" Margin="0,0,4,4"
+                              ToolTip.Tip="Ingress: Public → Private (inbound from internet)">
+                    <TextBlock Text="Ingress" FontSize="10"/>
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding InsecureToggle}" Classes="qf red" Margin="0,0,4,4"
+                              ToolTip.Tip="Insecure protocols (HTTP, FTP, Telnet, TLS 1.0/1.1)">
+                    <TextBlock Text="Insecure" FontSize="10"/>
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding IPv4Toggle}" Classes="qf blue" Margin="0,0,4,4"
+                              ToolTip.Tip="IPv4 traffic only">
+                    <TextBlock Text="IPv4" FontSize="10"/>
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding IPv6Toggle}" Classes="qf blue" Margin="0,0,4,4"
+                              ToolTip.Tip="IPv6 traffic only">
+                    <TextBlock Text="IPv6" FontSize="10"/>
+                </ToggleButton>
+
+                <!-- Separator -->
+                <Border Width="1" Height="20" Background="#30363D" Margin="4,0,8,4" VerticalAlignment="Center"/>
+
+                <!-- Security Filters -->
+                <ToggleButton IsChecked="{Binding AnomaliesToggle}" Classes="qf red" Margin="0,0,4,4"
+                              ToolTip.Tip="All detected anomalies">
+                    <TextBlock Text="Anomalies" FontSize="10"/>
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding SuspiciousToggle}" Classes="qf red" Margin="0,0,4,4"
+                              ToolTip.Tip="High-severity suspicious activity">
+                    <TextBlock Text="Suspicious" FontSize="10"/>
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding TcpIssuesToggle}" Classes="qf orange" Margin="0,0,4,4"
+                              ToolTip.Tip="TCP retransmissions, out-of-order packets">
+                    <TextBlock Text="TCP Issues" FontSize="10"/>
+                </ToggleButton>
+                <ToggleButton IsChecked="{Binding JumboFramesToggle}" Classes="qf orange" Margin="0,0,4,4"
+                              ToolTip.Tip="Large packets (>1500 bytes)">
+                    <TextBlock Text="Large Pkts" FontSize="10"/>
+                </ToggleButton>
+            </WrapPanel>
+        </Grid>
+    </Border>
+
+    <UserControl.Styles>
+        <!-- Quick Filter Toggle Base -->
+        <Style Selector="ToggleButton.qf">
+            <Setter Property="Background" Value="#1C2128"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="MinHeight" Value="22"/>
+        </Style>
+        <Style Selector="ToggleButton.qf:pointerover">
+            <Setter Property="Background" Value="#21262D"/>
+        </Style>
+
+        <!-- Blue -->
+        <Style Selector="ToggleButton.qf.blue">
+            <Setter Property="BorderBrush" Value="#3B82F6"/>
+        </Style>
+        <Style Selector="ToggleButton.qf.blue:checked">
+            <Setter Property="Background" Value="#1E3A5F"/>
+            <Setter Property="BorderBrush" Value="#3B82F6"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Foreground" Value="#60A5FA"/>
+        </Style>
+
+        <!-- Red -->
+        <Style Selector="ToggleButton.qf.red">
+            <Setter Property="BorderBrush" Value="#EF4444"/>
+        </Style>
+        <Style Selector="ToggleButton.qf.red:checked">
+            <Setter Property="Background" Value="#5F1E1E"/>
+            <Setter Property="BorderBrush" Value="#EF4444"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Foreground" Value="#F87171"/>
+        </Style>
+
+        <!-- Orange -->
+        <Style Selector="ToggleButton.qf.orange">
+            <Setter Property="BorderBrush" Value="#F59E0B"/>
+        </Style>
+        <Style Selector="ToggleButton.qf.orange:checked">
+            <Setter Property="Background" Value="#5F4B1E"/>
+            <Setter Property="BorderBrush" Value="#F59E0B"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Foreground" Value="#FBBF24"/>
+        </Style>
+
+        <!-- Green -->
+        <Style Selector="ToggleButton.qf.green">
+            <Setter Property="BorderBrush" Value="#10B981"/>
+        </Style>
+        <Style Selector="ToggleButton.qf.green:checked">
+            <Setter Property="Background" Value="#1E5F4B"/>
+            <Setter Property="BorderBrush" Value="#10B981"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Foreground" Value="#34D399"/>
+        </Style>
+    </UserControl.Styles>
+</UserControl>

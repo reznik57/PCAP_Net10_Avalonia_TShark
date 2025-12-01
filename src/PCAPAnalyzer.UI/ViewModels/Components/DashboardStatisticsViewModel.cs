@@ -208,7 +208,16 @@ public partial class DashboardStatisticsViewModel : ObservableObject
 
             if (isFiltered)
             {
+                var t1 = DateTime.Now;
                 UpdateFilteredStatistics(statistics);
+                var e1 = (DateTime.Now - t1).TotalSeconds;
+
+                // IMPORTANT: Also update tables with filtered data!
+                var t2 = DateTime.Now;
+                UpdateTables(statistics);
+                var e2 = (DateTime.Now - t2).TotalSeconds;
+
+                DebugLogger.Log($"[DashboardStatisticsViewModel] Filtered updates: FilteredStats: {e1:F3}s, Tables: {e2:F3}s");
             }
             else
             {
@@ -252,7 +261,10 @@ public partial class DashboardStatisticsViewModel : ObservableObject
 
             // Derived counts
             DifferentPorts = statistics.UniquePortCount;  // Use total unique port count, not just top N
-            ActiveConversations = statistics.TotalConversationCount;  // Use total conversation count, not just top 30
+            // FIXED: Use directional stream count (4-tuple) to match Packet Analysis tab
+            // TotalStreamCount = directional 4-tuples (matches Packet Analysis)
+            // TotalConversationCount = bidirectional conversations (lower count, used for tables)
+            ActiveConversations = statistics.TotalStreamCount;  // Use directional streams for consistency
             ThreatCount = statistics.DetectedThreats?.Count ?? statistics.Threats?.Count ?? 0;
             CriticalThreats = statistics.DetectedThreats?.Count(t => t.Severity == ThreatSeverity.Critical)
                              ?? statistics.Threats?.Count(t => t.Severity == ThreatSeverity.Critical) ?? 0;
@@ -312,7 +324,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
             FilteredUniqueIPs = statistics.AllUniqueIPs?.Count ?? 0;
             FilteredProtocolCount = statistics.ProtocolStats.Count;
             FilteredDifferentPorts = statistics.UniquePortCount;  // Use total unique port count, not just top N
-            FilteredConversationCount = statistics.TotalConversationCount;  // Use total conversation count, not just top 30
+            FilteredConversationCount = statistics.TotalStreamCount;  // Use directional stream count for consistency
             FilteredSecurityThreats = statistics.DetectedThreats?.Count ?? 0;
             FilteredAnomalies = statistics.DetectedThreats?.Count ?? 0;
         }
@@ -402,7 +414,18 @@ public partial class DashboardStatisticsViewModel : ObservableObject
     {
         TopSources.Clear();
         TopSourcesDisplay.Clear();
-        if (statistics.TopSources == null) return;
+        if (statistics.TopSources == null)
+        {
+            DebugLogger.Log("[DashboardStatisticsViewModel] PopulateSourcesByPackets: TopSources is NULL");
+            return;
+        }
+
+        // Log actual data being populated to verify it's filtered data
+        var topSource = statistics.TopSources.FirstOrDefault();
+        if (topSource != null)
+        {
+            DebugLogger.Log($"[DashboardStatisticsViewModel] PopulateSourcesByPackets: First source={topSource.Address}, packets={topSource.PacketCount:N0}, totalStats={statistics.TotalPackets:N0}");
+        }
 
         foreach (var source in statistics.TopSources)
         {
@@ -434,7 +457,18 @@ public partial class DashboardStatisticsViewModel : ObservableObject
     {
         TopDestinations.Clear();
         TopDestinationsDisplay.Clear();
-        if (statistics.TopDestinations == null) return;
+        if (statistics.TopDestinations == null)
+        {
+            DebugLogger.Log("[DashboardStatisticsViewModel] PopulateDestinationsByPackets: TopDestinations is NULL");
+            return;
+        }
+
+        // Log actual data being populated to verify it's filtered data
+        var topDest = statistics.TopDestinations.FirstOrDefault();
+        if (topDest != null)
+        {
+            DebugLogger.Log($"[DashboardStatisticsViewModel] PopulateDestinationsByPackets: First dest={topDest.Address}, packets={topDest.PacketCount:N0}, totalStats={statistics.TotalPackets:N0}");
+        }
 
         foreach (var dest in statistics.TopDestinations)
         {
@@ -443,6 +477,8 @@ public partial class DashboardStatisticsViewModel : ObservableObject
             TopDestinations.Add(vm);
             TopDestinationsDisplay.Add(vm);
         }
+
+        DebugLogger.Log($"[DashboardStatisticsViewModel] PopulateDestinationsByPackets: Populated {TopDestinations.Count} destinations");
     }
 
     private void PopulateDestinationsByBytes(NetworkStatistics statistics)

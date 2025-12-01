@@ -847,20 +847,8 @@ public partial class DashboardChartsViewModel : ObservableObject
                 return;
             }
 
-            // Create column series for packet count histogram
-            var packetCountSeries = new ColumnSeries<double>
-            {
-                Values = buckets.Select(b => (double)b.PacketCount).ToArray(),
-                Name = "Packet Count",
-                Fill = new SolidColorPaint(SKColor.Parse("#3FB950")),
-                MaxBarWidth = 50,
-                DataLabelsPaint = new SolidColorPaint(SKColors.White),
-                DataLabelsSize = 10,
-                DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top,
-                DataLabelsFormatter = point => $"{point.Coordinate.PrimaryValue:N0}"
-            };
-
-            PacketSizeSeries = new ObservableCollection<ISeries> { packetCountSeries };
+            // FIX: Configure axes FIRST before setting series data
+            // This ensures LiveCharts has proper axis configuration when rendering begins
 
             // Configure X axis with bucket labels
             PacketSizeXAxes = new[]
@@ -888,6 +876,21 @@ public partial class DashboardChartsViewModel : ObservableObject
                     MinLimit = 0
                 }
             };
+
+            // Create column series for packet count histogram (set AFTER axes)
+            var packetCountSeries = new ColumnSeries<double>
+            {
+                Values = buckets.Select(b => (double)b.PacketCount).ToArray(),
+                Name = "Packet Count",
+                Fill = new SolidColorPaint(SKColor.Parse("#3FB950")),
+                MaxBarWidth = 50,
+                DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                DataLabelsSize = 10,
+                DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top,
+                DataLabelsFormatter = point => $"{point.Coordinate.PrimaryValue:N0}"
+            };
+
+            PacketSizeSeries = new ObservableCollection<ISeries> { packetCountSeries };
 
             DebugLogger.Log($"[DashboardChartsViewModel] Packet size chart updated - {buckets.Count} buckets displayed");
         }

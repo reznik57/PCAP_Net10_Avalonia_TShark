@@ -55,6 +55,18 @@ public partial class GlobalFilterState : ObservableObject
         IncrementVersion();
     }
 
+    public void AddIncludeQuickFilter(string filter)
+    {
+        IncludeFilters.QuickFilters.Add(filter);
+        IncrementVersion();
+    }
+
+    public void AddExcludeQuickFilter(string filter)
+    {
+        ExcludeFilters.QuickFilters.Add(filter);
+        IncrementVersion();
+    }
+
     public void RemoveIncludeFilter(string value, FilterCategory category)
     {
         var removed = category switch
