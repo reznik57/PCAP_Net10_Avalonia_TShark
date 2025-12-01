@@ -133,7 +133,7 @@
             <StackPanel Margin="24,24,24,24" Spacing="24" MaxWidth="{Binding $parent[Grid].Bounds.Width}">
 
                 <!-- UnifiedFilterPanelControl for sophisticated filtering -->
-                <ctrl:UnifiedFilterPanelControl Margin="0,0,0,10" />
+                <ctrl:UnifiedFilterPanelControl x:Name="UnifiedFilterPanel" Margin="0,0,0,10" />
 
                 <!-- Sampling Indicator Banner (shown for large captures) -->
                 <Border IsVisible="{Binding UsingStatisticsSample}"

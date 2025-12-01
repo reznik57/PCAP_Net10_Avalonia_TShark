@@ -138,12 +138,63 @@ namespace PCAPAnalyzer.UI.Views
                 // Set up chart event handlers
                 SetupChartEventHandlers();
 
+                // Wire up UnifiedFilterPanelControl's Apply button
+                WireUpFilterPanelEvents();
+
                 DebugLogger.Log("[DashboardView] OnLoaded completed");
             }
             catch (Exception ex)
             {
                 DebugLogger.Log($"[DashboardView] OnLoaded failed: {ex.Message}");
                 DebugLogger.Log($"[DashboardView] Stack trace: {ex.StackTrace}");
+            }
+        }
+
+        /// <summary>
+        /// Wires up UnifiedFilterPanelControl's ApplyFiltersRequested event
+        /// </summary>
+        private void WireUpFilterPanelEvents()
+        {
+            try
+            {
+                var filterPanel = this.FindControl<Controls.UnifiedFilterPanelControl>("UnifiedFilterPanel");
+                if (filterPanel?.DataContext is ViewModels.Components.UnifiedFilterPanelViewModel filterPanelVm)
+                {
+                    filterPanelVm.ApplyFiltersRequested += OnFilterPanelApplyRequested;
+                    DebugLogger.Log("[DashboardView] Successfully subscribed to UnifiedFilterPanel.ApplyFiltersRequested");
+                }
+                else
+                {
+                    DebugLogger.Log("[DashboardView] WARNING: Could not find UnifiedFilterPanelControl or its ViewModel");
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugLogger.Log($"[DashboardView] Failed to wire filter panel events: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Handles UnifiedFilterPanel Apply button click
+        /// </summary>
+        private void OnFilterPanelApplyRequested()
+        {
+            try
+            {
+                DebugLogger.Log("[DashboardView] Filter panel Apply button clicked");
+
+                if (DataContext is DashboardViewModel vm)
+                {
+                    vm.ApplyGlobalFilters();
+                }
+                else
+                {
+                    DebugLogger.Log("[DashboardView] DataContext is not DashboardViewModel");
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugLogger.Log($"[DashboardView] OnFilterPanelApplyRequested failed: {ex.Message}");
             }
         }
 

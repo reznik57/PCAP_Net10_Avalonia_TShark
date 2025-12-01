@@ -71,6 +71,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     private readonly IFileDialogService? _fileDialogService;
     private readonly FilterCopyService? _filterCopyService;
     private readonly IFilterPresetService? _filterPresetService;
+    private readonly GlobalFilterState? _globalFilterState;
     private readonly Action<string>? _navigateToTab;
 
     // Anomaly frame number caches for efficient filtering
@@ -265,7 +266,8 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             App.Services?.GetService<ICsvExportService>(),
             App.Services?.GetService<IFileDialogService>(),
             App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService(),
-            App.Services?.GetService<IFilterPresetService>())
+            App.Services?.GetService<IFilterPresetService>(),
+            App.Services?.GetService<GlobalFilterState>())
     {
     }
 
@@ -278,6 +280,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         IFileDialogService? fileDialogService = null,
         ISmartFilterBuilder? filterBuilder = null,
         IFilterPresetService? filterPresetService = null,
+        GlobalFilterState? globalFilterState = null,
         Action<string>? navigateToTab = null)
         : base(filterBuilder ?? new SmartFilterBuilderService())
     {
@@ -289,6 +292,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         _fileDialogService = fileDialogService;
         _filterCopyService = App.Services?.GetService<FilterCopyService>();
         _filterPresetService = filterPresetService;
+        _globalFilterState = globalFilterState;
         _navigateToTab = navigateToTab;
 
         // Initialize component ViewModels
