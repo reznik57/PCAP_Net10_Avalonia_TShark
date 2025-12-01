@@ -1,0 +1,153 @@
+<!-- src/PCAPAnalyzer.UI/Views/Controls/UnifiedFilterPanelControl.axaml -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="300"
+             x:Class="PCAPAnalyzer.UI.Views.Controls.UnifiedFilterPanelControl">
+
+    <Border Classes="modern-card-unified" Padding="16,12" Margin="0,0,0,16"
+            BorderThickness="2" BorderBrush="#30363D">
+        <StackPanel Spacing="12">
+
+            <!-- Row 1: Mode Toggle + Apply/Clear Buttons -->
+            <Grid ColumnDefinitions="Auto,16,Auto,*,Auto,8,Auto">
+                <!-- Include Button -->
+                <Button Grid.Column="0" Classes="mode-button include"
+                        Height="32" Padding="12,0">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="+" FontSize="14" FontWeight="Bold"/>
+                        <TextBlock Text="Include" FontSize="12" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Exclude Button -->
+                <Button Grid.Column="2" Classes="mode-button exclude"
+                        Height="32" Padding="12,0">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="−" FontSize="14" FontWeight="Bold"/>
+                        <TextBlock Text="Exclude" FontSize="12" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Apply Button -->
+                <Button Grid.Column="4" Classes="primary-action" Height="32" Padding="16,0">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="Apply" FontSize="12" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Clear Button -->
+                <Button Grid.Column="6" Classes="secondary-action" Height="32" Padding="16,0">
+                    <TextBlock Text="Clear" FontSize="12"/>
+                </Button>
+            </Grid>
+
+            <!-- Row 2: Include Summary (green border - placeholder) -->
+            <Border Background="#0D1117" BorderBrush="#2EA043" BorderThickness="1"
+                    CornerRadius="6" Padding="10,6"
+                    IsVisible="False">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="+" FontSize="12" FontWeight="Bold" Foreground="#3FB950"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="Including:" FontSize="11" Foreground="#7EE787"
+                               VerticalAlignment="Center"/>
+                    <!-- Chip items will be bound here later -->
+                    <Border Background="#1A3D1A" BorderBrush="#2EA043" BorderThickness="1"
+                            CornerRadius="10" Padding="8,3" Margin="0,0,6,0">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="TCP" FontSize="11"
+                                       Foreground="#7EE787" VerticalAlignment="Center"/>
+                            <Button Background="Transparent" BorderThickness="0"
+                                    Padding="2" Cursor="Hand">
+                                <TextBlock Text="x" Foreground="#F85149" FontSize="10"/>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Row 3: Exclude Summary (red border - placeholder) -->
+            <Border Background="#0D1117" BorderBrush="#F85149" BorderThickness="1"
+                    CornerRadius="6" Padding="10,6"
+                    IsVisible="False">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="−" FontSize="14" FontWeight="Bold" Foreground="#F85149"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="Excluding:" FontSize="11" Foreground="#FF7B72"
+                               VerticalAlignment="Center"/>
+                    <!-- Chip items will be bound here later -->
+                    <Border Background="#3D1A1A" BorderBrush="#F85149" BorderThickness="1"
+                            CornerRadius="10" Padding="8,3" Margin="0,0,6,0">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock Text="192.168.1.1" FontSize="11"
+                                       Foreground="#FF7B72" VerticalAlignment="Center"/>
+                            <Button Background="Transparent" BorderThickness="0"
+                                    Padding="2" Cursor="Hand">
+                                <TextBlock Text="x" Foreground="#F85149" FontSize="10"/>
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Row 4: Filter Category Tabs -->
+            <TabControl>
+                <TabItem Header="General">
+                    <Border Padding="16" Background="#0D1117">
+                        <TextBlock Text="General filter content (protocols, IPs, ports) - to be implemented"
+                                   Foreground="#8B949E" FontSize="12"/>
+                    </Border>
+                </TabItem>
+                <TabItem Header="Threats">
+                    <Border Padding="16" Background="#0D1117">
+                        <TextBlock Text="Threats filter content (severity, category) - to be implemented"
+                                   Foreground="#8B949E" FontSize="12"/>
+                    </Border>
+                </TabItem>
+                <TabItem Header="VoiceQoS">
+                    <Border Padding="16" Background="#0D1117">
+                        <TextBlock Text="VoiceQoS filter content (codecs, quality) - to be implemented"
+                                   Foreground="#8B949E" FontSize="12"/>
+                    </Border>
+                </TabItem>
+                <TabItem Header="Country">
+                    <Border Padding="16" Background="#0D1117">
+                        <TextBlock Text="Country filter content (regions, countries) - to be implemented"
+                                   Foreground="#8B949E" FontSize="12"/>
+                    </Border>
+                </TabItem>
+            </TabControl>
+
+        </StackPanel>
+    </Border>
+
+    <UserControl.Styles>
+        <Style Selector="Button.mode-button">
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.mode-button.include">
+            <Setter Property="Background" Value="#1E5F4B"/>
+            <Setter Property="BorderBrush" Value="#10B981"/>
+            <Setter Property="Foreground" Value="#34D399"/>
+        </Style>
+        <Style Selector="Button.mode-button.include:disabled">
+            <Setter Property="Background" Value="#2EA043"/>
+            <Setter Property="BorderBrush" Value="#3FB950"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Button.mode-button.exclude">
+            <Setter Property="Background" Value="#3D1A1A"/>
+            <Setter Property="BorderBrush" Value="#EF4444"/>
+            <Setter Property="Foreground" Value="#F87171"/>
+        </Style>
+        <Style Selector="Button.mode-button.exclude:disabled">
+            <Setter Property="Background" Value="#DC2626"/>
+            <Setter Property="BorderBrush" Value="#F85149"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+    </UserControl.Styles>
+</UserControl>
