@@ -541,6 +541,9 @@ namespace PCAPAnalyzer.UI
             services.AddTransient<FilterSummaryViewModel>();
             services.AddTransient<UnifiedFilterPanelViewModel>();
             services.AddTransient<GeneralFilterTabViewModel>();
+            services.AddTransient<ThreatsFilterTabViewModel>();
+            services.AddTransient<VoiceQoSFilterTabViewModel>();
+            services.AddTransient<CountryFilterTabViewModel>();
 
             // Note: Add more ViewModels as they are migrated to DI
         }
