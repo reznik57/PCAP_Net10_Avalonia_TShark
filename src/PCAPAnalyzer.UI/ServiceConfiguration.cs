@@ -537,6 +537,10 @@ namespace PCAPAnalyzer.UI
                 return new PacketDetailsViewModel(protocolParser, hexFormatter, streamAnalyzer, hexDataService, deepDiveService);
             });
 
+            // Filter Panel ViewModels (Transient - one per filter panel instance)
+            services.AddTransient<FilterSummaryViewModel>();
+            services.AddTransient<UnifiedFilterPanelViewModel>();
+
             // Note: Add more ViewModels as they are migrated to DI
         }
     }
