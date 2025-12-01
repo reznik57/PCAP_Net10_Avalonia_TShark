@@ -63,6 +63,10 @@ public partial class GlobalFilterState : ObservableObject
             FilterCategory.IP => IncludeFilters.IPs.Remove(value),
             FilterCategory.Port => IncludeFilters.Ports.Remove(value),
             FilterCategory.QuickFilter => IncludeFilters.QuickFilters.Remove(value),
+            FilterCategory.Severity => IncludeFilters.Severities.Remove(value),
+            FilterCategory.ThreatCategory => IncludeFilters.ThreatCategories.Remove(value),
+            FilterCategory.TlsVersion => IncludeFilters.TlsVersions.Remove(value),
+            FilterCategory.Country => IncludeFilters.Countries.Remove(value),
             _ => false
         };
         if (removed) IncrementVersion();
@@ -76,6 +80,10 @@ public partial class GlobalFilterState : ObservableObject
             FilterCategory.IP => ExcludeFilters.IPs.Remove(value),
             FilterCategory.Port => ExcludeFilters.Ports.Remove(value),
             FilterCategory.QuickFilter => ExcludeFilters.QuickFilters.Remove(value),
+            FilterCategory.Severity => ExcludeFilters.Severities.Remove(value),
+            FilterCategory.ThreatCategory => ExcludeFilters.ThreatCategories.Remove(value),
+            FilterCategory.TlsVersion => ExcludeFilters.TlsVersions.Remove(value),
+            FilterCategory.Country => ExcludeFilters.Countries.Remove(value),
             _ => false
         };
         if (removed) IncrementVersion();
@@ -97,7 +105,7 @@ public partial class GlobalFilterState : ObservableObject
 
 public enum FilterMode { Include, Exclude }
 
-public enum FilterCategory { Protocol, IP, Port, QuickFilter, Severity, ThreatCategory }
+public enum FilterCategory { Protocol, IP, Port, QuickFilter, Severity, ThreatCategory, TlsVersion, Country }
 
 public class FilterCriteria
 {
