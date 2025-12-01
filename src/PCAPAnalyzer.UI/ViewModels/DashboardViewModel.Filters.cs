@@ -15,6 +15,11 @@ public partial class DashboardViewModel
     /// <summary>
     /// Applies filters from GlobalFilterState to Dashboard packets.
     /// Converts GlobalFilterState criteria to PacketFilter and triggers ApplySmartFilter.
+    ///
+    /// Filter Logic:
+    /// - Within category: OR (e.g., TLS OR HTTPS → any of these protocols)
+    /// - Between categories: AND (e.g., Protocol AND IP → must match both)
+    /// - Include vs Exclude: INCLUDE AND NOT(EXCLUDE)
     /// </summary>
     public void ApplyGlobalFilters()
     {
@@ -26,115 +31,179 @@ public partial class DashboardViewModel
 
         DebugLogger.Log("[DashboardViewModel] Applying global filters from UnifiedFilterPanel");
 
-        // Build list of filters to combine
+        // Build grouped filters: OR within category, AND between categories
+        var includeFilter = BuildGroupedFilters(_globalFilterState.IncludeFilters, isExclude: false);
+        var excludeFilter = BuildGroupedFilters(_globalFilterState.ExcludeFilters, isExclude: true);
+
+        // Combine: INCLUDE AND NOT(EXCLUDE)
         var filters = new List<PacketFilter>();
 
-        // Process Include filters
-        var includeFilters = BuildFiltersFromCriteria(_globalFilterState.IncludeFilters, isExclude: false);
-        if (includeFilters.Count > 0)
+        if (includeFilter != null)
         {
-            filters.Add(CombineFiltersWithOr(includeFilters));
+            filters.Add(includeFilter);
+            DebugLogger.Log($"[DashboardViewModel] Include filter: {includeFilter.Description}");
         }
 
-        // Process Exclude filters
-        var excludeFilters = BuildFiltersFromCriteria(_globalFilterState.ExcludeFilters, isExclude: true);
-        if (excludeFilters.Count > 0)
+        if (excludeFilter != null)
         {
-            // Combine exclude filters with OR, then invert
-            var excludeOr = CombineFiltersWithOr(excludeFilters);
-            var invertedExclude = InvertFilter(excludeOr);
+            var invertedExclude = InvertFilter(excludeFilter);
             filters.Add(invertedExclude);
+            DebugLogger.Log($"[DashboardViewModel] Exclude filter (inverted): {invertedExclude.Description}");
         }
 
-        // Combine include and exclude filters
         PacketFilter? finalFilter = null;
-        if (filters.Count == 1)
+        if (filters.Count == 0)
+        {
+            finalFilter = new PacketFilter(); // Empty filter - show all
+        }
+        else if (filters.Count == 1)
         {
             finalFilter = filters[0];
         }
-        else if (filters.Count == 2)
-        {
-            // AND combination: INCLUDE AND NOT(EXCLUDE)
-            finalFilter = CombineFiltersWithAnd(filters);
-        }
         else
         {
-            finalFilter = new PacketFilter(); // Empty filter
+            finalFilter = CombineFiltersWithAnd(filters);
         }
 
         // Apply the filter using existing infrastructure
-        if (finalFilter != null)
-        {
-            ApplySmartFilter(finalFilter);
-            DebugLogger.Log($"[DashboardViewModel] Global filters applied (IsEmpty={finalFilter.IsEmpty})");
-        }
+        ApplySmartFilter(finalFilter);
+        DebugLogger.Log($"[DashboardViewModel] Global filters applied (IsEmpty={finalFilter.IsEmpty})");
     }
 
     /// <summary>
-    /// Builds list of PacketFilters from FilterCriteria
+    /// Builds grouped filters: OR within category, AND between categories.
+    /// Example: (TLS OR HTTPS) AND (192.168.1.0/24) AND (Port:443 OR Port:8443)
     /// </summary>
-    private List<PacketFilter> BuildFiltersFromCriteria(Models.FilterCriteria criteria, bool isExclude)
+    private PacketFilter? BuildGroupedFilters(Models.FilterCriteria criteria, bool isExclude)
     {
-        var filters = new List<PacketFilter>();
+        var categoryFilters = new List<PacketFilter>();
+        var prefix = isExclude ? "Exclude" : "Include";
 
-        // Protocol filters
+        // Category 1: Protocols (OR within category)
+        var protocolFilters = new List<PacketFilter>();
         foreach (var protocol in criteria.Protocols)
         {
-            filters.Add(new PacketFilter
+            protocolFilters.Add(new PacketFilter
             {
-                CustomPredicate = p => p.Protocol.ToString().Equals(protocol, System.StringComparison.OrdinalIgnoreCase) ||
-                                      (p.L7Protocol?.Equals(protocol, System.StringComparison.OrdinalIgnoreCase) ?? false),
-                Description = $"{(isExclude ? "Exclude" : "Include")} Protocol: {protocol}"
+                CustomPredicate = p => p.Protocol.ToString().Equals(protocol, StringComparison.OrdinalIgnoreCase) ||
+                                      (p.L7Protocol?.Equals(protocol, StringComparison.OrdinalIgnoreCase) ?? false),
+                Description = protocol
             });
         }
+        if (protocolFilters.Count > 0)
+        {
+            categoryFilters.Add(CombineFiltersWithOr(protocolFilters, $"{prefix} Protocol"));
+        }
 
-        // IP filters
+        // Category 2: IPs (OR within category)
+        var ipFilters = new List<PacketFilter>();
         foreach (var ip in criteria.IPs)
         {
-            filters.Add(new PacketFilter
+            ipFilters.Add(new PacketFilter
             {
-                CustomPredicate = p => p.SourceIP == ip || p.DestinationIP == ip,
-                Description = $"{(isExclude ? "Exclude" : "Include")} IP: {ip}"
+                CustomPredicate = p => MatchesIpOrCidr(p.SourceIP, ip) || MatchesIpOrCidr(p.DestinationIP, ip),
+                Description = ip
             });
         }
+        if (ipFilters.Count > 0)
+        {
+            categoryFilters.Add(CombineFiltersWithOr(ipFilters, $"{prefix} IP"));
+        }
 
-        // Port filters
+        // Category 3: Ports (OR within category)
+        var portFilters = new List<PacketFilter>();
         foreach (var port in criteria.Ports)
         {
-            if (int.TryParse(port, out var portNum))
+            if (TryParsePortOrRange(port, out var portPredicate))
             {
-                filters.Add(new PacketFilter
+                portFilters.Add(new PacketFilter
                 {
-                    CustomPredicate = p => p.SourcePort == portNum || p.DestinationPort == portNum,
-                    Description = $"{(isExclude ? "Exclude" : "Include")} Port: {port}"
+                    CustomPredicate = portPredicate,
+                    Description = $"Port:{port}"
                 });
             }
         }
+        if (portFilters.Count > 0)
+        {
+            categoryFilters.Add(CombineFiltersWithOr(portFilters, $"{prefix} Port"));
+        }
 
-        // QuickFilters (special filters like "TCP", "UDP", "Encrypted", etc.)
+        // Category 4: QuickFilters (OR within category)
+        var quickFilters = new List<PacketFilter>();
         foreach (var qf in criteria.QuickFilters)
         {
             var predicate = BuildQuickFilterPredicate(qf);
             if (predicate != null)
             {
-                filters.Add(new PacketFilter
+                quickFilters.Add(new PacketFilter
                 {
                     CustomPredicate = predicate,
-                    Description = $"{(isExclude ? "Exclude" : "Include")} {qf}"
+                    Description = qf
                 });
             }
         }
+        if (quickFilters.Count > 0)
+        {
+            categoryFilters.Add(CombineFiltersWithOr(quickFilters, $"{prefix} QuickFilter"));
+        }
 
-        // TODO: Country filters require GeoIP enrichment - implement after statistics enhancement
-        // For now, country filtering is not supported in GlobalFilterState
+        // Combine all categories with AND
+        if (categoryFilters.Count == 0)
+            return null;
+        if (categoryFilters.Count == 1)
+            return categoryFilters[0];
 
-        return filters;
+        return CombineFiltersWithAnd(categoryFilters);
+    }
+
+    /// <summary>
+    /// Matches IP against exact match or CIDR notation
+    /// </summary>
+    private static bool MatchesIpOrCidr(string packetIp, string filterIp)
+    {
+        if (string.IsNullOrEmpty(packetIp) || string.IsNullOrEmpty(filterIp))
+            return false;
+
+        // Use existing CIDR matcher from NetworkHelper
+        return Core.Services.NetworkHelper.MatchesIpPattern(packetIp, filterIp);
+    }
+
+    /// <summary>
+    /// Parses port string to predicate (supports single port, range like "80-443", or comma-separated)
+    /// </summary>
+    private static bool TryParsePortOrRange(string portString, out Func<PacketInfo, bool> predicate)
+    {
+        predicate = null!;
+
+        if (string.IsNullOrWhiteSpace(portString))
+            return false;
+
+        // Single port
+        if (int.TryParse(portString, out var singlePort))
+        {
+            predicate = p => p.SourcePort == singlePort || p.DestinationPort == singlePort;
+            return true;
+        }
+
+        // Port range: "80-443"
+        if (portString.Contains('-', StringComparison.Ordinal))
+        {
+            var parts = portString.Split('-');
+            if (parts.Length == 2 && int.TryParse(parts[0], out var start) && int.TryParse(parts[1], out var end))
+            {
+                predicate = p => (p.SourcePort >= start && p.SourcePort <= end) ||
+                                (p.DestinationPort >= start && p.DestinationPort <= end);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
     /// Builds predicate for QuickFilter strings
     /// </summary>
-    private System.Func<PacketInfo, bool>? BuildQuickFilterPredicate(string quickFilter)
+    private Func<PacketInfo, bool>? BuildQuickFilterPredicate(string quickFilter)
     {
         return quickFilter.ToUpperInvariant() switch
         {
@@ -151,16 +220,27 @@ public partial class DashboardViewModel
     /// <summary>
     /// Combines filters with OR logic
     /// </summary>
-    private PacketFilter CombineFiltersWithOr(List<PacketFilter> filters)
+    private PacketFilter CombineFiltersWithOr(List<PacketFilter> filters, string? categoryName = null)
     {
         if (filters.Count == 0) return new PacketFilter();
-        if (filters.Count == 1) return filters[0];
+        if (filters.Count == 1)
+        {
+            // Preserve single filter with category name for debugging
+            if (!string.IsNullOrEmpty(categoryName) && string.IsNullOrEmpty(filters[0].Description))
+                filters[0].Description = categoryName;
+            return filters[0];
+        }
+
+        var itemDescriptions = string.Join(" OR ", filters.Select(f => f.Description));
+        var desc = string.IsNullOrEmpty(categoryName)
+            ? $"({itemDescriptions})"
+            : $"{categoryName}: ({itemDescriptions})";
 
         return new PacketFilter
         {
             CombinedFilters = filters,
             CombineMode = FilterCombineMode.Or,
-            Description = $"OR({string.Join(", ", filters.Select(f => f.Description))})"
+            Description = desc
         };
     }
 
