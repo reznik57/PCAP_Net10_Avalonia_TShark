@@ -19,6 +19,7 @@ using PCAPAnalyzer.Core.Services.Reporting;
 using PCAPAnalyzer.Core.Services.Statistics;
 using PCAPAnalyzer.TShark;
 using PCAPAnalyzer.UI.Interfaces;
+using PCAPAnalyzer.UI.Models;
 using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.ViewModels;
 using PCAPAnalyzer.UI.ViewModels.Capture;
@@ -441,6 +442,9 @@ namespace PCAPAnalyzer.UI
             // Filter Copy Service (Singleton - manages tab-specific filter registration and copying)
             services.AddSingleton<FilterCopyService>();
 
+            // Global Filter State (Singleton - centralized filter state for unified filter panel)
+            services.AddSingleton<GlobalFilterState>();
+
             // Smart Filter Builder Service (Singleton - stateless filter building logic)
             // Provides sophisticated packet filtering with INCLUDE/EXCLUDE groups, AND/OR logic,
             // port range patterns, and protocol matching - shared across all analysis tabs
@@ -449,6 +453,10 @@ namespace PCAPAnalyzer.UI
             // Dashboard Filter Service (Singleton - stateless filter logic for Dashboard tab)
             // Extracted from DashboardViewModel.UpdateFilteredStatistics() for testability
             services.AddSingleton<IDashboardFilterService, DashboardFilterService>();
+
+            // Filter Preset Service (Singleton - manages saved Dashboard filter presets)
+            // Stores user presets in JSON, provides immutable built-in presets
+            services.AddSingleton<IFilterPresetService, FilterPresetService>();
 
             // Packet Details Services (Transient - stateless parsing and formatting)
             services.AddTransient<ProtocolParser>();
