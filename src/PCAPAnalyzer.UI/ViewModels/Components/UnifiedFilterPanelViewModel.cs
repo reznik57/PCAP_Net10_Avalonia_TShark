@@ -10,6 +10,9 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
 
     public FilterSummaryViewModel Summary { get; }
     public GeneralFilterTabViewModel GeneralTab { get; }
+    public ThreatsFilterTabViewModel ThreatsTab { get; }
+    public VoiceQoSFilterTabViewModel VoiceQoSTab { get; }
+    public CountryFilterTabViewModel CountryTab { get; }
 
     [ObservableProperty] private int _selectedTabIndex;
 
@@ -21,11 +24,17 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
     public UnifiedFilterPanelViewModel(
         GlobalFilterState filterState,
         FilterSummaryViewModel summary,
-        GeneralFilterTabViewModel generalTab)
+        GeneralFilterTabViewModel generalTab,
+        ThreatsFilterTabViewModel threatsTab,
+        VoiceQoSFilterTabViewModel voiceQoSTab,
+        CountryFilterTabViewModel countryTab)
     {
         _filterState = filterState;
         Summary = summary;
         GeneralTab = generalTab;
+        ThreatsTab = threatsTab;
+        VoiceQoSTab = voiceQoSTab;
+        CountryTab = countryTab;
         _filterState.OnFilterChanged += OnFilterStateChanged;
     }
 
