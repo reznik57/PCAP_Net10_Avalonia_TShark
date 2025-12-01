@@ -168,45 +168,42 @@
                                 </WrapPanel>
                             </StackPanel>
 
-                            <!-- IP/Port Inputs -->
+                            <!-- IP/Port Inputs (Press Enter to add) -->
                             <Grid ColumnDefinitions="*,16,*,16,*">
                                 <!-- Source IP -->
                                 <StackPanel Grid.Column="0" Spacing="4">
-                                    <TextBlock Text="Source IP" FontSize="11" Foreground="#8B949E"/>
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBox Grid.Column="0" Text="{Binding SourceIPInput}"
-                                                 Watermark="e.g. 192.168.1.0/24"
-                                                 Classes="filter-input"/>
-                                        <Button Grid.Column="1" Classes="add-button"
-                                                Command="{Binding AddSourceIPCommand}"
-                                                Content="+" Margin="4,0,0,0"/>
-                                    </Grid>
+                                    <TextBlock Text="Source IP (Enter to add)" FontSize="11" Foreground="#8B949E"/>
+                                    <TextBox Text="{Binding SourceIPInput}"
+                                             Watermark="e.g. 192.168.1.0/24"
+                                             Classes="filter-input">
+                                        <TextBox.KeyBindings>
+                                            <KeyBinding Gesture="Enter" Command="{Binding AddSourceIPCommand}"/>
+                                        </TextBox.KeyBindings>
+                                    </TextBox>
                                 </StackPanel>
 
                                 <!-- Destination IP -->
                                 <StackPanel Grid.Column="2" Spacing="4">
-                                    <TextBlock Text="Destination IP" FontSize="11" Foreground="#8B949E"/>
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBox Grid.Column="0" Text="{Binding DestinationIPInput}"
-                                                 Watermark="e.g. 10.0.0.1"
-                                                 Classes="filter-input"/>
-                                        <Button Grid.Column="1" Classes="add-button"
-                                                Command="{Binding AddDestinationIPCommand}"
-                                                Content="+" Margin="4,0,0,0"/>
-                                    </Grid>
+                                    <TextBlock Text="Destination IP (Enter to add)" FontSize="11" Foreground="#8B949E"/>
+                                    <TextBox Text="{Binding DestinationIPInput}"
+                                             Watermark="e.g. 10.0.0.1"
+                                             Classes="filter-input">
+                                        <TextBox.KeyBindings>
+                                            <KeyBinding Gesture="Enter" Command="{Binding AddDestinationIPCommand}"/>
+                                        </TextBox.KeyBindings>
+                                    </TextBox>
                                 </StackPanel>
 
                                 <!-- Port Range -->
                                 <StackPanel Grid.Column="4" Spacing="4">
-                                    <TextBlock Text="Port Range" FontSize="11" Foreground="#8B949E"/>
-                                    <Grid ColumnDefinitions="*,Auto">
-                                        <TextBox Grid.Column="0" Text="{Binding PortRangeInput}"
-                                                 Watermark="e.g. 80-443"
-                                                 Classes="filter-input"/>
-                                        <Button Grid.Column="1" Classes="add-button"
-                                                Command="{Binding AddPortCommand}"
-                                                Content="+" Margin="4,0,0,0"/>
-                                    </Grid>
+                                    <TextBlock Text="Port Range (Enter to add)" FontSize="11" Foreground="#8B949E"/>
+                                    <TextBox Text="{Binding PortRangeInput}"
+                                             Watermark="e.g. 80-443"
+                                             Classes="filter-input">
+                                        <TextBox.KeyBindings>
+                                            <KeyBinding Gesture="Enter" Command="{Binding AddPortCommand}"/>
+                                        </TextBox.KeyBindings>
+                                    </TextBox>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
