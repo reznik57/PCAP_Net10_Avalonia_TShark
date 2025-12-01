@@ -3,8 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels.Components"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="300"
-             x:Class="PCAPAnalyzer.UI.Views.Controls.UnifiedFilterPanelControl">
+             x:Class="PCAPAnalyzer.UI.Views.Controls.UnifiedFilterPanelControl"
+             x:DataType="vm:UnifiedFilterPanelViewModel">
 
     <Border Classes="modern-card-unified" Padding="16,12" Margin="0,0,0,16"
             BorderThickness="2" BorderBrush="#30363D">
@@ -12,18 +14,22 @@
 
             <!-- Row 1: Mode Toggle + Apply/Clear Buttons -->
             <Grid ColumnDefinitions="Auto,16,Auto,*,Auto,8,Auto">
-                <!-- Include Button -->
+                <!-- Include Button (disabled=active when in Include mode) -->
                 <Button Grid.Column="0" Classes="mode-button include"
-                        Height="32" Padding="12,0">
+                        Height="32" Padding="12,0"
+                        Command="{Binding SetIncludeModeCommand}"
+                        IsEnabled="{Binding !IsIncludeMode}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <TextBlock Text="+" FontSize="14" FontWeight="Bold"/>
                         <TextBlock Text="Include" FontSize="12" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Button>
 
-                <!-- Exclude Button -->
+                <!-- Exclude Button (disabled=active when in Exclude mode) -->
                 <Button Grid.Column="2" Classes="mode-button exclude"
-                        Height="32" Padding="12,0">
+                        Height="32" Padding="12,0"
+                        Command="{Binding SetExcludeModeCommand}"
+                        IsEnabled="{Binding !IsExcludeMode}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <TextBlock Text="−" FontSize="14" FontWeight="Bold"/>
                         <TextBlock Text="Exclude" FontSize="12" FontWeight="SemiBold"/>
@@ -31,72 +37,179 @@
                 </Button>
 
                 <!-- Apply Button -->
-                <Button Grid.Column="4" Classes="primary-action" Height="32" Padding="16,0">
+                <Button Grid.Column="4" Classes="primary-action" Height="32" Padding="16,0"
+                        Command="{Binding ApplyFiltersCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <TextBlock Text="Apply" FontSize="12" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Button>
 
                 <!-- Clear Button -->
-                <Button Grid.Column="6" Classes="secondary-action" Height="32" Padding="16,0">
+                <Button Grid.Column="6" Classes="secondary-action" Height="32" Padding="16,0"
+                        Command="{Binding ClearFiltersCommand}">
                     <TextBlock Text="Clear" FontSize="12"/>
                 </Button>
             </Grid>
 
-            <!-- Row 2: Include Summary (green border - placeholder) -->
+            <!-- Row 2: Include Summary (green border) -->
             <Border Background="#0D1117" BorderBrush="#2EA043" BorderThickness="1"
                     CornerRadius="6" Padding="10,6"
-                    IsVisible="False">
+                    IsVisible="{Binding Summary.HasIncludeFilters}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <TextBlock Text="+" FontSize="12" FontWeight="Bold" Foreground="#3FB950"
                                VerticalAlignment="Center"/>
                     <TextBlock Text="Including:" FontSize="11" Foreground="#7EE787"
                                VerticalAlignment="Center"/>
-                    <!-- Chip items will be bound here later -->
-                    <Border Background="#1A3D1A" BorderBrush="#2EA043" BorderThickness="1"
-                            CornerRadius="10" Padding="8,3" Margin="0,0,6,0">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="TCP" FontSize="11"
-                                       Foreground="#7EE787" VerticalAlignment="Center"/>
-                            <Button Background="Transparent" BorderThickness="0"
-                                    Padding="2" Cursor="Hand">
-                                <TextBlock Text="x" Foreground="#F85149" FontSize="10"/>
-                            </Button>
-                        </StackPanel>
-                    </Border>
+                    <ItemsControl ItemsSource="{Binding Summary.IncludeChips}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="6"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#1A3D1A" BorderBrush="#2EA043" BorderThickness="1"
+                                        CornerRadius="10" Padding="8,3">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="{Binding TypedLabel}" FontSize="11"
+                                                   Foreground="#7EE787" VerticalAlignment="Center"/>
+                                        <Button Background="Transparent" BorderThickness="0"
+                                                Padding="2" Cursor="Hand"
+                                                Command="{Binding RemoveCommand}">
+                                            <TextBlock Text="×" Foreground="#F85149" FontSize="10"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </Border>
 
-            <!-- Row 3: Exclude Summary (red border - placeholder) -->
+            <!-- Row 3: Exclude Summary (red border) -->
             <Border Background="#0D1117" BorderBrush="#F85149" BorderThickness="1"
                     CornerRadius="6" Padding="10,6"
-                    IsVisible="False">
+                    IsVisible="{Binding Summary.HasExcludeFilters}">
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <TextBlock Text="−" FontSize="14" FontWeight="Bold" Foreground="#F85149"
                                VerticalAlignment="Center"/>
                     <TextBlock Text="Excluding:" FontSize="11" Foreground="#FF7B72"
                                VerticalAlignment="Center"/>
-                    <!-- Chip items will be bound here later -->
-                    <Border Background="#3D1A1A" BorderBrush="#F85149" BorderThickness="1"
-                            CornerRadius="10" Padding="8,3" Margin="0,0,6,0">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="192.168.1.1" FontSize="11"
-                                       Foreground="#FF7B72" VerticalAlignment="Center"/>
-                            <Button Background="Transparent" BorderThickness="0"
-                                    Padding="2" Cursor="Hand">
-                                <TextBlock Text="x" Foreground="#F85149" FontSize="10"/>
-                            </Button>
-                        </StackPanel>
-                    </Border>
+                    <ItemsControl ItemsSource="{Binding Summary.ExcludeChips}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="6"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#3D1A1A" BorderBrush="#F85149" BorderThickness="1"
+                                        CornerRadius="10" Padding="8,3">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Text="{Binding TypedLabel}" FontSize="11"
+                                                   Foreground="#FF7B72" VerticalAlignment="Center"/>
+                                        <Button Background="Transparent" BorderThickness="0"
+                                                Padding="2" Cursor="Hand"
+                                                Command="{Binding RemoveCommand}">
+                                            <TextBlock Text="×" Foreground="#F85149" FontSize="10"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </Border>
 
             <!-- Row 4: Filter Category Tabs -->
-            <TabControl>
+            <TabControl SelectedIndex="{Binding SelectedTabIndex}">
                 <TabItem Header="General">
-                    <Border Padding="16" Background="#0D1117">
-                        <TextBlock Text="General filter content (protocols, IPs, ports) - to be implemented"
-                                   Foreground="#8B949E" FontSize="12"/>
+                    <Border Padding="16,12" Background="#0D1117">
+                        <StackPanel Spacing="12" DataContext="{Binding GeneralTab}">
+                            <!-- Protocols Row -->
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Protocols" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
+                                <WrapPanel>
+                                    <Button Classes="filter-chip" Content="TCP"
+                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="TCP"/>
+                                    <Button Classes="filter-chip" Content="UDP"
+                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="UDP"/>
+                                    <Button Classes="filter-chip" Content="ICMP"
+                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="ICMP"/>
+                                    <Button Classes="filter-chip" Content="DNS"
+                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="DNS"/>
+                                    <Button Classes="filter-chip" Content="HTTP"
+                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="HTTP"/>
+                                    <Button Classes="filter-chip" Content="HTTPS"
+                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="HTTPS"/>
+                                    <Button Classes="filter-chip" Content="TLS"
+                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="TLS"/>
+                                    <Button Classes="filter-chip" Content="SSH"
+                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="SSH"/>
+                                    <Button Classes="filter-chip" Content="FTP"
+                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="FTP"/>
+                                    <Button Classes="filter-chip" Content="SMTP"
+                                            Command="{Binding ToggleProtocolCommand}" CommandParameter="SMTP"/>
+                                </WrapPanel>
+                            </StackPanel>
+
+                            <!-- Security Row -->
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Security" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
+                                <WrapPanel>
+                                    <Button Classes="filter-chip" Content="Insecure"
+                                            Command="{Binding ToggleQuickFilterCommand}" CommandParameter="Insecure"/>
+                                    <Button Classes="filter-chip" Content="Anomalies"
+                                            Command="{Binding ToggleQuickFilterCommand}" CommandParameter="Anomalies"/>
+                                    <Button Classes="filter-chip" Content="Suspicious"
+                                            Command="{Binding ToggleQuickFilterCommand}" CommandParameter="Suspicious"/>
+                                    <Button Classes="filter-chip" Content="TCP Issues"
+                                            Command="{Binding ToggleQuickFilterCommand}" CommandParameter="TCP Issues"/>
+                                </WrapPanel>
+                            </StackPanel>
+
+                            <!-- IP/Port Inputs -->
+                            <Grid ColumnDefinitions="*,16,*,16,*">
+                                <!-- Source IP -->
+                                <StackPanel Grid.Column="0" Spacing="4">
+                                    <TextBlock Text="Source IP" FontSize="11" Foreground="#8B949E"/>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBox Grid.Column="0" Text="{Binding SourceIPInput}"
+                                                 Watermark="e.g. 192.168.1.0/24"
+                                                 Classes="filter-input"/>
+                                        <Button Grid.Column="1" Classes="add-button"
+                                                Command="{Binding AddSourceIPCommand}"
+                                                Content="+" Margin="4,0,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- Destination IP -->
+                                <StackPanel Grid.Column="2" Spacing="4">
+                                    <TextBlock Text="Destination IP" FontSize="11" Foreground="#8B949E"/>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBox Grid.Column="0" Text="{Binding DestinationIPInput}"
+                                                 Watermark="e.g. 10.0.0.1"
+                                                 Classes="filter-input"/>
+                                        <Button Grid.Column="1" Classes="add-button"
+                                                Command="{Binding AddDestinationIPCommand}"
+                                                Content="+" Margin="4,0,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <!-- Port Range -->
+                                <StackPanel Grid.Column="4" Spacing="4">
+                                    <TextBlock Text="Port Range" FontSize="11" Foreground="#8B949E"/>
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <TextBox Grid.Column="0" Text="{Binding PortRangeInput}"
+                                                 Watermark="e.g. 80-443"
+                                                 Classes="filter-input"/>
+                                        <Button Grid.Column="1" Classes="add-button"
+                                                Command="{Binding AddPortCommand}"
+                                                Content="+" Margin="4,0,0,0"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
                     </Border>
                 </TabItem>
                 <TabItem Header="Threats">
@@ -123,6 +236,7 @@
     </Border>
 
     <UserControl.Styles>
+        <!-- Mode Toggle Buttons -->
         <Style Selector="Button.mode-button">
             <Setter Property="Height" Value="32"/>
             <Setter Property="Padding" Value="12,0"/>
@@ -138,6 +252,7 @@
             <Setter Property="Background" Value="#2EA043"/>
             <Setter Property="BorderBrush" Value="#3FB950"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Opacity" Value="1"/>
         </Style>
         <Style Selector="Button.mode-button.exclude">
             <Setter Property="Background" Value="#3D1A1A"/>
@@ -148,6 +263,73 @@
             <Setter Property="Background" Value="#DC2626"/>
             <Setter Property="BorderBrush" Value="#F85149"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Opacity" Value="1"/>
+        </Style>
+
+        <!-- Filter Chip Buttons -->
+        <Style Selector="Button.filter-chip">
+            <Setter Property="Background" Value="#21262D"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Margin" Value="0,0,6,6"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.filter-chip:pointerover">
+            <Setter Property="Background" Value="#30363D"/>
+            <Setter Property="BorderBrush" Value="#484F58"/>
+        </Style>
+
+        <!-- Filter Input TextBox -->
+        <Style Selector="TextBox.filter-input">
+            <Setter Property="Background" Value="#0D1117"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Foreground" Value="#C9D1D9"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+
+        <!-- Add Button -->
+        <Style Selector="Button.add-button">
+            <Setter Property="Background" Value="#238636"/>
+            <Setter Property="BorderBrush" Value="#2EA043"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Width" Value="28"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.add-button:pointerover">
+            <Setter Property="Background" Value="#2EA043"/>
+        </Style>
+
+        <!-- Action Buttons -->
+        <Style Selector="Button.primary-action">
+            <Setter Property="Background" Value="#238636"/>
+            <Setter Property="BorderBrush" Value="#2EA043"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.primary-action:pointerover">
+            <Setter Property="Background" Value="#2EA043"/>
+        </Style>
+        <Style Selector="Button.secondary-action">
+            <Setter Property="Background" Value="#21262D"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.secondary-action:pointerover">
+            <Setter Property="Background" Value="#30363D"/>
         </Style>
     </UserControl.Styles>
 </UserControl>

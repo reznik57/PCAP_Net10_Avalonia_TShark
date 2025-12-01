@@ -9,32 +9,44 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
     private readonly GlobalFilterState _filterState;
 
     public FilterSummaryViewModel Summary { get; }
+    public GeneralFilterTabViewModel GeneralTab { get; }
 
     [ObservableProperty] private int _selectedTabIndex;
 
     public bool IsIncludeMode => _filterState.CurrentMode == FilterMode.Include;
+    public bool IsExcludeMode => _filterState.CurrentMode == FilterMode.Exclude;
 
     public event Action? ApplyFiltersRequested;
 
-    public UnifiedFilterPanelViewModel(GlobalFilterState filterState, FilterSummaryViewModel summary)
+    public UnifiedFilterPanelViewModel(
+        GlobalFilterState filterState,
+        FilterSummaryViewModel summary,
+        GeneralFilterTabViewModel generalTab)
     {
         _filterState = filterState;
         Summary = summary;
-        _filterState.OnFilterChanged += () => OnPropertyChanged(nameof(IsIncludeMode));
+        GeneralTab = generalTab;
+        _filterState.OnFilterChanged += OnFilterStateChanged;
+    }
+
+    private void OnFilterStateChanged()
+    {
+        OnPropertyChanged(nameof(IsIncludeMode));
+        OnPropertyChanged(nameof(IsExcludeMode));
     }
 
     [RelayCommand]
     private void SetIncludeMode()
     {
         _filterState.CurrentMode = FilterMode.Include;
-        OnPropertyChanged(nameof(IsIncludeMode));
+        OnFilterStateChanged();
     }
 
     [RelayCommand]
     private void SetExcludeMode()
     {
         _filterState.CurrentMode = FilterMode.Exclude;
-        OnPropertyChanged(nameof(IsIncludeMode));
+        OnFilterStateChanged();
     }
 
     [RelayCommand]
