@@ -342,6 +342,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [INIT] Creating DashboardViewModel...");
         try
         {
+            var globalFilterState = App.Services?.GetService<Models.GlobalFilterState>();
             DashboardViewModel = new DashboardViewModel(
                 _statisticsService,
                 _anomalyService,
@@ -349,11 +350,14 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
                 csvExportService: null,
                 fileDialogService: null,
                 filterBuilder: null,
+                filterPresetService: null,
+                globalFilterState: globalFilterState,
                 navigateToTab: HandleDashboardNavigation);
         }
         catch (Exception ex)
         {
             DebugLogger.Critical($"[ERROR] Failed to initialize DashboardViewModel: {ex.Message}");
+            var globalFilterState = App.Services?.GetService<Models.GlobalFilterState>();
             DashboardViewModel = new DashboardViewModel(
                 _statisticsService,
                 _anomalyService,
@@ -361,6 +365,8 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
                 csvExportService: null,
                 fileDialogService: null,
                 filterBuilder: null,
+                filterPresetService: null,
+                globalFilterState: globalFilterState,
                 navigateToTab: HandleDashboardNavigation);
         }
         DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [INIT] DashboardViewModel created");
