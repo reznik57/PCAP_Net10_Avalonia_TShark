@@ -132,11 +132,8 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="24,24,24,24" Spacing="24" MaxWidth="{Binding $parent[Grid].Bounds.Width}">
 
-                <!-- FilterPanelControl for sophisticated filtering -->
-                <ctrl:FilterPanelControl DataContext="{Binding}" Margin="0,0,0,10" />
-
-                <!-- NOTE: Active filter badges are now shown in FilterPanelControl's
-                     INCLUDE/EXCLUDE sections with color-coded chips -->
+                <!-- UnifiedFilterPanelControl for sophisticated filtering -->
+                <ctrl:UnifiedFilterPanelControl Margin="0,0,0,10" />
 
                 <!-- Sampling Indicator Banner (shown for large captures) -->
                 <Border IsVisible="{Binding UsingStatisticsSample}"
