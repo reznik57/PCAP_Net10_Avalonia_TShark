@@ -14,7 +14,9 @@ using PCAPAnalyzer.Core.Orchestration;
 using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.Core.Services.Caching;
 using PCAPAnalyzer.Core.Services.Capture;
+using PCAPAnalyzer.Core.Services.Credentials;
 using PCAPAnalyzer.Core.Services.GeoIP;
+using PCAPAnalyzer.Core.Services.OsFingerprinting;
 using PCAPAnalyzer.Core.Services.Reporting;
 using PCAPAnalyzer.Core.Services.Statistics;
 using PCAPAnalyzer.TShark;
@@ -316,6 +318,16 @@ namespace PCAPAnalyzer.UI
             // Anomaly Detection (Singleton - maintains registered detectors)
             services.AddSingleton<IUnifiedAnomalyDetectionService, UnifiedAnomalyDetectionService>();
 
+            // Credential Detection (Singleton - collects credential findings during packet parsing)
+            // Detects cleartext credentials in HTTP Basic Auth, FTP, SMTP, IMAP, POP3, LDAP, SNMP,
+            // Kerberos, NTLM, MySQL, and PostgreSQL protocols
+            services.AddSingleton<ICredentialDetectionService, CredentialDetectionService>();
+
+            // OS Fingerprinting (Singleton - passive OS detection from TCP/JA3/MAC/DHCP signals)
+            // NetworkMiner-inspired host inventory with p0f-style TCP fingerprinting, JA3 TLS hashes,
+            // MAC vendor OUI lookup, DHCP Option 55, and server banner parsing
+            services.AddSingleton<IOsFingerprintService, OsFingerprintService>();
+
             // ✅ ARCHITECTURE REDESIGN: Analysis Orchestrator (Singleton - central coordinator)
             // Replaces fragmented MainWindowViewModel analysis logic with unified orchestration
             // Implements aggressive preloading: load all packets once, analyze all tabs in parallel
@@ -458,6 +470,10 @@ namespace PCAPAnalyzer.UI
             // Stores user presets in JSON, provides immutable built-in presets
             services.AddSingleton<IFilterPresetService, FilterPresetService>();
 
+            // Anomaly Frame Index Service (Singleton - provides indexed access to anomalies by frame number)
+            // Populated once per analysis, used by all tabs for cross-tab anomaly filtering
+            services.AddSingleton<IAnomalyFrameIndexService, AnomalyFrameIndexService>();
+
             // Packet Details Services (Transient - stateless parsing and formatting)
             services.AddTransient<ProtocolParser>();
             services.AddTransient<HexFormatter>();
@@ -511,6 +527,11 @@ namespace PCAPAnalyzer.UI
             services.AddTransient<TopTalkersViewModel>();
             services.AddTransient<AnomalyViewModel>();
             services.AddTransient<CompareViewModel>();
+            services.AddTransient<HostInventoryViewModel>(provider =>
+            {
+                var fingerprintService = provider.GetRequiredService<IOsFingerprintService>();
+                return new HostInventoryViewModel(fingerprintService);
+            });
 
             // Compare Tab Services
             services.AddSingleton<Core.Interfaces.IPacketLoader, TShark.TSharkPacketLoader>();
@@ -540,10 +561,8 @@ namespace PCAPAnalyzer.UI
             // Filter Panel ViewModels (Transient - one per filter panel instance)
             services.AddTransient<FilterSummaryViewModel>();
             services.AddTransient<UnifiedFilterPanelViewModel>();
-            services.AddTransient<GeneralFilterTabViewModel>();
-            services.AddTransient<ThreatsFilterTabViewModel>();
-            services.AddTransient<VoiceQoSFilterTabViewModel>();
-            services.AddTransient<CountryFilterTabViewModel>();
+            // Note: Tab ViewModels (General, Threats, VoiceQoS, Country) are created directly
+            // by UnifiedFilterPanelViewModel without GlobalFilterState dependency
 
             // Note: Add more ViewModels as they are migrated to DI
         }
