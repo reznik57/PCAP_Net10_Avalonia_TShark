@@ -1,0 +1,640 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+             xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="900"
+             x:Class="PCAPAnalyzer.UI.Views.AnomaliesView"
+             x:DataType="vm:AnomaliesViewModel"
+             Background="#0D1117">
+
+    <UserControl.Styles>
+        <!-- Modern Card Style -->
+        <Style Selector="Border.modern-card">
+            <Setter Property="Background" Value="#0D1117"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="20"/>
+        </Style>
+
+        <!-- KPI Card Style -->
+        <Style Selector="Border.kpi-card">
+            <Setter Property="Background" Value="#161B22"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+        </Style>
+
+        <!-- Section Header -->
+        <Style Selector="TextBlock.section-header">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+
+        <!-- KPI Value -->
+        <Style Selector="TextBlock.kpi-value">
+            <Setter Property="FontSize" Value="24"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontFamily" Value="Consolas, monospace"/>
+        </Style>
+
+        <!-- KPI Label -->
+        <Style Selector="TextBlock.kpi-label">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Margin" Value="0,4,0,0"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid>
+        <!-- Loading Overlay -->
+        <Border IsVisible="{Binding IsLoading}"
+                Background="#CC0D1117"
+                ZIndex="100">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressBar IsIndeterminate="True" Width="200"/>
+                <TextBlock Text="{Binding LoadingMessage}"
+                           Foreground="#8B949E"
+                           HorizontalAlignment="Center"
+                           Margin="0,12,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- No Data Message -->
+        <Border IsVisible="{Binding !HasData}"
+                Background="#0D1117">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="No Anomalies Detected"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           Foreground="#8B949E"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="Load a PCAP file to analyze for anomalies"
+                           FontSize="13"
+                           Foreground="#6B7280"
+                           HorizontalAlignment="Center"
+                           Margin="0,8,0,0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content -->
+        <ScrollViewer IsVisible="{Binding HasData}"
+                      HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="24" Spacing="24">
+
+                <!-- Filter Progress Bar -->
+                <ProgressBar IsVisible="{Binding IsFiltering}"
+                             Value="{Binding FilterProgress}"
+                             Minimum="0" Maximum="100"
+                             Height="4"
+                             Foreground="#3B82F6"/>
+
+                <!-- KPI Row -->
+                <Grid ColumnDefinitions="*,*,*,*,*,*">
+                    <!-- Total Anomalies -->
+                    <Border Classes="kpi-card" Grid.Column="0" Margin="0,0,8,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Statistics.TotalAnomalies}"
+                                       Classes="kpi-value"
+                                       Foreground="#3B82F6"/>
+                            <TextBlock Text="Total Anomalies" Classes="kpi-label"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Critical -->
+                    <Border Classes="kpi-card" Grid.Column="1" Margin="4,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Statistics.CriticalCount}"
+                                       Classes="kpi-value"
+                                       Foreground="#F85149"/>
+                            <TextBlock Text="Critical" Classes="kpi-label"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- High -->
+                    <Border Classes="kpi-card" Grid.Column="2" Margin="4,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Statistics.HighCount}"
+                                       Classes="kpi-value"
+                                       Foreground="#F59E0B"/>
+                            <TextBlock Text="High" Classes="kpi-label"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Unique Sources -->
+                    <Border Classes="kpi-card" Grid.Column="3" Margin="4,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Statistics.UniqueSourceIPs}"
+                                       Classes="kpi-value"
+                                       Foreground="#06B6D4"/>
+                            <TextBlock Text="Unique Sources" Classes="kpi-label"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Unique Targets -->
+                    <Border Classes="kpi-card" Grid.Column="4" Margin="4,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Statistics.UniqueTargetIPs}"
+                                       Classes="kpi-value"
+                                       Foreground="#EC4899"/>
+                            <TextBlock Text="Unique Targets" Classes="kpi-label"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Time Span -->
+                    <Border Classes="kpi-card" Grid.Column="5" Margin="8,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Statistics.TimeSpanFormatted}"
+                                       Classes="kpi-value"
+                                       Foreground="#A855F7"/>
+                            <TextBlock Text="Time Span" Classes="kpi-label"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Anomaly Timeline (Hero Chart) -->
+                <Border Classes="modern-card">
+                    <Grid RowDefinitions="Auto,*">
+                        <!-- Header with accent bar -->
+                        <Border Grid.Row="0"
+                                Background="#1C2128"
+                                CornerRadius="8,8,0,0"
+                                Margin="-20,-20,-20,16"
+                                Padding="20,0">
+                            <Grid>
+                                <Border Height="3"
+                                        Background="#F85149"
+                                        VerticalAlignment="Top"
+                                        CornerRadius="0,0,0,0"
+                                        Margin="-20,0"/>
+                                <StackPanel Orientation="Horizontal"
+                                            Height="48"
+                                            VerticalAlignment="Center">
+                                    <TextBlock Text="Anomalies Over Time"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="#F0F6FC"
+                                               VerticalAlignment="Center"/>
+                                    <StackPanel Orientation="Horizontal"
+                                                Margin="24,0,0,0"
+                                                Spacing="8">
+                                        <Button Content="-"
+                                                Width="28" Height="28"
+                                                Command="{Binding Charts.ZoomOut}"
+                                                Background="#21262D"
+                                                Foreground="#F0F6FC"/>
+                                        <Button Content="Reset"
+                                                Height="28"
+                                                Command="{Binding Charts.ResetZoom}"
+                                                Background="#21262D"
+                                                Foreground="#F0F6FC"/>
+                                        <Button Content="+"
+                                                Width="28" Height="28"
+                                                Command="{Binding Charts.ZoomIn}"
+                                                Background="#21262D"
+                                                Foreground="#F0F6FC"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Chart -->
+                        <lvc:CartesianChart Grid.Row="1"
+                                            Series="{Binding Charts.TimelineSeries}"
+                                            XAxes="{Binding Charts.TimelineXAxes}"
+                                            YAxes="{Binding Charts.TimelineYAxes}"
+                                            Height="320"
+                                            ZoomMode="X"
+                                            TooltipPosition="Hidden"/>
+                    </Grid>
+                </Border>
+
+                <!-- Secondary Charts Row -->
+                <Grid ColumnDefinitions="*,*">
+                    <!-- Anomalous Ports Bar Chart -->
+                    <Border Classes="modern-card" Grid.Column="0" Margin="0,0,12,0">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0"
+                                    Background="#1C2128"
+                                    CornerRadius="8,8,0,0"
+                                    Margin="-20,-20,-20,16"
+                                    Padding="20,0">
+                                <Grid>
+                                    <Border Height="3"
+                                            Background="#3B82F6"
+                                            VerticalAlignment="Top"
+                                            Margin="-20,0"/>
+                                    <TextBlock Text="Anomalous Ports"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="#F0F6FC"
+                                               Height="48"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <lvc:CartesianChart Grid.Row="1"
+                                                Series="{Binding Charts.PortsSeries}"
+                                                XAxes="{Binding Charts.PortsXAxes}"
+                                                YAxes="{Binding Charts.PortsYAxes}"
+                                                Height="250"
+                                                TooltipPosition="Top"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Category Distribution Donut -->
+                    <Border Classes="modern-card" Grid.Column="1" Margin="12,0,0,0">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0"
+                                    Background="#1C2128"
+                                    CornerRadius="8,8,0,0"
+                                    Margin="-20,-20,-20,16"
+                                    Padding="20,0">
+                                <Grid>
+                                    <Border Height="3"
+                                            Background="#10B981"
+                                            VerticalAlignment="Top"
+                                            Margin="-20,0"/>
+                                    <TextBlock Text="Category Distribution"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="#F0F6FC"
+                                               Height="48"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <lvc:PieChart Grid.Row="1"
+                                          Series="{Binding Charts.CategorySeries}"
+                                          Height="250"
+                                          TooltipPosition="Center"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <!-- Ranked Tables Row -->
+                <Grid ColumnDefinitions="*,*">
+                    <!-- Top Anomalous Sources -->
+                    <Border Classes="modern-card" Grid.Column="0" Margin="0,0,12,0">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0"
+                                    Background="#1C2128"
+                                    CornerRadius="8,8,0,0"
+                                    Margin="-20,-20,-20,16"
+                                    Padding="20,0">
+                                <Grid>
+                                    <Border Height="3"
+                                            Background="#06B6D4"
+                                            VerticalAlignment="Top"
+                                            Margin="-20,0"/>
+                                    <TextBlock Text="Top Anomalous Sources"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="#F0F6FC"
+                                               Height="48"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <ScrollViewer Grid.Row="1" Height="440">
+                                <ItemsControl ItemsSource="{Binding Statistics.TopSources}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#161B22"
+                                                    BorderBrush="#30363D"
+                                                    BorderThickness="0,0,0,1"
+                                                    Padding="12,10">
+                                                <Grid ColumnDefinitions="40,*,80,120,Auto">
+                                                    <!-- Rank -->
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{Binding Rank, StringFormat=#\{0\}}"
+                                                               FontSize="11"
+                                                               Foreground="#6B7280"
+                                                               VerticalAlignment="Center"/>
+
+                                                    <!-- IP + Country -->
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Text="{Binding IPAddress}"
+                                                                   FontFamily="Consolas, monospace"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#F0F6FC"/>
+                                                        <TextBlock Text="{Binding Country}"
+                                                                   FontSize="11"
+                                                                   Foreground="#8B949E"/>
+                                                    </StackPanel>
+
+                                                    <!-- Severity counts -->
+                                                    <StackPanel Grid.Column="2"
+                                                                Orientation="Horizontal"
+                                                                Spacing="4"
+                                                                VerticalAlignment="Center">
+                                                        <Border Background="#F85149"
+                                                                CornerRadius="4"
+                                                                Padding="4,2"
+                                                                IsVisible="{Binding CriticalCount}">
+                                                            <TextBlock Text="{Binding CriticalCount}"
+                                                                       FontSize="10"
+                                                                       Foreground="White"/>
+                                                        </Border>
+                                                        <Border Background="#F59E0B"
+                                                                CornerRadius="4"
+                                                                Padding="4,2"
+                                                                IsVisible="{Binding HighCount}">
+                                                            <TextBlock Text="{Binding HighCount}"
+                                                                       FontSize="10"
+                                                                       Foreground="White"/>
+                                                        </Border>
+                                                    </StackPanel>
+
+                                                    <!-- Anomaly count + percentage -->
+                                                    <StackPanel Grid.Column="3"
+                                                                HorizontalAlignment="Right"
+                                                                VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding AnomalyCount, StringFormat=\{0\} anomalies}"
+                                                                   FontSize="12"
+                                                                   Foreground="#F0F6FC"
+                                                                   HorizontalAlignment="Right"/>
+                                                        <TextBlock Text="{Binding Percentage, StringFormat=\{0:F1\}%}"
+                                                                   FontSize="11"
+                                                                   Foreground="#8B949E"
+                                                                   HorizontalAlignment="Right"/>
+                                                    </StackPanel>
+
+                                                    <!-- Details button -->
+                                                    <Button Grid.Column="4"
+                                                            Content="→"
+                                                            Width="32" Height="32"
+                                                            Background="Transparent"
+                                                            Foreground="#8B949E"
+                                                            Command="{Binding $parent[ItemsControl].((vm:AnomaliesViewModel)DataContext).ShowSourceDrillDownCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            Margin="8,0,0,0"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+
+                    <!-- Top Anomalous Targets -->
+                    <Border Classes="modern-card" Grid.Column="1" Margin="12,0,0,0">
+                        <Grid RowDefinitions="Auto,*">
+                            <Border Grid.Row="0"
+                                    Background="#1C2128"
+                                    CornerRadius="8,8,0,0"
+                                    Margin="-20,-20,-20,16"
+                                    Padding="20,0">
+                                <Grid>
+                                    <Border Height="3"
+                                            Background="#EC4899"
+                                            VerticalAlignment="Top"
+                                            Margin="-20,0"/>
+                                    <TextBlock Text="Top Anomalous Targets"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               Foreground="#F0F6FC"
+                                               Height="48"
+                                               VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <ScrollViewer Grid.Row="1" Height="440">
+                                <ItemsControl ItemsSource="{Binding Statistics.TopTargets}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="#161B22"
+                                                    BorderBrush="#30363D"
+                                                    BorderThickness="0,0,0,1"
+                                                    Padding="12,10">
+                                                <Grid ColumnDefinitions="40,*,80,120,Auto">
+                                                    <!-- Rank -->
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{Binding Rank, StringFormat=#\{0\}}"
+                                                               FontSize="11"
+                                                               Foreground="#6B7280"
+                                                               VerticalAlignment="Center"/>
+
+                                                    <!-- IP + Country -->
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Text="{Binding IPAddress}"
+                                                                   FontFamily="Consolas, monospace"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="#F0F6FC"/>
+                                                        <TextBlock Text="{Binding Country}"
+                                                                   FontSize="11"
+                                                                   Foreground="#8B949E"/>
+                                                    </StackPanel>
+
+                                                    <!-- Severity counts -->
+                                                    <StackPanel Grid.Column="2"
+                                                                Orientation="Horizontal"
+                                                                Spacing="4"
+                                                                VerticalAlignment="Center">
+                                                        <Border Background="#F85149"
+                                                                CornerRadius="4"
+                                                                Padding="4,2"
+                                                                IsVisible="{Binding CriticalCount}">
+                                                            <TextBlock Text="{Binding CriticalCount}"
+                                                                       FontSize="10"
+                                                                       Foreground="White"/>
+                                                        </Border>
+                                                        <Border Background="#F59E0B"
+                                                                CornerRadius="4"
+                                                                Padding="4,2"
+                                                                IsVisible="{Binding HighCount}">
+                                                            <TextBlock Text="{Binding HighCount}"
+                                                                       FontSize="10"
+                                                                       Foreground="White"/>
+                                                        </Border>
+                                                    </StackPanel>
+
+                                                    <!-- Anomaly count + percentage -->
+                                                    <StackPanel Grid.Column="3"
+                                                                HorizontalAlignment="Right"
+                                                                VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding AnomalyCount, StringFormat=\{0\} anomalies}"
+                                                                   FontSize="12"
+                                                                   Foreground="#F0F6FC"
+                                                                   HorizontalAlignment="Right"/>
+                                                        <TextBlock Text="{Binding Percentage, StringFormat=\{0:F1\}%}"
+                                                                   FontSize="11"
+                                                                   Foreground="#8B949E"
+                                                                   HorizontalAlignment="Right"/>
+                                                    </StackPanel>
+
+                                                    <!-- Details button -->
+                                                    <Button Grid.Column="4"
+                                                            Content="→"
+                                                            Width="32" Height="32"
+                                                            Background="Transparent"
+                                                            Foreground="#8B949E"
+                                                            Command="{Binding $parent[ItemsControl].((vm:AnomaliesViewModel)DataContext).ShowTargetDrillDownCommand}"
+                                                            CommandParameter="{Binding}"
+                                                            Margin="8,0,0,0"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Drill-Down Popup Overlay -->
+        <Border IsVisible="{Binding DrillDown.IsDetailPopupOpen}"
+                Background="#80000000"
+                ZIndex="50">
+            <Border Background="#161B22"
+                    BorderBrush="#30363D"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    MaxWidth="700"
+                    MaxHeight="600"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Padding="24">
+                <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+                    <!-- Header -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <StackPanel>
+                            <TextBlock Text="{Binding DrillDown.DetailPopupTitle}"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       Foreground="#F0F6FC"/>
+                            <TextBlock Text="{Binding DrillDown.DetailPopupSubtitle}"
+                                       FontSize="12"
+                                       Foreground="#8B949E"
+                                       Margin="0,4,0,0"/>
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="✕"
+                                Width="32" Height="32"
+                                Background="Transparent"
+                                Foreground="#8B949E"
+                                Command="{Binding DrillDown.CloseDetailPopupCommand}"/>
+                    </Grid>
+
+                    <!-- Severity Summary -->
+                    <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*" Margin="0,16,0,0">
+                        <StackPanel Grid.Column="0" HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding DrillDown.DetailCriticalCount}"
+                                       FontSize="20"
+                                       FontWeight="SemiBold"
+                                       Foreground="#F85149"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="Critical" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding DrillDown.DetailHighCount}"
+                                       FontSize="20"
+                                       FontWeight="SemiBold"
+                                       Foreground="#F59E0B"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="High" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding DrillDown.DetailMediumCount}"
+                                       FontSize="20"
+                                       FontWeight="SemiBold"
+                                       Foreground="#FCD34D"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="Medium" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="3" HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding DrillDown.DetailLowCount}"
+                                       FontSize="20"
+                                       FontWeight="SemiBold"
+                                       Foreground="#3B82F6"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="Low" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Separator Grid.Row="2" Margin="0,16" Background="#30363D"/>
+
+                    <!-- Anomaly List -->
+                    <ScrollViewer Grid.Row="3" MaxHeight="300">
+                        <ItemsControl ItemsSource="{Binding DrillDown.DetailAnomalies}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border BorderBrush="#30363D"
+                                            BorderThickness="0,0,0,1"
+                                            Padding="8,10">
+                                        <Grid ColumnDefinitions="80,*,Auto">
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding DetectedAt, StringFormat=\{0:HH:mm:ss\}}"
+                                                       FontFamily="Consolas, monospace"
+                                                       FontSize="11"
+                                                       Foreground="#8B949E"
+                                                       VerticalAlignment="Center"/>
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{Binding Type}"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#F0F6FC"/>
+                                                <TextBlock Text="{Binding Description}"
+                                                           FontSize="11"
+                                                           Foreground="#8B949E"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           MaxWidth="400"/>
+                                            </StackPanel>
+                                            <Border Grid.Column="2"
+                                                    CornerRadius="4"
+                                                    Padding="8,4"
+                                                    VerticalAlignment="Center">
+                                                <Border.Background>
+                                                    <MultiBinding>
+                                                        <Binding Path="Severity"/>
+                                                    </MultiBinding>
+                                                </Border.Background>
+                                                <TextBlock Text="{Binding Severity}"
+                                                           FontSize="10"
+                                                           Foreground="White"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Pagination -->
+                    <StackPanel Grid.Row="4"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                Margin="0,16,0,0"
+                                Spacing="8">
+                        <Button Content="← Previous"
+                                Command="{Binding DrillDown.PreviousDetailPageCommand}"
+                                Background="#21262D"
+                                Foreground="#F0F6FC"/>
+                        <TextBlock VerticalAlignment="Center"
+                                   Foreground="#8B949E">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="{}Page {0} of {1}">
+                                    <Binding Path="DrillDown.DetailCurrentPage"/>
+                                    <Binding Path="DrillDown.DetailTotalPages"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                        <Button Content="Next →"
+                                Command="{Binding DrillDown.NextDetailPageCommand}"
+                                Background="#21262D"
+                                Foreground="#F0F6FC"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Border>
+    </Grid>
+</UserControl>
