@@ -11,12 +11,14 @@ using LiveChartsCore.SkiaSharpView;
 using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
+using PCAPAnalyzer.Core.Services.Credentials;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.ViewModels.Base;
 using PCAPAnalyzer.UI.Interfaces;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.UI.ViewModels.Components;
 using PCAPAnalyzer.UI.ViewModels.Threats;
 using PCAPAnalyzer.UI.Constants;
@@ -24,18 +26,21 @@ using PCAPAnalyzer.UI.Constants;
 namespace PCAPAnalyzer.UI.ViewModels
 {
     [SuppressMessage("Maintainability", "CA1506:Avoid excessive class coupling", Justification = "Threats ViewModel requires coordination of security services, anomaly detection, and visualization components - this is necessary for comprehensive threat analysis")]
-    public partial class ThreatsViewModel : SmartFilterableTab, ILazyLoadableTab
+    public partial class ThreatsViewModel : SmartFilterableTab, ILazyLoadableTab, IDisposable
     {
         private readonly IInsecurePortDetector _insecurePortDetector;
         private readonly IUnifiedAnomalyDetectionService _anomalyService;
+        private readonly ICredentialDetectionService? _credentialService;
         private readonly ITabFilterService? _filterService;
         private readonly PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService? _cacheService;
         private readonly FilterCopyService? _filterCopyService;
+        private readonly GlobalFilterState? _globalFilterState;
+        private bool _disposed;
     private List<EnhancedSecurityThreat> _allThreats = new();
     private List<SuricataAlert> _suricataAlerts = new();
     private List<YaraMatch> _yaraMatches = new();
-        private List<PacketInfo> _currentPackets = new();
-        private List<PacketInfo> _unfilteredPackets = new();
+        private IReadOnlyList<PacketInfo> _currentPackets = Array.Empty<PacketInfo>(); // Filtered packets (may be reference or new list)
+        private IReadOnlyList<PacketInfo> _unfilteredPackets = Array.Empty<PacketInfo>(); // Reference to cache (NOT a copy)
         private SecurityMetrics? _metrics;
 
         // Cache to prevent redundant analysis
@@ -228,6 +233,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         public ObservableCollection<string> Categories { get; } = new()
         {
             "All",
+            "CleartextCredentials",
             "InsecureProtocol",
             "UnencryptedService",
             "LegacyProtocol",
@@ -245,25 +251,31 @@ namespace PCAPAnalyzer.UI.ViewModels
             : this(
                 App.Services?.GetService<IInsecurePortDetector>() ?? new InsecurePortDetector(),
                 App.Services?.GetService<IUnifiedAnomalyDetectionService>() ?? new UnifiedAnomalyDetectionService(),
+                App.Services?.GetService<ICredentialDetectionService>(),
                 new TabFilterService("Security Threats", new FilterServiceCore()),
                 App.Services?.GetService<PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService>(),
-                App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService())
+                App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService(),
+                App.Services?.GetService<GlobalFilterState>())
         {
         }
 
         public ThreatsViewModel(
             IInsecurePortDetector insecurePortDetector,
             IUnifiedAnomalyDetectionService anomalyService,
+            ICredentialDetectionService? credentialService,
             ITabFilterService? filterService,
             PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService? cacheService = null,
-            ISmartFilterBuilder? filterBuilder = null)
+            ISmartFilterBuilder? filterBuilder = null,
+            GlobalFilterState? globalFilterState = null)
             : base(filterBuilder ?? new SmartFilterBuilderService())
         {
             _insecurePortDetector = insecurePortDetector;
             _anomalyService = anomalyService;
+            _credentialService = credentialService;
             _filterService = filterService;
             _cacheService = cacheService;
             _filterCopyService = App.Services?.GetService<FilterCopyService>();
+            _globalFilterState = globalFilterState;
 
             // Initialize component ViewModels (Dashboard composition pattern)
             Charts = new ThreatsChartsViewModel(insecurePortDetector);
@@ -280,6 +292,12 @@ namespace PCAPAnalyzer.UI.ViewModels
             if (_filterService != null)
             {
                 _filterService.FilterChanged += OnFilterServiceChanged;
+            }
+
+            // Subscribe to GlobalFilterState changes for tab-specific filtering
+            if (_globalFilterState != null)
+            {
+                _globalFilterState.OnFilterChanged += OnGlobalFilterChanged;
             }
 
             // Subscribe to CommonFilters property changes
@@ -319,6 +337,22 @@ namespace PCAPAnalyzer.UI.ViewModels
                     {
                         DebugLogger.Log($"[ThreatsViewModel] Error updating threats on filter change: {ex.Message}");
                     }
+                });
+            }
+        }
+
+        /// <summary>
+        /// Handles GlobalFilterState changes - re-applies tab-specific filters to threat list.
+        /// </summary>
+        private void OnGlobalFilterChanged()
+        {
+            // Re-apply filters when global filter state changes (e.g., severity/category from UnifiedFilterPanel)
+            if (_allThreats.Count > 0)
+            {
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    UpdateThreatsList();
+                    DebugLogger.Log($"[ThreatsViewModel] Threats list updated after global filter change");
                 });
             }
         }
@@ -391,8 +425,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                 AffectedIPs = new List<string> { t.SourceAddress, t.DestinationAddress }
             }).ToList();
 
-            _currentPackets = packets.ToList();
-            _unfilteredPackets = _currentPackets;
+            _currentPackets = packets; // Reference, no copy
+            _unfilteredPackets = packets;
             _lastAnalyzedPacketCount = packets.Count;
             _lastFilterState = false;
 
@@ -434,14 +468,14 @@ namespace PCAPAnalyzer.UI.ViewModels
 
             var startTime = DateTime.Now;
 
-            // Store unfiltered packets (can do on any thread)
-            _unfilteredPackets = packets as List<PacketInfo> ?? packets.ToList();
+            // Store reference to unfiltered packets (no copy)
+            _unfilteredPackets = packets;
 
             // Apply filter if filter service is available and active
             var isFilterActive = _filterService?.IsFilterActive == true;
             _currentPackets = isFilterActive
-                ? _filterService!.GetFilteredPackets(_unfilteredPackets).ToList()
-                : _unfilteredPackets;
+                ? _filterService!.GetFilteredPackets(packets).ToList()
+                : packets;
 
             // OPTIMIZATION: Skip analysis if packets and filter state unchanged
             var currentPacketCount = _currentPackets.Count;
@@ -495,18 +529,18 @@ namespace PCAPAnalyzer.UI.ViewModels
                     var versionCheckPackets = workingSet.Where(p => monitoredPorts.Contains(p.DestinationPort) || monitoredPorts.Contains(p.SourcePort)).ToList();
                     DebugLogger.Log($"[ThreatsViewModel] Pre-filtered {versionCheckPackets.Count:N0} packets for version detection (monitored ports only)");
 
-                    // Split packets into batches
+                    // Split packets into batches (use Skip/Take for IReadOnlyList compatibility)
                     var batches = new List<List<PacketInfo>>();
                     var versionBatches = new List<List<PacketInfo>>();
                     for (int i = 0; i < workingSet.Count; i += BATCH_SIZE)
                     {
                         var batchSize = Math.Min(BATCH_SIZE, workingSet.Count - i);
-                        batches.Add(workingSet.GetRange(i, batchSize));
+                        batches.Add(workingSet.Skip(i).Take(batchSize).ToList());
                     }
                     for (int i = 0; i < versionCheckPackets.Count; i += BATCH_SIZE)
                     {
                         var batchSize = Math.Min(BATCH_SIZE, versionCheckPackets.Count - i);
-                        versionBatches.Add(versionCheckPackets.GetRange(i, batchSize));
+                        versionBatches.Add(versionCheckPackets.GetRange(i, batchSize)); // versionCheckPackets is already a List
                     }
 
                     DebugLogger.Log($"[ThreatsViewModel] Created {batches.Count} full batches + {versionBatches.Count} version check batches for parallel processing");
@@ -614,6 +648,65 @@ namespace PCAPAnalyzer.UI.ViewModels
                                 .ToList()
                         });
                     }
+                }
+
+                // ==================== CREDENTIAL THREAT DETECTION ====================
+                // Detect packets with cleartext credentials (HasCredentials flag set during parsing)
+                var credentialPackets = workingSet.Where(p => p.HasCredentials).ToList();
+                if (credentialPackets.Any())
+                {
+                    DebugLogger.Log($"[ThreatsViewModel] Detected {credentialPackets.Count:N0} packets with credentials");
+
+                    // Group by destination port to aggregate credential threats by service
+                    var credentialsByPort = credentialPackets
+                        .GroupBy(p => new { p.DestinationPort, Service = GetServiceName(p.DestinationPort) })
+                        .ToList();
+
+                    foreach (var group in credentialsByPort)
+                    {
+                        var first = group.First();
+                        var last = group.Last();
+
+                        _allThreats.Add(new EnhancedSecurityThreat
+                        {
+                            Category = ThreatCategory.CleartextCredentials,
+                            Severity = ThreatSeverity.Critical, // All cleartext credentials are critical
+                            ThreatName = $"Cleartext Credentials ({group.Key.Service})",
+                            Description = $"Detected {group.Count()} packet(s) containing cleartext credentials on port {group.Key.DestinationPort} ({group.Key.Service}). Credentials transmitted in cleartext can be intercepted and compromised.",
+                            FirstSeen = first.Timestamp,
+                            LastSeen = last.Timestamp,
+                            OccurrenceCount = group.Count(),
+                            RiskScore = 9.5, // Higher than most threats
+                            Port = group.Key.DestinationPort,
+                            Service = group.Key.Service,
+                            Protocol = first.Protocol.ToString(),
+                            AffectedIPs = group
+                                .SelectMany(p => new[] { p.SourceIP, p.DestinationIP })
+                                .Where(ip => !string.IsNullOrEmpty(ip))
+                                .Distinct()
+                                .ToList(),
+                            Vulnerabilities = new List<string>
+                            {
+                                "CWE-319: Cleartext Transmission of Sensitive Information",
+                                "CWE-523: Unprotected Transport of Credentials"
+                            },
+                            Mitigations = new List<string>
+                            {
+                                $"Migrate from {group.Key.Service} to encrypted alternative (e.g., SFTP, HTTPS, LDAPS)",
+                                "Enable TLS/SSL encryption for this service",
+                                "Rotate any credentials that may have been exposed",
+                                "Implement network segmentation to limit credential exposure"
+                            },
+                            Metadata = new Dictionary<string, object>
+                            {
+                                ["CredentialPacketCount"] = group.Count(),
+                                ["Protocol"] = first.L7Protocol ?? first.Protocol.ToString(),
+                                ["FrameNumbers"] = group.Select(p => (int)p.FrameNumber).Take(100).ToList()
+                            }
+                        });
+                    }
+
+                    DebugLogger.Log($"[ThreatsViewModel] Added {credentialsByPort.Count} credential threat entries");
                 }
 
                 // Ensure all threats have valid risk scores
@@ -916,6 +1009,10 @@ namespace PCAPAnalyzer.UI.ViewModels
                     (IsAuthIssuesFilterActive && ThreatsFilterViewModel.IsAuthIssueThreat(t)) ||
                     (IsCleartextFilterActive && ThreatsFilterViewModel.IsCleartextThreat(t)));
             }
+
+            // ==================== GLOBAL FILTER STATE (UnifiedFilterPanel) ====================
+            // Apply severity and category filters from GlobalFilterState (set via UnifiedFilterPanel)
+            filteredThreats = ApplyGlobalFilterStateCriteria(filteredThreats);
 
             // Aggregate similar threats if grouping is enabled
             var threatsList = filteredThreats.ToList();
@@ -1425,6 +1522,37 @@ namespace PCAPAnalyzer.UI.ViewModels
             };
         }
 
+        /// <summary>
+        /// Maps common ports to service names for credential threat display.
+        /// </summary>
+        private static string GetServiceName(ushort port) => port switch
+        {
+            21 => "FTP",
+            22 => "SSH",
+            23 => "Telnet",
+            25 => "SMTP",
+            80 => "HTTP",
+            110 => "POP3",
+            143 => "IMAP",
+            161 => "SNMP",
+            389 => "LDAP",
+            443 => "HTTPS",
+            445 => "SMB",
+            465 => "SMTPS",
+            587 => "SMTP",
+            636 => "LDAPS",
+            993 => "IMAPS",
+            995 => "POP3S",
+            1433 => "MSSQL",
+            3306 => "MySQL",
+            3389 => "RDP",
+            5432 => "PostgreSQL",
+            5900 => "VNC",
+            8080 => "HTTP-ALT",
+            8443 => "HTTPS-ALT",
+            _ => $"Port {port}"
+        };
+
         partial void OnShowCriticalOnlyChanged(bool value)
         {
             // Mutual exclusion: Critical and High+ are mutually exclusive
@@ -1481,6 +1609,95 @@ namespace PCAPAnalyzer.UI.ViewModels
         {
             DebugLogger.Log($"[ThreatsViewModel.PopulateFromCacheAsync] Populating from cache with {result.Threats.Count:N0} threats, {result.AllPackets.Count:N0} packets");
             await SetFromCacheAsync(result.Threats, result.AllPackets);
+        }
+
+        // ==================== GLOBAL FILTER STATE FILTERING ====================
+
+        /// <summary>
+        /// Applies threat-specific criteria from GlobalFilterState (severity, category filters from UnifiedFilterPanel).
+        /// Supports both flat IncludeFilters/ExcludeFilters and AND-grouped IncludeGroups/ExcludeGroups.
+        /// </summary>
+        private IEnumerable<EnhancedSecurityThreat> ApplyGlobalFilterStateCriteria(IEnumerable<EnhancedSecurityThreat> threats)
+        {
+            if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+                return threats;
+
+            var result = threats;
+
+            // Use helper to collect all criteria
+            var (includeSeverities, includeCategories, excludeSeverities, excludeCategories) =
+                GlobalFilterStateHelper.CollectThreatCriteria(_globalFilterState);
+
+            // Apply include severity filter (OR within severities)
+            if (includeSeverities.Count > 0)
+            {
+                result = result.Where(t => includeSeverities.Contains(t.Severity.ToString()));
+                HasFiltersApplied = true;
+            }
+
+            // Apply include category filter (OR within categories)
+            if (includeCategories.Count > 0)
+            {
+                result = result.Where(t => includeCategories.Contains(t.Category.ToString()));
+                HasFiltersApplied = true;
+            }
+
+            // Apply exclude severity filter
+            if (excludeSeverities.Count > 0)
+            {
+                result = result.Where(t => !excludeSeverities.Contains(t.Severity.ToString()));
+                HasFiltersApplied = true;
+            }
+
+            // Apply exclude category filter
+            if (excludeCategories.Count > 0)
+            {
+                result = result.Where(t => !excludeCategories.Contains(t.Category.ToString()));
+                HasFiltersApplied = true;
+            }
+
+            return result;
+        }
+
+        // ==================== IDisposable IMPLEMENTATION ====================
+
+        /// <summary>
+        /// Disposes managed resources including event subscriptions.
+        /// Prevents memory leaks from GlobalFilterState event handlers.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+
+            // Unsubscribe from GlobalFilterState to prevent memory leaks
+            if (_globalFilterState != null)
+            {
+                _globalFilterState.OnFilterChanged -= OnGlobalFilterChanged;
+            }
+
+            // Unsubscribe from filter service events
+            if (_filterService != null)
+            {
+                _filterService.FilterChanged -= OnFilterServiceChanged;
+            }
+
+            // Unregister from filter copy service
+            _filterCopyService?.UnregisterTab(TabName);
+
+            // Unsubscribe from Analysis completion
+            if (Analysis != null)
+            {
+                Analysis.AnalysisCompleted -= OnAnalysisCompleted;
+            }
+
+            // Unsubscribe from DrillDown navigation
+            if (DrillDown != null)
+            {
+                DrillDown.ViewInPacketAnalysisRequested -= OnDrillDownNavigationRequested;
+            }
+
+            DebugLogger.Log("[ThreatsViewModel] Disposed - cleaned up event handlers");
         }
     }
 

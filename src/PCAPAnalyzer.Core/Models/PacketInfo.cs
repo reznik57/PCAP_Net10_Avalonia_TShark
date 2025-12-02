@@ -26,7 +26,13 @@ public readonly record struct PacketInfo
     public uint SeqNum { get; init; }          // TCP sequence number
     public uint AckNum { get; init; }          // TCP acknowledgment number
     public ushort WindowSize { get; init; }    // TCP window size
-    
+
+    // Credential detection flag
+    public bool HasCredentials { get; init; }  // True if packet contains credential data
+
+    // OS Fingerprinting data (nullable - only populated when packet has fingerprint signals)
+    public PCAPAnalyzer.Core.Services.OsFingerprinting.OsFingerprintRawFields? OsFingerprintData { get; init; }
+
     // Deprecated - use L7Protocol instead
     public string? WiresharkProtocol => L7Protocol;
     

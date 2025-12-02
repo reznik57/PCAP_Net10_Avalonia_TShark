@@ -1,0 +1,301 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
+             x:Class="PCAPAnalyzer.UI.Views.HostInventoryView"
+             x:DataType="vm:HostInventoryViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.modern-card">
+            <Setter Property="Background" Value="#0D1117"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+        </Style>
+        <Style Selector="Border.table-header">
+            <Setter Property="Background" Value="#161B22"/>
+            <Setter Property="Height" Value="48"/>
+        </Style>
+        <Style Selector="Border.stat-card">
+            <Setter Property="Background" Value="#161B22"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="MinHeight" Value="80"/>
+        </Style>
+        <Style Selector="TextBox.search-box">
+            <Setter Property="Background" Value="#0D1117"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="10,0"/>
+        </Style>
+        <Style Selector="ComboBox.filter-combo">
+            <Setter Property="Background" Value="#0D1117"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+        <Style Selector="DataGrid">
+            <Setter Property="Background" Value="#0D1117"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="GridLinesVisibility" Value="Horizontal"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="#21262D"/>
+        </Style>
+        <Style Selector="DataGridRow">
+            <Setter Property="Background" Value="#0D1117"/>
+            <Setter Property="Foreground" Value="#F0F6FC"/>
+        </Style>
+        <Style Selector="DataGridRow:pointerover">
+            <Setter Property="Background" Value="#161B22"/>
+        </Style>
+        <Style Selector="DataGridRow:selected">
+            <Setter Property="Background" Value="#1C2128"/>
+        </Style>
+        <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background" Value="#161B22"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Padding" Value="12,0"/>
+        </Style>
+        <Style Selector="DataGridCell">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="12,8"/>
+        </Style>
+        <Style Selector="Button.clear-btn">
+            <Setter Property="Background" Value="#21262D"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
+        </Style>
+        <Style Selector="Button.clear-btn:pointerover">
+            <Setter Property="Background" Value="#30363D"/>
+        </Style>
+        <Style Selector="CheckBox">
+            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="FontSize" Value="12"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Background="#0D1117" Margin="24">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Spacing="20">
+
+                <!-- Header -->
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="🖥️" FontSize="24" VerticalAlignment="Center"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Host Inventory" FontSize="20" FontWeight="Bold" Foreground="#F0F6FC"/>
+                            <TextBlock Text="Passive OS fingerprinting and device detection" FontSize="12" Foreground="#8B949E"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
+                        <Button Command="{Binding ExportToCsvCommand}" Classes="clear-btn">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="📥" FontSize="12"/>
+                                <TextBlock Text="Export CSV" FontSize="11"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Statistics Cards -->
+                <Grid ColumnDefinitions="*,*,*,*,*,*,*">
+                    <Border Grid.Column="0" Classes="stat-card" Margin="0,0,8,0">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="TOTAL HOSTS" FontSize="10" Foreground="#8B949E"/>
+                            <TextBlock Text="{Binding TotalHosts}" FontSize="28" FontWeight="Bold" Foreground="#58A6FF"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Classes="stat-card" Margin="4,0">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="WINDOWS" FontSize="10" Foreground="#8B949E"/>
+                            <TextBlock Text="{Binding WindowsHosts}" FontSize="28" FontWeight="Bold" Foreground="#00A4EF"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="2" Classes="stat-card" Margin="4,0">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="LINUX" FontSize="10" Foreground="#8B949E"/>
+                            <TextBlock Text="{Binding LinuxHosts}" FontSize="28" FontWeight="Bold" Foreground="#FCC624"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="3" Classes="stat-card" Margin="4,0">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="APPLE" FontSize="10" Foreground="#8B949E"/>
+                            <TextBlock Text="{Binding MacOsHosts}" FontSize="28" FontWeight="Bold" Foreground="#A2AAAD"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="4" Classes="stat-card" Margin="4,0">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="MOBILE" FontSize="10" Foreground="#8B949E"/>
+                            <TextBlock Text="{Binding MobileHosts}" FontSize="28" FontWeight="Bold" Foreground="#3DDC84"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="5" Classes="stat-card" Margin="4,0">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="IoT/NETWORK" FontSize="10" Foreground="#8B949E"/>
+                            <TextBlock Text="{Binding IotHosts}" FontSize="28" FontWeight="Bold" Foreground="#F59E0B"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="6" Classes="stat-card" Margin="8,0,0,0">
+                        <StackPanel HorizontalAlignment="Center">
+                            <TextBlock Text="UNKNOWN" FontSize="10" Foreground="#8B949E"/>
+                            <TextBlock Text="{Binding UnknownHosts}" FontSize="28" FontWeight="Bold" Foreground="#6B7280"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Filters -->
+                <Border Classes="modern-card" Padding="16">
+                    <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" RowDefinitions="Auto">
+                        <TextBox Grid.Column="0" Classes="search-box"
+                                 Text="{Binding SearchFilter}"
+                                 Watermark="🔍 Search by IP, MAC, hostname, or OS..."
+                                 Margin="0,0,12,0"/>
+                        <ComboBox Grid.Column="1" Classes="filter-combo"
+                                  ItemsSource="{Binding OsFilterOptions}"
+                                  SelectedItem="{Binding OsFilter}"
+                                  Width="150" Margin="0,0,8,0"/>
+                        <ComboBox Grid.Column="2" Classes="filter-combo"
+                                  ItemsSource="{Binding DeviceTypeFilterOptions}"
+                                  SelectedItem="{Binding DeviceTypeFilter}"
+                                  Width="150" Margin="0,0,8,0"/>
+                        <CheckBox Grid.Column="3" Content="JA3 Verified Only"
+                                  IsChecked="{Binding ShowVerifiedOnly}"
+                                  VerticalAlignment="Center" Margin="0,0,12,0"/>
+                        <Button Grid.Column="4" Command="{Binding ClearFiltersCommand}" Classes="clear-btn">
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <TextBlock Text="🔄" FontSize="11"/>
+                                <TextBlock Text="Clear Filters" FontSize="11"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Host Table -->
+                <Border Classes="modern-card" MinHeight="500">
+                    <Grid RowDefinitions="Auto,*">
+                        <!-- Header -->
+                        <Border Grid.Row="0" Classes="table-header">
+                            <Grid Margin="20,0">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Width="3" Height="20" Background="#58A6FF" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Detected Hosts" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                    <TextBlock Text="{Binding Hosts.Count, StringFormat=' ({0} hosts)'}" FontSize="12" Foreground="#8B949E" Margin="8,0,0,0" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- DataGrid -->
+                        <DataGrid Grid.Row="1"
+                                  ItemsSource="{Binding Hosts}"
+                                  SelectedItem="{Binding SelectedHost}"
+                                  AutoGenerateColumns="False"
+                                  IsReadOnly="True"
+                                  CanUserReorderColumns="True"
+                                  CanUserResizeColumns="True"
+                                  CanUserSortColumns="True"
+                                  SelectionMode="Single"
+                                  Margin="1">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="IP Address" Binding="{Binding IpAddress}" Width="130"/>
+                                <DataGridTextColumn Header="Hostname" Binding="{Binding Hostname}" Width="150"/>
+                                <DataGridTemplateColumn Header="OS" Width="180">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:HostInventoryItem">
+                                            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding OsIcon}" FontSize="14"/>
+                                                <TextBlock Text="{Binding OsDisplayName}" FontSize="12" Foreground="#F0F6FC"/>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Device Type" Binding="{Binding DeviceTypeDisplay}" Width="100"/>
+                                <DataGridTemplateColumn Header="Confidence" Width="90">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:HostInventoryItem">
+                                            <Border Background="{Binding Confidence, Converter={x:Static vm:ConfidenceToBrushConverter.Instance}}"
+                                                    CornerRadius="4" Padding="6,2">
+                                                <TextBlock Text="{Binding ConfidenceDisplay}" FontSize="10" Foreground="#F0F6FC" HorizontalAlignment="Center"/>
+                                            </Border>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="Detection" Binding="{Binding DetectionMethodDisplay}" Width="80"/>
+                                <DataGridTemplateColumn Header="JA3" Width="50">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate x:DataType="vm:HostInventoryItem">
+                                            <TextBlock Text="{Binding VerifiedIcon}" FontSize="14" HorizontalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn Header="MAC Vendor" Binding="{Binding MacVendor}" Width="140"/>
+                                <DataGridTextColumn Header="MAC Address" Binding="{Binding MacAddress}" Width="140"/>
+                                <DataGridTextColumn Header="Packets" Binding="{Binding PacketCountDisplay}" Width="80"/>
+                                <DataGridTextColumn Header="First Seen" Binding="{Binding FirstSeenDisplay}" Width="140"/>
+                                <DataGridTextColumn Header="Last Seen" Binding="{Binding LastSeenDisplay}" Width="140"/>
+                                <DataGridTextColumn Header="Open Ports" Binding="{Binding OpenPorts}" Width="150"/>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+
+                <!-- Selected Host Details -->
+                <Border Classes="modern-card" Padding="16" IsVisible="{Binding SelectedHost, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <Grid RowDefinitions="Auto,Auto,Auto">
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="12" Margin="0,0,0,12">
+                            <TextBlock Text="📋" FontSize="16"/>
+                            <TextBlock Text="Host Details" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                            <Button Command="{Binding CopyToClipboardCommand}" CommandParameter="{Binding SelectedHost}" Classes="clear-btn" Height="24" Padding="8,0">
+                                <TextBlock Text="📋 Copy" FontSize="10"/>
+                            </Button>
+                        </StackPanel>
+
+                        <Grid Grid.Row="1" ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto">
+                            <!-- Row 1 -->
+                            <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,16,12">
+                                <TextBlock Text="TCP Fingerprint" FontSize="10" Foreground="#8B949E"/>
+                                <TextBlock Text="{Binding SelectedHost.TcpFingerprint}" FontSize="11" Foreground="#F0F6FC" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Grid.Row="0" Margin="0,0,16,12">
+                                <TextBlock Text="JA3 Hash" FontSize="10" Foreground="#8B949E"/>
+                                <TextBlock Text="{Binding SelectedHost.Ja3Hash}" FontSize="11" Foreground="#F0F6FC" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Grid.Row="0" Margin="0,0,0,12">
+                                <TextBlock Text="JA3 Application" FontSize="10" Foreground="#8B949E"/>
+                                <TextBlock Text="{Binding SelectedHost.Ja3Application}" FontSize="11" Foreground="#F0F6FC"/>
+                            </StackPanel>
+
+                            <!-- Row 2 -->
+                            <StackPanel Grid.Column="0" Grid.Row="1" Margin="0,0,16,0">
+                                <TextBlock Text="Server Banners" FontSize="10" Foreground="#8B949E"/>
+                                <TextBlock Text="{Binding SelectedHost.ServerBanners}" FontSize="11" Foreground="#F0F6FC" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Grid.Row="1" Margin="0,0,16,0">
+                                <TextBlock Text="Open Ports" FontSize="10" Foreground="#8B949E"/>
+                                <TextBlock Text="{Binding SelectedHost.OpenPorts}" FontSize="11" Foreground="#F0F6FC" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Grid.Row="1">
+                                <TextBlock Text="Confidence Score" FontSize="10" Foreground="#8B949E"/>
+                                <TextBlock Text="{Binding SelectedHost.ConfidencePercentage}" FontSize="11" Foreground="#F0F6FC"/>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

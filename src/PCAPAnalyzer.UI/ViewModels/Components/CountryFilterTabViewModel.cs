@@ -1,55 +1,57 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using PCAPAnalyzer.UI.Models;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
 public partial class CountryFilterTabViewModel : ObservableObject
 {
-    private readonly GlobalFilterState _filterState;
-
     [ObservableProperty] private string _countrySearchInput = "";
 
-    // Observable chip collections with state tracking
     public ObservableCollection<FilterChipViewModel> DirectionChips { get; } = new();
     public ObservableCollection<FilterChipViewModel> RegionChips { get; } = new();
     public ObservableCollection<FilterChipViewModel> CountryChips { get; } = new();
 
-    public CountryFilterTabViewModel(GlobalFilterState filterState)
+    public CountryFilterTabViewModel()
     {
-        _filterState = filterState;
         InitializeChips();
     }
 
     private void InitializeChips()
     {
-        // Direction chips
         var directions = new[] { "Inbound", "Outbound", "Internal" };
         foreach (var d in directions)
-            DirectionChips.Add(new FilterChipViewModel(d, _filterState, FilterCategory.Direction));
+            DirectionChips.Add(new FilterChipViewModel(d));
 
-        // Region chips
         var regions = new[] { "North America", "Europe", "Asia", "Middle East", "Africa", "South America", "Oceania" };
         foreach (var r in regions)
-            RegionChips.Add(new FilterChipViewModel(r, _filterState, FilterCategory.Region));
+            RegionChips.Add(new FilterChipViewModel(r));
 
-        // Common country chips (2-letter ISO codes)
         var countries = new[] { "US", "CN", "RU", "DE", "GB", "FR", "JP", "IN", "BR", "AU" };
         foreach (var c in countries)
-            CountryChips.Add(new FilterChipViewModel(c, _filterState, FilterCategory.Country));
+            CountryChips.Add(new FilterChipViewModel(c));
     }
 
-    [RelayCommand]
-    private void AddCountry()
+    public void SetMode(FilterChipMode mode)
     {
-        if (string.IsNullOrWhiteSpace(CountrySearchInput)) return;
+        foreach (var chip in DirectionChips) chip.SetMode(mode);
+        foreach (var chip in RegionChips) chip.SetMode(mode);
+        foreach (var chip in CountryChips) chip.SetMode(mode);
+    }
 
-        if (_filterState.CurrentMode == FilterMode.Include)
-            _filterState.AddIncludeCountry(CountrySearchInput.Trim());
-        else
-            _filterState.AddExcludeCountry(CountrySearchInput.Trim());
+    public (List<string> Directions, List<string> Regions, List<string> Countries) GetPendingFilters()
+    {
+        return (
+            DirectionChips.Where(c => c.IsSelected).Select(c => c.Name).ToList(),
+            RegionChips.Where(c => c.IsSelected).Select(c => c.Name).ToList(),
+            CountryChips.Where(c => c.IsSelected).Select(c => c.Name).ToList()
+        );
+    }
 
+    public void Reset()
+    {
+        foreach (var chip in DirectionChips) chip.Reset();
+        foreach (var chip in RegionChips) chip.Reset();
+        foreach (var chip in CountryChips) chip.Reset();
         CountrySearchInput = "";
     }
 }

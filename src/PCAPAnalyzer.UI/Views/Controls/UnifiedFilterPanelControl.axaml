@@ -8,48 +8,79 @@
              x:Class="PCAPAnalyzer.UI.Views.Controls.UnifiedFilterPanelControl"
              x:DataType="vm:UnifiedFilterPanelViewModel">
 
-    <Border Classes="modern-card-unified" Padding="16,12" Margin="0,0,0,16"
-            BorderThickness="2" BorderBrush="#30363D">
+    <!-- Mode-tinted filter panel with smooth transitions -->
+    <Border Background="{Binding PanelBackground}"
+            BorderBrush="{Binding PanelBorder}"
+            BorderThickness="2"
+            CornerRadius="8" Padding="16,14" Margin="0,0,0,16">
+        <Border.Transitions>
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.2"/>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+            </Transitions>
+        </Border.Transitions>
         <StackPanel Spacing="12">
 
             <!-- Row 1: Mode Toggle + Apply/Clear Buttons -->
             <Grid ColumnDefinitions="Auto,16,Auto,*,Auto,8,Auto">
-                <!-- Include Button (disabled=active when in Include mode) -->
+                <!-- Include Button (active class when in Include mode) -->
                 <Button Grid.Column="0" Classes="mode-button include"
+                        Classes.active="{Binding IsIncludeMode}"
                         Height="32" Padding="12,0"
-                        Command="{Binding SetIncludeModeCommand}"
-                        IsEnabled="{Binding !IsIncludeMode}">
+                        Command="{Binding SetIncludeModeCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <TextBlock Text="+" FontSize="14" FontWeight="Bold"/>
                         <TextBlock Text="Include" FontSize="12" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Button>
 
-                <!-- Exclude Button (disabled=active when in Exclude mode) -->
+                <!-- Exclude Button (active class when in Exclude mode) -->
                 <Button Grid.Column="2" Classes="mode-button exclude"
+                        Classes.active="{Binding IsExcludeMode}"
                         Height="32" Padding="12,0"
-                        Command="{Binding SetExcludeModeCommand}"
-                        IsEnabled="{Binding !IsExcludeMode}">
+                        Command="{Binding SetExcludeModeCommand}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <TextBlock Text="−" FontSize="14" FontWeight="Bold"/>
                         <TextBlock Text="Exclude" FontSize="12" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Button>
 
-                <!-- Apply Button -->
+                <!-- Apply Button with Loading State -->
                 <Button Grid.Column="4" Classes="primary-action" Height="32" Padding="16,0"
-                        Command="{Binding ApplyFiltersCommand}">
+                        Command="{Binding ApplyFiltersCommand}"
+                        IsEnabled="{Binding !IsApplyingFilter}">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="Apply" FontSize="12" FontWeight="SemiBold"/>
+                        <!-- Normal state: Apply text -->
+                        <TextBlock Text="Apply" FontSize="12" FontWeight="SemiBold"
+                                   IsVisible="{Binding !IsApplyingFilter}"/>
+                        <!-- Loading state: Spinner + Applying text -->
+                        <StackPanel Orientation="Horizontal" Spacing="6"
+                                    IsVisible="{Binding IsApplyingFilter}">
+                            <Border Width="14" Height="14" CornerRadius="7"
+                                    BorderBrush="#FFFFFF" BorderThickness="2"
+                                    Classes="spinner"/>
+                            <TextBlock Text="Applying..." FontSize="12" FontWeight="SemiBold"/>
+                        </StackPanel>
                     </StackPanel>
                 </Button>
 
                 <!-- Clear Button -->
                 <Button Grid.Column="6" Classes="secondary-action" Height="32" Padding="16,0"
-                        Command="{Binding ClearFiltersCommand}">
+                        Command="{Binding ClearFiltersCommand}"
+                        IsEnabled="{Binding !IsApplyingFilter}">
                     <TextBlock Text="Clear" FontSize="12"/>
                 </Button>
             </Grid>
+
+            <!-- Progress Bar (visible during filtering) - Animated indeterminate -->
+            <Border Background="#161B22" CornerRadius="4" Padding="10,8"
+                    IsVisible="{Binding IsApplyingFilter}">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Filtering packets..." FontSize="11" Foreground="#58A6FF"/>
+                    <ProgressBar Height="8" Background="#30363D" Foreground="#58A6FF"
+                                 IsIndeterminate="True" CornerRadius="4"/>
+                </StackPanel>
+            </Border>
 
             <!-- Row 2: Include Summary (green border) -->
             <Border Background="#0D1117" BorderBrush="#2EA043" BorderThickness="1"
@@ -86,7 +117,7 @@
                 </StackPanel>
             </Border>
 
-            <!-- Row 3: Exclude Summary (red border) -->
+            <!-- Row 2b: Exclude Summary (red border) -->
             <Border Background="#0D1117" BorderBrush="#F85149" BorderThickness="1"
                     CornerRadius="6" Padding="10,6"
                     IsVisible="{Binding Summary.HasExcludeFilters}">
@@ -121,10 +152,47 @@
                 </StackPanel>
             </Border>
 
-            <!-- Row 4: Filter Category Tabs -->
+            <!-- Row 3: Global IP/Port Inputs (shared across all tabs) - neutral styling -->
+            <Grid ColumnDefinitions="*,16,*,16,*">
+                <!-- Source IP -->
+                <StackPanel Grid.Column="0" Spacing="4">
+                    <TextBlock Text="Source IP" FontSize="11" Foreground="#8B949E"/>
+                    <TextBox Text="{Binding SourceIPInput}"
+                             Watermark="e.g. 192.168.1.0/24"
+                             Classes="filter-input"/>
+                </StackPanel>
+
+                <!-- Destination IP -->
+                <StackPanel Grid.Column="2" Spacing="4">
+                    <TextBlock Text="Destination IP" FontSize="11" Foreground="#8B949E"/>
+                    <TextBox Text="{Binding DestinationIPInput}"
+                             Watermark="e.g. 10.0.0.1"
+                             Classes="filter-input"/>
+                </StackPanel>
+
+                <!-- Port Range -->
+                <StackPanel Grid.Column="4" Spacing="4">
+                    <TextBlock Text="Port Range" FontSize="11" Foreground="#8B949E"/>
+                    <TextBox Text="{Binding PortRangeInput}"
+                             Watermark="e.g. 80-443"
+                             Classes="filter-input"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Row 4: Filter Category Tabs with Indicator Dots -->
             <TabControl SelectedIndex="{Binding SelectedTabIndex}">
-                <TabItem Header="General">
-                    <Border Padding="16,12" Background="#0D1117">
+                <!-- General Tab with filter indicator -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="General"/>
+                            <Ellipse Width="6" Height="6" Fill="#3FB950" VerticalAlignment="Center"
+                                     IsVisible="{Binding GeneralHasIncludeFilters}"/>
+                            <Ellipse Width="6" Height="6" Fill="#F85149" VerticalAlignment="Center"
+                                     IsVisible="{Binding GeneralHasExcludeFilters}"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Border Padding="16,12" Background="#1C2128" CornerRadius="0,6,6,6" BorderBrush="#30363D" BorderThickness="1">
                         <StackPanel Spacing="12" DataContext="{Binding GeneralTab}">
                             <!-- Protocols Row -->
                             <StackPanel Spacing="6">
@@ -167,50 +235,22 @@
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
                             </StackPanel>
-
-                            <!-- IP/Port Inputs (Press Enter to add) -->
-                            <Grid ColumnDefinitions="*,16,*,16,*">
-                                <!-- Source IP -->
-                                <StackPanel Grid.Column="0" Spacing="4">
-                                    <TextBlock Text="Source IP (Enter to add)" FontSize="11" Foreground="#8B949E"/>
-                                    <TextBox Text="{Binding SourceIPInput}"
-                                             Watermark="e.g. 192.168.1.0/24"
-                                             Classes="filter-input">
-                                        <TextBox.KeyBindings>
-                                            <KeyBinding Gesture="Enter" Command="{Binding AddSourceIPCommand}"/>
-                                        </TextBox.KeyBindings>
-                                    </TextBox>
-                                </StackPanel>
-
-                                <!-- Destination IP -->
-                                <StackPanel Grid.Column="2" Spacing="4">
-                                    <TextBlock Text="Destination IP (Enter to add)" FontSize="11" Foreground="#8B949E"/>
-                                    <TextBox Text="{Binding DestinationIPInput}"
-                                             Watermark="e.g. 10.0.0.1"
-                                             Classes="filter-input">
-                                        <TextBox.KeyBindings>
-                                            <KeyBinding Gesture="Enter" Command="{Binding AddDestinationIPCommand}"/>
-                                        </TextBox.KeyBindings>
-                                    </TextBox>
-                                </StackPanel>
-
-                                <!-- Port Range -->
-                                <StackPanel Grid.Column="4" Spacing="4">
-                                    <TextBlock Text="Port Range (Enter to add)" FontSize="11" Foreground="#8B949E"/>
-                                    <TextBox Text="{Binding PortRangeInput}"
-                                             Watermark="e.g. 80-443"
-                                             Classes="filter-input">
-                                        <TextBox.KeyBindings>
-                                            <KeyBinding Gesture="Enter" Command="{Binding AddPortCommand}"/>
-                                        </TextBox.KeyBindings>
-                                    </TextBox>
-                                </StackPanel>
-                            </Grid>
                         </StackPanel>
                     </Border>
                 </TabItem>
-                <TabItem Header="Threats">
-                    <Border Padding="16,12" Background="#0D1117">
+
+                <!-- Threats Tab with filter indicator -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="Threats"/>
+                            <Ellipse Width="6" Height="6" Fill="#3FB950" VerticalAlignment="Center"
+                                     IsVisible="{Binding ThreatsHasIncludeFilters}"/>
+                            <Ellipse Width="6" Height="6" Fill="#F85149" VerticalAlignment="Center"
+                                     IsVisible="{Binding ThreatsHasExcludeFilters}"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Border Padding="16,12" Background="#1C2128" CornerRadius="0,6,6,6" BorderBrush="#30363D" BorderThickness="1">
                         <StackPanel Spacing="12" DataContext="{Binding ThreatsTab}">
                             <!-- Severity Row -->
                             <StackPanel Spacing="6">
@@ -256,20 +296,27 @@
 
                             <!-- Search Input -->
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Search (Enter to add)" FontSize="11" Foreground="#8B949E"/>
+                                <TextBlock Text="Search" FontSize="11" Foreground="#8B949E"/>
                                 <TextBox Text="{Binding SearchInput}"
                                          Watermark="e.g. Port Scan, Cleartext Auth"
-                                         Classes="filter-input">
-                                    <TextBox.KeyBindings>
-                                        <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}"/>
-                                    </TextBox.KeyBindings>
-                                </TextBox>
+                                         Classes="filter-input"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
                 </TabItem>
-                <TabItem Header="VoiceQoS">
-                    <Border Padding="16,12" Background="#0D1117">
+
+                <!-- VoiceQoS Tab with filter indicator -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="VoiceQoS"/>
+                            <Ellipse Width="6" Height="6" Fill="#3FB950" VerticalAlignment="Center"
+                                     IsVisible="{Binding VoiceQoSHasIncludeFilters}"/>
+                            <Ellipse Width="6" Height="6" Fill="#F85149" VerticalAlignment="Center"
+                                     IsVisible="{Binding VoiceQoSHasExcludeFilters}"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Border Padding="16,12" Background="#1C2128" CornerRadius="0,6,6,6" BorderBrush="#30363D" BorderThickness="1">
                         <StackPanel Spacing="12" DataContext="{Binding VoiceQoSTab}">
                             <!-- Codecs Row -->
                             <StackPanel Spacing="6">
@@ -337,31 +384,34 @@
                             <!-- Threshold Inputs -->
                             <Grid ColumnDefinitions="*,16,*">
                                 <StackPanel Grid.Column="0" Spacing="4">
-                                    <TextBlock Text="Jitter Threshold (Enter to set)" FontSize="11" Foreground="#8B949E"/>
+                                    <TextBlock Text="Jitter Threshold" FontSize="11" Foreground="#8B949E"/>
                                     <TextBox Text="{Binding JitterThresholdInput}"
                                              Watermark="e.g. 30 ms"
-                                             Classes="filter-input">
-                                        <TextBox.KeyBindings>
-                                            <KeyBinding Gesture="Enter" Command="{Binding SetJitterThresholdCommand}"/>
-                                        </TextBox.KeyBindings>
-                                    </TextBox>
+                                             Classes="filter-input"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" Spacing="4">
-                                    <TextBlock Text="Latency Threshold (Enter to set)" FontSize="11" Foreground="#8B949E"/>
+                                    <TextBlock Text="Latency Threshold" FontSize="11" Foreground="#8B949E"/>
                                     <TextBox Text="{Binding LatencyThresholdInput}"
                                              Watermark="e.g. 150 ms"
-                                             Classes="filter-input">
-                                        <TextBox.KeyBindings>
-                                            <KeyBinding Gesture="Enter" Command="{Binding SetLatencyThresholdCommand}"/>
-                                        </TextBox.KeyBindings>
-                                    </TextBox>
+                                             Classes="filter-input"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
                     </Border>
                 </TabItem>
-                <TabItem Header="Country">
-                    <Border Padding="16,12" Background="#0D1117">
+
+                <!-- Country Tab with filter indicator -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="Country"/>
+                            <Ellipse Width="6" Height="6" Fill="#3FB950" VerticalAlignment="Center"
+                                     IsVisible="{Binding CountryHasIncludeFilters}"/>
+                            <Ellipse Width="6" Height="6" Fill="#F85149" VerticalAlignment="Center"
+                                     IsVisible="{Binding CountryHasExcludeFilters}"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Border Padding="16,12" Background="#1C2128" CornerRadius="0,6,6,6" BorderBrush="#30363D" BorderThickness="1">
                         <StackPanel Spacing="12" DataContext="{Binding CountryTab}">
                             <!-- Direction Row -->
                             <StackPanel Spacing="6">
@@ -428,14 +478,10 @@
 
                             <!-- Country Search Input -->
                             <StackPanel Spacing="4">
-                                <TextBlock Text="Country Search (Enter to add)" FontSize="11" Foreground="#8B949E"/>
+                                <TextBlock Text="Country Search" FontSize="11" Foreground="#8B949E"/>
                                 <TextBox Text="{Binding CountrySearchInput}"
                                          Watermark="e.g. CA, NL, SE"
-                                         Classes="filter-input">
-                                    <TextBox.KeyBindings>
-                                        <KeyBinding Gesture="Enter" Command="{Binding AddCountryCommand}"/>
-                                    </TextBox.KeyBindings>
-                                </TextBox>
+                                         Classes="filter-input"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -452,48 +498,103 @@
             <Setter Property="Padding" Value="12,0"/>
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.2"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
+                </Transitions>
+            </Setter>
         </Style>
+        <!-- Include button: inactive = grey, active = green (persistent) -->
         <Style Selector="Button.mode-button.include">
-            <Setter Property="Background" Value="#1E5F4B"/>
-            <Setter Property="BorderBrush" Value="#10B981"/>
-            <Setter Property="Foreground" Value="#34D399"/>
+            <Setter Property="Background" Value="#21262D"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
         </Style>
-        <Style Selector="Button.mode-button.include:disabled">
+        <Style Selector="Button.mode-button.include:pointerover">
+            <Setter Property="Background" Value="#30363D"/>
+            <Setter Property="BorderBrush" Value="#484F58"/>
+        </Style>
+        <Style Selector="Button.mode-button.include.active">
+            <Setter Property="Background" Value="#238636"/>
+            <Setter Property="BorderBrush" Value="#2EA043"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
+        <Style Selector="Button.mode-button.include.active:pointerover">
             <Setter Property="Background" Value="#2EA043"/>
             <Setter Property="BorderBrush" Value="#3FB950"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="Opacity" Value="1"/>
         </Style>
+        <!-- Exclude button: inactive = grey, active = red (persistent) -->
         <Style Selector="Button.mode-button.exclude">
-            <Setter Property="Background" Value="#3D1A1A"/>
-            <Setter Property="BorderBrush" Value="#EF4444"/>
-            <Setter Property="Foreground" Value="#F87171"/>
+            <Setter Property="Background" Value="#21262D"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
         </Style>
-        <Style Selector="Button.mode-button.exclude:disabled">
-            <Setter Property="Background" Value="#DC2626"/>
+        <Style Selector="Button.mode-button.exclude:pointerover">
+            <Setter Property="Background" Value="#30363D"/>
+            <Setter Property="BorderBrush" Value="#484F58"/>
+        </Style>
+        <Style Selector="Button.mode-button.exclude.active">
+            <Setter Property="Background" Value="#DA3633"/>
             <Setter Property="BorderBrush" Value="#F85149"/>
             <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="Opacity" Value="1"/>
+        </Style>
+        <Style Selector="Button.mode-button.exclude.active:pointerover">
+            <Setter Property="Background" Value="#F85149"/>
+            <Setter Property="BorderBrush" Value="#FF6B6B"/>
         </Style>
 
-        <!-- Filter Chip Buttons - Base Style -->
+        <!-- Card-style TabControl -->
+        <Style Selector="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="TabControl > TabItem">
+            <Setter Property="Background" Value="#0D1117"/>
+            <Setter Property="Foreground" Value="#6E7681"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Margin" Value="0,0,4,0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="CornerRadius" Value="6,6,0,0"/>
+            <Setter Property="BorderThickness" Value="1,1,1,0"/>
+            <Setter Property="BorderBrush" Value="#21262D"/>
+        </Style>
+        <Style Selector="TabControl > TabItem:pointerover">
+            <Setter Property="Background" Value="#161B22"/>
+            <Setter Property="Foreground" Value="#8B949E"/>
+        </Style>
+        <Style Selector="TabControl > TabItem:selected">
+            <Setter Property="Background" Value="#1C2128"/>
+            <Setter Property="Foreground" Value="#E6EDF3"/>
+            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="BorderThickness" Value="1,2,1,0"/>
+        </Style>
+
+        <!-- Filter Badge Buttons - Compact badge style -->
         <Style Selector="Button.filter-chip">
             <Setter Property="Background" Value="#21262D"/>
             <Setter Property="BorderBrush" Value="#30363D"/>
-            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Foreground" Value="#8B949E"/>
-            <Setter Property="Padding" Value="10,5"/>
-            <Setter Property="Margin" Value="0,0,6,6"/>
-            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="6,3"/>
+            <Setter Property="Margin" Value="0,0,4,4"/>
+            <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontFamily" Value="Cascadia Code, Consolas, monospace"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                </Transitions>
+            </Setter>
         </Style>
         <Style Selector="Button.filter-chip:pointerover">
             <Setter Property="Background" Value="#30363D"/>
             <Setter Property="BorderBrush" Value="#484F58"/>
         </Style>
 
-        <!-- Chip INCLUDED state (green) -->
+        <!-- Badge INCLUDED state (green) -->
         <Style Selector="Button.filter-chip.chip-included">
             <Setter Property="Background" Value="#1A3D1A"/>
             <Setter Property="BorderBrush" Value="#2EA043"/>
@@ -504,7 +605,7 @@
             <Setter Property="BorderBrush" Value="#3FB950"/>
         </Style>
 
-        <!-- Chip EXCLUDED state (red) -->
+        <!-- Badge EXCLUDED state (red) -->
         <Style Selector="Button.filter-chip.chip-excluded">
             <Setter Property="Background" Value="#3D1A1A"/>
             <Setter Property="BorderBrush" Value="#F85149"/>
@@ -515,7 +616,7 @@
             <Setter Property="BorderBrush" Value="#F97583"/>
         </Style>
 
-        <!-- Filter Input TextBox -->
+        <!-- Filter Input TextBox - Neutral styling -->
         <Style Selector="TextBox.filter-input">
             <Setter Property="Background" Value="#0D1117"/>
             <Setter Property="BorderBrush" Value="#30363D"/>
@@ -523,23 +624,6 @@
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Padding" Value="8,6"/>
             <Setter Property="CornerRadius" Value="4"/>
-        </Style>
-
-        <!-- Add Button -->
-        <Style Selector="Button.add-button">
-            <Setter Property="Background" Value="#238636"/>
-            <Setter Property="BorderBrush" Value="#2EA043"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-            <Setter Property="Width" Value="28"/>
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style Selector="Button.add-button:pointerover">
-            <Setter Property="Background" Value="#2EA043"/>
         </Style>
 
         <!-- Action Buttons -->

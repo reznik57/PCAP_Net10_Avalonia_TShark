@@ -101,6 +101,7 @@ namespace PCAPAnalyzer.Core.Models
         UnencryptedService,
         LegacyProtocol,
         DefaultCredentials,
+        CleartextCredentials,
         KnownVulnerability,
         MaliciousActivity,
         DataExfiltration,

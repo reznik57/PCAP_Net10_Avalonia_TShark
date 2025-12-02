@@ -27,13 +27,15 @@ namespace PCAPAnalyzer.UI.ViewModels;
 /// Coordinates 6 specialized component ViewModels using composition pattern.
 /// Reduced from 1,675 lines to ~350 lines through component-based architecture.
 /// </summary>
-public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulationTarget
+public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulationTarget, IDisposable
 {
     private readonly IGeoIPService _geoIPService;
     private readonly ITabFilterService? _filterService;
     private readonly FilterCopyService? _filterCopyService;
+    private readonly GlobalFilterState? _globalFilterState;
     private NetworkStatistics? _currentStatistics;
     private IReadOnlyList<PacketInfo>? _allPackets;
+    private bool _disposed;
 
     // Component ViewModels (Composition)
     public CountryDataViewModel DataManager { get; }
@@ -125,16 +127,18 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         : this(
             App.Services?.GetService<IGeoIPService>() ?? throw new InvalidOperationException("GeoIPService not registered in DI container"),
             new TabFilterService("Country Traffic", new FilterServiceCore()),
-            App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService())
+            App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService(),
+            App.Services?.GetService<GlobalFilterState>())
     {
     }
 
-    public CountryTrafficViewModel(IGeoIPService geoIPService, ITabFilterService? filterService, ISmartFilterBuilder? filterBuilder = null)
+    public CountryTrafficViewModel(IGeoIPService geoIPService, ITabFilterService? filterService, ISmartFilterBuilder? filterBuilder = null, GlobalFilterState? globalFilterState = null)
         : base(filterBuilder ?? new SmartFilterBuilderService())
     {
         _geoIPService = geoIPService;
         _filterService = filterService;
         _filterCopyService = App.Services?.GetService<FilterCopyService>();
+        _globalFilterState = globalFilterState;
 
         // Initialize component ViewModels
         DataManager = new CountryDataViewModel();
@@ -156,6 +160,12 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         if (_filterService != null)
         {
             _filterService.FilterChanged += OnFilterServiceChanged;
+        }
+
+        // Subscribe to GlobalFilterState changes for tab-specific filtering (country, region)
+        if (_globalFilterState != null)
+        {
+            _globalFilterState.OnFilterChanged += OnGlobalFilterChanged;
         }
 
         // Subscribe to CommonFilters property changes
@@ -234,7 +244,10 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
             return;
         }
 
-        var countries = _currentStatistics.CountryStatistics.Values;
+        var countries = _currentStatistics.CountryStatistics.Values.AsEnumerable();
+
+        // Apply GlobalFilterState country/region filters (from UnifiedFilterPanel)
+        countries = ApplyGlobalFilterStateCriteria(countries);
 
         // Apply sorting based on filter
         var sorted = Filter.SortMode switch
@@ -266,6 +279,84 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         }
 
         DebugLogger.Log($"[CountryTrafficViewModel] Updated TopCountries with {TopCountries.Count} items");
+    }
+
+    /// <summary>
+    /// Applies country-specific criteria from GlobalFilterState (country, region filters from UnifiedFilterPanel).
+    /// Uses ContinentData.CountryToContinentMap for region lookups.
+    /// </summary>
+    private IEnumerable<CountryTrafficStatistics> ApplyGlobalFilterStateCriteria(IEnumerable<CountryTrafficStatistics> countries)
+    {
+        if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+            return countries;
+
+        var result = countries;
+
+        // Use helper to collect all criteria
+        var (includeCountries, includeRegions, excludeCountries, excludeRegions) =
+            GlobalFilterStateHelper.CollectCountryCriteria(_globalFilterState);
+
+        // Apply include country filter - match against country code or name
+        if (includeCountries.Count > 0)
+        {
+            result = result.Where(c =>
+                includeCountries.Contains(c.CountryCode) ||
+                includeCountries.Any(ic => c.CountryName.Contains(ic, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        // Apply include region filter - use ContinentData.CountryToContinentMap for lookup
+        if (includeRegions.Count > 0)
+        {
+            result = result.Where(c =>
+            {
+                var continent = GetContinentForCountry(c.CountryCode);
+                return includeRegions.Contains(continent) ||
+                       includeRegions.Any(ir => continent.Contains(ir, StringComparison.OrdinalIgnoreCase));
+            });
+        }
+
+        // Apply exclude country filter
+        if (excludeCountries.Count > 0)
+        {
+            result = result.Where(c =>
+                !excludeCountries.Contains(c.CountryCode) &&
+                !excludeCountries.Any(ec => c.CountryName.Contains(ec, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        // Apply exclude region filter
+        if (excludeRegions.Count > 0)
+        {
+            result = result.Where(c =>
+            {
+                var continent = GetContinentForCountry(c.CountryCode);
+                return !excludeRegions.Contains(continent) &&
+                       !excludeRegions.Any(er => continent.Contains(er, StringComparison.OrdinalIgnoreCase));
+            });
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Gets continent code/name for a country code using ContinentData mapping.
+    /// </summary>
+    private static string GetContinentForCountry(string countryCode)
+    {
+        if (string.IsNullOrEmpty(countryCode))
+            return "Unknown";
+
+        if (countryCode == "INTERNAL") return "Internal";
+        if (countryCode == "IPV6" || countryCode == "IP6") return "IPv6";
+
+        if (ContinentData.CountryToContinentMap.TryGetValue(countryCode.ToUpperInvariant(), out var continentCode))
+        {
+            // Return both code and name for flexible matching
+            return ContinentData.Continents.TryGetValue(continentCode, out var continent)
+                ? continent.DisplayName
+                : continentCode;
+        }
+
+        return "Unknown";
     }
 
     /// <summary>
@@ -470,6 +561,22 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         // MainWindowViewModel will update us with new statistics
     }
 
+    /// <summary>
+    /// Handles GlobalFilterState changes - re-applies tab-specific filters to country data.
+    /// </summary>
+    private void OnGlobalFilterChanged()
+    {
+        // Re-apply filters when global filter state changes (e.g., country/region from UnifiedFilterPanel)
+        if (_currentStatistics?.CountryStatistics != null && _currentStatistics.CountryStatistics.Count > 0)
+        {
+            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                UpdateTopCountriesList();
+                DebugLogger.Log($"[CountryTrafficViewModel] Country list updated after global filter change");
+            });
+        }
+    }
+
     // ==================== COMPATIBILITY LAYER ====================
     // Merged from CountryTrafficViewModel.Compatibility.cs for cleaner project structure.
 
@@ -649,6 +756,48 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         DebugLogger.Log($"[CountryTrafficViewModel.PopulateFromCacheAsync] Populating from cache with {result.AllPackets.Count:N0} packets");
         _allPackets = result.AllPackets;
         await UpdateStatistics(result.Statistics);
+    }
+
+    // ==================== IDisposable IMPLEMENTATION ====================
+
+    /// <summary>
+    /// Disposes managed resources including event subscriptions.
+    /// Prevents memory leaks from GlobalFilterState event handlers.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+
+        // Unsubscribe from GlobalFilterState to prevent memory leaks
+        if (_globalFilterState != null)
+        {
+            _globalFilterState.OnFilterChanged -= OnGlobalFilterChanged;
+        }
+
+        // Unsubscribe from filter service events
+        if (_filterService != null)
+        {
+            _filterService.FilterChanged -= OnFilterServiceChanged;
+        }
+
+        // Unregister from filter copy service
+        _filterCopyService?.UnregisterTab(TabName);
+
+        // Unsubscribe from component events
+        if (Filter != null)
+        {
+            Filter.SortModeChanged -= OnFilterSortModeChanged;
+            Filter.ExcludedCountriesChanged -= OnExcludedCountriesChanged;
+            Filter.DisplayCountChanged -= OnDisplayCountChanged;
+        }
+
+        if (UIState != null)
+        {
+            UIState.ContinentChanged -= OnContinentChanged;
+        }
+
+        DebugLogger.Log("[CountryTrafficViewModel] Disposed - cleaned up event handlers");
     }
 }
 

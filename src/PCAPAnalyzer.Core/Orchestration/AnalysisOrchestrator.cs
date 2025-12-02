@@ -35,19 +35,22 @@ namespace PCAPAnalyzer.Core.Orchestration
         private readonly IUnifiedAnomalyDetectionService _anomalyService;
         private readonly IGeoIPService _geoIPService;
         private readonly ISessionAnalysisCache _sessionCache;
+        private readonly PCAPAnalyzer.Core.Services.OsFingerprinting.IOsFingerprintService _osFingerprintService;
 
         public AnalysisOrchestrator(
             ITSharkService tsharkService,
             IStatisticsService statisticsService,
             IUnifiedAnomalyDetectionService anomalyService,
             IGeoIPService geoIPService,
-            ISessionAnalysisCache sessionCache)
+            ISessionAnalysisCache sessionCache,
+            PCAPAnalyzer.Core.Services.OsFingerprinting.IOsFingerprintService osFingerprintService)
         {
             _tsharkService = tsharkService ?? throw new ArgumentNullException(nameof(tsharkService));
             _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService));
             _anomalyService = anomalyService ?? throw new ArgumentNullException(nameof(anomalyService));
             _geoIPService = geoIPService ?? throw new ArgumentNullException(nameof(geoIPService));
             _sessionCache = sessionCache ?? throw new ArgumentNullException(nameof(sessionCache));
+            _osFingerprintService = osFingerprintService ?? throw new ArgumentNullException(nameof(osFingerprintService));
         }
 
         /// <summary>
@@ -236,10 +239,28 @@ namespace PCAPAnalyzer.Core.Orchestration
             // Start TShark streaming
             await _tsharkService.StartAnalysisAsync(pcapPath, cancellationToken);
 
+            // Clear OS fingerprint service for new analysis
+            _osFingerprintService.Clear();
+
             // Read all packets from channel with real-time metrics
             await foreach (var packet in _tsharkService.PacketReader.ReadAllAsync(cancellationToken))
             {
                 allPackets.Add(packet);
+
+                // Process OS fingerprinting data inline during packet loading
+                if (packet.OsFingerprintData.HasValue)
+                {
+                    _osFingerprintService.ProcessPacket(
+                        packet.OsFingerprintData.Value,
+                        packet.FrameNumber,
+                        packet.Timestamp,
+                        packet.SourceIP,
+                        packet.DestinationIP,
+                        packet.SourcePort,
+                        packet.DestinationPort,
+                        packet.TcpFlags
+                    );
+                }
 
                 // Report progress every 100k packets
                 if (allPackets.Count % 100000 == 0)
@@ -251,6 +272,10 @@ namespace PCAPAnalyzer.Core.Orchestration
             // Stop TShark process
             await _tsharkService.StopAnalysisAsync();
             coordinator.StopPhase("Loading Packets");
+
+            // Finalize OS fingerprinting analysis (signature matching)
+            await _osFingerprintService.FinalizeAnalysisAsync();
+            DebugLogger.Log($"[AnalysisOrchestrator] OS fingerprinting complete: {_osFingerprintService.HostCount} hosts detected");
 
             DebugLogger.Log($"[AnalysisOrchestrator] Packet loading complete: {allPackets.Count:N0} packets");
 

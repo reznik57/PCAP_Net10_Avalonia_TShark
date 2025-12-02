@@ -72,6 +72,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     private readonly FilterCopyService? _filterCopyService;
     private readonly IFilterPresetService? _filterPresetService;
     private readonly GlobalFilterState? _globalFilterState;
+    private readonly IAnomalyFrameIndexService? _anomalyFrameIndexService;
     private readonly Action<string>? _navigateToTab;
 
     // Anomaly frame number caches for efficient filtering
@@ -115,8 +116,8 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     private NetworkStatistics? _currentStatistics;
     private NetworkStatistics? _unfilteredStatistics; // For Quick Stats (all packets)
     private NetworkStatistics? _filteredStatistics;   // For Filtered Stats
-    private List<PacketInfo>? _allPackets;            // Single source of truth for all packets
-    private List<PacketInfo>? _filteredPackets;       // Cached filtered result (null when no filter active)
+    private IReadOnlyList<PacketInfo>? _allPackets;   // Reference to SessionAnalysisCache packets (NOT a copy)
+    private List<PacketInfo>? _filteredPackets;       // Materialized filtered result (null when no filter active)
     private NetworkStatistics? _nextStatisticsOverride;
 
     public NetworkStatistics? CurrentStatistics => _currentStatistics;
@@ -267,7 +268,8 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             App.Services?.GetService<IFileDialogService>(),
             App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService(),
             App.Services?.GetService<IFilterPresetService>(),
-            App.Services?.GetService<GlobalFilterState>())
+            App.Services?.GetService<GlobalFilterState>(),
+            App.Services?.GetService<IAnomalyFrameIndexService>())
     {
     }
 
@@ -281,6 +283,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         ISmartFilterBuilder? filterBuilder = null,
         IFilterPresetService? filterPresetService = null,
         GlobalFilterState? globalFilterState = null,
+        IAnomalyFrameIndexService? anomalyFrameIndexService = null,
         Action<string>? navigateToTab = null)
         : base(filterBuilder ?? new SmartFilterBuilderService())
     {
@@ -293,6 +296,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         _filterCopyService = App.Services?.GetService<FilterCopyService>();
         _filterPresetService = filterPresetService;
         _globalFilterState = globalFilterState;
+        _anomalyFrameIndexService = anomalyFrameIndexService;
         _navigateToTab = navigateToTab;
 
         // Initialize component ViewModels
@@ -342,7 +346,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     /// Main entry point for updating dashboard with new packet data.
     /// Coordinates updates across all component ViewModels.
     /// </summary>
-    public async Task UpdateStatisticsAsync(List<PacketInfo> packets)
+    public async Task UpdateStatisticsAsync(IReadOnlyList<PacketInfo> packets)
     {
         var methodStart = DateTime.Now;
         DebugLogger.Log($"[{methodStart:HH:mm:ss.fff}] [DashboardViewModel.UpdateStatisticsAsync] ========== METHOD START ==========");
@@ -445,7 +449,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     /// <summary>
     /// Updates all component ViewModels with new statistics.
     /// </summary>
-    private async Task UpdateAllComponents(NetworkStatistics? statistics, List<PacketInfo>? packets)
+    private async Task UpdateAllComponents(NetworkStatistics? statistics, IReadOnlyList<PacketInfo>? packets)
     {
         var updateStartTime = DateTime.Now;
         DebugLogger.Log($"[DashboardViewModel] UpdateAllComponents starting - statistics null: {statistics == null}, packets: {packets?.Count ?? 0}");
@@ -611,10 +615,23 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             if (!IsFilterActive)
             {
                 _filteredPackets = null;
-                _currentStatistics = _unfilteredStatistics;
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
+                    // CRITICAL: Set statistics FIRST, before any chart updates
+                    _currentStatistics = _unfilteredStatistics;
+
                     Statistics.ClearFilteredStatistics();
+                    // CRITICAL: Update charts with full unfiltered data when filters are cleared
+                    if (_unfilteredStatistics != null)
+                    {
+                        Statistics.UpdateAllStatistics(_unfilteredStatistics, isFiltered: false);
+                        Charts.UpdateAllCharts(_unfilteredStatistics);
+                        DebugLogger.Log("[DashboardViewModel] Charts restored to unfiltered data");
+                    }
+                    // CRITICAL: Refresh extended collections (with ranking) for UI bindings
+                    UpdateExtendedCollections();
+
+                    // CRITICAL: Update Port Activity Timeline LAST to ensure _currentStatistics is set
                     UpdatePortActivityTimeline();
                 });
                 DebugLogger.Log("[DashboardViewModel] No chip filters active, using unfiltered packets");
@@ -641,6 +658,24 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
                 return result;
             }, cancellationToken);
+
+            FilterProgress = 0.6;
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Apply global anomaly filters if active
+            if (_globalFilterState != null && _globalFilterState.HasAnomalyFilters && _anomalyFrameIndexService != null)
+            {
+                var matchingFrames = _anomalyFrameIndexService.GetFramesMatchingFilters(
+                    _globalFilterState.AnomalySeverityFilter,
+                    _globalFilterState.AnomalyCategoryFilter,
+                    _globalFilterState.AnomalyDetectorFilter);
+
+                if (matchingFrames.Count > 0)
+                {
+                    filteredList = filteredList.Where(p => matchingFrames.Contains(p.FrameNumber)).ToList();
+                    DebugLogger.Log($"[DashboardViewModel] Applied anomaly filters: {filteredList.Count:N0} packets match anomaly criteria");
+                }
+            }
 
             FilterProgress = 0.7;
             cancellationToken.ThrowIfCancellationRequested();
@@ -828,14 +863,27 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             if (!IsFilterActive)
             {
                 _filteredPackets = null;
-                _currentStatistics = _unfilteredStatistics;
 
                 // Update UI to show unfiltered data
                 await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
+                    // CRITICAL: Set statistics FIRST, before any chart updates
+                    _currentStatistics = _unfilteredStatistics;
+
                     Statistics.ClearFilteredStatistics();
 
-                    // Update Port Activity Timeline chart with unfiltered statistics
+                    // CRITICAL: Update charts with full unfiltered data when filters are cleared
+                    if (_unfilteredStatistics != null)
+                    {
+                        Statistics.UpdateAllStatistics(_unfilteredStatistics, isFiltered: false);
+                        Charts.UpdateAllCharts(_unfilteredStatistics);
+                        DebugLogger.Log("[DashboardViewModel] Legacy filter cleared - Charts restored to unfiltered data");
+                    }
+
+                    // CRITICAL: Refresh extended collections (with ranking) for UI bindings
+                    UpdateExtendedCollections();
+
+                    // CRITICAL: Update Port Activity Timeline LAST to ensure _currentStatistics is set
                     UpdatePortActivityTimeline();
                 });
 
@@ -894,6 +942,9 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
                 Statistics.UpdateAllStatistics(filteredStats, isFiltered: true);
                 Charts.UpdateAllCharts(filteredStats);
 
+                // Update extended collections (with ranking) for UI bindings
+                UpdateExtendedCollections();
+
                 // Update Port Activity Timeline chart with filtered statistics
                 UpdatePortActivityTimeline();
             });
@@ -921,7 +972,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     /// Apply common filters (protocol, IP, port, time range) in a single pass.
     /// Returns materialized list for efficient smart filter processing.
     /// </summary>
-    private List<PacketInfo> ApplyCommonFilters(List<PacketInfo> packets)
+    private List<PacketInfo> ApplyCommonFilters(IReadOnlyList<PacketInfo> packets)
     {
         // Build a combined predicate for single-pass evaluation
         var predicates = new List<Func<PacketInfo, bool>>();
@@ -990,7 +1041,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
         // Single-pass evaluation
         if (predicates.Count == 0)
-            return packets;
+            return packets as List<PacketInfo> ?? packets.ToList();
 
         var result = new List<PacketInfo>(packets.Count / 2);
         foreach (var packet in packets)
@@ -1203,7 +1254,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // ==================== GEOGRAPHIC DATA ====================
 
-    private void UpdateGeographicData(NetworkStatistics statistics, List<PacketInfo> packets)
+    private void UpdateGeographicData(NetworkStatistics statistics, IReadOnlyList<PacketInfo> packets)
     {
         try
         {
@@ -1286,10 +1337,10 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // ==================== HELPER METHODS ====================
 
-    private List<PacketInfo> SamplePackets(List<PacketInfo> packets, int sampleSize)
+    private List<PacketInfo> SamplePackets(IReadOnlyList<PacketInfo> packets, int sampleSize)
     {
         if (packets.Count <= sampleSize)
-            return packets;
+            return packets as List<PacketInfo> ?? packets.ToList();
 
         // Stratified sampling to maintain temporal distribution
         var step = packets.Count / sampleSize;
@@ -1738,7 +1789,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     /// <summary>
     /// Updates statistics with packets (delegates to UpdateStatisticsAsync)
     /// </summary>
-    public async Task UpdateStatistics(NetworkStatistics statistics, List<PacketInfo> packets)
+    public async Task UpdateStatistics(NetworkStatistics statistics, IReadOnlyList<PacketInfo> packets)
     {
         _nextStatisticsOverride = statistics;
         await UpdateStatisticsAsync(packets);

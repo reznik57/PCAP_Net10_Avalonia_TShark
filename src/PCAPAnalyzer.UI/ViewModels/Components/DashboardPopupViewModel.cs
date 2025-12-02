@@ -34,7 +34,7 @@ public partial class DashboardPopupViewModel : ObservableObject
     // ==================== DATA REFERENCES ====================
 
     private NetworkStatistics? _currentStatistics;
-    private List<PacketInfo>? _currentPackets;
+    private IReadOnlyList<PacketInfo>? _currentPackets;
     private readonly DashboardViewModel? _parentViewModel;
 
     // ==================== CONSTRUCTOR ====================
@@ -49,7 +49,7 @@ public partial class DashboardPopupViewModel : ObservableObject
     /// <summary>
     /// Updates the current statistics and packets for popup operations.
     /// </summary>
-    public void UpdateDataContext(NetworkStatistics? statistics, List<PacketInfo>? packets)
+    public void UpdateDataContext(NetworkStatistics? statistics, IReadOnlyList<PacketInfo>? packets)
     {
         _currentStatistics = statistics;
         _currentPackets = packets;

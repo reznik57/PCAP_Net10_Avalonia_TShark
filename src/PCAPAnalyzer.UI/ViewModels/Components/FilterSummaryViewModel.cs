@@ -36,6 +36,23 @@ public partial class FilterSummaryViewModel : ObservableObject
     {
         IncludeChips.Clear();
 
+        // Display AND-grouped filters (show group label as single chip)
+        foreach (var group in _filterState.IncludeGroups)
+        {
+            var groupId = group.GroupId;
+            IncludeChips.Add(new ActiveFilterChip
+            {
+                DisplayLabel = $"GROUP: {group.DisplayLabel}",
+                Value = groupId.ToString(),
+                Category = FilterCategory.Protocol, // Using Protocol as placeholder for group
+                IsInclude = true,
+                IsGroup = true,
+                GroupId = groupId,
+                RemoveCommand = new RelayCommand(() => _filterState.RemoveGroup(groupId, false))
+            });
+        }
+
+        // Display individual filters (OR mode)
         foreach (var p in _filterState.IncludeFilters.Protocols)
             IncludeChips.Add(CreateChip(p, p, FilterCategory.Protocol, true));
         foreach (var ip in _filterState.IncludeFilters.IPs)
@@ -60,6 +77,23 @@ public partial class FilterSummaryViewModel : ObservableObject
     {
         ExcludeChips.Clear();
 
+        // Display NOT-grouped filters (show group label as single chip)
+        foreach (var group in _filterState.ExcludeGroups)
+        {
+            var groupId = group.GroupId;
+            ExcludeChips.Add(new ActiveFilterChip
+            {
+                DisplayLabel = $"NOT GROUP: {group.DisplayLabel}",
+                Value = groupId.ToString(),
+                Category = FilterCategory.Protocol,
+                IsInclude = false,
+                IsGroup = true,
+                GroupId = groupId,
+                RemoveCommand = new RelayCommand(() => _filterState.RemoveGroup(groupId, true))
+            });
+        }
+
+        // Display individual filters (OR mode)
         foreach (var p in _filterState.ExcludeFilters.Protocols)
             ExcludeChips.Add(CreateChip(p, p, FilterCategory.Protocol, false));
         foreach (var ip in _filterState.ExcludeFilters.IPs)

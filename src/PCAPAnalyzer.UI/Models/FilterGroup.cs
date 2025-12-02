@@ -26,18 +26,28 @@ public partial class FilterGroup : ObservableObject
     [ObservableProperty]
     private bool _isExcludeGroup;
 
-    // Filter criteria - only populated fields contribute to the group
-    [ObservableProperty]
-    private string? _sourceIP;
+    // ==================== GENERAL TAB CRITERIA ====================
+    [ObservableProperty] private string? _sourceIP;
+    [ObservableProperty] private string? _destinationIP;
+    [ObservableProperty] private string? _portRange;
+    [ObservableProperty] private string? _protocol;
+    [ObservableProperty] private List<string>? _quickFilters;
 
-    [ObservableProperty]
-    private string? _destinationIP;
+    // ==================== THREATS TAB CRITERIA ====================
+    [ObservableProperty] private List<string>? _severities;
+    [ObservableProperty] private List<string>? _threatCategories;
 
-    [ObservableProperty]
-    private string? _portRange;
+    // ==================== VOICEQOS TAB CRITERIA ====================
+    [ObservableProperty] private List<string>? _codecs;
+    [ObservableProperty] private List<string>? _qualityLevels;
+    [ObservableProperty] private List<string>? _voipIssues;
+    [ObservableProperty] private string? _jitterThreshold;
+    [ObservableProperty] private string? _latencyThreshold;
 
-    [ObservableProperty]
-    private string? _protocol;
+    // ==================== COUNTRY TAB CRITERIA ====================
+    [ObservableProperty] private List<string>? _countries;
+    [ObservableProperty] private List<string>? _directions;
+    [ObservableProperty] private List<string>? _regions;
 
     /// <summary>Command to remove this entire filter group</summary>
     public IRelayCommand? RemoveCommand { get; set; }
@@ -62,7 +72,18 @@ public partial class FilterGroup : ObservableObject
         return !string.IsNullOrWhiteSpace(SourceIP) ||
                !string.IsNullOrWhiteSpace(DestinationIP) ||
                !string.IsNullOrWhiteSpace(PortRange) ||
-               !string.IsNullOrWhiteSpace(Protocol);
+               !string.IsNullOrWhiteSpace(Protocol) ||
+               (QuickFilters?.Count > 0) ||
+               (Severities?.Count > 0) ||
+               (ThreatCategories?.Count > 0) ||
+               (Codecs?.Count > 0) ||
+               (QualityLevels?.Count > 0) ||
+               (VoipIssues?.Count > 0) ||
+               !string.IsNullOrWhiteSpace(JitterThreshold) ||
+               !string.IsNullOrWhiteSpace(LatencyThreshold) ||
+               (Countries?.Count > 0) ||
+               (Directions?.Count > 0) ||
+               (Regions?.Count > 0);
     }
 
     /// <summary>
@@ -72,17 +93,43 @@ public partial class FilterGroup : ObservableObject
     {
         var descriptions = new List<string>();
 
+        // General tab
         if (!string.IsNullOrWhiteSpace(SourceIP))
             descriptions.Add($"Src IP: {SourceIP}");
-
         if (!string.IsNullOrWhiteSpace(DestinationIP))
             descriptions.Add($"Dest IP: {DestinationIP}");
-
         if (!string.IsNullOrWhiteSpace(PortRange))
             descriptions.Add($"Port: {PortRange}");
-
         if (!string.IsNullOrWhiteSpace(Protocol))
             descriptions.Add($"Protocol: {Protocol}");
+        if (QuickFilters?.Count > 0)
+            descriptions.AddRange(QuickFilters);
+
+        // Threats tab
+        if (Severities?.Count > 0)
+            descriptions.AddRange(Severities.Select(s => $"Severity: {s}"));
+        if (ThreatCategories?.Count > 0)
+            descriptions.AddRange(ThreatCategories.Select(c => $"Threat: {c}"));
+
+        // VoiceQoS tab
+        if (Codecs?.Count > 0)
+            descriptions.AddRange(Codecs.Select(c => $"Codec: {c}"));
+        if (QualityLevels?.Count > 0)
+            descriptions.AddRange(QualityLevels.Select(q => $"Quality: {q}"));
+        if (VoipIssues?.Count > 0)
+            descriptions.AddRange(VoipIssues.Select(i => $"Issue: {i}"));
+        if (!string.IsNullOrWhiteSpace(JitterThreshold))
+            descriptions.Add($"Jitter: >{JitterThreshold}ms");
+        if (!string.IsNullOrWhiteSpace(LatencyThreshold))
+            descriptions.Add($"Latency: >{LatencyThreshold}ms");
+
+        // Country tab
+        if (Countries?.Count > 0)
+            descriptions.AddRange(Countries.Select(c => $"Country: {c}"));
+        if (Directions?.Count > 0)
+            descriptions.AddRange(Directions.Select(d => $"Direction: {d}"));
+        if (Regions?.Count > 0)
+            descriptions.AddRange(Regions.Select(r => $"Region: {r}"));
 
         return descriptions;
     }
@@ -104,5 +151,40 @@ public partial class FilterGroup : ObservableObject
         // Join with " AND " for AND groups, ", " for OR mode
         var separator = IsAndGroup ? " AND " : ", ";
         DisplayLabel = string.Join(separator, descriptions);
+    }
+
+    // ==================== TAB-SPECIFIC CRITERIA EXTRACTION ====================
+
+    /// <summary>
+    /// Extracts threat-specific filter criteria from this group.
+    /// Returns null if no threat criteria are set.
+    /// </summary>
+    public (List<string>? Severities, List<string>? Categories)? GetThreatCriteria()
+    {
+        if ((Severities?.Count ?? 0) == 0 && (ThreatCategories?.Count ?? 0) == 0)
+            return null;
+        return (Severities, ThreatCategories);
+    }
+
+    /// <summary>
+    /// Extracts VoiceQoS-specific filter criteria from this group.
+    /// Returns null if no VoiceQoS criteria are set.
+    /// </summary>
+    public (List<string>? Codecs, List<string>? Qualities, List<string>? Issues)? GetVoiceQoSCriteria()
+    {
+        if ((Codecs?.Count ?? 0) == 0 && (QualityLevels?.Count ?? 0) == 0 && (VoipIssues?.Count ?? 0) == 0)
+            return null;
+        return (Codecs, QualityLevels, VoipIssues);
+    }
+
+    /// <summary>
+    /// Extracts country-specific filter criteria from this group.
+    /// Returns null if no country criteria are set.
+    /// </summary>
+    public (List<string>? Countries, List<string>? Regions)? GetCountryCriteria()
+    {
+        if ((Countries?.Count ?? 0) == 0 && (Regions?.Count ?? 0) == 0)
+            return null;
+        return (Countries, Regions);
     }
 }

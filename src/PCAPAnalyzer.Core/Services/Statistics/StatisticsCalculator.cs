@@ -97,6 +97,11 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             return (topConversations, totalCount);
         }
 
+        /// <summary>
+        /// Calculates top ports with unique count tracking.
+        /// NOTE: Keeps TCP and UDP ports separate - Port 2598/TCP and Port 2598/UDP are distinct entries.
+        /// This provides accurate protocol-specific port analysis.
+        /// </summary>
         public (List<PortStatistics> TopPorts, int UniqueCount) CalculateTopPortsWithCount(
             List<PacketInfo> packets,
             Dictionary<int, string> wellKnownPorts)
@@ -170,6 +175,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                     IsWellKnown = true
                 }));
 
+            // Return top ports sorted by packet count, keeping TCP and UDP separate
             return (topPorts.OrderByDescending(p => p.PacketCount).Take(30).ToList(), uniquePortCount);
         }
 

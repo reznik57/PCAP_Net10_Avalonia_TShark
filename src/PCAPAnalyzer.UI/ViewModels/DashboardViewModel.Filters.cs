@@ -17,8 +17,8 @@ public partial class DashboardViewModel
     /// Converts GlobalFilterState criteria to PacketFilter and triggers ApplySmartFilter.
     ///
     /// Filter Logic:
-    /// - Within category: OR (e.g., TLS OR HTTPS → any of these protocols)
-    /// - Between categories: AND (e.g., Protocol AND IP → must match both)
+    /// - FilterGroups: All fields within group are AND'd together
+    /// - Flat filters: OR within category, AND between categories
     /// - Include vs Exclude: INCLUDE AND NOT(EXCLUDE)
     /// </summary>
     public void ApplyGlobalFilters()
@@ -31,13 +31,62 @@ public partial class DashboardViewModel
 
         DebugLogger.Log("[DashboardViewModel] Applying global filters from UnifiedFilterPanel");
 
-        // Build grouped filters: OR within category, AND between categories
-        var includeFilter = BuildGroupedFilters(_globalFilterState.IncludeFilters, isExclude: false);
-        var excludeFilter = BuildGroupedFilters(_globalFilterState.ExcludeFilters, isExclude: true);
+        var includeFilters = new List<PacketFilter>();
+        var excludeFilters = new List<PacketFilter>();
+
+        // Process FilterGroups (each group = all criteria AND'd together)
+        foreach (var group in _globalFilterState.IncludeGroups)
+        {
+            var groupFilter = BuildFilterFromGroup(group);
+            if (groupFilter != null)
+            {
+                includeFilters.Add(groupFilter);
+                DebugLogger.Log($"[DashboardViewModel] Include group filter: {groupFilter.Description}");
+            }
+        }
+
+        foreach (var group in _globalFilterState.ExcludeGroups)
+        {
+            var groupFilter = BuildFilterFromGroup(group);
+            if (groupFilter != null)
+            {
+                excludeFilters.Add(groupFilter);
+                DebugLogger.Log($"[DashboardViewModel] Exclude group filter: {groupFilter.Description}");
+            }
+        }
+
+        // Process flat filters (legacy - OR within category, AND between categories)
+        var flatIncludeFilter = BuildGroupedFilters(_globalFilterState.IncludeFilters, isExclude: false);
+        if (flatIncludeFilter != null)
+        {
+            includeFilters.Add(flatIncludeFilter);
+            DebugLogger.Log($"[DashboardViewModel] Include flat filter: {flatIncludeFilter.Description}");
+        }
+
+        var flatExcludeFilter = BuildGroupedFilters(_globalFilterState.ExcludeFilters, isExclude: true);
+        if (flatExcludeFilter != null)
+        {
+            excludeFilters.Add(flatExcludeFilter);
+        }
+
+        // Combine all include filters with OR (any group can match)
+        PacketFilter? includeFilter = includeFilters.Count switch
+        {
+            0 => null,
+            1 => includeFilters[0],
+            _ => CombineFiltersWithOr(includeFilters, "Include")
+        };
+
+        // Combine all exclude filters with OR (any group to exclude)
+        PacketFilter? excludeFilter = excludeFilters.Count switch
+        {
+            0 => null,
+            1 => excludeFilters[0],
+            _ => CombineFiltersWithOr(excludeFilters, "Exclude")
+        };
 
         // Combine: INCLUDE AND NOT(EXCLUDE)
         var filters = new List<PacketFilter>();
-
         if (includeFilter != null)
         {
             filters.Add(includeFilter);
@@ -68,6 +117,162 @@ public partial class DashboardViewModel
         // Apply the filter using existing infrastructure
         ApplySmartFilter(finalFilter);
         DebugLogger.Log($"[DashboardViewModel] Global filters applied (IsEmpty={finalFilter.IsEmpty})");
+    }
+
+    /// <summary>
+    /// Builds a PacketFilter from a FilterGroup (all criteria AND'd together).
+    /// </summary>
+    private PacketFilter? BuildFilterFromGroup(Models.FilterGroup group)
+    {
+        var groupFilters = new List<PacketFilter>();
+
+        // ==================== GENERAL TAB ====================
+
+        // Source IP
+        if (!string.IsNullOrWhiteSpace(group.SourceIP))
+        {
+            var srcIp = group.SourceIP;
+            groupFilters.Add(new PacketFilter
+            {
+                CustomPredicate = p => MatchesIpOrCidr(p.SourceIP, srcIp),
+                Description = $"Src IP: {srcIp}"
+            });
+        }
+
+        // Destination IP
+        if (!string.IsNullOrWhiteSpace(group.DestinationIP))
+        {
+            var destIp = group.DestinationIP;
+            groupFilters.Add(new PacketFilter
+            {
+                CustomPredicate = p => MatchesIpOrCidr(p.DestinationIP, destIp),
+                Description = $"Dest IP: {destIp}"
+            });
+        }
+
+        // Port Range
+        if (!string.IsNullOrWhiteSpace(group.PortRange) && TryParsePortOrRange(group.PortRange, out var portPredicate))
+        {
+            groupFilters.Add(new PacketFilter
+            {
+                CustomPredicate = portPredicate,
+                Description = $"Port: {group.PortRange}"
+            });
+        }
+
+        // Protocol(s) - may be comma-separated
+        if (!string.IsNullOrWhiteSpace(group.Protocol))
+        {
+            var protocols = group.Protocol.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            var protocolFilters = protocols.Select(proto =>
+            {
+                var p = proto.Trim();
+                return new PacketFilter
+                {
+                    CustomPredicate = pkt => pkt.Protocol.ToString().Equals(p, StringComparison.OrdinalIgnoreCase) ||
+                                             (pkt.L7Protocol?.Equals(p, StringComparison.OrdinalIgnoreCase) ?? false),
+                    Description = p
+                };
+            }).ToList();
+
+            if (protocolFilters.Count == 1)
+                groupFilters.Add(protocolFilters[0]);
+            else if (protocolFilters.Count > 1)
+                groupFilters.Add(CombineFiltersWithOr(protocolFilters, "Protocol"));
+        }
+
+        // QuickFilters (Insecure, Anomalies, TCP Issues, etc.)
+        if (group.QuickFilters?.Count > 0)
+        {
+            var quickFilterPredicates = group.QuickFilters
+                .Select(qf => BuildQuickFilterPredicate(qf))
+                .Where(p => p != null)
+                .ToList();
+
+            if (quickFilterPredicates.Count > 0)
+            {
+                var quickFilters = quickFilterPredicates.Select((pred, i) => new PacketFilter
+                {
+                    CustomPredicate = pred!,
+                    Description = group.QuickFilters[i]
+                }).ToList();
+
+                groupFilters.Add(CombineFiltersWithOr(quickFilters, "QuickFilter"));
+            }
+        }
+
+        // ==================== COUNTRY TAB ====================
+
+        // Countries - Note: Country info requires GeoIP lookup per-packet.
+        // For now, country filtering is applied at the CountryTrafficViewModel level
+        // where GeoIP-enriched statistics are available.
+        // The filter chip will still display correctly.
+
+        // Directions (Inbound, Outbound, Internal)
+        if (group.Directions?.Count > 0)
+        {
+            var directions = group.Directions;
+            groupFilters.Add(new PacketFilter
+            {
+                CustomPredicate = p =>
+                {
+                    var srcPrivate = IsPrivateIP(p.SourceIP);
+                    var dstPrivate = IsPrivateIP(p.DestinationIP);
+
+                    foreach (var dir in directions)
+                    {
+                        var match = dir.ToUpperInvariant() switch
+                        {
+                            "INBOUND" => !srcPrivate && dstPrivate,
+                            "OUTBOUND" => srcPrivate && !dstPrivate,
+                            "INTERNAL" => srcPrivate && dstPrivate,
+                            _ => false
+                        };
+                        if (match) return true;
+                    }
+                    return false;
+                },
+                Description = $"Direction: {string.Join("|", directions)}"
+            });
+        }
+
+        // ==================== TAB-SPECIFIC FILTERS (NOT PACKET-LEVEL) ====================
+        //
+        // The following filter criteria CANNOT be applied at packet level because the data
+        // exists only in AnalysisResult, computed after packet parsing:
+        //
+        // - Codecs (G.729, G.711, etc.): Stored in VoiceQoSData.QoSTraffic[].QoSType
+        //   L7Protocol only contains "RTP", not the codec name
+        // - Severities (Critical, High, etc.): Stored in AnalysisResult.Threats[].Severity
+        // - ThreatCategories: Stored in AnalysisResult.Threats[].Type
+        // - QualityLevels: Computed from jitter/latency metrics in VoiceQoSData
+        // - VoipIssues: Detected by VoIP anomaly analysis
+        // - Countries/Regions: Requires GeoIP enrichment of IP addresses
+        //
+        // These filters are applied at the tab-specific level:
+        // - VoiceQoSViewModel filters its QoS connections
+        // - ThreatsViewModel filters its threat list
+        // - CountryTrafficViewModel filters its country statistics
+        //
+        // The filter chip displays correctly, but packet-level filtering is limited
+        // to General tab criteria (IP, Port, Protocol, Direction, QuickFilters).
+
+        // Use group's display label
+        if (groupFilters.Count == 0)
+            return null;
+
+        if (groupFilters.Count == 1)
+        {
+            groupFilters[0].Description = group.DisplayLabel ?? groupFilters[0].Description;
+            return groupFilters[0];
+        }
+
+        return new PacketFilter
+        {
+            CombinedFilters = groupFilters,
+            CombineMode = FilterCombineMode.And,
+            Description = group.DisplayLabel ?? string.Join(" AND ", groupFilters.Select(f => f.Description))
+        };
     }
 
     /// <summary>

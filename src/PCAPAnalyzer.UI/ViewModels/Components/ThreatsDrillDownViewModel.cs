@@ -62,7 +62,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
 
     // Internal state
     private EnhancedSecurityThreat? _currentThreat;
-    private List<PacketInfo> _allPackets = new();
+    private IReadOnlyList<PacketInfo> _allPackets = Array.Empty<PacketInfo>();
     private List<EnhancedSecurityThreat> _allThreats = new();
     private List<uint> _currentFrameNumbers = new();
 
@@ -75,7 +75,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
     /// </summary>
     public void ShowForThreat(
         EnhancedSecurityThreat threat,
-        List<PacketInfo> allPackets,
+        IReadOnlyList<PacketInfo> allPackets,
         List<EnhancedSecurityThreat> allThreats)
     {
         _currentThreat = threat;
@@ -309,7 +309,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
         TimelineSvg = GenerateMiniTimelineSvg(threatTimes, threat.Severity);
     }
 
-    private void LoadEvidencePacketsTab(EnhancedSecurityThreat threat, List<PacketInfo> allPackets)
+    private void LoadEvidencePacketsTab(EnhancedSecurityThreat threat, IReadOnlyList<PacketInfo> allPackets)
     {
         // Get packets by frame numbers if available
         List<PacketInfo> evidencePackets;

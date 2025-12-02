@@ -2,6 +2,8 @@ using System;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.Core.Services.Credentials;
+using PCAPAnalyzer.Core.Services.OsFingerprinting;
 using PCAPAnalyzer.Core.Utilities;
 
 namespace PCAPAnalyzer.TShark;
@@ -14,10 +16,13 @@ namespace PCAPAnalyzer.TShark;
 public static class TSharkParserOptimized
 {
     /// <summary>
-    /// Maximum number of fields in TShark output (frame.number through tcp.window_size)
+    /// Maximum number of fields in TShark output (frame.number through OS fingerprinting fields)
+    /// Core fields: 0-18 (frame.number through tcp.window_size)
+    /// Credential fields: 19-38 (http.authorization through pgsql.password)
+    /// OS Fingerprint fields: 39-59 (ip.ttl through http.server)
     /// If TShark output format changes, update this constant.
     /// </summary>
-    private const int MAX_TSHARK_FIELDS = 19;
+    private const int MAX_TSHARK_FIELDS = 60;
     /// <summary>
     /// Parses TShark tab-delimited output line into PacketInfo struct.
     /// Uses ReadOnlySpan&lt;char&gt; for zero-copy string slicing.
@@ -99,6 +104,20 @@ public static class TSharkParserOptimized
             ParseTcpFields(tcpFlagsSpan, tcpSeqSpan, tcpAckSpan, tcpWindowSpan,
                           out ushort tcpFlags, out uint tcpSeq, out uint tcpAck, out ushort tcpWindow);
 
+            // Check for credential data in fields 19-38
+            bool hasCredentials = HasCredentialData(line, tabIndices, tabCount);
+
+            // Extract OS fingerprint data if present (fields 39-59)
+            OsFingerprintRawFields? osFingerprintData = null;
+            if (tabCount >= 40)
+            {
+                var osFields = ExtractOsFingerprintFields(line);
+                if (osFields.HasValue && osFields.Value.HasAnyFingerprintData)
+                {
+                    osFingerprintData = osFields;
+                }
+            }
+
             // ✅ DEFENSIVE: Validate frame number before creating packet
             if (frameNumber == 0)
             {
@@ -121,7 +140,9 @@ public static class TSharkParserOptimized
                 TcpFlags = tcpFlags,
                 SeqNum = tcpSeq,
                 AckNum = tcpAck,
-                WindowSize = tcpWindow
+                WindowSize = tcpWindow,
+                HasCredentials = hasCredentials,
+                OsFingerprintData = osFingerprintData
             };
 
             // ✅ DEFENSIVE: Verify frame number was correctly assigned
@@ -310,4 +331,141 @@ public static class TSharkParserOptimized
         int lastColon = protocolStack.LastIndexOf(':');
         return lastColon >= 0 ? protocolStack.Slice(lastColon + 1) : protocolStack;
     }
+
+    #region Credential Detection
+
+    /// <summary>
+    /// Checks if any credential-related fields (19-38) contain data.
+    /// Fast path: checks if any field in the credential range is non-empty.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool HasCredentialData(ReadOnlySpan<char> line, Span<int> tabIndices, int tabCount)
+    {
+        // Credential fields start at index 19
+        // We need at least 20 tabs (fields 0-19) to have the first credential field
+        if (tabCount < 20)
+            return false;
+
+        // Check each credential field (19-38) for non-empty data
+        // Fields: 19-20 HTTP, 21-22 FTP, 23-24 SMTP, 25 IMAP, 26-27 POP3,
+        //         28-29 LDAP, 30 SNMP, 31-32 Kerberos, 33-34 NTLM, 35-36 MySQL, 37-38 PostgreSQL
+        for (int fieldIndex = 19; fieldIndex < Math.Min(39, tabCount); fieldIndex++)
+        {
+            var field = GetField(line, tabIndices, fieldIndex);
+            if (!field.IsEmpty)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Extracts credential fields as strings for further processing.
+    /// Only call this when HasCredentialData returns true to avoid unnecessary allocations.
+    /// </summary>
+    public static CredentialRawFields? ExtractCredentialFields(ReadOnlySpan<char> line)
+    {
+        // Allocate tab index array on stack
+        Span<int> tabIndices = stackalloc int[MAX_TSHARK_FIELDS];
+        int tabCount = FindTabIndices(line, tabIndices);
+
+        if (tabCount < 20)
+            return null;
+
+        // Check if any credential data exists first
+        if (!HasCredentialData(line, tabIndices, tabCount))
+            return null;
+
+        // Extract credential fields as strings
+        return new CredentialRawFields
+        {
+            HttpAuthorization = GetFieldString(line, tabIndices, tabCount, 19),
+            HttpAuthBasic = GetFieldString(line, tabIndices, tabCount, 20),
+            FtpCommand = GetFieldString(line, tabIndices, tabCount, 21),
+            FtpArg = GetFieldString(line, tabIndices, tabCount, 22),
+            SmtpCommand = GetFieldString(line, tabIndices, tabCount, 23),
+            SmtpParameter = GetFieldString(line, tabIndices, tabCount, 24),
+            ImapRequest = GetFieldString(line, tabIndices, tabCount, 25),
+            Pop3Command = GetFieldString(line, tabIndices, tabCount, 26),
+            Pop3Parameter = GetFieldString(line, tabIndices, tabCount, 27),
+            LdapSimple = GetFieldString(line, tabIndices, tabCount, 28),
+            LdapBindName = GetFieldString(line, tabIndices, tabCount, 29),
+            SnmpCommunity = GetFieldString(line, tabIndices, tabCount, 30),
+            KerberosCName = GetFieldString(line, tabIndices, tabCount, 31),
+            KerberosRealm = GetFieldString(line, tabIndices, tabCount, 32),
+            NtlmUsername = GetFieldString(line, tabIndices, tabCount, 33),
+            NtlmDomain = GetFieldString(line, tabIndices, tabCount, 34),
+            MySqlUser = GetFieldString(line, tabIndices, tabCount, 35),
+            MySqlPassword = GetFieldString(line, tabIndices, tabCount, 36),
+            PgSqlUser = GetFieldString(line, tabIndices, tabCount, 37),
+            PgSqlPassword = GetFieldString(line, tabIndices, tabCount, 38)
+        };
+    }
+
+    /// <summary>
+    /// Gets a field as string, returning null if empty or out of bounds.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string? GetFieldString(ReadOnlySpan<char> line, Span<int> tabIndices, int tabCount, int fieldIndex)
+    {
+        if (fieldIndex >= tabCount)
+            return null;
+
+        var span = GetField(line, tabIndices, fieldIndex);
+        return span.IsEmpty ? null : span.ToString();
+    }
+
+    #endregion
+
+    #region OS Fingerprinting Detection
+
+    /// <summary>
+    /// Extracts OS fingerprinting fields as strings for further processing.
+    /// Fields 39-59 in the TShark output.
+    /// </summary>
+    public static OsFingerprintRawFields? ExtractOsFingerprintFields(ReadOnlySpan<char> line)
+    {
+        // Allocate tab index array on stack
+        Span<int> tabIndices = stackalloc int[MAX_TSHARK_FIELDS];
+        int tabCount = FindTabIndices(line, tabIndices);
+
+        // Need at least 40 tabs for first OS fingerprint field (ip.ttl at index 39)
+        if (tabCount < 40)
+            return null;
+
+        // Extract OS fingerprint fields as strings
+        // Fields 39-59: ip.ttl, ip.flags.df, eth.src, tcp.options, tcp.options.mss_val,
+        //               tcp.options.wscale, tcp.options.sack_perm, tcp.options.timestamp.tsval,
+        //               tcp.window_size_value, tls.handshake.type, tls.handshake.version,
+        //               tls.handshake.ciphersuite, tls.handshake.extension.type,
+        //               tls.handshake.extensions_elliptic_curves, tls.handshake.extensions_ec_point_formats,
+        //               dhcp.option.dhcp, dhcp.option.request_list, dhcp.option.vendor_class_id,
+        //               dhcp.option.hostname, ssh.protocol, http.server
+        return new OsFingerprintRawFields
+        {
+            IpTtl = GetFieldString(line, tabIndices, tabCount, 39),
+            IpDfFlag = GetFieldString(line, tabIndices, tabCount, 40),
+            EthSrc = GetFieldString(line, tabIndices, tabCount, 41),
+            TcpOptions = GetFieldString(line, tabIndices, tabCount, 42),
+            TcpMss = GetFieldString(line, tabIndices, tabCount, 43),
+            TcpWindowScale = GetFieldString(line, tabIndices, tabCount, 44),
+            TcpSackPerm = GetFieldString(line, tabIndices, tabCount, 45),
+            TcpTimestamp = GetFieldString(line, tabIndices, tabCount, 46),
+            TcpWindowSize = GetFieldString(line, tabIndices, tabCount, 47),
+            TlsHandshakeType = GetFieldString(line, tabIndices, tabCount, 48),
+            TlsVersion = GetFieldString(line, tabIndices, tabCount, 49),
+            TlsCipherSuites = GetFieldString(line, tabIndices, tabCount, 50),
+            TlsExtensions = GetFieldString(line, tabIndices, tabCount, 51),
+            TlsEllipticCurves = GetFieldString(line, tabIndices, tabCount, 52),
+            TlsEcPointFormats = GetFieldString(line, tabIndices, tabCount, 53),
+            DhcpMessageType = GetFieldString(line, tabIndices, tabCount, 54),
+            DhcpOption55 = GetFieldString(line, tabIndices, tabCount, 55),
+            DhcpVendorClassId = GetFieldString(line, tabIndices, tabCount, 56),
+            DhcpHostname = GetFieldString(line, tabIndices, tabCount, 57),
+            SshProtocol = GetFieldString(line, tabIndices, tabCount, 58),
+            HttpServer = GetFieldString(line, tabIndices, tabCount, 59)
+        };
+    }
+
+    #endregion
 }

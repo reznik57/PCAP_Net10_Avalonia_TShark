@@ -512,18 +512,22 @@ namespace PCAPAnalyzer.UI.ViewModels
                     }
                 };
 
-                // Update Y-axis based on display mode with appropriate color coding
+                // LINEAR scale - show actual packet/byte rates without logarithmic transformation
                 PortActivityYAxes = new Axis[]
                 {
                     new Axis
                     {
-                        Name = ShowPortActivityAsThroughput ? "Throughput/Second" : "Packets/Second",
-                        Labeler = value => ShowPortActivityAsThroughput
-                            ? FormatBytesPerSecond((long)value)
-                            : $"{value:F0} pkt/s",
+                        Name = ShowPortActivityAsThroughput ? "Throughput/s" : "Packets/s",
+                        Labeler = value => {
+                            if (value <= 0) return "0";
+                            if (ShowPortActivityAsThroughput)
+                                return FormatBytesPerSecond((long)value);
+                            return value >= 1000000 ? $"{value/1000000:F0}M" :
+                                   value >= 1000 ? $"{value/1000:F0}K" : $"{value:F0}";
+                        },
                         TextSize = 10,
-                        MinLimit = 0,  // Start at 0 baseline
-                        NamePaint = new SolidColorPaint(SKColor.Parse(ShowPortActivityAsThroughput ? "#10B981" : "#3B82F6")),  // Green for throughput, Blue for packets
+                        MinLimit = 0,
+                        NamePaint = new SolidColorPaint(SKColor.Parse(ShowPortActivityAsThroughput ? "#10B981" : "#3B82F6")),
                         LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
                         SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#21262D"))
                     }
@@ -545,6 +549,14 @@ namespace PCAPAnalyzer.UI.ViewModels
                         .OrderByDescending(p => ShowPortActivityAsThroughput ? p.ByteCount : p.PacketCount)
                         .Take(displayCount)
                         .ToList();
+
+                    // DIAGNOSTIC: Log which ports are being displayed
+                    DebugLogger.Log($"[DashboardViewModel] UpdatePortActivityTimeline - Top {displayCount} ports:");
+                    for (int i = 0; i < topPorts.Count; i++)
+                    {
+                        var port = topPorts[i];
+                        DebugLogger.Log($"  [{i}] Port {port.Port}: {port.PacketCount:N0} packets, {port.ByteCount:N0} bytes");
+                    }
 
                     var colors = new[] { "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
                                         "#06B6D4", "#EC4899", "#F97316", "#84CC16", "#6366F1" };
@@ -575,10 +587,11 @@ namespace PCAPAnalyzer.UI.ViewModels
                                 try
                                 {
                                     var time = new DateTime((long)coordinate.Coordinate.SecondaryValue);
-                                    var value = coordinate.Coordinate.PrimaryValue;
+                                    // Use raw value directly (no logarithmic conversion)
+                                    var actualValue = coordinate.Coordinate.PrimaryValue;
                                     var formattedValue = ShowPortActivityAsThroughput
-                                        ? FormatBytesPerSecond((long)value)
-                                        : $"{value:F0} pkt/s";
+                                        ? FormatBytesPerSecond((long)actualValue)
+                                        : $"{actualValue:F0} pkt/s";
                                     return $"Port {port.Port} ({GetServiceName(port.Port)})\n" +
                                            $"Time: {time:HH:mm:ss}\n" +
                                            $"Rate: {formattedValue}";
@@ -625,6 +638,12 @@ namespace PCAPAnalyzer.UI.ViewModels
             var captureEnd = _currentStatistics?.LastPacketTime ?? DateTime.UtcNow;
             var captureRange = (captureEnd - captureStart).TotalSeconds;
 
+            // DIAGNOSTIC: Log data generation parameters
+            var dataType = showThroughput ? "bytes" : "packets";
+            var dataValue = showThroughput ? port.ByteCount : port.PacketCount;
+            var baseRate = dataValue / 600.0;
+            DebugLogger.Log($"  [GeneratePortActivityData] Port {port.Port} (index {index}): {dataType}={dataValue:N0}, baseRate={baseRate:F2}");
+
             // Use actual capture time as base, with 60 data points across the capture duration
             var baseTime = captureStart;
             var intervalSeconds = Math.Max(1, captureRange / 60); // At least 1 second per point
@@ -636,25 +655,32 @@ namespace PCAPAnalyzer.UI.ViewModels
                 if (showThroughput)
                 {
                     // Simulate varying throughput rates
-                    var baseRate = (port.ByteCount / 600.0); // Average bytes per second
 #pragma warning disable CA5394 // Do not use insecure randomness - Used only for UI chart variation visualization, not security
                     var variation = Random.Shared.NextDouble() * 0.5 + 0.75; // 75% to 125% variation
 #pragma warning restore CA5394
                     var bytesPerSecond = baseRate * variation * (1 + index * 0.1); // Slight offset per port
+                    // Use RAW values (no logarithmic transformation)
                     points.Add(new ObservablePoint(time.Ticks, Math.Max(0, bytesPerSecond)));
                 }
                 else
                 {
                     // Simulate varying packet rates
-                    var baseRate = (port.PacketCount / 600.0); // Average rate
 #pragma warning disable CA5394 // Do not use insecure randomness - Used only for UI chart variation visualization, not security
                     var variation = Random.Shared.NextDouble() * 0.5 + 0.75; // 75% to 125% variation
 #pragma warning restore CA5394
                     var packetsPerSecond = baseRate * variation * (1 + index * 0.1); // Slight offset per port
+                    // Use RAW values (no logarithmic transformation)
                     points.Add(new ObservablePoint(time.Ticks, Math.Max(0, packetsPerSecond)));
                 }
             }
-            
+
+            // DIAGNOSTIC: Log sample values (first 3 points)
+            if (points.Count > 0)
+            {
+                var sampleValues = string.Join(", ", points.Take(3).Select(p => $"{p.Y:F2}"));
+                DebugLogger.Log($"  [GeneratePortActivityData] Port {port.Port}: Sample values: {sampleValues}");
+            }
+
             return points.ToArray();
         }
         

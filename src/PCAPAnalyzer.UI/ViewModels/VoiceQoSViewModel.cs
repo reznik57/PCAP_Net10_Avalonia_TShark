@@ -31,10 +31,11 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
     private readonly ITabFilterService? _filterService;
     private readonly PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService? _cacheService;
     private readonly FilterCopyService? _filterCopyService;
+    private readonly GlobalFilterState? _globalFilterState;
     private readonly object _collectionLock = new(); // Thread-safety lock
     private readonly DebouncedAction _filterDebouncer; // Debouncer for IP filter TextBoxes
     private bool _disposed; // Track disposal state
-    private List<PacketInfo> _allPackets = new();
+    private IReadOnlyList<PacketInfo> _allPackets = Array.Empty<PacketInfo>(); // Reference to cache (NOT a copy)
     private string? _currentFilePath;
 
     // Storage for unfiltered collections (for local QoS/DSCP filtering)
@@ -360,6 +361,7 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
         _filterService = new TabFilterService("Voice/QoS", new FilterServiceCore());
         _cacheService = App.Services?.GetService<PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService>();
         _filterCopyService = App.Services?.GetService<FilterCopyService>();
+        _globalFilterState = App.Services?.GetService<GlobalFilterState>();
 
         // Initialize AnalysisViewModel with cache service
         _analysisViewModel = new VoiceQoSAnalysisViewModel(_cacheService);
@@ -374,6 +376,12 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
         if (_filterService != null)
         {
             _filterService.FilterChanged += OnFilterServiceChanged;
+        }
+
+        // Subscribe to GlobalFilterState changes for tab-specific filtering (codec, quality, issues)
+        if (_globalFilterState != null)
+        {
+            _globalFilterState.OnFilterChanged += OnGlobalFilterChanged;
         }
 
         // Subscribe to CommonFilters property changes and forward to existing SourceIP/DestIP filters
@@ -482,6 +490,22 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
     }
 
     /// <summary>
+    /// Handles GlobalFilterState changes - re-applies tab-specific filters to VoiceQoS data.
+    /// </summary>
+    private void OnGlobalFilterChanged()
+    {
+        // Re-apply filters when global filter state changes (e.g., codec/quality from UnifiedFilterPanel)
+        if (_allQoSTraffic.Count > 0 || _allLatencyConnections.Count > 0 || _allJitterConnections.Count > 0)
+        {
+            Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ApplyLocalFilters();
+                DebugLogger.Log($"[VoiceQoSViewModel] VoiceQoS data updated after global filter change");
+            });
+        }
+    }
+
+    /// <summary>
     /// Analyzes packets for QoS, latency, and jitter metrics
     /// </summary>
     /// <summary>
@@ -538,10 +562,10 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
         {
             DebugLogger.Log($"[VoiceQoSViewModel] SetFromCache - QoS: {analysisResult.QoSTraffic.Count}, Latency: {analysisResult.HighLatencyConnections.Count}, Jitter: {analysisResult.HighJitterConnections.Count}");
 
-            // Store packets
+            // Store reference to packets (no copy)
             lock (_collectionLock)
             {
-                _allPackets = packets.ToList();
+                _allPackets = packets;
             }
 
             // Convert Core models to UI models
@@ -642,17 +666,16 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
             StatusMessage = "Analyzing Voice/QoS traffic...";
         });
 
-        // Store local copy for filtering (thread-safe)
-        var packetList = packets as List<PacketInfo> ?? packets.ToList();
+        // Store reference to packets (no copy, thread-safe)
         lock (_collectionLock)
         {
-            _allPackets = packetList;
+            _allPackets = packets;
         }
 
         // Apply filter if active
         var workingSet = _filterService?.IsFilterActive == true
-            ? _filterService.GetFilteredPackets(packetList).ToList()
-            : packetList;
+            ? _filterService.GetFilteredPackets(packets).ToList()
+            : packets.ToList();
 
         // Delegate to AnalysisViewModel - OnAnalysisCompleted handles UI updates
         await AnalysisViewModel.AnalyzePacketsAsync(
@@ -854,6 +877,10 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
             var filteredLatency = ApplyLatencyJitterFilters(latencySnapshot);
             var filteredJitter = ApplyLatencyJitterFilters(jitterSnapshot);
 
+            // Apply GlobalFilterState quality/threshold filters to latency and jitter
+            filteredLatency = ApplyGlobalLatencyFilters(filteredLatency);
+            filteredJitter = ApplyGlobalJitterFilters(filteredJitter);
+
             // PAGINATION: Sort and apply pagination to filtered results
             var sortedQoS = filteredQoS.OrderByDescending(q => q.PacketCount).ToList();
             var sortedLatency = filteredLatency.OrderByDescending(l => l.AverageLatency).ToList();
@@ -930,7 +957,7 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
     }
 
     /// <summary>
-    /// Apply QoS-specific filters (QoS Type, DSCP Marking, IP filters)
+    /// Apply QoS-specific filters (QoS Type, DSCP Marking, IP filters, GlobalFilterState codecs)
     /// </summary>
     private IEnumerable<QoSTrafficItem> ApplyQoSFilters(List<QoSTrafficItem> items)
     {
@@ -951,7 +978,133 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
         // IP filters
         filtered = ApplyIPFilters(filtered, q => q.SourceIP, q => q.DestinationIP);
 
+        // GlobalFilterState codec/quality filters (from UnifiedFilterPanel)
+        filtered = ApplyGlobalFilterStateCriteria(filtered);
+
         return filtered;
+    }
+
+    /// <summary>
+    /// Applies VoiceQoS-specific criteria from GlobalFilterState (codec, DSCP, quality filters from UnifiedFilterPanel).
+    /// Supports common VoIP codecs: G.711, G.729, G.722, Opus, RTP, SIP, RTCP, H.323, MGCP, SCCP
+    /// Supports DSCP classes: EF (voice), AF41-43 (video), CS3/CS5 (signaling)
+    /// </summary>
+    private IEnumerable<QoSTrafficItem> ApplyGlobalFilterStateCriteria(IEnumerable<QoSTrafficItem> items)
+    {
+        if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+            return items;
+
+        var result = items;
+
+        // Use helper to collect all criteria
+        var (includeCodecs, _, excludeCodecs, _) =
+            GlobalFilterStateHelper.CollectVoiceQoSCriteria(_globalFilterState);
+
+        // Apply include codec/protocol filter - match against QoSType, Protocol, or DSCP marking
+        if (includeCodecs.Count > 0)
+        {
+            result = result.Where(q => MatchesCodecOrDscp(q, includeCodecs));
+        }
+
+        // Apply exclude codec/protocol filter
+        if (excludeCodecs.Count > 0)
+        {
+            result = result.Where(q => !MatchesCodecOrDscp(q, excludeCodecs));
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Checks if a QoSTrafficItem matches any of the specified codecs/protocols/DSCP classes.
+    /// </summary>
+    private static bool MatchesCodecOrDscp(QoSTrafficItem q, HashSet<string> codecs)
+    {
+        // Match against QoSType (e.g., "Voice", "Video", "RTP")
+        if (codecs.Any(c => q.QoSType?.Contains(c, StringComparison.OrdinalIgnoreCase) ?? false))
+            return true;
+
+        // Match against Protocol (e.g., "RTP", "SIP", "RTCP")
+        if (codecs.Any(c => q.Protocol?.Contains(c, StringComparison.OrdinalIgnoreCase) ?? false))
+            return true;
+
+        // Match against DSCP marking (e.g., "EF", "AF41", "CS5")
+        if (codecs.Any(c => q.DscpMarking?.Equals(c, StringComparison.OrdinalIgnoreCase) ?? false))
+            return true;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Applies GlobalFilterState quality and threshold criteria to latency connections.
+    /// </summary>
+    private IEnumerable<LatencyConnectionItem> ApplyGlobalLatencyFilters(IEnumerable<LatencyConnectionItem> items)
+    {
+        if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+            return items;
+
+        var result = items;
+
+        // Use helper to collect quality level filters
+        var (_, includeQualities, _, excludeQualities) =
+            GlobalFilterStateHelper.CollectVoiceQoSCriteria(_globalFilterState);
+
+        // Apply include quality filter
+        if (includeQualities.Count > 0)
+        {
+            result = result.Where(l => includeQualities.Contains(l.LatencySeverity));
+        }
+
+        // Apply exclude quality filter
+        if (excludeQualities.Count > 0)
+        {
+            result = result.Where(l => !excludeQualities.Contains(l.LatencySeverity));
+        }
+
+        // Apply latency threshold filter (show only connections above threshold)
+        if (!string.IsNullOrEmpty(_globalFilterState.IncludeFilters.LatencyThreshold) &&
+            double.TryParse(_globalFilterState.IncludeFilters.LatencyThreshold, out var latencyThreshold))
+        {
+            result = result.Where(l => l.AverageLatency >= latencyThreshold);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Applies GlobalFilterState quality and threshold criteria to jitter connections.
+    /// </summary>
+    private IEnumerable<JitterConnectionItem> ApplyGlobalJitterFilters(IEnumerable<JitterConnectionItem> items)
+    {
+        if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+            return items;
+
+        var result = items;
+
+        // Use helper to collect quality level filters
+        var (_, includeQualities, _, excludeQualities) =
+            GlobalFilterStateHelper.CollectVoiceQoSCriteria(_globalFilterState);
+
+        // Apply include quality filter
+        if (includeQualities.Count > 0)
+        {
+            result = result.Where(j => includeQualities.Contains(j.JitterSeverity));
+        }
+
+        // Apply exclude quality filter
+        if (excludeQualities.Count > 0)
+        {
+            result = result.Where(j => !excludeQualities.Contains(j.JitterSeverity));
+        }
+
+        // Apply jitter threshold filter (show only connections above threshold)
+        if (!string.IsNullOrEmpty(_globalFilterState.IncludeFilters.JitterThreshold) &&
+            double.TryParse(_globalFilterState.IncludeFilters.JitterThreshold, out var jitterThreshold))
+        {
+            result = result.Where(j => j.AverageJitter >= jitterThreshold);
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -1099,6 +1252,12 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
     {
         if (_disposed) return;
         _disposed = true;
+
+        // Unsubscribe from GlobalFilterState to prevent memory leaks
+        if (_globalFilterState != null)
+        {
+            _globalFilterState.OnFilterChanged -= OnGlobalFilterChanged;
+        }
 
         // Unsubscribe from filter service events
         if (_filterService != null)

@@ -1,79 +1,48 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using PCAPAnalyzer.UI.Models;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
 public partial class GeneralFilterTabViewModel : ObservableObject
 {
-    private readonly GlobalFilterState _filterState;
+    // NOTE: IP/Port inputs moved to UnifiedFilterPanelViewModel (shared across all tabs)
 
-    [ObservableProperty] private string _sourceIPInput = "";
-    [ObservableProperty] private string _destinationIPInput = "";
-    [ObservableProperty] private string _portRangeInput = "";
-
-    // Observable chip collections with state tracking
     public ObservableCollection<FilterChipViewModel> ProtocolChips { get; } = new();
     public ObservableCollection<FilterChipViewModel> SecurityChips { get; } = new();
 
-    public GeneralFilterTabViewModel(GlobalFilterState filterState)
+    public GeneralFilterTabViewModel()
     {
-        _filterState = filterState;
         InitializeChips();
     }
 
     private void InitializeChips()
     {
-        // Protocol chips
         var protocols = new[] { "TCP", "UDP", "ICMP", "DNS", "HTTP", "HTTPS", "TLS", "SSH", "FTP", "SMTP" };
         foreach (var p in protocols)
-            ProtocolChips.Add(new FilterChipViewModel(p, _filterState, FilterCategory.Protocol));
+            ProtocolChips.Add(new FilterChipViewModel(p));
 
-        // Security/Quick filter chips
         var security = new[] { "Insecure", "Anomalies", "Suspicious", "TCP Issues" };
         foreach (var s in security)
-            SecurityChips.Add(new FilterChipViewModel(s, _filterState, FilterCategory.QuickFilter));
+            SecurityChips.Add(new FilterChipViewModel(s));
     }
 
-    [RelayCommand]
-    private void AddSourceIP()
+    public void SetMode(FilterChipMode mode)
     {
-        if (string.IsNullOrWhiteSpace(SourceIPInput)) return;
-
-        if (_filterState.CurrentMode == FilterMode.Include)
-            _filterState.AddIncludeIP(SourceIPInput.Trim());
-        else
-            _filterState.AddExcludeIP(SourceIPInput.Trim());
-
-        SourceIPInput = "";
+        foreach (var chip in ProtocolChips) chip.SetMode(mode);
+        foreach (var chip in SecurityChips) chip.SetMode(mode);
     }
 
-    [RelayCommand]
-    private void AddDestinationIP()
+    public (List<string> Protocols, List<string> QuickFilters) GetPendingFilters()
     {
-        if (string.IsNullOrWhiteSpace(DestinationIPInput)) return;
-
-        if (_filterState.CurrentMode == FilterMode.Include)
-            _filterState.AddIncludeIP(DestinationIPInput.Trim());
-        else
-            _filterState.AddExcludeIP(DestinationIPInput.Trim());
-
-        DestinationIPInput = "";
+        return (
+            ProtocolChips.Where(c => c.IsSelected).Select(c => c.Name).ToList(),
+            SecurityChips.Where(c => c.IsSelected).Select(c => c.Name).ToList()
+        );
     }
 
-    [RelayCommand]
-    private void AddPort()
+    public void Reset()
     {
-        if (string.IsNullOrWhiteSpace(PortRangeInput)) return;
-
-        if (_filterState.CurrentMode == FilterMode.Include)
-            _filterState.AddIncludePort(PortRangeInput.Trim());
-        else
-            _filterState.AddExcludePort(PortRangeInput.Trim());
-
-        PortRangeInput = "";
+        foreach (var chip in ProtocolChips) chip.Reset();
+        foreach (var chip in SecurityChips) chip.Reset();
     }
 }
-
-public enum ChipState { Inactive, Included, Excluded }

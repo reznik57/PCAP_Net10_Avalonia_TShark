@@ -345,30 +345,36 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         try
         {
             var globalFilterState = App.Services?.GetService<Models.GlobalFilterState>();
+            var anomalyFrameIndexService = App.Services?.GetService<IAnomalyFrameIndexService>();
             DashboardViewModel = new DashboardViewModel(
                 _statisticsService,
                 _anomalyService,
-                _dashboardFilterService,
+                filterService: _dashboardFilterService,
+                dashboardFilterService: null,
                 csvExportService: null,
                 fileDialogService: null,
                 filterBuilder: null,
                 filterPresetService: null,
                 globalFilterState: globalFilterState,
+                anomalyFrameIndexService: anomalyFrameIndexService,
                 navigateToTab: HandleDashboardNavigation);
         }
         catch (Exception ex)
         {
             DebugLogger.Critical($"[ERROR] Failed to initialize DashboardViewModel: {ex.Message}");
             var globalFilterState = App.Services?.GetService<Models.GlobalFilterState>();
+            var anomalyFrameIndexService = App.Services?.GetService<IAnomalyFrameIndexService>();
             DashboardViewModel = new DashboardViewModel(
                 _statisticsService,
                 _anomalyService,
-                _dashboardFilterService,
+                filterService: _dashboardFilterService,
+                dashboardFilterService: null,
                 csvExportService: null,
                 fileDialogService: null,
                 filterBuilder: null,
                 filterPresetService: null,
                 globalFilterState: globalFilterState,
+                anomalyFrameIndexService: anomalyFrameIndexService,
                 navigateToTab: HandleDashboardNavigation);
         }
         DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [INIT] DashboardViewModel created");
@@ -1288,7 +1294,20 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             {
                 if (DashboardViewModel == null)
                 {
-                    DashboardViewModel = new DashboardViewModel(_statisticsService, _anomalyService, _dashboardFilterService);
+                    var globalFilterState = App.Services?.GetService<Models.GlobalFilterState>();
+                    var anomalyFrameIndexService = App.Services?.GetService<IAnomalyFrameIndexService>();
+                    DashboardViewModel = new DashboardViewModel(
+                        _statisticsService,
+                        _anomalyService,
+                        filterService: _dashboardFilterService,
+                        dashboardFilterService: null,
+                        csvExportService: null,
+                        fileDialogService: null,
+                        filterBuilder: null,
+                        filterPresetService: null,
+                        globalFilterState: globalFilterState,
+                        anomalyFrameIndexService: anomalyFrameIndexService,
+                        navigateToTab: HandleDashboardNavigation);
                 }
 
                 await DashboardViewModel.UpdateStatistics(statistics, allPackets);

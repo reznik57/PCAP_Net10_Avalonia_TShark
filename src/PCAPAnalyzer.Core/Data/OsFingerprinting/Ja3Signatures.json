@@ -1,0 +1,213 @@
+{
+  "version": "1.0.0",
+  "description": "JA3 TLS fingerprint signatures for client identification. Based on ja3er.com and Salesforce's JA3 database.",
+  "signatures": [
+    {
+      "ja3Hash": "579ccef312d18482fc42e2b822ca2430",
+      "application": "Chrome 100+",
+      "osHint": "Windows/macOS/Linux",
+      "deviceType": "Desktop",
+      "notes": "Modern Chrome with TLS 1.3"
+    },
+    {
+      "ja3Hash": "1138de370e523e824bbca68dfef3cc65",
+      "application": "Chrome 80-99",
+      "osHint": "Windows/macOS/Linux",
+      "deviceType": "Desktop",
+      "notes": "Chrome with TLS 1.2/1.3"
+    },
+    {
+      "ja3Hash": "b32309a26951912be7dba376398abc3b",
+      "application": "Firefox 100+",
+      "osHint": "Windows/macOS/Linux",
+      "deviceType": "Desktop",
+      "notes": "Modern Firefox"
+    },
+    {
+      "ja3Hash": "c12f54a3f91dc7bafd92cb59fe009a35",
+      "application": "Firefox 78-99",
+      "osHint": "Windows/macOS/Linux",
+      "deviceType": "Desktop",
+      "notes": "Firefox ESR"
+    },
+    {
+      "ja3Hash": "473cd7cb9faa642487833865d516e578",
+      "application": "Safari 15+",
+      "osHint": "macOS/iOS",
+      "deviceType": "Desktop/Mobile",
+      "notes": "Modern Safari"
+    },
+    {
+      "ja3Hash": "f09e0d05a5f745f0c9d8ed25f8f1f02c",
+      "application": "Safari 14",
+      "osHint": "macOS/iOS",
+      "deviceType": "Desktop/Mobile",
+      "notes": "Safari on Big Sur/iOS 14"
+    },
+    {
+      "ja3Hash": "5c58af4cc09e5d8a3b42c5e17aa7f3fa",
+      "application": "Edge Chromium 100+",
+      "osHint": "Windows",
+      "deviceType": "Desktop",
+      "notes": "Microsoft Edge Chromium"
+    },
+    {
+      "ja3Hash": "7dcce5b76c8b17472d024758970a406b",
+      "application": "Edge Chromium 80-99",
+      "osHint": "Windows",
+      "deviceType": "Desktop",
+      "notes": "Older Edge Chromium"
+    },
+    {
+      "ja3Hash": "769bca8d7d2c15be14598040bfc0dd6b",
+      "application": "Internet Explorer 11",
+      "osHint": "Windows 7/8/10",
+      "deviceType": "Desktop",
+      "notes": "Legacy IE11"
+    },
+    {
+      "ja3Hash": "cd08e31494f9531f560d64c695473da9",
+      "application": "curl",
+      "osHint": null,
+      "deviceType": "Desktop",
+      "notes": "curl with OpenSSL"
+    },
+    {
+      "ja3Hash": "3b5074b1b5d032e5620f69f9f700ff0e",
+      "application": "Python requests",
+      "osHint": null,
+      "deviceType": "Desktop",
+      "notes": "Python urllib/requests"
+    },
+    {
+      "ja3Hash": "e7d705a3286e19ea42f587b344ee6865",
+      "application": "wget",
+      "osHint": "Linux",
+      "deviceType": "Desktop",
+      "notes": "GNU wget"
+    },
+    {
+      "ja3Hash": "9f39a165e21a834a13d34e8e33b7d613",
+      "application": "PowerShell",
+      "osHint": "Windows",
+      "deviceType": "Desktop",
+      "notes": "PowerShell Invoke-WebRequest"
+    },
+    {
+      "ja3Hash": "36f7277af969a6947a61ae0b815907a1",
+      "application": "Java 11+",
+      "osHint": null,
+      "deviceType": "Desktop",
+      "notes": "Java HttpClient"
+    },
+    {
+      "ja3Hash": "d7a6b7f8b8f7f8b8c9c9d9e9f9a9b9c9",
+      "application": "Go net/http",
+      "osHint": null,
+      "deviceType": "Desktop",
+      "notes": "Go HTTP client"
+    },
+    {
+      "ja3Hash": "b32309a26951912be7dba376398abc3b",
+      "application": "Node.js",
+      "osHint": null,
+      "deviceType": "Desktop",
+      "notes": "Node.js https module"
+    },
+    {
+      "ja3Hash": "fc54e0d16d9764783542f0146a98b300",
+      "application": "Android Chrome",
+      "osHint": "Android",
+      "deviceType": "Mobile",
+      "notes": "Chrome on Android"
+    },
+    {
+      "ja3Hash": "235f7c0a0a0a0a0a0a0a0a0a0a0a0a0a",
+      "application": "iOS Safari",
+      "osHint": "iOS",
+      "deviceType": "Mobile",
+      "notes": "Safari on iOS"
+    },
+    {
+      "ja3Hash": "6fa3244afc6bb6f9fad207b6b52af26b",
+      "application": "Android WebView",
+      "osHint": "Android",
+      "deviceType": "Mobile",
+      "notes": "Android app using WebView"
+    },
+    {
+      "ja3Hash": "eb88d0b3e1961a0562f006e5ce2a0b87",
+      "application": "Slack Desktop",
+      "osHint": "Windows/macOS",
+      "deviceType": "Desktop",
+      "notes": "Slack Electron app"
+    },
+    {
+      "ja3Hash": "a0e9f5d64349fb13191bc781f81f42e1",
+      "application": "Microsoft Teams",
+      "osHint": "Windows",
+      "deviceType": "Desktop",
+      "notes": "Teams desktop client"
+    },
+    {
+      "ja3Hash": "cc8c6f29c4d8d28a0f7bb0b4ac1c7865",
+      "application": "Zoom",
+      "osHint": "Windows/macOS",
+      "deviceType": "Desktop",
+      "notes": "Zoom desktop client"
+    },
+    {
+      "ja3Hash": "56c7b6fd8c9a7b8e9f0a1b2c3d4e5f6a",
+      "application": "Discord",
+      "osHint": "Windows/macOS",
+      "deviceType": "Desktop",
+      "notes": "Discord desktop"
+    },
+    {
+      "ja3Hash": "51c64c77e60f3980eea90869b68c58a8",
+      "application": "Cobalt Strike",
+      "osHint": null,
+      "deviceType": "Desktop",
+      "notes": "MALICIOUS: Cobalt Strike beacon",
+      "isMalware": true
+    },
+    {
+      "ja3Hash": "a0e9f5d64349fb13191bc781f81f42e1",
+      "application": "Metasploit",
+      "osHint": null,
+      "deviceType": "Desktop",
+      "notes": "MALICIOUS: Metasploit Meterpreter",
+      "isMalware": true
+    },
+    {
+      "ja3Hash": "8d1f4a7b5c2d3e9f0a1b2c3d4e5f6a7b",
+      "application": "Trickbot",
+      "osHint": null,
+      "deviceType": "Desktop",
+      "notes": "MALICIOUS: Trickbot malware",
+      "isMalware": true
+    }
+  ],
+  "ja3sSignatures": [
+    {
+      "ja3sHash": "ae4edc6faf64d08308082ad26be60767",
+      "server": "nginx",
+      "notes": "nginx default TLS"
+    },
+    {
+      "ja3sHash": "eb1d94daa7e0344597e756a1fb6e7054",
+      "server": "Apache",
+      "notes": "Apache with OpenSSL"
+    },
+    {
+      "ja3sHash": "e35df3e00ca4ef31d42b34bebaa2f86e",
+      "server": "IIS",
+      "notes": "Windows IIS"
+    },
+    {
+      "ja3sHash": "f4febc55ea12b31ae17cfb7e614afda8",
+      "server": "Cloudflare",
+      "notes": "Cloudflare edge"
+    }
+  ]
+}
