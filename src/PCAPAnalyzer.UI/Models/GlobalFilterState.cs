@@ -1,21 +1,31 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using PCAPAnalyzer.Core.Models;
 
 namespace PCAPAnalyzer.UI.Models;
 
 /// <summary>
 /// Global filter state singleton. Stores Include/Exclude criteria.
 /// Version increments on every change for lazy per-tab evaluation.
+/// Supports both flat filters (OR mode) and grouped filters (AND mode).
 /// </summary>
 public partial class GlobalFilterState : ObservableObject
 {
     [ObservableProperty] private FilterMode _currentMode = FilterMode.Include;
     [ObservableProperty] private int _version;
+    private int _nextGroupId = 1;
 
     public FilterCriteria IncludeFilters { get; } = new();
     public FilterCriteria ExcludeFilters { get; } = new();
 
-    public bool HasActiveFilters => IncludeFilters.HasAny || ExcludeFilters.HasAny;
+    /// <summary>AND-grouped include filters (each group = all criteria AND'd together)</summary>
+    public ObservableCollection<FilterGroup> IncludeGroups { get; } = new();
+
+    /// <summary>AND-grouped exclude filters (each group = all criteria AND'd together, then NOT)</summary>
+    public ObservableCollection<FilterGroup> ExcludeGroups { get; } = new();
+
+    public bool HasActiveFilters => IncludeFilters.HasAny || ExcludeFilters.HasAny ||
+                                     IncludeGroups.Count > 0 || ExcludeGroups.Count > 0;
 
     public event Action? OnFilterChanged;
 
@@ -223,13 +233,83 @@ public partial class GlobalFilterState : ObservableObject
     {
         IncludeFilters.Clear();
         ExcludeFilters.Clear();
+        IncludeGroups.Clear();
+        ExcludeGroups.Clear();
         IncrementVersion();
+    }
+
+    /// <summary>
+    /// Adds a filter group (AND-combined criteria) to include filters.
+    /// </summary>
+    public void AddIncludeGroup(FilterGroup group)
+    {
+        group.GroupId = _nextGroupId++;
+        group.IsExcludeGroup = false;
+        group.IsAndGroup = true;
+        group.BuildDisplayLabel();
+        IncludeGroups.Add(group);
+        IncrementVersion();
+    }
+
+    /// <summary>
+    /// Adds a filter group (AND-combined criteria) to exclude filters (NOT group).
+    /// </summary>
+    public void AddExcludeGroup(FilterGroup group)
+    {
+        group.GroupId = _nextGroupId++;
+        group.IsExcludeGroup = true;
+        group.IsAndGroup = true;
+        group.BuildDisplayLabel();
+        ExcludeGroups.Add(group);
+        IncrementVersion();
+    }
+
+    /// <summary>
+    /// Removes a filter group by its ID.
+    /// </summary>
+    public void RemoveGroup(int groupId, bool isExclude)
+    {
+        var collection = isExclude ? ExcludeGroups : IncludeGroups;
+        var group = collection.FirstOrDefault(g => g.GroupId == groupId);
+        if (group != null)
+        {
+            collection.Remove(group);
+            IncrementVersion();
+        }
     }
 
     private void IncrementVersion()
     {
         Version++;
         OnFilterChanged?.Invoke();
+    }
+
+    // Anomaly filters (global scope - affects all tabs)
+    [ObservableProperty]
+    private List<AnomalySeverity> _anomalySeverityFilter = new();
+
+    [ObservableProperty]
+    private List<AnomalyCategory> _anomalyCategoryFilter = new();
+
+    [ObservableProperty]
+    private List<string> _anomalyDetectorFilter = new();
+
+    /// <summary>
+    /// Check if any anomaly filters are active.
+    /// </summary>
+    public bool HasAnomalyFilters =>
+        AnomalySeverityFilter.Count > 0 ||
+        AnomalyCategoryFilter.Count > 0 ||
+        AnomalyDetectorFilter.Count > 0;
+
+    /// <summary>
+    /// Clear all anomaly-specific filters.
+    /// </summary>
+    public void ClearAnomalyFilters()
+    {
+        AnomalySeverityFilter = new List<AnomalySeverity>();
+        AnomalyCategoryFilter = new List<AnomalyCategory>();
+        AnomalyDetectorFilter = new List<string>();
     }
 }
 
