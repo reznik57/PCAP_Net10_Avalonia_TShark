@@ -522,6 +522,7 @@ namespace PCAPAnalyzer.UI
             services.AddTransient<DashboardViewModel>();
             services.AddTransient<CountryTrafficViewModel>();
             services.AddTransient<ThreatsViewModel>();
+            services.AddTransient<AnomaliesViewModel>();
             services.AddTransient<EnhancedMapViewModel>();
             services.AddTransient<ReportViewModel>();
             services.AddTransient<TopTalkersViewModel>();
