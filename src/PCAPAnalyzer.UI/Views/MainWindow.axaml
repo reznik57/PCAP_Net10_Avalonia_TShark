@@ -462,7 +462,15 @@
                         <TextBlock Text="🔬 Anomalies" FontSize="13" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
-                <ns3:AnomalyView DataContext="{Binding AnomalyViewModel}" />
+                <ns3:AnomaliesView DataContext="{Binding AnomaliesViewModel}" />
+            </TabItem>
+            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="🖥️ Host Inventory" FontSize="13" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ns3:HostInventoryView DataContext="{Binding HostInventoryViewModel}" />
             </TabItem>
             <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
                 <TabItem.Header>

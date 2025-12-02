@@ -61,6 +61,8 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     [ObservableProperty] private FlowSummaryViewModel _flowSummaryViewModel = new();
     [ObservableProperty] private TopTalkersViewModel? _topTalkersViewModel;
     [ObservableProperty] private AnomalyViewModel? _anomalyViewModel;
+    [ObservableProperty] private AnomaliesViewModel? _anomaliesViewModel;
+    [ObservableProperty] private HostInventoryViewModel? _hostInventoryViewModel;
 
     // ==================== STATS BAR VIEWMODELS ====================
 
@@ -383,9 +385,10 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         // Initialize child view models - FIX: Use DI to get cache service injection
         DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [INIT] Creating tab ViewModels...");
         var cacheService = App.Services?.GetService<PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService>();
+        var credentialService = App.Services?.GetService<PCAPAnalyzer.Core.Services.Credentials.ICredentialDetectionService>();
         DebugLogger.Log($"[MainWindowViewModel] Cache service resolved from DI: {cacheService != null}");
 
-        ThreatsViewModel = new ThreatsViewModel(_insecurePortDetector, _anomalyService, _threatsFilterService, cacheService);
+        ThreatsViewModel = new ThreatsViewModel(_insecurePortDetector, _anomalyService, credentialService, _threatsFilterService, cacheService);
         DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [INIT] ThreatsViewModel created");
 
         // Wire up DrillDown navigation to Packet Analysis
@@ -439,6 +442,31 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         {
             DebugLogger.Critical("[WARNING] AnomalyViewModel not available in DI container");
             AnomalyViewModel = new AnomalyViewModel();
+        }
+
+        // Initialize AnomaliesViewModel from DI if available
+        var anomaliesVM = App.Services?.GetService<AnomaliesViewModel>();
+        if (anomaliesVM != null)
+        {
+            AnomaliesViewModel = anomaliesVM;
+            DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [INIT] AnomaliesViewModel created");
+        }
+        else
+        {
+            DebugLogger.Critical("[WARNING] AnomaliesViewModel not available in DI container");
+        }
+
+        // Initialize HostInventoryViewModel from DI
+        var hostInventoryVM = App.Services?.GetService<HostInventoryViewModel>();
+        if (hostInventoryVM != null)
+        {
+            HostInventoryViewModel = hostInventoryVM;
+            DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [INIT] HostInventoryViewModel created");
+        }
+        else
+        {
+            DebugLogger.Critical("[WARNING] HostInventoryViewModel not available in DI container");
+            HostInventoryViewModel = new HostInventoryViewModel();
         }
 
         // Initialize ReportViewModel with DI if available, otherwise create with service locator
@@ -499,6 +527,8 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             tabs.Add(voiceQos);
         if (CountryTrafficViewModel is ITabPopulationTarget countryTraffic)
             tabs.Add(countryTraffic);
+        if (HostInventoryViewModel is ITabPopulationTarget hostInventory)
+            tabs.Add(hostInventory);
 
         _analysisCoordinator.RegisterTabs(tabs.ToArray());
         DebugLogger.Log($"[MainWindowViewModel] ✅ Registered {tabs.Count} tabs with coordinator: {string.Join(", ", tabs.Select(t => t.TabName))}");
@@ -579,6 +609,11 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             if (DashboardViewModel != null)
             {
                 DashboardViewModel.ResetStatistics();
+            }
+
+            if (AnomaliesViewModel != null)
+            {
+                AnomaliesViewModel.Clear();
             }
 
             // Clear session cache
@@ -1022,9 +1057,13 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
                     DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [PARALLEL] Task C: Anomaly detected {detectedAnomalies.Count} anomalies");
 
                     // Update ViewModels on UI thread
-                    await Dispatcher.UIThread.InvokeAsync(() =>
+                    await Dispatcher.UIThread.InvokeAsync(async () =>
                     {
                         AnomalyViewModel?.UpdateAnomalies(detectedAnomalies);
+                        if (AnomaliesViewModel != null)
+                        {
+                            await AnomaliesViewModel.LoadFromAnalysisResultAsync(detectedAnomalies);
+                        }
                         DashboardViewModel?.UpdateAnomalySummary(detectedAnomalies);
                     });
 
