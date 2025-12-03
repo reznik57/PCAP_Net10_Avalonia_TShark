@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Monitoring;
+using PCAPAnalyzer.TShark.Configuration;
 
 namespace PCAPAnalyzer.TShark;
 
@@ -603,46 +604,12 @@ public sealed class TSharkService : ITSharkService
 
     private static string BuildStreamingArguments(string tsharkPath)
     {
-        return $"-r \"{tsharkPath}\" -T fields " +
-               // Core fields (0-18)
-               "-e frame.number -e frame.time -e frame.time_epoch -e frame.len " +
-               "-e ip.src -e ip.dst -e ipv6.src -e ipv6.dst " +
-               "-e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport " +
-               "-e _ws.col.Protocol -e frame.protocols -e _ws.col.Info " +
-               "-e tcp.flags -e tcp.seq -e tcp.ack -e tcp.window_size " +
-               // Credential detection fields (19-38)
-               "-e http.authorization -e http.authbasic " +                    // 19-20: HTTP Basic Auth
-               "-e ftp.request.command -e ftp.request.arg " +                  // 21-22: FTP USER/PASS
-               "-e smtp.req.command -e smtp.req.parameter " +                  // 23-24: SMTP AUTH
-               "-e imap.request " +                                            // 25: IMAP LOGIN
-               "-e pop.request.command -e pop.request.parameter " +            // 26-27: POP3 USER/PASS
-               "-e ldap.simple -e ldap.bindRequest.name " +                    // 28-29: LDAP Simple Bind
-               "-e snmp.community " +                                          // 30: SNMP Community
-               "-e kerberos.CNameString -e kerberos.realm " +                  // 31-32: Kerberos
-               "-e ntlmssp.auth.username -e ntlmssp.auth.domain " +            // 33-34: NTLM
-               "-e mysql.user -e mysql.passwd " +                              // 35-36: MySQL
-               "-e pgsql.user -e pgsql.password " +                            // 37-38: PostgreSQL
-               // OS Fingerprinting fields (39-56)
-               "-e ip.ttl -e ip.flags.df " +                                   // 39-40: TTL, DF flag
-               "-e eth.src " +                                                 // 41: MAC address
-               "-e tcp.options -e tcp.options.mss_val " +                      // 42-43: TCP options, MSS
-               "-e tcp.options.wscale -e tcp.options.sack_perm " +             // 44-45: Window scale, SACK
-               "-e tcp.options.timestamp.tsval " +                             // 46: TCP timestamp
-               "-e tcp.window_size_value " +                                   // 47: Initial window size
-               "-e tls.handshake.type -e tls.handshake.version " +             // 48-49: TLS handshake info
-               "-e tls.handshake.ciphersuite " +                               // 50: Cipher suites (JA3)
-               "-e tls.handshake.extension.type " +                            // 51: Extensions (JA3)
-               "-e tls.handshake.extensions_elliptic_curves " +                // 52: Elliptic curves (JA3)
-               "-e tls.handshake.extensions_ec_point_formats " +               // 53: EC point formats (JA3)
-               "-e dhcp.option.dhcp -e dhcp.option.request_list " +            // 54-55: DHCP options
-               "-e dhcp.option.vendor_class_id -e dhcp.option.hostname " +     // 56-57: DHCP vendor/hostname
-               "-e ssh.protocol -e http.server " +                             // 58-59: SSH banner, HTTP server
-               "-E occurrence=f";
+        return TSharkFieldDefinitions.BuildStreamingArguments(tsharkPath);
     }
 
     private static string BuildCountArguments(string tsharkPath)
     {
-        return $"-r \"{tsharkPath}\" -T fields -e frame.number";
+        return TSharkFieldDefinitions.BuildCountArguments(tsharkPath);
     }
 
     private bool TryCreateTSharkProcessStartInfo(
@@ -653,202 +620,48 @@ public sealed class TSharkService : ITSharkService
         out TSharkExecutionMode executionMode,
         out string resolvedExecutable)
     {
-        executionMode = DetermineTSharkExecutionMode(out var executablePath);
+        // Use WiresharkToolDetector for platform abstraction
+        var tsharkInfo = WiresharkToolDetector.DetectTShark();
         startInfo = null!;
-        resolvedExecutable = executablePath;
         effectivePcapPath = originalPcapPath;
+        resolvedExecutable = tsharkInfo.ExecutablePath;
 
-        if (executionMode == TSharkExecutionMode.Unavailable || string.IsNullOrWhiteSpace(executablePath))
+        if (!tsharkInfo.IsAvailable)
         {
+            executionMode = TSharkExecutionMode.Unavailable;
             return false;
         }
 
-        effectivePcapPath = executionMode == TSharkExecutionMode.Wsl
-            ? ConvertPathForTShark(originalPcapPath)
-            : originalPcapPath;
+        // Convert WiresharkExecutionMode to TSharkExecutionMode (for backward compatibility)
+        executionMode = tsharkInfo.Mode switch
+        {
+            WiresharkExecutionMode.NativeWindows => TSharkExecutionMode.Native,
+            WiresharkExecutionMode.Wsl => TSharkExecutionMode.Wsl,
+            WiresharkExecutionMode.DirectUnix => TSharkExecutionMode.Direct,
+            _ => TSharkExecutionMode.Unavailable
+        };
 
+        // Convert path if using WSL
+        effectivePcapPath = tsharkInfo.ConvertPathIfNeeded(originalPcapPath);
+
+        // Build arguments and create ProcessStartInfo
         var arguments = argumentsBuilder(effectivePcapPath);
-        startInfo = BuildProcessStartInfo(executionMode, executablePath, arguments);
-        resolvedExecutable = executionMode == TSharkExecutionMode.Wsl
-            ? $"WSL:{executablePath}"
-            : executablePath;
+        startInfo = tsharkInfo.CreateProcessStartInfo(arguments);
+
+        resolvedExecutable = tsharkInfo.Mode == WiresharkExecutionMode.Wsl
+            ? $"WSL:{tsharkInfo.ExecutablePath}"
+            : tsharkInfo.ExecutablePath;
 
         return true;
     }
 
-    private static ProcessStartInfo BuildProcessStartInfo(TSharkExecutionMode mode, string executablePath, string arguments)
-    {
-        var info = new ProcessStartInfo
-        {
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-            StandardOutputEncoding = System.Text.Encoding.UTF8,
-            StandardErrorEncoding = System.Text.Encoding.UTF8
-        };
-
-        if (mode == TSharkExecutionMode.Wsl)
-        {
-            info.FileName = "wsl.exe";
-            info.Arguments = $"{QuoteIfNeeded(executablePath)} {arguments}";
-        }
-        else
-        {
-            info.FileName = executablePath;
-            info.Arguments = arguments;
-        }
-
-        return info;
-    }
-
-    private static string QuoteIfNeeded(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return "\"\"";
-        }
-
-        return value.Contains(' ', StringComparison.Ordinal) ? $"\"{value}\"" : value;
-    }
-
-    private TSharkExecutionMode DetermineTSharkExecutionMode(out string executablePath)
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            var native = FindNativeTSharkExecutable();
-            if (!string.IsNullOrWhiteSpace(native))
-            {
-                executablePath = native;
-                return TSharkExecutionMode.Native;
-            }
-
-            if (IsWslAvailable())
-            {
-                executablePath = "tshark";
-                return TSharkExecutionMode.Wsl;
-            }
-
-            executablePath = string.Empty;
-            return TSharkExecutionMode.Unavailable;
-        }
-
-        executablePath = "tshark";
-        return TSharkExecutionMode.Direct;
-    }
-
-    private string? FindNativeTSharkExecutable()
-    {
-        var explicitPath = Environment.GetEnvironmentVariable("TSHARK_PATH");
-        if (!string.IsNullOrWhiteSpace(explicitPath) && File.Exists(explicitPath))
-        {
-            return explicitPath;
-        }
-
-        foreach (var candidate in EnumerateWindowsTSharkCandidates())
-        {
-            try
-            {
-                if (File.Exists(candidate))
-                {
-                    return candidate;
-                }
-            }
-            catch
-            {
-                // Ignore invalid paths or access exceptions
-            }
-        }
-
-        return null;
-    }
-
-    private static IEnumerable<string> EnumerateWindowsTSharkCandidates()
-    {
-        yield return @"C:\\Program Files\\Wireshark\\tshark.exe";
-        yield return @"C:\\Program Files (x86)\\Wireshark\\tshark.exe";
-
-        var programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-        if (!string.IsNullOrWhiteSpace(programFiles))
-        {
-            yield return Path.Combine(programFiles, "Wireshark", "tshark.exe");
-        }
-
-        var programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-        if (!string.IsNullOrWhiteSpace(programFilesX86))
-        {
-            yield return Path.Combine(programFilesX86, "Wireshark", "tshark.exe");
-        }
-
-        var pathEnv = Environment.GetEnvironmentVariable("PATH");
-        if (!string.IsNullOrWhiteSpace(pathEnv))
-        {
-            foreach (var segment in pathEnv.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
-            {
-                var trimmed = segment.Trim();
-                if (string.IsNullOrWhiteSpace(trimmed))
-                {
-                    continue;
-                }
-
-                if (trimmed.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (trimmed.EndsWith("tshark.exe", StringComparison.OrdinalIgnoreCase))
-                    {
-                        yield return trimmed;
-                    }
-                    continue;
-                }
-
-                yield return Path.Combine(trimmed, "tshark.exe");
-            }
-        }
-    }
-
-    private static bool IsWslAvailable()
-    {
-        try
-        {
-            var systemDir = Environment.GetFolderPath(Environment.SpecialFolder.System);
-            if (!string.IsNullOrWhiteSpace(systemDir))
-            {
-                var wslPath = Path.Combine(systemDir, "wsl.exe");
-                if (File.Exists(wslPath))
-                {
-                    return true;
-                }
-            }
-        }
-        catch
-        {
-            // Ignore access exceptions
-        }
-
-        return false;
-    }
-
+    // Kept for backward compatibility - internal execution mode enum
     private enum TSharkExecutionMode
     {
         Native,
         Wsl,
         Direct,
         Unavailable
-    }
-    private string ConvertPathForTShark(string path)
-    {
-        // If running on Windows and path starts with a drive letter, convert to WSL path
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            if (path.Length >= 2 && path[1] == ':')
-            {
-                // Convert C:\path\to\file to /mnt/c/path/to/file
-                var driveLetter = char.ToLower(path[0]);
-                var relativePath = path.Substring(2).Replace('\\', '/');
-                return $"/mnt/{driveLetter}{relativePath}";
-            }
-        }
-        
-        return path;
     }
 
     public async Task<long> GetTotalPacketCountAsync(string pcapPath, PCAPAnalyzer.Core.Orchestration.ProgressCoordinator? progressCoordinator = null)
@@ -1116,7 +929,7 @@ public sealed class TSharkService : ITSharkService
         {
             if (!TryCreateTSharkProcessStartInfo(
                     pcapPath,
-                    path => $"-r \"{path}\" -T fields -e frame.time_epoch -c 1",
+                    TSharkFieldDefinitions.BuildFirstTimestampArguments,
                     out var startInfo,
                     out _,
                     out _,
@@ -1152,7 +965,7 @@ public sealed class TSharkService : ITSharkService
             // Read all timestamps and take the last one (expensive but accurate)
             if (!TryCreateTSharkProcessStartInfo(
                     pcapPath,
-                    path => $"-r \"{path}\" -T fields -e frame.time_epoch",
+                    TSharkFieldDefinitions.BuildAllTimestampsArguments,
                     out var startInfo,
                     out _,
                     out _,
