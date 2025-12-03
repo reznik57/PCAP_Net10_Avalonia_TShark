@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.UI.Models;
@@ -19,7 +20,7 @@ namespace PCAPAnalyzer.UI.ViewModels;
 /// Main ViewModel for the Anomalies tab.
 /// Orchestrates component ViewModels and manages anomaly data.
 /// </summary>
-public partial class AnomaliesViewModel : ObservableObject, IDisposable
+public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget, IDisposable
 {
     private readonly IAnomalyFrameIndexService _frameIndexService;
     private readonly GlobalFilterState _globalFilterState;
@@ -46,6 +47,9 @@ public partial class AnomaliesViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _isFiltering;
     [ObservableProperty] private double _filterProgress;
 
+    // ITabPopulationTarget implementation
+    public string TabName => "Anomalies";
+
     public AnomaliesViewModel(
         IAnomalyFrameIndexService frameIndexService,
         GlobalFilterState globalFilterState,
@@ -66,6 +70,19 @@ public partial class AnomaliesViewModel : ObservableObject, IDisposable
         // Subscribe to filter changes
         Filters.FiltersChanged += OnFiltersChanged;
         _globalFilterState.PropertyChanged += OnGlobalFilterStateChanged;
+    }
+
+    /// <summary>
+    /// ITabPopulationTarget implementation - populate from cached analysis result.
+    /// NOTE: Anomalies are not yet stored in AnalysisResult (they're populated via direct call to LoadFromAnalysisResultAsync).
+    /// This method is a no-op until anomalies are added to AnalysisResult model.
+    /// </summary>
+    public Task PopulateFromCacheAsync(AnalysisResult result)
+    {
+        _logger.LogDebug("PopulateFromCacheAsync called - anomalies populated via LoadFromAnalysisResultAsync");
+        // Anomalies are already populated via MainWindowViewModel.LoadCaptureAsync -> LoadFromAnalysisResultAsync
+        // No additional work needed here until AnalysisResult.Anomalies property is added
+        return Task.CompletedTask;
     }
 
     public async Task LoadFromAnalysisResultAsync(List<NetworkAnomaly> anomalies)

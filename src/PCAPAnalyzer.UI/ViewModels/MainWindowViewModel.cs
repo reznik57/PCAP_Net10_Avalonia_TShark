@@ -529,6 +529,8 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             tabs.Add(dashboard);
         if (ThreatsViewModel is ITabPopulationTarget threats)
             tabs.Add(threats);
+        if (AnomaliesViewModel is ITabPopulationTarget anomalies)
+            tabs.Add(anomalies);
         if (VoiceQoSViewModel is ITabPopulationTarget voiceQos)
             tabs.Add(voiceQos);
         if (CountryTrafficViewModel is ITabPopulationTarget countryTraffic)

@@ -518,17 +518,20 @@ public partial class MainWindow : Window
     
     private string GetTabName(int tabIndex)
     {
-        // ✅ FIX: Corrected tab index mapping to match actual tab names
-        // Current tab order: FileManager(0), PacketAnalysis(1), Dashboard(2), SecurityThreats(3), VoiceQoS(4), CountryTraffic(5), Reports(6)
+        // ✅ FIX: Tab index mapping matches actual MainWindow.axaml tab order
+        // Current tab order: FileManager(0), PacketAnalysis(1), Dashboard(2), Threats(3), Anomalies(4), HostInventory(5), VoiceQoS(6), CountryTraffic(7), Compare(8), Reports(9)
         return tabIndex switch
         {
             0 => "FileManager",       // 📂 File Manager
             1 => "PacketAnalysis",    // 📦 Packet Analysis
             2 => "Dashboard",         // 📊 Dashboard
-            3 => "SecurityThreats",   // 🛡️ Security Threats
-            4 => "VoiceQoS",          // 📞 Voice / QoS
-            5 => "CountryTraffic",    // 🌍 Country Traffic
-            6 => "Reports",           // 📈 Reports
+            3 => "Threats",           // 🛡️ Security Threats
+            4 => "Anomalies",         // 🔬 Anomalies
+            5 => "HostInventory",     // 🖥️ Host Inventory
+            6 => "VoiceQoS",          // 📞 Voice / QoS
+            7 => "CountryTraffic",    // 🌍 Country Traffic
+            8 => "Compare",           // 🔍 Compare
+            9 => "Reports",           // 📈 Reports
             _ => "Tab"
         };
     }
