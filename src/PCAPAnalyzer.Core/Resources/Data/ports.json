@@ -1,0 +1,434 @@
+{
+  "version": "1.0",
+  "lastUpdated": "2025-12-03",
+  "ports": [
+    {
+      "port": 88,
+      "transport": "Both",
+      "serviceName": "Kerberos",
+      "description": "Kerberos authentication",
+      "risk": "Low",
+      "category": "AD",
+      "recommendation": "Secure when properly configured"
+    },
+    {
+      "port": 464,
+      "transport": "Both",
+      "serviceName": "Kerberos-Change",
+      "description": "Kerberos password change",
+      "risk": "Low",
+      "category": "AD"
+    },
+    {
+      "port": 389,
+      "transport": "Both",
+      "serviceName": "LDAP",
+      "description": "Lightweight Directory Access Protocol",
+      "risk": "High",
+      "category": "AD",
+      "recommendation": "Use LDAPS (636) instead"
+    },
+    {
+      "port": 636,
+      "transport": "Both",
+      "serviceName": "LDAPS",
+      "description": "LDAP over SSL/TLS",
+      "risk": "Low",
+      "category": "AD",
+      "recommendation": "Secure directory access"
+    },
+    {
+      "port": 3268,
+      "transport": "TCP",
+      "serviceName": "LDAP-GC",
+      "description": "LDAP Global Catalog",
+      "risk": "High",
+      "category": "AD",
+      "recommendation": "Use LDAPS-GC (3269)"
+    },
+    {
+      "port": 3269,
+      "transport": "TCP",
+      "serviceName": "LDAPS-GC",
+      "description": "LDAP Global Catalog over SSL",
+      "risk": "Low",
+      "category": "AD"
+    },
+    {
+      "port": 445,
+      "transport": "TCP",
+      "serviceName": "SMB",
+      "description": "Server Message Block",
+      "risk": "Medium",
+      "category": "AD",
+      "recommendation": "Ensure SMBv3 with encryption"
+    },
+    {
+      "port": 139,
+      "transport": "TCP",
+      "serviceName": "NetBIOS-SSN",
+      "description": "NetBIOS Session Service",
+      "risk": "High",
+      "category": "AD",
+      "recommendation": "Legacy - use SMB direct (445)"
+    },
+    {
+      "port": 137,
+      "transport": "UDP",
+      "serviceName": "NetBIOS-NS",
+      "description": "NetBIOS Name Service",
+      "risk": "Medium",
+      "category": "AD",
+      "recommendation": "Disable if not needed"
+    },
+    {
+      "port": 138,
+      "transport": "UDP",
+      "serviceName": "NetBIOS-DGM",
+      "description": "NetBIOS Datagram",
+      "risk": "Medium",
+      "category": "AD",
+      "recommendation": "Disable if not needed"
+    },
+    {
+      "port": 135,
+      "transport": "TCP",
+      "serviceName": "MS-RPC",
+      "description": "Microsoft RPC Endpoint Mapper",
+      "risk": "Medium",
+      "category": "AD",
+      "recommendation": "Required for AD, firewall carefully"
+    },
+    {
+      "port": 593,
+      "transport": "TCP",
+      "serviceName": "RPC-HTTP",
+      "description": "RPC over HTTP",
+      "risk": "Medium",
+      "category": "AD"
+    },
+    {
+      "port": 49152,
+      "transport": "TCP",
+      "serviceName": "RPC-Dynamic",
+      "description": "RPC Dynamic Ports Start",
+      "risk": "Medium",
+      "category": "AD",
+      "recommendation": "Configure fixed RPC port range"
+    },
+    {
+      "port": 65535,
+      "transport": "TCP",
+      "serviceName": "RPC-Dynamic-End",
+      "description": "RPC Dynamic Ports End",
+      "risk": "Medium",
+      "category": "AD"
+    },
+    {
+      "port": 80,
+      "transport": "TCP",
+      "serviceName": "HTTP",
+      "description": "Hypertext Transfer Protocol",
+      "risk": "High",
+      "category": "Web",
+      "recommendation": "Use HTTPS instead"
+    },
+    {
+      "port": 443,
+      "transport": "TCP",
+      "serviceName": "HTTPS",
+      "description": "HTTP over TLS",
+      "risk": "Low",
+      "category": "Web",
+      "recommendation": "Ensure TLS 1.2+"
+    },
+    {
+      "port": 8080,
+      "transport": "TCP",
+      "serviceName": "HTTP-Alt",
+      "description": "HTTP Alternate/Proxy",
+      "risk": "High",
+      "category": "Web",
+      "recommendation": "Common proxy port"
+    },
+    {
+      "port": 8443,
+      "transport": "TCP",
+      "serviceName": "HTTPS-Alt",
+      "description": "HTTPS Alternate",
+      "risk": "Low",
+      "category": "Web"
+    },
+    {
+      "port": 8000,
+      "transport": "TCP",
+      "serviceName": "HTTP-Alt-2",
+      "description": "HTTP Alternate (dev)",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 8888,
+      "transport": "TCP",
+      "serviceName": "HTTP-Proxy",
+      "description": "HTTP Proxy/Alt",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 3128,
+      "transport": "TCP",
+      "serviceName": "Squid",
+      "description": "Squid proxy",
+      "risk": "Medium",
+      "category": "Web"
+    },
+    {
+      "port": 8081,
+      "transport": "TCP",
+      "serviceName": "HTTP-Proxy-Alt",
+      "description": "HTTP Proxy Alternate",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 9443,
+      "transport": "TCP",
+      "serviceName": "HTTPS-Alt-2",
+      "description": "HTTPS Alternate 2",
+      "risk": "Low",
+      "category": "Web"
+    },
+    {
+      "port": 81,
+      "transport": "TCP",
+      "serviceName": "HTTP-Alt-3",
+      "description": "HTTP Alternate 3",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 82,
+      "transport": "TCP",
+      "serviceName": "HTTP-Alt-4",
+      "description": "HTTP Alternate 4",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 8008,
+      "transport": "TCP",
+      "serviceName": "HTTP-Alt-5",
+      "description": "HTTP Alternate 5",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 8090,
+      "transport": "TCP",
+      "serviceName": "HTTP-Alt-6",
+      "description": "HTTP Alternate 6",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 9080,
+      "transport": "TCP",
+      "serviceName": "HTTP-WebSphere",
+      "description": "WebSphere HTTP",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 25,
+      "transport": "TCP",
+      "serviceName": "SMTP",
+      "description": "Simple Mail Transfer Protocol",
+      "risk": "High",
+      "category": "Email",
+      "recommendation": "Use STARTTLS or port 587"
+    },
+    {
+      "port": 465,
+      "transport": "TCP",
+      "serviceName": "SMTPS",
+      "description": "SMTP over SSL (deprecated)",
+      "risk": "Low",
+      "category": "Email",
+      "recommendation": "Implicit TLS"
+    },
+    {
+      "port": 587,
+      "transport": "TCP",
+      "serviceName": "Submission",
+      "description": "Mail Submission (STARTTLS)",
+      "risk": "Low",
+      "category": "Email",
+      "recommendation": "Recommended for client submission"
+    },
+    {
+      "port": 2525,
+      "transport": "TCP",
+      "serviceName": "SMTP-Alt",
+      "description": "SMTP Alternate",
+      "risk": "High",
+      "category": "Email"
+    },
+    {
+      "port": 110,
+      "transport": "TCP",
+      "serviceName": "POP3",
+      "description": "Post Office Protocol v3",
+      "risk": "High",
+      "category": "Email",
+      "recommendation": "Use POP3S (995)"
+    },
+    {
+      "port": 995,
+      "transport": "TCP",
+      "serviceName": "POP3S",
+      "description": "POP3 over SSL/TLS",
+      "risk": "Low",
+      "category": "Email"
+    },
+    {
+      "port": 143,
+      "transport": "TCP",
+      "serviceName": "IMAP",
+      "description": "Internet Message Access Protocol",
+      "risk": "High",
+      "category": "Email",
+      "recommendation": "Use IMAPS (993)"
+    },
+    {
+      "port": 993,
+      "transport": "TCP",
+      "serviceName": "IMAPS",
+      "description": "IMAP over SSL/TLS",
+      "risk": "Low",
+      "category": "Email"
+    },
+    {
+      "port": 2095,
+      "transport": "TCP",
+      "serviceName": "Webmail",
+      "description": "cPanel Webmail",
+      "risk": "High",
+      "category": "Email"
+    },
+    {
+      "port": 2096,
+      "transport": "TCP",
+      "serviceName": "Webmail-SSL",
+      "description": "cPanel Webmail SSL",
+      "risk": "Low",
+      "category": "Email"
+    },
+    {
+      "port": 53,
+      "transport": "Both",
+      "serviceName": "DNS",
+      "description": "Domain Name System",
+      "risk": "Medium",
+      "category": "DNS",
+      "recommendation": "Use DoT/DoH for privacy"
+    },
+    {
+      "port": 853,
+      "transport": "TCP",
+      "serviceName": "DNS-over-TLS",
+      "description": "DNS over TLS (DoT)",
+      "risk": "Low",
+      "category": "DNS",
+      "recommendation": "Encrypted DNS"
+    },
+    {
+      "port": 5353,
+      "transport": "UDP",
+      "serviceName": "mDNS",
+      "description": "Multicast DNS",
+      "risk": "Medium",
+      "category": "DNS",
+      "recommendation": "Local network only"
+    },
+    {
+      "port": 5355,
+      "transport": "UDP",
+      "serviceName": "LLMNR",
+      "description": "Link-Local Multicast Name Resolution",
+      "risk": "Medium",
+      "category": "DNS",
+      "recommendation": "Disable - Responder attacks"
+    },
+    {
+      "port": 20,
+      "transport": "TCP",
+      "serviceName": "FTP-Data",
+      "description": "FTP Data Transfer",
+      "risk": "High",
+      "category": "FileTransfer",
+      "recommendation": "Plaintext - use SFTP"
+    },
+    {
+      "port": 21,
+      "transport": "TCP",
+      "serviceName": "FTP",
+      "description": "File Transfer Protocol",
+      "risk": "High",
+      "category": "FileTransfer",
+      "recommendation": "Use SFTP/FTPS instead"
+    },
+    {
+      "port": 22,
+      "transport": "TCP",
+      "serviceName": "SSH/SFTP",
+      "description": "Secure Shell / SFTP",
+      "risk": "Low",
+      "category": "FileTransfer",
+      "recommendation": "Preferred file transfer"
+    },
+    {
+      "port": 69,
+      "transport": "UDP",
+      "serviceName": "TFTP",
+      "description": "Trivial File Transfer Protocol",
+      "risk": "High",
+      "category": "FileTransfer",
+      "recommendation": "No auth - internal use only"
+    },
+    {
+      "port": 989,
+      "transport": "TCP",
+      "serviceName": "FTPS-Data",
+      "description": "FTP Data over TLS",
+      "risk": "Low",
+      "category": "FileTransfer"
+    },
+    {
+      "port": 990,
+      "transport": "TCP",
+      "serviceName": "FTPS",
+      "description": "FTP Control over TLS",
+      "risk": "Low",
+      "category": "FileTransfer"
+    },
+    {
+      "port": 115,
+      "transport": "TCP",
+      "serviceName": "SFTP-Legacy",
+      "description": "Simple File Transfer Protocol",
+      "risk": "High",
+      "category": "FileTransfer",
+      "recommendation": "Legacy - not SSH SFTP"
+    },
+    {
+      "port": 2049,
+      "transport": "Both",
+      "serviceName": "NFS",
+      "description": "Network File System",
+      "risk": "Medium",
+      "category": "FileTransfer",
+      "recommendation": "Use NFSv4 with Kerberos"
+    }
+  ]
+}
