@@ -36,29 +36,10 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 {
     // ==================== COMPONENT VIEWMODELS ====================
 
-    /// <summary>
-    /// Manages all chart visualizations (throughput, protocols, ports, etc.)
-    /// </summary>
     public DashboardChartsViewModel Charts { get; }
-
-    /// <summary>
-    /// Manages all statistics display and data tables
-    /// </summary>
     public DashboardStatisticsViewModel Statistics { get; }
-
-    /// <summary>
-    /// Manages popup windows and detail views
-    /// </summary>
     public DashboardPopupViewModel Popups { get; }
-
-    /// <summary>
-    /// Manages anomaly summary widget for Security Overview
-    /// </summary>
     public AnomalySummaryViewModel AnomalySummary { get; }
-
-    /// <summary>
-    /// Manages drill-down detail popup for IPs, Ports, Connections
-    /// </summary>
     public DrillDownPopupViewModel DrillDown { get; }
 
     // ==================== SERVICES ====================
@@ -91,24 +72,9 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // ==================== FILTERABLE TAB IMPLEMENTATION ====================
 
-    /// <summary>
-    /// Common filters for protocol, source IP, and destination IP
-    /// </summary>
     public new CommonFilterViewModel CommonFilters { get; } = new();
-
-    /// <summary>
-    /// Tab-specific filter: Traffic type (All/TCP/UDP/ICMP/Other)
-    /// </summary>
     [ObservableProperty] private string _trafficTypeFilter = "All";
-
-    /// <summary>
-    /// Tab-specific filter: Port range filter
-    /// </summary>
     [ObservableProperty] private string _portRangeFilter = "";
-
-    /// <summary>
-    /// Unique tab identifier for FilterCopyService
-    /// </summary>
     public override string TabName => TabNames.Dashboard;
 
     // ==================== DATA STATE ====================
@@ -163,17 +129,8 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     [ObservableProperty] private bool _filterUseNotMode = false;
 
-    // ==================== NETWORK/TRAFFIC/SECURITY FILTERS ====================
-    // These are INHERITED from SmartFilterableTab which delegates to NetworkQuickFilters.
-    // DO NOT add [ObservableProperty] here - that would HIDE the base class properties
-    // and break the single source of truth architecture.
-    //
-    // Inherited properties (via SmartFilterableTab wrappers → NetworkQuickFilters):
-    //   FilterRfc1918Toggle, FilterPublicIpToggle, FilterIPv4Toggle, FilterIPv6Toggle,
-    //   FilterMulticastToggle, FilterInsecureToggle, FilterAnomaliesToggle,
-    //   FilterSuspiciousToggle, FilterTcpIssuesToggle, FilterPortScansToggle,
-    //   FilterPrivateToPublicToggle, FilterPublicToPrivateToggle, FilterJumboFramesToggle,
-    //   FilterLoopbackToggle, FilterLinkLocalToggle
+    // Network/Traffic/Security filters inherited from SmartFilterableTab → NetworkQuickFilters
+    // DO NOT redeclare with [ObservableProperty] - breaks single source of truth
 
     // ==================== L7 PROTOCOL FILTERS ====================
 
@@ -200,11 +157,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     [ObservableProperty] private bool _filterL2tpToggle = false;
     [ObservableProperty] private bool _filterPptpToggle = false;
 
-    // ==================== ADDITIONAL FILTERS ====================
-    // JumboFrames, PrivateToPublic, PublicToPrivate, LinkLocal, Loopback,
-    // Suspicious, TcpIssues, DnsAnomalies, PortScans are all inherited from
-    // SmartFilterableTab (which delegates to NetworkQuickFilters).
-    // See comment at line 160 for the full list of inherited properties.
+    // Additional filters inherited from SmartFilterableTab
 
     // ==================== UNIVERSAL FILTER PROPERTIES ====================
 
@@ -342,10 +295,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // ==================== PUBLIC UPDATE METHODS ====================
 
-    /// <summary>
-    /// Main entry point for updating dashboard with new packet data.
-    /// Coordinates updates across all component ViewModels.
-    /// </summary>
     public async Task UpdateStatisticsAsync(IReadOnlyList<PacketInfo> packets)
     {
         var methodStart = DateTime.Now;
@@ -446,9 +395,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         }
     }
 
-    /// <summary>
-    /// Updates all component ViewModels with new statistics.
-    /// </summary>
     private async Task UpdateAllComponents(NetworkStatistics? statistics, IReadOnlyList<PacketInfo>? packets)
     {
         var updateStartTime = DateTime.Now;
@@ -511,19 +457,11 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         DebugLogger.Log($"[DashboardViewModel] UpdateAllComponents completed in {totalElapsed:F2}s (Charts: {chartsElapsed:F2}s, Stats: {statsElapsed:F2}s, Popups: {popupsElapsed:F2}s, Geo: {geoElapsed:F2}s, TCP: {tcpElapsed:F2}s)");
     }
 
-    /// <summary>
-    /// Sets pre-calculated statistics to avoid recalculation.
-    /// Useful when statistics are already available from another source.
-    /// </summary>
     public void SetStatisticsOverride(NetworkStatistics statistics)
     {
         _nextStatisticsOverride = statistics;
     }
 
-    /// <summary>
-    /// Update the anomaly summary widget with detected anomalies.
-    /// Called after PCAP analysis completes.
-    /// </summary>
     public void UpdateAnomalySummary(IReadOnlyList<NetworkAnomaly>? anomalies)
     {
         DebugLogger.Log($"[DashboardViewModel] Updating anomaly summary: {anomalies?.Count ?? 0} anomalies");
@@ -556,25 +494,16 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // ==================== FILTER COMMANDS ====================
 
-    /// <summary>
-    /// IFilterableTab implementation - applies common and tab-specific filters (sync wrapper)
-    /// </summary>
     public new void ApplyFilters()
     {
         _ = ApplyFiltersAsync();
     }
 
-    /// <summary>
-    /// Async version of ApplyFilters with progress reporting and cancellation.
-    /// </summary>
     public async Task ApplyFiltersAsync()
     {
         await UpdateFilteredStatisticsAsync();
     }
 
-    /// <summary>
-    /// Applies the sophisticated PacketFilter to Dashboard's displayed packets
-    /// </summary>
     protected override void ApplySmartFilter(PacketFilter filter)
     {
         // Store the chip-based filter for use in filtering
@@ -585,10 +514,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         DebugLogger.Log($"[{TabName}] Smart filters applied from chips (IsEmpty={filter?.IsEmpty ?? true})");
     }
 
-    /// <summary>
-    /// Applies the chip-based PacketFilter to packets and updates statistics.
-    /// This is the NEW filter path that respects INCLUDE/EXCLUDE chips.
-    /// </summary>
     private async Task ApplyChipBasedFilterAsync()
     {
         _filterCancellationTokenSource?.Cancel();
@@ -730,9 +655,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         await ApplyFiltersAsync();
     }
 
-    /// <summary>
-    /// Populates Dashboard filters based on a connection (for Quick Win filtering from Details window)
-    /// </summary>
     [RelayCommand]
     public void FilterByConnection(object? parameter)
     {
@@ -806,10 +728,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         DebugLogger.Log("[DashboardViewModel] Cleared all filters (NetworkQuickFilters + Dashboard-only)");
     }
 
-    /// <summary>
-    /// Async filter implementation with progress reporting and cancellation support.
-    /// Uses DashboardFilterService for efficient single-pass smart filtering.
-    /// </summary>
     private async Task UpdateFilteredStatisticsAsync()
     {
         // Cancel any in-progress filter operation
@@ -968,10 +886,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         }
     }
 
-    /// <summary>
-    /// Apply common filters (protocol, IP, port, time range) in a single pass.
-    /// Returns materialized list for efficient smart filter processing.
-    /// </summary>
     private List<PacketInfo> ApplyCommonFilters(IReadOnlyList<PacketInfo> packets)
     {
         // Build a combined predicate for single-pass evaluation
@@ -1062,9 +976,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         return result;
     }
 
-    /// <summary>
-    /// Build a port filter predicate that supports single port, ranges (80-443), and comma-separated values (80,443,8080).
-    /// </summary>
     private static Func<PacketInfo, bool>? BuildPortRangePredicate(string portFilter)
     {
         var ports = new HashSet<ushort>();
@@ -1109,10 +1020,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         };
     }
 
-    /// <summary>
-    /// Build an immutable AnomalyFrameSet from current ViewModel anomaly caches.
-    /// Creates a new instance each time for thread-safety.
-    /// </summary>
     private AnomalyFrameSet BuildAnomalyFrameSet()
     {
         return new AnomalyFrameSet
@@ -1124,12 +1031,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         };
     }
 
-    /// <summary>
-    /// Builds DashboardSmartFilters state from current filter toggle values.
-    /// ARCHITECTURE: Shared filters are read via inherited base class wrappers which
-    /// delegate to NetworkQuickFilters (single source of truth).
-    /// Dashboard-only filters (L7 protocols, TLS, VPN) are read from this class.
-    /// </summary>
     private DashboardSmartFilters BuildSmartFilterState()
     {
         return new DashboardSmartFilters
@@ -1349,9 +1250,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // ==================== FILTER PRESET COMMANDS ====================
 
-    /// <summary>
-    /// Load all available presets (built-in + user-defined)
-    /// </summary>
     private async Task LoadPresetsAsync()
     {
         if (_filterPresetService == null)
@@ -1386,9 +1284,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         }
     }
 
-    /// <summary>
-    /// Apply the selected preset to current filter state
-    /// </summary>
     [RelayCommand]
     private async Task ApplyPresetAsync()
     {
@@ -1420,9 +1315,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         }
     }
 
-    /// <summary>
-    /// Save current filter state as a new preset
-    /// </summary>
     [RelayCommand]
     private async Task SaveCurrentAsPresetAsync(string? presetName)
     {
@@ -1480,9 +1372,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         }
     }
 
-    /// <summary>
-    /// Delete a user-defined preset
-    /// </summary>
     [RelayCommand]
     private async Task DeletePresetAsync(FilterPreset? preset)
     {
@@ -1595,14 +1484,8 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // ==================== PROPERTY CHANGE FORWARDING ====================
 
-    /// <summary>
-    /// Forwards property changes from Statistics component to DashboardViewModel.
-    /// This ensures backward compatibility - when Statistics.TotalPackets changes,
-    /// UI bindings to DashboardViewModel.TotalPackets get notified.
-    /// Also handles property name mapping for compatibility layer aliases.
-    /// </summary>
     [SuppressMessage("Maintainability", "CA1502:Avoid excessive complexity",
-        Justification = "Statistics property change handling requires forwarding and mapping multiple property names for backward compatibility with legacy UI bindings")]
+        Justification = "Property forwarding for backward compatibility")]
     private void OnStatisticsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (string.IsNullOrEmpty(e.PropertyName))
@@ -1683,10 +1566,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         }
     }
 
-    /// <summary>
-    /// Forwards property changes from Charts component to DashboardViewModel.
-    /// This ensures backward compatibility for chart-related bindings.
-    /// </summary>
     private void OnChartsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         // Forward all Charts property changes to the parent ViewModel
@@ -1694,8 +1573,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     }
 
     // ==================== COMPATIBILITY LAYER ====================
-    // Provides backward-compatible properties that delegate to component ViewModels.
-    // Merged from DashboardViewModel.Compatibility.cs for cleaner project structure.
 
     // Statistics properties (delegate to Statistics component)
     public bool IsLoadingStats => Statistics.IsLoadingStats;
@@ -1759,17 +1636,11 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     public ObservableCollection<ISeries> PortByBytesSeries => Charts.PortByBytesSeries;
     public ObservableCollection<ISeries> PortByPacketsSeries => Charts.PortByPacketsSeries;
 
-    /// <summary>
-    /// Updates throughput chart (delegates to Charts component)
-    /// </summary>
     public void UpdateThroughputChart(NetworkStatistics statistics)
     {
         Charts.UpdateThroughputChart(statistics);
     }
 
-    /// <summary>
-    /// Updates throughput chart without parameters (for backward compatibility)
-    /// </summary>
     public void UpdateThroughputChart()
     {
         if (_currentStatistics != null)
@@ -1778,26 +1649,17 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         }
     }
 
-    /// <summary>
-    /// Updates statistics (delegates to UpdateStatisticsAsync)
-    /// </summary>
     public void UpdateStatistics(NetworkStatistics statistics)
     {
         _nextStatisticsOverride = statistics;
     }
 
-    /// <summary>
-    /// Updates statistics with packets (delegates to UpdateStatisticsAsync)
-    /// </summary>
     public async Task UpdateStatistics(NetworkStatistics statistics, IReadOnlyList<PacketInfo> packets)
     {
         _nextStatisticsOverride = statistics;
         await UpdateStatisticsAsync(packets);
     }
 
-    /// <summary>
-    /// Resets all statistics
-    /// </summary>
     public void ResetStatistics()
     {
         _currentStatistics = null;
@@ -1817,7 +1679,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // ==================== ITabPopulationTarget IMPLEMENTATION ====================
 
-    /// <inheritdoc />
     public async Task PopulateFromCacheAsync(AnalysisResult result)
     {
         DebugLogger.Log($"[DashboardViewModel.PopulateFromCacheAsync] Populating from cache with {result.AllPackets.Count:N0} packets");
