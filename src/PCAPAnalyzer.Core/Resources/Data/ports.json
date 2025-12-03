@@ -3,362 +3,46 @@
   "lastUpdated": "2025-12-03",
   "ports": [
     {
-      "port": 88,
+      "port": 7,
       "transport": "Both",
-      "serviceName": "Kerberos",
-      "description": "Kerberos authentication",
-      "risk": "Low",
-      "category": "AD",
-      "recommendation": "Secure when properly configured"
+      "serviceName": "Echo",
+      "description": "Echo Protocol",
+      "risk": "Medium",
+      "category": "Legacy"
     },
     {
-      "port": 464,
+      "port": 9,
       "transport": "Both",
-      "serviceName": "Kerberos-Change",
-      "description": "Kerberos password change",
-      "risk": "Low",
-      "category": "AD"
+      "serviceName": "Discard",
+      "description": "Discard Protocol",
+      "risk": "Medium",
+      "category": "Legacy"
     },
     {
-      "port": 389,
+      "port": 13,
       "transport": "Both",
-      "serviceName": "LDAP",
-      "description": "Lightweight Directory Access Protocol",
-      "risk": "High",
-      "category": "AD",
-      "recommendation": "Use LDAPS (636) instead"
+      "serviceName": "Daytime",
+      "description": "Daytime Protocol",
+      "risk": "Medium",
+      "category": "Legacy",
+      "recommendation": "Use NTP"
     },
     {
-      "port": 636,
+      "port": 17,
       "transport": "Both",
-      "serviceName": "LDAPS",
-      "description": "LDAP over SSL/TLS",
+      "serviceName": "QOTD",
+      "description": "Quote of the Day",
       "risk": "Low",
-      "category": "AD",
-      "recommendation": "Secure directory access"
+      "category": "Legacy"
     },
     {
-      "port": 3268,
-      "transport": "TCP",
-      "serviceName": "LDAP-GC",
-      "description": "LDAP Global Catalog",
-      "risk": "High",
-      "category": "AD",
-      "recommendation": "Use LDAPS-GC (3269)"
-    },
-    {
-      "port": 3269,
-      "transport": "TCP",
-      "serviceName": "LDAPS-GC",
-      "description": "LDAP Global Catalog over SSL",
-      "risk": "Low",
-      "category": "AD"
-    },
-    {
-      "port": 445,
-      "transport": "TCP",
-      "serviceName": "SMB",
-      "description": "Server Message Block",
-      "risk": "Medium",
-      "category": "AD",
-      "recommendation": "Ensure SMBv3 with encryption"
-    },
-    {
-      "port": 139,
-      "transport": "TCP",
-      "serviceName": "NetBIOS-SSN",
-      "description": "NetBIOS Session Service",
-      "risk": "High",
-      "category": "AD",
-      "recommendation": "Legacy - use SMB direct (445)"
-    },
-    {
-      "port": 137,
-      "transport": "UDP",
-      "serviceName": "NetBIOS-NS",
-      "description": "NetBIOS Name Service",
-      "risk": "Medium",
-      "category": "AD",
-      "recommendation": "Disable if not needed"
-    },
-    {
-      "port": 138,
-      "transport": "UDP",
-      "serviceName": "NetBIOS-DGM",
-      "description": "NetBIOS Datagram",
-      "risk": "Medium",
-      "category": "AD",
-      "recommendation": "Disable if not needed"
-    },
-    {
-      "port": 135,
-      "transport": "TCP",
-      "serviceName": "MS-RPC",
-      "description": "Microsoft RPC Endpoint Mapper",
-      "risk": "Medium",
-      "category": "AD",
-      "recommendation": "Required for AD, firewall carefully"
-    },
-    {
-      "port": 593,
-      "transport": "TCP",
-      "serviceName": "RPC-HTTP",
-      "description": "RPC over HTTP",
-      "risk": "Medium",
-      "category": "AD"
-    },
-    {
-      "port": 49152,
-      "transport": "TCP",
-      "serviceName": "RPC-Dynamic",
-      "description": "RPC Dynamic Ports Start",
-      "risk": "Medium",
-      "category": "AD",
-      "recommendation": "Configure fixed RPC port range"
-    },
-    {
-      "port": 65535,
-      "transport": "TCP",
-      "serviceName": "RPC-Dynamic-End",
-      "description": "RPC Dynamic Ports End",
-      "risk": "Medium",
-      "category": "AD"
-    },
-    {
-      "port": 80,
-      "transport": "TCP",
-      "serviceName": "HTTP",
-      "description": "Hypertext Transfer Protocol",
-      "risk": "High",
-      "category": "Web",
-      "recommendation": "Use HTTPS instead"
-    },
-    {
-      "port": 443,
-      "transport": "TCP",
-      "serviceName": "HTTPS",
-      "description": "HTTP over TLS",
-      "risk": "Low",
-      "category": "Web",
-      "recommendation": "Ensure TLS 1.2+"
-    },
-    {
-      "port": 8080,
-      "transport": "TCP",
-      "serviceName": "HTTP-Alt",
-      "description": "HTTP Alternate/Proxy",
-      "risk": "High",
-      "category": "Web",
-      "recommendation": "Common proxy port"
-    },
-    {
-      "port": 8443,
-      "transport": "TCP",
-      "serviceName": "HTTPS-Alt",
-      "description": "HTTPS Alternate",
-      "risk": "Low",
-      "category": "Web"
-    },
-    {
-      "port": 8000,
-      "transport": "TCP",
-      "serviceName": "HTTP-Alt-2",
-      "description": "HTTP Alternate (dev)",
-      "risk": "High",
-      "category": "Web"
-    },
-    {
-      "port": 8888,
-      "transport": "TCP",
-      "serviceName": "HTTP-Proxy",
-      "description": "HTTP Proxy/Alt",
-      "risk": "High",
-      "category": "Web"
-    },
-    {
-      "port": 3128,
-      "transport": "TCP",
-      "serviceName": "Squid",
-      "description": "Squid proxy",
-      "risk": "Medium",
-      "category": "Web"
-    },
-    {
-      "port": 8081,
-      "transport": "TCP",
-      "serviceName": "HTTP-Proxy-Alt",
-      "description": "HTTP Proxy Alternate",
-      "risk": "High",
-      "category": "Web"
-    },
-    {
-      "port": 9443,
-      "transport": "TCP",
-      "serviceName": "HTTPS-Alt-2",
-      "description": "HTTPS Alternate 2",
-      "risk": "Low",
-      "category": "Web"
-    },
-    {
-      "port": 81,
-      "transport": "TCP",
-      "serviceName": "HTTP-Alt-3",
-      "description": "HTTP Alternate 3",
-      "risk": "High",
-      "category": "Web"
-    },
-    {
-      "port": 82,
-      "transport": "TCP",
-      "serviceName": "HTTP-Alt-4",
-      "description": "HTTP Alternate 4",
-      "risk": "High",
-      "category": "Web"
-    },
-    {
-      "port": 8008,
-      "transport": "TCP",
-      "serviceName": "HTTP-Alt-5",
-      "description": "HTTP Alternate 5",
-      "risk": "High",
-      "category": "Web"
-    },
-    {
-      "port": 8090,
-      "transport": "TCP",
-      "serviceName": "HTTP-Alt-6",
-      "description": "HTTP Alternate 6",
-      "risk": "High",
-      "category": "Web"
-    },
-    {
-      "port": 9080,
-      "transport": "TCP",
-      "serviceName": "HTTP-WebSphere",
-      "description": "WebSphere HTTP",
-      "risk": "High",
-      "category": "Web"
-    },
-    {
-      "port": 25,
-      "transport": "TCP",
-      "serviceName": "SMTP",
-      "description": "Simple Mail Transfer Protocol",
-      "risk": "High",
-      "category": "Email",
-      "recommendation": "Use STARTTLS or port 587"
-    },
-    {
-      "port": 465,
-      "transport": "TCP",
-      "serviceName": "SMTPS",
-      "description": "SMTP over SSL (deprecated)",
-      "risk": "Low",
-      "category": "Email",
-      "recommendation": "Implicit TLS"
-    },
-    {
-      "port": 587,
-      "transport": "TCP",
-      "serviceName": "Submission",
-      "description": "Mail Submission (STARTTLS)",
-      "risk": "Low",
-      "category": "Email",
-      "recommendation": "Recommended for client submission"
-    },
-    {
-      "port": 2525,
-      "transport": "TCP",
-      "serviceName": "SMTP-Alt",
-      "description": "SMTP Alternate",
-      "risk": "High",
-      "category": "Email"
-    },
-    {
-      "port": 110,
-      "transport": "TCP",
-      "serviceName": "POP3",
-      "description": "Post Office Protocol v3",
-      "risk": "High",
-      "category": "Email",
-      "recommendation": "Use POP3S (995)"
-    },
-    {
-      "port": 995,
-      "transport": "TCP",
-      "serviceName": "POP3S",
-      "description": "POP3 over SSL/TLS",
-      "risk": "Low",
-      "category": "Email"
-    },
-    {
-      "port": 143,
-      "transport": "TCP",
-      "serviceName": "IMAP",
-      "description": "Internet Message Access Protocol",
-      "risk": "High",
-      "category": "Email",
-      "recommendation": "Use IMAPS (993)"
-    },
-    {
-      "port": 993,
-      "transport": "TCP",
-      "serviceName": "IMAPS",
-      "description": "IMAP over SSL/TLS",
-      "risk": "Low",
-      "category": "Email"
-    },
-    {
-      "port": 2095,
-      "transport": "TCP",
-      "serviceName": "Webmail",
-      "description": "cPanel Webmail",
-      "risk": "High",
-      "category": "Email"
-    },
-    {
-      "port": 2096,
-      "transport": "TCP",
-      "serviceName": "Webmail-SSL",
-      "description": "cPanel Webmail SSL",
-      "risk": "Low",
-      "category": "Email"
-    },
-    {
-      "port": 53,
+      "port": 19,
       "transport": "Both",
-      "serviceName": "DNS",
-      "description": "Domain Name System",
-      "risk": "Medium",
-      "category": "DNS",
-      "recommendation": "Use DoT/DoH for privacy"
-    },
-    {
-      "port": 853,
-      "transport": "TCP",
-      "serviceName": "DNS-over-TLS",
-      "description": "DNS over TLS (DoT)",
-      "risk": "Low",
-      "category": "DNS",
-      "recommendation": "Encrypted DNS"
-    },
-    {
-      "port": 5353,
-      "transport": "UDP",
-      "serviceName": "mDNS",
-      "description": "Multicast DNS",
-      "risk": "Medium",
-      "category": "DNS",
-      "recommendation": "Local network only"
-    },
-    {
-      "port": 5355,
-      "transport": "UDP",
-      "serviceName": "LLMNR",
-      "description": "Link-Local Multicast Name Resolution",
-      "risk": "Medium",
-      "category": "DNS",
-      "recommendation": "Disable - Responder attacks"
+      "serviceName": "Chargen",
+      "description": "Character Generator",
+      "risk": "High",
+      "category": "Legacy",
+      "recommendation": "DoS amplification"
     },
     {
       "port": 20,
@@ -388,6 +72,68 @@
       "recommendation": "Preferred file transfer"
     },
     {
+      "port": 23,
+      "transport": "TCP",
+      "serviceName": "Telnet",
+      "description": "Telnet",
+      "risk": "Critical",
+      "category": "RemoteAccess",
+      "recommendation": "NEVER use - replace with SSH"
+    },
+    {
+      "port": 25,
+      "transport": "TCP",
+      "serviceName": "SMTP",
+      "description": "Simple Mail Transfer Protocol",
+      "risk": "High",
+      "category": "Email",
+      "recommendation": "Use STARTTLS or port 587"
+    },
+    {
+      "port": 37,
+      "transport": "Both",
+      "serviceName": "Time",
+      "description": "Time Protocol (legacy)",
+      "risk": "Medium",
+      "category": "Time",
+      "recommendation": "Use NTP instead"
+    },
+    {
+      "port": 49,
+      "transport": "TCP",
+      "serviceName": "TACACS+",
+      "description": "TACACS+",
+      "risk": "Medium",
+      "category": "Auth",
+      "recommendation": "Encrypts payload"
+    },
+    {
+      "port": 53,
+      "transport": "Both",
+      "serviceName": "DNS",
+      "description": "Domain Name System",
+      "risk": "Medium",
+      "category": "DNS",
+      "recommendation": "Use DoT/DoH for privacy"
+    },
+    {
+      "port": 67,
+      "transport": "UDP",
+      "serviceName": "DHCP-Server",
+      "description": "DHCP Server",
+      "risk": "Medium",
+      "category": "Network",
+      "recommendation": "Enable DHCP snooping"
+    },
+    {
+      "port": 68,
+      "transport": "UDP",
+      "serviceName": "DHCP-Client",
+      "description": "DHCP Client",
+      "risk": "Medium",
+      "category": "Network"
+    },
+    {
       "port": 69,
       "transport": "UDP",
       "serviceName": "TFTP",
@@ -395,6 +141,494 @@
       "risk": "High",
       "category": "FileTransfer",
       "recommendation": "No auth - internal use only"
+    },
+    {
+      "port": 70,
+      "transport": "TCP",
+      "serviceName": "Gopher",
+      "description": "Gopher Protocol",
+      "risk": "High",
+      "category": "Legacy",
+      "recommendation": "Obsolete"
+    },
+    {
+      "port": 79,
+      "transport": "TCP",
+      "serviceName": "Finger",
+      "description": "Finger Protocol",
+      "risk": "High",
+      "category": "Legacy",
+      "recommendation": "Disable - information disclosure"
+    },
+    {
+      "port": 80,
+      "transport": "TCP",
+      "serviceName": "HTTP",
+      "description": "Hypertext Transfer Protocol",
+      "risk": "High",
+      "category": "Web",
+      "recommendation": "Use HTTPS instead"
+    },
+    {
+      "port": 81,
+      "transport": "TCP",
+      "serviceName": "HTTP-Alt-3",
+      "description": "HTTP Alternate 3",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 82,
+      "transport": "TCP",
+      "serviceName": "HTTP-Alt-4",
+      "description": "HTTP Alternate 4",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 88,
+      "transport": "Both",
+      "serviceName": "Kerberos",
+      "description": "Kerberos authentication",
+      "risk": "Low",
+      "category": "AD",
+      "recommendation": "Secure when properly configured"
+    },
+    {
+      "port": 102,
+      "transport": "TCP",
+      "serviceName": "S7comm",
+      "description": "Siemens S7 Communication",
+      "risk": "High",
+      "category": "Industrial"
+    },
+    {
+      "port": 110,
+      "transport": "TCP",
+      "serviceName": "POP3",
+      "description": "Post Office Protocol v3",
+      "risk": "High",
+      "category": "Email",
+      "recommendation": "Use POP3S (995)"
+    },
+    {
+      "port": 111,
+      "transport": "Both",
+      "serviceName": "RPCBind",
+      "description": "RPC Port Mapper",
+      "risk": "Medium",
+      "category": "FileTransfer",
+      "recommendation": "Required for NFS"
+    },
+    {
+      "port": 113,
+      "transport": "TCP",
+      "serviceName": "Ident",
+      "description": "Identification Protocol",
+      "risk": "Medium",
+      "category": "Network"
+    },
+    {
+      "port": 115,
+      "transport": "TCP",
+      "serviceName": "SFTP-Legacy",
+      "description": "Simple File Transfer Protocol",
+      "risk": "High",
+      "category": "FileTransfer",
+      "recommendation": "Legacy - not SSH SFTP"
+    },
+    {
+      "port": 123,
+      "transport": "UDP",
+      "serviceName": "NTP",
+      "description": "Network Time Protocol",
+      "risk": "Low",
+      "category": "Time",
+      "recommendation": "Use NTP authentication"
+    },
+    {
+      "port": 135,
+      "transport": "TCP",
+      "serviceName": "MS-RPC",
+      "description": "Microsoft RPC Endpoint Mapper",
+      "risk": "Medium",
+      "category": "AD",
+      "recommendation": "Required for AD, firewall carefully"
+    },
+    {
+      "port": 137,
+      "transport": "UDP",
+      "serviceName": "NetBIOS-NS",
+      "description": "NetBIOS Name Service",
+      "risk": "Medium",
+      "category": "AD",
+      "recommendation": "Disable if not needed"
+    },
+    {
+      "port": 138,
+      "transport": "UDP",
+      "serviceName": "NetBIOS-DGM",
+      "description": "NetBIOS Datagram",
+      "risk": "Medium",
+      "category": "AD",
+      "recommendation": "Disable if not needed"
+    },
+    {
+      "port": 139,
+      "transport": "TCP",
+      "serviceName": "NetBIOS-SSN",
+      "description": "NetBIOS Session Service",
+      "risk": "High",
+      "category": "AD",
+      "recommendation": "Legacy - use SMB direct (445)"
+    },
+    {
+      "port": 143,
+      "transport": "TCP",
+      "serviceName": "IMAP",
+      "description": "Internet Message Access Protocol",
+      "risk": "High",
+      "category": "Email",
+      "recommendation": "Use IMAPS (993)"
+    },
+    {
+      "port": 161,
+      "transport": "UDP",
+      "serviceName": "SNMP",
+      "description": "Simple Network Management Protocol",
+      "risk": "High",
+      "category": "Management",
+      "recommendation": "Use SNMPv3"
+    },
+    {
+      "port": 162,
+      "transport": "UDP",
+      "serviceName": "SNMP-Trap",
+      "description": "SNMP Trap",
+      "risk": "High",
+      "category": "Management",
+      "recommendation": "Use SNMPv3"
+    },
+    {
+      "port": 177,
+      "transport": "UDP",
+      "serviceName": "XDMCP",
+      "description": "X Display Manager Control",
+      "risk": "High",
+      "category": "Display",
+      "recommendation": "Disable"
+    },
+    {
+      "port": 179,
+      "transport": "TCP",
+      "serviceName": "BGP",
+      "description": "Border Gateway Protocol",
+      "risk": "Medium",
+      "category": "Network",
+      "recommendation": "Internal routing only"
+    },
+    {
+      "port": 264,
+      "transport": "TCP",
+      "serviceName": "Check-Point-FWA",
+      "description": "Check Point FWA",
+      "risk": "Medium",
+      "category": "VPN"
+    },
+    {
+      "port": 389,
+      "transport": "Both",
+      "serviceName": "LDAP",
+      "description": "Lightweight Directory Access Protocol",
+      "risk": "High",
+      "category": "AD",
+      "recommendation": "Use LDAPS (636) instead"
+    },
+    {
+      "port": 427,
+      "transport": "Both",
+      "serviceName": "SLP",
+      "description": "Service Location Protocol",
+      "risk": "Medium",
+      "category": "Network"
+    },
+    {
+      "port": 443,
+      "transport": "TCP",
+      "serviceName": "HTTPS",
+      "description": "HTTP over TLS",
+      "risk": "Low",
+      "category": "Web",
+      "recommendation": "Ensure TLS 1.2+"
+    },
+    {
+      "port": 444,
+      "transport": "TCP",
+      "serviceName": "Skype-Certs",
+      "description": "Skype for Business Certificates",
+      "risk": "Low",
+      "category": "Teams"
+    },
+    {
+      "port": 445,
+      "transport": "TCP",
+      "serviceName": "SMB",
+      "description": "Server Message Block",
+      "risk": "Medium",
+      "category": "AD",
+      "recommendation": "Ensure SMBv3 with encryption"
+    },
+    {
+      "port": 464,
+      "transport": "Both",
+      "serviceName": "Kerberos-Change",
+      "description": "Kerberos password change",
+      "risk": "Low",
+      "category": "AD"
+    },
+    {
+      "port": 465,
+      "transport": "TCP",
+      "serviceName": "SMTPS",
+      "description": "SMTP over SSL (deprecated)",
+      "risk": "Low",
+      "category": "Email",
+      "recommendation": "Implicit TLS"
+    },
+    {
+      "port": 500,
+      "transport": "UDP",
+      "serviceName": "IKE",
+      "description": "Internet Key Exchange (IPSec)",
+      "risk": "Low",
+      "category": "VPN"
+    },
+    {
+      "port": 502,
+      "transport": "TCP",
+      "serviceName": "Modbus",
+      "description": "Modbus TCP",
+      "risk": "High",
+      "category": "Industrial",
+      "recommendation": "Isolate from IT network"
+    },
+    {
+      "port": 512,
+      "transport": "TCP",
+      "serviceName": "rexec",
+      "description": "Remote Execution",
+      "risk": "Critical",
+      "category": "RemoteAccess",
+      "recommendation": "NEVER use"
+    },
+    {
+      "port": 513,
+      "transport": "TCP",
+      "serviceName": "rlogin",
+      "description": "Remote Login",
+      "risk": "Critical",
+      "category": "RemoteAccess",
+      "recommendation": "NEVER use - replace with SSH"
+    },
+    {
+      "port": 514,
+      "transport": "TCP",
+      "serviceName": "rsh",
+      "description": "Remote Shell (TCP)",
+      "risk": "Critical",
+      "category": "RemoteAccess",
+      "recommendation": "NEVER use - replace with SSH"
+    },
+    {
+      "port": 514,
+      "transport": "UDP",
+      "serviceName": "Syslog",
+      "description": "Syslog",
+      "risk": "Medium",
+      "category": "Management",
+      "recommendation": "Use Syslog over TLS"
+    },
+    {
+      "port": 515,
+      "transport": "TCP",
+      "serviceName": "LPD",
+      "description": "Line Printer Daemon",
+      "risk": "Medium",
+      "category": "Printing"
+    },
+    {
+      "port": 520,
+      "transport": "UDP",
+      "serviceName": "RIP",
+      "description": "Routing Information Protocol",
+      "risk": "Medium",
+      "category": "Network"
+    },
+    {
+      "port": 521,
+      "transport": "UDP",
+      "serviceName": "RIPng",
+      "description": "RIP Next Generation (IPv6)",
+      "risk": "Medium",
+      "category": "Network"
+    },
+    {
+      "port": 524,
+      "transport": "TCP",
+      "serviceName": "NCP",
+      "description": "NetWare Core Protocol",
+      "risk": "Medium",
+      "category": "Directory"
+    },
+    {
+      "port": 541,
+      "transport": "TCP",
+      "serviceName": "FortiGate-Admin",
+      "description": "FortiGate Management",
+      "risk": "Medium",
+      "category": "VPN"
+    },
+    {
+      "port": 546,
+      "transport": "UDP",
+      "serviceName": "DHCPv6-Client",
+      "description": "DHCPv6 Client",
+      "risk": "Medium",
+      "category": "Network"
+    },
+    {
+      "port": 547,
+      "transport": "UDP",
+      "serviceName": "DHCPv6-Server",
+      "description": "DHCPv6 Server",
+      "risk": "Medium",
+      "category": "Network"
+    },
+    {
+      "port": 548,
+      "transport": "TCP",
+      "serviceName": "AFP",
+      "description": "Apple Filing Protocol",
+      "risk": "Medium",
+      "category": "FileTransfer",
+      "recommendation": "Use SMB instead"
+    },
+    {
+      "port": 554,
+      "transport": "TCP",
+      "serviceName": "RTSP",
+      "description": "Real Time Streaming Protocol",
+      "risk": "Medium",
+      "category": "VoIP"
+    },
+    {
+      "port": 587,
+      "transport": "TCP",
+      "serviceName": "Submission",
+      "description": "Mail Submission (STARTTLS)",
+      "risk": "Low",
+      "category": "Email",
+      "recommendation": "Recommended for client submission"
+    },
+    {
+      "port": 593,
+      "transport": "TCP",
+      "serviceName": "RPC-HTTP",
+      "description": "RPC over HTTP",
+      "risk": "Medium",
+      "category": "AD"
+    },
+    {
+      "port": 623,
+      "transport": "UDP",
+      "serviceName": "IPMI-RMCP",
+      "description": "IPMI Remote Management",
+      "risk": "High",
+      "category": "Management",
+      "recommendation": "Vulnerable - isolate"
+    },
+    {
+      "port": 631,
+      "transport": "Both",
+      "serviceName": "IPP",
+      "description": "Internet Printing Protocol",
+      "risk": "Medium",
+      "category": "Printing"
+    },
+    {
+      "port": 636,
+      "transport": "Both",
+      "serviceName": "LDAPS",
+      "description": "LDAP over SSL/TLS",
+      "risk": "Low",
+      "category": "AD",
+      "recommendation": "Secure directory access"
+    },
+    {
+      "port": 646,
+      "transport": "Both",
+      "serviceName": "LDP",
+      "description": "Label Distribution Protocol",
+      "risk": "Medium",
+      "category": "Network"
+    },
+    {
+      "port": 664,
+      "transport": "TCP",
+      "serviceName": "IPMI-Serial",
+      "description": "IPMI Serial Over LAN",
+      "risk": "High",
+      "category": "Management"
+    },
+    {
+      "port": 830,
+      "transport": "TCP",
+      "serviceName": "NETCONF",
+      "description": "Network Configuration Protocol",
+      "risk": "Medium",
+      "category": "Network"
+    },
+    {
+      "port": 853,
+      "transport": "TCP",
+      "serviceName": "DNS-over-TLS",
+      "description": "DNS over TLS (DoT)",
+      "risk": "Low",
+      "category": "DNS",
+      "recommendation": "Encrypted DNS"
+    },
+    {
+      "port": 873,
+      "transport": "TCP",
+      "serviceName": "Rsync",
+      "description": "Remote Sync",
+      "risk": "Medium",
+      "category": "FileTransfer",
+      "recommendation": "Use SSH tunnel"
+    },
+    {
+      "port": 902,
+      "transport": "Both",
+      "serviceName": "VMware-Auth",
+      "description": "VMware ESXi Auth/Console",
+      "risk": "Medium",
+      "category": "VMware"
+    },
+    {
+      "port": 903,
+      "transport": "TCP",
+      "serviceName": "VMware-Console",
+      "description": "VMware Remote Console",
+      "risk": "Medium",
+      "category": "VMware"
+    },
+    {
+      "port": 943,
+      "transport": "TCP",
+      "serviceName": "OpenVPN-AS-Admin",
+      "description": "OpenVPN Access Server Admin",
+      "risk": "Medium",
+      "category": "VPN"
     },
     {
       "port": 989,
@@ -413,13 +647,309 @@
       "category": "FileTransfer"
     },
     {
-      "port": 115,
+      "port": 993,
       "transport": "TCP",
-      "serviceName": "SFTP-Legacy",
-      "description": "Simple File Transfer Protocol",
+      "serviceName": "IMAPS",
+      "description": "IMAP over SSL/TLS",
+      "risk": "Low",
+      "category": "Email"
+    },
+    {
+      "port": 995,
+      "transport": "TCP",
+      "serviceName": "POP3S",
+      "description": "POP3 over SSL/TLS",
+      "risk": "Low",
+      "category": "Email"
+    },
+    {
+      "port": 1080,
+      "transport": "TCP",
+      "serviceName": "SOCKS",
+      "description": "SOCKS Proxy",
+      "risk": "Medium",
+      "category": "Proxy"
+    },
+    {
+      "port": 1194,
+      "transport": "Both",
+      "serviceName": "OpenVPN",
+      "description": "OpenVPN",
+      "risk": "Low",
+      "category": "VPN"
+    },
+    {
+      "port": 1195,
+      "transport": "UDP",
+      "serviceName": "OpenVPN-Alt",
+      "description": "OpenVPN Alternate",
+      "risk": "Low",
+      "category": "VPN"
+    },
+    {
+      "port": 1270,
+      "transport": "TCP",
+      "serviceName": "SCOM-Agent",
+      "description": "SCOM Agent",
+      "risk": "Medium",
+      "category": "Enterprise"
+    },
+    {
+      "port": 1400,
+      "transport": "TCP",
+      "serviceName": "Sonos",
+      "description": "Sonos Speaker Control",
+      "risk": "Medium",
+      "category": "IoT"
+    },
+    {
+      "port": 1431,
+      "transport": "TCP",
+      "serviceName": "SQL-DAC",
+      "description": "SQL Server DAC",
+      "risk": "Medium",
+      "category": "Microsoft"
+    },
+    {
+      "port": 1433,
+      "transport": "TCP",
+      "serviceName": "MSSQL",
+      "description": "Microsoft SQL Server",
+      "risk": "Medium",
+      "category": "Database",
+      "recommendation": "Use TLS encryption"
+    },
+    {
+      "port": 1434,
+      "transport": "UDP",
+      "serviceName": "MSSQL-Browser",
+      "description": "SQL Server Browser",
+      "risk": "Medium",
+      "category": "Database",
+      "recommendation": "Instance discovery"
+    },
+    {
+      "port": 1494,
+      "transport": "Both",
+      "serviceName": "Citrix-ICA",
+      "description": "Citrix ICA Protocol",
+      "risk": "Medium",
+      "category": "Citrix",
+      "recommendation": "Use SSL/TLS with NetScaler"
+    },
+    {
+      "port": 1514,
+      "transport": "TCP",
+      "serviceName": "Wazuh-Agent",
+      "description": "Wazuh Agent",
+      "risk": "Medium",
+      "category": "Security"
+    },
+    {
+      "port": 1515,
+      "transport": "TCP",
+      "serviceName": "Wazuh-Register",
+      "description": "Wazuh Registration",
+      "risk": "Medium",
+      "category": "Security"
+    },
+    {
+      "port": 1521,
+      "transport": "TCP",
+      "serviceName": "Oracle",
+      "description": "Oracle Database",
+      "risk": "Medium",
+      "category": "Database",
+      "recommendation": "Use TLS"
+    },
+    {
+      "port": 1526,
+      "transport": "TCP",
+      "serviceName": "Oracle-Alt",
+      "description": "Oracle Alternate",
+      "risk": "Medium",
+      "category": "Database"
+    },
+    {
+      "port": 1527,
+      "transport": "TCP",
+      "serviceName": "Derby",
+      "description": "Apache Derby",
+      "risk": "Medium",
+      "category": "Database"
+    },
+    {
+      "port": 1585,
+      "transport": "TCP",
+      "serviceName": "Bomgar",
+      "description": "BeyondTrust Remote Support",
+      "risk": "Medium",
+      "category": "RemoteSupport"
+    },
+    {
+      "port": 1586,
+      "transport": "TCP",
+      "serviceName": "Bomgar-HTTPS",
+      "description": "BeyondTrust HTTPS",
+      "risk": "Low",
+      "category": "RemoteSupport"
+    },
+    {
+      "port": 1636,
+      "transport": "TCP",
+      "serviceName": "eDir-LDAPS",
+      "description": "Novell eDirectory LDAPS",
+      "risk": "Low",
+      "category": "Directory"
+    },
+    {
+      "port": 1645,
+      "transport": "UDP",
+      "serviceName": "RADIUS-Old-Auth",
+      "description": "RADIUS Auth (old)",
+      "risk": "Medium",
+      "category": "Auth"
+    },
+    {
+      "port": 1646,
+      "transport": "UDP",
+      "serviceName": "RADIUS-Old-Acct",
+      "description": "RADIUS Acct (old)",
+      "risk": "Medium",
+      "category": "Auth"
+    },
+    {
+      "port": 1688,
+      "transport": "TCP",
+      "serviceName": "KMS",
+      "description": "Windows Key Management Service",
+      "risk": "Low",
+      "category": "Microsoft"
+    },
+    {
+      "port": 1701,
+      "transport": "UDP",
+      "serviceName": "L2TP",
+      "description": "Layer 2 Tunneling Protocol",
+      "risk": "Medium",
+      "category": "VPN",
+      "recommendation": "Use with IPSec"
+    },
+    {
+      "port": 1719,
+      "transport": "UDP",
+      "serviceName": "H.323-GK-RAS",
+      "description": "H.323 Gatekeeper RAS",
+      "risk": "Medium",
+      "category": "VoIP"
+    },
+    {
+      "port": 1720,
+      "transport": "TCP",
+      "serviceName": "H.323",
+      "description": "H.323 Call Setup",
+      "risk": "Medium",
+      "category": "VoIP"
+    },
+    {
+      "port": 1723,
+      "transport": "TCP",
+      "serviceName": "PPTP",
+      "description": "Point-to-Point Tunneling",
+      "risk": "Critical",
+      "category": "VPN",
+      "recommendation": "NEVER use - broken encryption"
+    },
+    {
+      "port": 1801,
+      "transport": "TCP",
+      "serviceName": "MSMQ",
+      "description": "Microsoft Message Queue",
+      "risk": "Medium",
+      "category": "Microsoft"
+    },
+    {
+      "port": 1812,
+      "transport": "UDP",
+      "serviceName": "RADIUS-Auth",
+      "description": "RADIUS Authentication",
+      "risk": "Medium",
+      "category": "Auth",
+      "recommendation": "Use RadSec"
+    },
+    {
+      "port": 1813,
+      "transport": "UDP",
+      "serviceName": "RADIUS-Acct",
+      "description": "RADIUS Accounting",
+      "risk": "Medium",
+      "category": "Auth"
+    },
+    {
+      "port": 1883,
+      "transport": "TCP",
+      "serviceName": "MQTT",
+      "description": "Message Queuing Telemetry Transport",
       "risk": "High",
-      "category": "FileTransfer",
-      "recommendation": "Legacy - not SSH SFTP"
+      "category": "Messaging",
+      "recommendation": "Use port 8883 with TLS"
+    },
+    {
+      "port": 1900,
+      "transport": "UDP",
+      "serviceName": "SSDP",
+      "description": "Simple Service Discovery",
+      "risk": "Medium",
+      "category": "Network",
+      "recommendation": "Disable on internet-facing"
+    },
+    {
+      "port": 1911,
+      "transport": "TCP",
+      "serviceName": "Niagara-Fox",
+      "description": "Niagara Fox Protocol",
+      "risk": "High",
+      "category": "Industrial"
+    },
+    {
+      "port": 1935,
+      "transport": "TCP",
+      "serviceName": "RTMP",
+      "description": "Real-Time Messaging Protocol",
+      "risk": "Medium",
+      "category": "VoIP"
+    },
+    {
+      "port": 2000,
+      "transport": "TCP",
+      "serviceName": "Cisco-SCCP",
+      "description": "Cisco Skinny",
+      "risk": "Medium",
+      "category": "VoIP"
+    },
+    {
+      "port": 2012,
+      "transport": "TCP",
+      "serviceName": "VMware-VCHA",
+      "description": "VMware vCenter HA",
+      "risk": "Medium",
+      "category": "VMware"
+    },
+    {
+      "port": 2014,
+      "transport": "TCP",
+      "serviceName": "VMware-VCHA-Witness",
+      "description": "VMware vCenter HA Witness",
+      "risk": "Medium",
+      "category": "VMware"
+    },
+    {
+      "port": 2020,
+      "transport": "TCP",
+      "serviceName": "VMware-VCHA-DB",
+      "description": "VMware vCenter HA DB",
+      "risk": "Medium",
+      "category": "VMware"
     },
     {
       "port": 2049,
@@ -429,6 +959,2369 @@
       "risk": "Medium",
       "category": "FileTransfer",
       "recommendation": "Use NFSv4 with Kerberos"
+    },
+    {
+      "port": 2055,
+      "transport": "UDP",
+      "serviceName": "NetFlow",
+      "description": "Cisco NetFlow",
+      "risk": "Low",
+      "category": "Management"
+    },
+    {
+      "port": 2056,
+      "transport": "UDP",
+      "serviceName": "NetFlow-Alt",
+      "description": "NetFlow Alternate",
+      "risk": "Low",
+      "category": "Management"
+    },
+    {
+      "port": 2071,
+      "transport": "TCP",
+      "serviceName": "Citrix-ADF",
+      "description": "Citrix ADF Service",
+      "risk": "Medium",
+      "category": "Citrix"
+    },
+    {
+      "port": 2083,
+      "transport": "TCP",
+      "serviceName": "RadSec",
+      "description": "RADIUS over TLS",
+      "risk": "Low",
+      "category": "Auth"
+    },
+    {
+      "port": 2095,
+      "transport": "TCP",
+      "serviceName": "Webmail",
+      "description": "cPanel Webmail",
+      "risk": "High",
+      "category": "Email"
+    },
+    {
+      "port": 2096,
+      "transport": "TCP",
+      "serviceName": "Webmail-SSL",
+      "description": "cPanel Webmail SSL",
+      "risk": "Low",
+      "category": "Email"
+    },
+    {
+      "port": 2103,
+      "transport": "TCP",
+      "serviceName": "MSMQ-RPC",
+      "description": "MSMQ RPC",
+      "risk": "Medium",
+      "category": "Microsoft"
+    },
+    {
+      "port": 2105,
+      "transport": "TCP",
+      "serviceName": "MSMQ-Remote",
+      "description": "MSMQ Remote Read",
+      "risk": "Medium",
+      "category": "Microsoft"
+    },
+    {
+      "port": 2107,
+      "transport": "TCP",
+      "serviceName": "MSMQ-Mgmt",
+      "description": "MSMQ Management",
+      "risk": "Medium",
+      "category": "Microsoft"
+    },
+    {
+      "port": 2181,
+      "transport": "TCP",
+      "serviceName": "ZooKeeper",
+      "description": "Apache ZooKeeper",
+      "risk": "Medium",
+      "category": "Messaging",
+      "recommendation": "Use SASL auth"
+    },
+    {
+      "port": 2222,
+      "transport": "TCP",
+      "serviceName": "SSH-Alt",
+      "description": "SSH Alternate",
+      "risk": "Low",
+      "category": "RemoteAccess"
+    },
+    {
+      "port": 2222,
+      "transport": "UDP",
+      "serviceName": "EtherNet/IP-IO",
+      "description": "EtherNet/IP I/O",
+      "risk": "High",
+      "category": "Industrial"
+    },
+    {
+      "port": 2375,
+      "transport": "TCP",
+      "serviceName": "Docker",
+      "description": "Docker API (unencrypted)",
+      "risk": "Critical",
+      "category": "Container",
+      "recommendation": "NEVER expose - use 2376"
+    },
+    {
+      "port": 2376,
+      "transport": "TCP",
+      "serviceName": "Docker-TLS",
+      "description": "Docker API with TLS",
+      "risk": "Low",
+      "category": "Container"
+    },
+    {
+      "port": 2377,
+      "transport": "TCP",
+      "serviceName": "Docker-Swarm",
+      "description": "Docker Swarm Management",
+      "risk": "Medium",
+      "category": "Container"
+    },
+    {
+      "port": 2379,
+      "transport": "TCP",
+      "serviceName": "etcd-Client",
+      "description": "etcd Client",
+      "risk": "High",
+      "category": "Container",
+      "recommendation": "Enable auth and TLS"
+    },
+    {
+      "port": 2380,
+      "transport": "TCP",
+      "serviceName": "etcd-Peer",
+      "description": "etcd Peer",
+      "risk": "High",
+      "category": "Container"
+    },
+    {
+      "port": 2404,
+      "transport": "TCP",
+      "serviceName": "IEC-60870-5-104",
+      "description": "IEC 60870-5-104",
+      "risk": "High",
+      "category": "Industrial"
+    },
+    {
+      "port": 2443,
+      "transport": "TCP",
+      "serviceName": "Cisco-SCCP-TLS",
+      "description": "Cisco Skinny over TLS",
+      "risk": "Low",
+      "category": "VoIP"
+    },
+    {
+      "port": 2512,
+      "transport": "TCP",
+      "serviceName": "Citrix-Admin",
+      "description": "Citrix Management Console",
+      "risk": "Medium",
+      "category": "Citrix"
+    },
+    {
+      "port": 2513,
+      "transport": "TCP",
+      "serviceName": "Citrix-SMA",
+      "description": "Citrix SMA Service",
+      "risk": "Medium",
+      "category": "Citrix"
+    },
+    {
+      "port": 2525,
+      "transport": "TCP",
+      "serviceName": "SMTP-Alt",
+      "description": "SMTP Alternate",
+      "risk": "High",
+      "category": "Email"
+    },
+    {
+      "port": 2598,
+      "transport": "Both",
+      "serviceName": "Citrix-CGP",
+      "description": "Citrix CGP (Session Reliability)",
+      "risk": "Medium",
+      "category": "Citrix",
+      "recommendation": "Session reliability/reconnect"
+    },
+    {
+      "port": 2701,
+      "transport": "TCP",
+      "serviceName": "SMS-Remote",
+      "description": "SMS Remote Control",
+      "risk": "Medium",
+      "category": "Enterprise"
+    },
+    {
+      "port": 2888,
+      "transport": "TCP",
+      "serviceName": "ZooKeeper-Peer",
+      "description": "ZooKeeper Peer",
+      "risk": "Medium",
+      "category": "Messaging"
+    },
+    {
+      "port": 3000,
+      "transport": "TCP",
+      "serviceName": "Grafana",
+      "description": "Grafana",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 3074,
+      "transport": "Both",
+      "serviceName": "Xbox-Live",
+      "description": "Xbox Live",
+      "risk": "Low",
+      "category": "Gaming"
+    },
+    {
+      "port": 3128,
+      "transport": "TCP",
+      "serviceName": "Squid",
+      "description": "Squid proxy",
+      "risk": "Medium",
+      "category": "Web"
+    },
+    {
+      "port": 3130,
+      "transport": "TCP",
+      "serviceName": "Squid-ICP",
+      "description": "Squid ICP",
+      "risk": "Medium",
+      "category": "Proxy"
+    },
+    {
+      "port": 3200,
+      "transport": "TCP",
+      "serviceName": "SAP-Dispatcher",
+      "description": "SAP Dispatcher (00)",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 3201,
+      "transport": "TCP",
+      "serviceName": "SAP-Dispatcher-01",
+      "description": "SAP Dispatcher (01)",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 3202,
+      "transport": "TCP",
+      "serviceName": "SAP-Dispatcher-02",
+      "description": "SAP Dispatcher (02)",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 3203,
+      "transport": "TCP",
+      "serviceName": "SAP-Dispatcher-03",
+      "description": "SAP Dispatcher (03)",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 3205,
+      "transport": "TCP",
+      "serviceName": "iSCSI-Target",
+      "description": "iSCSI Target",
+      "risk": "Medium",
+      "category": "Storage"
+    },
+    {
+      "port": 3260,
+      "transport": "TCP",
+      "serviceName": "iSCSI",
+      "description": "Internet SCSI",
+      "risk": "Medium",
+      "category": "Storage",
+      "recommendation": "Use CHAP auth and IPSec"
+    },
+    {
+      "port": 3268,
+      "transport": "TCP",
+      "serviceName": "LDAP-GC",
+      "description": "LDAP Global Catalog",
+      "risk": "High",
+      "category": "AD",
+      "recommendation": "Use LDAPS-GC (3269)"
+    },
+    {
+      "port": 3269,
+      "transport": "TCP",
+      "serviceName": "LDAPS-GC",
+      "description": "LDAP Global Catalog over SSL",
+      "risk": "Low",
+      "category": "AD"
+    },
+    {
+      "port": 3283,
+      "transport": "TCP",
+      "serviceName": "Apple-Remote",
+      "description": "Apple Remote Desktop",
+      "risk": "Medium",
+      "category": "RemoteSupport"
+    },
+    {
+      "port": 3298,
+      "transport": "TCP",
+      "serviceName": "SAProuter-NI",
+      "description": "SAProuter NI",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 3299,
+      "transport": "TCP",
+      "serviceName": "SAProuter",
+      "description": "SAProuter Connection",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 3300,
+      "transport": "TCP",
+      "serviceName": "SAP-Gateway",
+      "description": "SAP Gateway (00)",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 3301,
+      "transport": "TCP",
+      "serviceName": "SAP-Gateway-01",
+      "description": "SAP Gateway (01)",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 3306,
+      "transport": "TCP",
+      "serviceName": "MySQL",
+      "description": "MySQL/MariaDB",
+      "risk": "Medium",
+      "category": "Database",
+      "recommendation": "Enable SSL/TLS"
+    },
+    {
+      "port": 3343,
+      "transport": "UDP",
+      "serviceName": "MS-Cluster",
+      "description": "Microsoft Cluster Service",
+      "risk": "Medium",
+      "category": "Microsoft"
+    },
+    {
+      "port": 3389,
+      "transport": "TCP",
+      "serviceName": "RDP",
+      "description": "Remote Desktop Protocol",
+      "risk": "Medium",
+      "category": "RemoteAccess",
+      "recommendation": "Enable NLA, use RD Gateway"
+    },
+    {
+      "port": 3478,
+      "transport": "Both",
+      "serviceName": "STUN/TURN",
+      "description": "STUN/TURN (WebRTC)",
+      "risk": "Low",
+      "category": "Media"
+    },
+    {
+      "port": 3478,
+      "transport": "UDP",
+      "serviceName": "Teams-STUN",
+      "description": "MS Teams STUN/TURN",
+      "risk": "Low",
+      "category": "Teams"
+    },
+    {
+      "port": 3479,
+      "transport": "Both",
+      "serviceName": "STUN-Alt",
+      "description": "STUN Alternate",
+      "risk": "Low",
+      "category": "Media"
+    },
+    {
+      "port": 3479,
+      "transport": "UDP",
+      "serviceName": "Teams-Audio",
+      "description": "MS Teams Audio",
+      "risk": "Low",
+      "category": "Teams"
+    },
+    {
+      "port": 3480,
+      "transport": "UDP",
+      "serviceName": "Teams-Video",
+      "description": "MS Teams Video",
+      "risk": "Low",
+      "category": "Teams"
+    },
+    {
+      "port": 3481,
+      "transport": "UDP",
+      "serviceName": "Teams-Sharing",
+      "description": "MS Teams Screen Sharing",
+      "risk": "Low",
+      "category": "Teams"
+    },
+    {
+      "port": 3535,
+      "transport": "TCP",
+      "serviceName": "SMTP-Alt",
+      "description": "SMTP Alternate",
+      "risk": "High",
+      "category": "Network"
+    },
+    {
+      "port": 3600,
+      "transport": "TCP",
+      "serviceName": "SAP-Message-Server",
+      "description": "SAP Message Server",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 3601,
+      "transport": "TCP",
+      "serviceName": "SAP-Message-Server-01",
+      "description": "SAP Message Server Int",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 3702,
+      "transport": "UDP",
+      "serviceName": "WS-Discovery",
+      "description": "Web Services Discovery",
+      "risk": "Medium",
+      "category": "IoT"
+    },
+    {
+      "port": 3888,
+      "transport": "TCP",
+      "serviceName": "ZooKeeper-Election",
+      "description": "ZooKeeper Election",
+      "risk": "Medium",
+      "category": "Messaging"
+    },
+    {
+      "port": 4000,
+      "transport": "TCP",
+      "serviceName": "Remote-Anything",
+      "description": "Remote Anything",
+      "risk": "Medium",
+      "category": "RemoteAccess"
+    },
+    {
+      "port": 4022,
+      "transport": "TCP",
+      "serviceName": "SQL-Service-Broker",
+      "description": "SQL Server Service Broker",
+      "risk": "Medium",
+      "category": "Microsoft"
+    },
+    {
+      "port": 4040,
+      "transport": "TCP",
+      "serviceName": "Puppet",
+      "description": "Puppet Agent",
+      "risk": "Medium",
+      "category": "DevOps"
+    },
+    {
+      "port": 4070,
+      "transport": "TCP",
+      "serviceName": "LogMeIn",
+      "description": "LogMeIn Hamachi",
+      "risk": "Medium",
+      "category": "RemoteSupport"
+    },
+    {
+      "port": 4100,
+      "transport": "TCP",
+      "serviceName": "Splashtop",
+      "description": "Splashtop Remote",
+      "risk": "Medium",
+      "category": "RemoteSupport"
+    },
+    {
+      "port": 4101,
+      "transport": "TCP",
+      "serviceName": "Splashtop-Gateway",
+      "description": "Splashtop Gateway",
+      "risk": "Medium",
+      "category": "RemoteSupport"
+    },
+    {
+      "port": 4102,
+      "transport": "TCP",
+      "serviceName": "Splashtop-SOS",
+      "description": "Splashtop SOS",
+      "risk": "Medium",
+      "category": "RemoteSupport"
+    },
+    {
+      "port": 4369,
+      "transport": "TCP",
+      "serviceName": "EPMD",
+      "description": "Erlang Port Mapper",
+      "risk": "Medium",
+      "category": "Database"
+    },
+    {
+      "port": 4443,
+      "transport": "TCP",
+      "serviceName": "Cisco-AnyConnect",
+      "description": "Cisco AnyConnect SSL",
+      "risk": "Low",
+      "category": "VPN"
+    },
+    {
+      "port": 4460,
+      "transport": "TCP",
+      "serviceName": "NTS-KE",
+      "description": "NTS Key Establishment",
+      "risk": "Low",
+      "category": "Time",
+      "recommendation": "NTP with TLS"
+    },
+    {
+      "port": 4500,
+      "transport": "UDP",
+      "serviceName": "IPSec-NAT-T",
+      "description": "IPSec NAT Traversal",
+      "risk": "Low",
+      "category": "VPN"
+    },
+    {
+      "port": 4505,
+      "transport": "TCP",
+      "serviceName": "SaltStack-Pub",
+      "description": "SaltStack Publisher",
+      "risk": "Medium",
+      "category": "DevOps"
+    },
+    {
+      "port": 4506,
+      "transport": "TCP",
+      "serviceName": "SaltStack-Ret",
+      "description": "SaltStack Return",
+      "risk": "Medium",
+      "category": "DevOps"
+    },
+    {
+      "port": 4569,
+      "transport": "UDP",
+      "serviceName": "IAX2",
+      "description": "Inter-Asterisk eXchange",
+      "risk": "Medium",
+      "category": "VoIP"
+    },
+    {
+      "port": 4646,
+      "transport": "TCP",
+      "serviceName": "Nomad",
+      "description": "HashiCorp Nomad",
+      "risk": "Medium",
+      "category": "DevOps"
+    },
+    {
+      "port": 4647,
+      "transport": "TCP",
+      "serviceName": "Nomad-RPC",
+      "description": "Nomad RPC",
+      "risk": "Medium",
+      "category": "DevOps"
+    },
+    {
+      "port": 4648,
+      "transport": "Both",
+      "serviceName": "Nomad-Serf",
+      "description": "Nomad Serf",
+      "risk": "Medium",
+      "category": "DevOps"
+    },
+    {
+      "port": 4700,
+      "transport": "TCP",
+      "serviceName": "SAP-HANA",
+      "description": "SAP HANA Index Server",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 4739,
+      "transport": "UDP",
+      "serviceName": "IPFIX",
+      "description": "IP Flow Information Export",
+      "risk": "Low",
+      "category": "Management"
+    },
+    {
+      "port": 4789,
+      "transport": "UDP",
+      "serviceName": "VXLAN",
+      "description": "Docker Overlay VXLAN",
+      "risk": "Medium",
+      "category": "Container"
+    },
+    {
+      "port": 4840,
+      "transport": "TCP",
+      "serviceName": "OPC-UA",
+      "description": "OPC Unified Architecture",
+      "risk": "Medium",
+      "category": "Industrial"
+    },
+    {
+      "port": 4843,
+      "transport": "TCP",
+      "serviceName": "OPC-UA-TLS",
+      "description": "OPC UA with TLS",
+      "risk": "Low",
+      "category": "Industrial"
+    },
+    {
+      "port": 4848,
+      "transport": "TCP",
+      "serviceName": "GlassFish",
+      "description": "GlassFish Admin",
+      "risk": "Medium",
+      "category": "Enterprise"
+    },
+    {
+      "port": 4899,
+      "transport": "TCP",
+      "serviceName": "Radmin",
+      "description": "Radmin Remote Admin",
+      "risk": "Medium",
+      "category": "RemoteSupport"
+    },
+    {
+      "port": 4911,
+      "transport": "TCP",
+      "serviceName": "Niagara-Fox-TLS",
+      "description": "Niagara Fox TLS",
+      "risk": "Medium",
+      "category": "Industrial"
+    },
+    {
+      "port": 5000,
+      "transport": "TCP",
+      "serviceName": "Registry",
+      "description": "Container Registry",
+      "risk": "Medium",
+      "category": "Container"
+    },
+    {
+      "port": 5004,
+      "transport": "UDP",
+      "serviceName": "RTP",
+      "description": "Real-time Transport Protocol",
+      "risk": "Medium",
+      "category": "VoIP",
+      "recommendation": "Use SRTP"
+    },
+    {
+      "port": 5005,
+      "transport": "UDP",
+      "serviceName": "RTCP",
+      "description": "RTP Control Protocol",
+      "risk": "Medium",
+      "category": "VoIP"
+    },
+    {
+      "port": 5060,
+      "transport": "Both",
+      "serviceName": "SIP",
+      "description": "Session Initiation Protocol",
+      "risk": "Medium",
+      "category": "VoIP",
+      "recommendation": "Use SIPS (5061)"
+    },
+    {
+      "port": 5060,
+      "transport": "TCP",
+      "serviceName": "Webex-SIP",
+      "description": "Webex SIP Signaling",
+      "risk": "Medium",
+      "category": "Webex"
+    },
+    {
+      "port": 5061,
+      "transport": "Both",
+      "serviceName": "SIPS",
+      "description": "SIP over TLS",
+      "risk": "Low",
+      "category": "VoIP"
+    },
+    {
+      "port": 5061,
+      "transport": "TCP",
+      "serviceName": "Skype-SIP-TLS",
+      "description": "Skype for Business SIP TLS",
+      "risk": "Low",
+      "category": "Teams"
+    },
+    {
+      "port": 5062,
+      "transport": "Both",
+      "serviceName": "SIP-Alt",
+      "description": "SIP Alternate",
+      "risk": "Medium",
+      "category": "VoIP"
+    },
+    {
+      "port": 5063,
+      "transport": "TCP",
+      "serviceName": "Skype-SIP-MTLS",
+      "description": "Skype for Business SIP MTLS",
+      "risk": "Low",
+      "category": "Teams"
+    },
+    {
+      "port": 5064,
+      "transport": "TCP",
+      "serviceName": "Skype-Internal",
+      "description": "Skype for Business Internal",
+      "risk": "Medium",
+      "category": "Teams"
+    },
+    {
+      "port": 5065,
+      "transport": "TCP",
+      "serviceName": "Skype-External",
+      "description": "Skype for Business External",
+      "risk": "Medium",
+      "category": "Teams"
+    },
+    {
+      "port": 5066,
+      "transport": "TCP",
+      "serviceName": "Skype-Focus",
+      "description": "Skype for Business Focus",
+      "risk": "Medium",
+      "category": "Teams"
+    },
+    {
+      "port": 5067,
+      "transport": "TCP",
+      "serviceName": "Skype-SRTP",
+      "description": "Skype for Business SRTP",
+      "risk": "Low",
+      "category": "Teams"
+    },
+    {
+      "port": 5068,
+      "transport": "TCP",
+      "serviceName": "Skype-SRTP-Video",
+      "description": "Skype for Business Video SRTP",
+      "risk": "Low",
+      "category": "Teams"
+    },
+    {
+      "port": 5070,
+      "transport": "TCP",
+      "serviceName": "Skype-CAA",
+      "description": "Skype for Business CAA",
+      "risk": "Medium",
+      "category": "Teams"
+    },
+    {
+      "port": 5071,
+      "transport": "TCP",
+      "serviceName": "Skype-Autodiscover",
+      "description": "Skype for Business Autodiscover",
+      "risk": "Medium",
+      "category": "Teams"
+    },
+    {
+      "port": 5090,
+      "transport": "TCP",
+      "serviceName": "Zoom-H323",
+      "description": "Zoom H.323 ALT",
+      "risk": "Medium",
+      "category": "Zoom"
+    },
+    {
+      "port": 5091,
+      "transport": "TCP",
+      "serviceName": "Zoom-H323-TLS",
+      "description": "Zoom H.323 TLS",
+      "risk": "Low",
+      "category": "Zoom"
+    },
+    {
+      "port": 5120,
+      "transport": "TCP",
+      "serviceName": "IMM-Virtual-Media",
+      "description": "Lenovo IMM Virtual Media",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 5349,
+      "transport": "Both",
+      "serviceName": "STUN-TLS",
+      "description": "STUN over TLS",
+      "risk": "Low",
+      "category": "Media"
+    },
+    {
+      "port": 5353,
+      "transport": "UDP",
+      "serviceName": "mDNS",
+      "description": "Multicast DNS",
+      "risk": "Medium",
+      "category": "DNS",
+      "recommendation": "Local network only"
+    },
+    {
+      "port": 5355,
+      "transport": "UDP",
+      "serviceName": "LLMNR",
+      "description": "Link-Local Multicast Name Resolution",
+      "risk": "Medium",
+      "category": "DNS",
+      "recommendation": "Disable - Responder attacks"
+    },
+    {
+      "port": 5432,
+      "transport": "TCP",
+      "serviceName": "PostgreSQL",
+      "description": "PostgreSQL",
+      "risk": "Medium",
+      "category": "Database",
+      "recommendation": "Enable SSL"
+    },
+    {
+      "port": 5480,
+      "transport": "TCP",
+      "serviceName": "VMware-VAMI",
+      "description": "VMware VAMI",
+      "risk": "Medium",
+      "category": "VMware"
+    },
+    {
+      "port": 5500,
+      "transport": "TCP",
+      "serviceName": "VNC-Reverse",
+      "description": "VNC Reverse Connection",
+      "risk": "High",
+      "category": "RemoteSupport"
+    },
+    {
+      "port": 5601,
+      "transport": "TCP",
+      "serviceName": "Kibana",
+      "description": "Kibana",
+      "risk": "Medium",
+      "category": "Security"
+    },
+    {
+      "port": 5631,
+      "transport": "TCP",
+      "serviceName": "pcAnywhere-Data",
+      "description": "pcAnywhere Data",
+      "risk": "High",
+      "category": "RemoteAccess",
+      "recommendation": "Deprecated"
+    },
+    {
+      "port": 5632,
+      "transport": "UDP",
+      "serviceName": "pcAnywhere-Status",
+      "description": "pcAnywhere Status",
+      "risk": "High",
+      "category": "RemoteAccess"
+    },
+    {
+      "port": 5666,
+      "transport": "TCP",
+      "serviceName": "NRPE",
+      "description": "Nagios Remote Plugin",
+      "risk": "Medium",
+      "category": "Management",
+      "recommendation": "Use NRPE with SSL"
+    },
+    {
+      "port": 5671,
+      "transport": "TCP",
+      "serviceName": "AMQPS",
+      "description": "AMQP over TLS",
+      "risk": "Low",
+      "category": "Messaging"
+    },
+    {
+      "port": 5672,
+      "transport": "TCP",
+      "serviceName": "AMQP",
+      "description": "Advanced Message Queue Protocol",
+      "risk": "Medium",
+      "category": "Messaging",
+      "recommendation": "Use TLS"
+    },
+    {
+      "port": 5683,
+      "transport": "UDP",
+      "serviceName": "CoAP",
+      "description": "Constrained Application Protocol",
+      "risk": "Medium",
+      "category": "IoT"
+    },
+    {
+      "port": 5684,
+      "transport": "UDP",
+      "serviceName": "CoAPs",
+      "description": "CoAP over DTLS",
+      "risk": "Low",
+      "category": "IoT"
+    },
+    {
+      "port": 5722,
+      "transport": "TCP",
+      "serviceName": "DFS-R",
+      "description": "DFS Replication",
+      "risk": "Medium",
+      "category": "Microsoft"
+    },
+    {
+      "port": 5723,
+      "transport": "TCP",
+      "serviceName": "SCOM",
+      "description": "System Center Operations Manager",
+      "risk": "Medium",
+      "category": "Microsoft"
+    },
+    {
+      "port": 5800,
+      "transport": "TCP",
+      "serviceName": "VNC-HTTP",
+      "description": "VNC over HTTP",
+      "risk": "High",
+      "category": "RemoteAccess"
+    },
+    {
+      "port": 5900,
+      "transport": "TCP",
+      "serviceName": "VNC",
+      "description": "Virtual Network Computing",
+      "risk": "High",
+      "category": "RemoteAccess",
+      "recommendation": "Tunnel over SSH"
+    },
+    {
+      "port": 5901,
+      "transport": "TCP",
+      "serviceName": "VNC-1",
+      "description": "VNC Display :1",
+      "risk": "High",
+      "category": "RemoteAccess"
+    },
+    {
+      "port": 5902,
+      "transport": "TCP",
+      "serviceName": "VNC-2",
+      "description": "VNC Display :2",
+      "risk": "High",
+      "category": "RemoteAccess"
+    },
+    {
+      "port": 5903,
+      "transport": "TCP",
+      "serviceName": "VNC-3",
+      "description": "VNC Display :3",
+      "risk": "High",
+      "category": "RemoteAccess"
+    },
+    {
+      "port": 5904,
+      "transport": "TCP",
+      "serviceName": "VNC-4",
+      "description": "VNC Display :4",
+      "risk": "High",
+      "category": "RemoteAccess"
+    },
+    {
+      "port": 5938,
+      "transport": "TCP",
+      "serviceName": "TeamViewer",
+      "description": "TeamViewer Connection",
+      "risk": "Medium",
+      "category": "RemoteSupport",
+      "recommendation": "Monitor for unauthorized use"
+    },
+    {
+      "port": 5984,
+      "transport": "TCP",
+      "serviceName": "CouchDB",
+      "description": "Apache CouchDB",
+      "risk": "Medium",
+      "category": "Database"
+    },
+    {
+      "port": 5985,
+      "transport": "TCP",
+      "serviceName": "WinRM-HTTP",
+      "description": "Windows Remote Management",
+      "risk": "Medium",
+      "category": "Microsoft",
+      "recommendation": "Use port 5986"
+    },
+    {
+      "port": 5986,
+      "transport": "TCP",
+      "serviceName": "WinRM-HTTPS",
+      "description": "Windows Remote Management HTTPS",
+      "risk": "Low",
+      "category": "Microsoft"
+    },
+    {
+      "port": 5988,
+      "transport": "TCP",
+      "serviceName": "WBEM-HTTP",
+      "description": "WBEM CIM/HTTP",
+      "risk": "Medium",
+      "category": "RemoteSupport"
+    },
+    {
+      "port": 5989,
+      "transport": "TCP",
+      "serviceName": "WBEM-HTTPS",
+      "description": "WBEM CIM/HTTPS",
+      "risk": "Low",
+      "category": "RemoteSupport"
+    },
+    {
+      "port": 6000,
+      "transport": "TCP",
+      "serviceName": "X11",
+      "description": "X Window System",
+      "risk": "Medium",
+      "category": "Display",
+      "recommendation": "Tunnel over SSH"
+    },
+    {
+      "port": 6001,
+      "transport": "TCP",
+      "serviceName": "X11-1",
+      "description": "X11 Display :1",
+      "risk": "Medium",
+      "category": "Display"
+    },
+    {
+      "port": 6002,
+      "transport": "TCP",
+      "serviceName": "X11-2",
+      "description": "X11 Display :2",
+      "risk": "Medium",
+      "category": "Display"
+    },
+    {
+      "port": 6003,
+      "transport": "TCP",
+      "serviceName": "X11-3",
+      "description": "X11 Display :3",
+      "risk": "Medium",
+      "category": "Display"
+    },
+    {
+      "port": 6379,
+      "transport": "TCP",
+      "serviceName": "Redis",
+      "description": "Redis",
+      "risk": "High",
+      "category": "Database",
+      "recommendation": "Enable AUTH, bind localhost"
+    },
+    {
+      "port": 6380,
+      "transport": "TCP",
+      "serviceName": "Redis-TLS",
+      "description": "Redis with TLS",
+      "risk": "Low",
+      "category": "Database"
+    },
+    {
+      "port": 6443,
+      "transport": "TCP",
+      "serviceName": "Kubernetes-API",
+      "description": "Kubernetes API Server",
+      "risk": "Medium",
+      "category": "Container",
+      "recommendation": "Use RBAC"
+    },
+    {
+      "port": 6514,
+      "transport": "TCP",
+      "serviceName": "Syslog-TLS",
+      "description": "Syslog over TLS",
+      "risk": "Low",
+      "category": "Management"
+    },
+    {
+      "port": 6568,
+      "transport": "TCP",
+      "serviceName": "AnyDesk-Direct",
+      "description": "AnyDesk Direct Connection",
+      "risk": "Medium",
+      "category": "RemoteSupport"
+    },
+    {
+      "port": 6633,
+      "transport": "TCP",
+      "serviceName": "OpenFlow",
+      "description": "OpenFlow SDN",
+      "risk": "Medium",
+      "category": "Network"
+    },
+    {
+      "port": 6650,
+      "transport": "TCP",
+      "serviceName": "Pulsar",
+      "description": "Apache Pulsar",
+      "risk": "Medium",
+      "category": "Messaging"
+    },
+    {
+      "port": 6651,
+      "transport": "TCP",
+      "serviceName": "Pulsar-TLS",
+      "description": "Apache Pulsar TLS",
+      "risk": "Low",
+      "category": "Messaging"
+    },
+    {
+      "port": 6653,
+      "transport": "TCP",
+      "serviceName": "OpenFlow-IANA",
+      "description": "OpenFlow (IANA)",
+      "risk": "Medium",
+      "category": "Network"
+    },
+    {
+      "port": 6660,
+      "transport": "TCP",
+      "serviceName": "Bacula-Dir",
+      "description": "Bacula Director",
+      "risk": "Medium",
+      "category": "Backup"
+    },
+    {
+      "port": 6661,
+      "transport": "TCP",
+      "serviceName": "Bacula-FD",
+      "description": "Bacula File Daemon",
+      "risk": "Medium",
+      "category": "Backup"
+    },
+    {
+      "port": 6662,
+      "transport": "TCP",
+      "serviceName": "Bacula-SD",
+      "description": "Bacula Storage Daemon",
+      "risk": "Medium",
+      "category": "Backup"
+    },
+    {
+      "port": 6668,
+      "transport": "TCP",
+      "serviceName": "IoT-Gateway",
+      "description": "Generic IoT Gateway",
+      "risk": "Medium",
+      "category": "IoT"
+    },
+    {
+      "port": 6789,
+      "transport": "TCP",
+      "serviceName": "UniFi-Mobile",
+      "description": "UniFi Mobile Speed Test",
+      "risk": "Medium",
+      "category": "IoT"
+    },
+    {
+      "port": 7000,
+      "transport": "TCP",
+      "serviceName": "Cassandra-Cluster",
+      "description": "Cassandra Inter-node",
+      "risk": "Medium",
+      "category": "Database"
+    },
+    {
+      "port": 7001,
+      "transport": "TCP",
+      "serviceName": "WebLogic",
+      "description": "Oracle WebLogic",
+      "risk": "Medium",
+      "category": "Enterprise"
+    },
+    {
+      "port": 7002,
+      "transport": "TCP",
+      "serviceName": "WebLogic-SSL",
+      "description": "Oracle WebLogic SSL",
+      "risk": "Low",
+      "category": "Enterprise"
+    },
+    {
+      "port": 7070,
+      "transport": "Both",
+      "serviceName": "AnyDesk",
+      "description": "AnyDesk Connection",
+      "risk": "Medium",
+      "category": "RemoteSupport",
+      "recommendation": "Monitor for unauthorized use"
+    },
+    {
+      "port": 7199,
+      "transport": "TCP",
+      "serviceName": "Cassandra-JMX",
+      "description": "Cassandra JMX",
+      "risk": "Medium",
+      "category": "Database"
+    },
+    {
+      "port": 7279,
+      "transport": "TCP",
+      "serviceName": "Citrix-License-Vendor",
+      "description": "Citrix License Vendor Daemon",
+      "risk": "Medium",
+      "category": "Citrix"
+    },
+    {
+      "port": 7474,
+      "transport": "TCP",
+      "serviceName": "Neo4j-HTTP",
+      "description": "Neo4j HTTP",
+      "risk": "Medium",
+      "category": "Database"
+    },
+    {
+      "port": 7578,
+      "transport": "TCP",
+      "serviceName": "IMM-Remote",
+      "description": "Lenovo IMM Remote Presence",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 7687,
+      "transport": "TCP",
+      "serviceName": "Neo4j-Bolt",
+      "description": "Neo4j Bolt",
+      "risk": "Medium",
+      "category": "Database"
+    },
+    {
+      "port": 7946,
+      "transport": "Both",
+      "serviceName": "Docker-Gossip",
+      "description": "Docker Swarm Gossip",
+      "risk": "Medium",
+      "category": "Container"
+    },
+    {
+      "port": 7990,
+      "transport": "TCP",
+      "serviceName": "Bitbucket",
+      "description": "Atlassian Bitbucket",
+      "risk": "Medium",
+      "category": "DevOps"
+    },
+    {
+      "port": 8000,
+      "transport": "TCP",
+      "serviceName": "HTTP-Alt-2",
+      "description": "HTTP Alternate (dev)",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 8001,
+      "transport": "TCP",
+      "serviceName": "HTTP-Proxy-Cache",
+      "description": "HTTP Proxy Cache",
+      "risk": "Medium",
+      "category": "Proxy"
+    },
+    {
+      "port": 8008,
+      "transport": "TCP",
+      "serviceName": "HTTP-Alt-5",
+      "description": "HTTP Alternate 5",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 8009,
+      "transport": "TCP",
+      "serviceName": "Chromecast-Cast",
+      "description": "Google Cast Protocol",
+      "risk": "Medium",
+      "category": "IoT"
+    },
+    {
+      "port": 8080,
+      "transport": "TCP",
+      "serviceName": "HTTP-Alt",
+      "description": "HTTP Alternate/Proxy",
+      "risk": "High",
+      "category": "Web",
+      "recommendation": "Common proxy port"
+    },
+    {
+      "port": 8081,
+      "transport": "TCP",
+      "serviceName": "HTTP-Proxy-Alt",
+      "description": "HTTP Proxy Alternate",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 8082,
+      "transport": "TCP",
+      "serviceName": "Citrix-License-Web",
+      "description": "Citrix License Web Interface",
+      "risk": "Medium",
+      "category": "Citrix"
+    },
+    {
+      "port": 8083,
+      "transport": "TCP",
+      "serviceName": "Citrix-License-WS",
+      "description": "Citrix License Web Service",
+      "risk": "Medium",
+      "category": "Citrix"
+    },
+    {
+      "port": 8086,
+      "transport": "TCP",
+      "serviceName": "InfluxDB",
+      "description": "InfluxDB HTTP",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 8089,
+      "transport": "TCP",
+      "serviceName": "Splunk-API",
+      "description": "Splunk REST API",
+      "risk": "Medium",
+      "category": "Security"
+    },
+    {
+      "port": 8090,
+      "transport": "TCP",
+      "serviceName": "HTTP-Alt-6",
+      "description": "HTTP Alternate 6",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 8100,
+      "transport": "TCP",
+      "serviceName": "VMware-Fault-Tolerance",
+      "description": "VMware FT Traffic",
+      "risk": "Medium",
+      "category": "VMware"
+    },
+    {
+      "port": 8118,
+      "transport": "TCP",
+      "serviceName": "Privoxy",
+      "description": "Privoxy HTTP Proxy",
+      "risk": "Medium",
+      "category": "Proxy"
+    },
+    {
+      "port": 8140,
+      "transport": "TCP",
+      "serviceName": "Puppet-Master",
+      "description": "Puppet Master",
+      "risk": "Medium",
+      "category": "DevOps"
+    },
+    {
+      "port": 8161,
+      "transport": "TCP",
+      "serviceName": "ActiveMQ-Web",
+      "description": "Apache ActiveMQ Web",
+      "risk": "Medium",
+      "category": "Enterprise"
+    },
+    {
+      "port": 8192,
+      "transport": "TCP",
+      "serviceName": "Veeam-VBR",
+      "description": "Veeam Backup & Replication",
+      "risk": "Medium",
+      "category": "Backup"
+    },
+    {
+      "port": 8200,
+      "transport": "TCP",
+      "serviceName": "Vault",
+      "description": "HashiCorp Vault",
+      "risk": "Low",
+      "category": "DevOps",
+      "recommendation": "Secrets management"
+    },
+    {
+      "port": 8266,
+      "transport": "TCP",
+      "serviceName": "ESP8266",
+      "description": "ESP8266 OTA Update",
+      "risk": "High",
+      "category": "IoT"
+    },
+    {
+      "port": 8300,
+      "transport": "TCP",
+      "serviceName": "Consul-Server",
+      "description": "Consul Server RPC",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 8301,
+      "transport": "Both",
+      "serviceName": "Consul-LAN",
+      "description": "Consul LAN Gossip",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 8302,
+      "transport": "Both",
+      "serviceName": "Consul-WAN",
+      "description": "Consul WAN Gossip",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 8443,
+      "transport": "TCP",
+      "serviceName": "HTTPS-Alt",
+      "description": "HTTPS Alternate",
+      "risk": "Low",
+      "category": "Web"
+    },
+    {
+      "port": 8472,
+      "transport": "UDP",
+      "serviceName": "Flannel-VXLAN",
+      "description": "Flannel VXLAN",
+      "risk": "Medium",
+      "category": "Container"
+    },
+    {
+      "port": 8500,
+      "transport": "TCP",
+      "serviceName": "Consul",
+      "description": "HashiCorp Consul",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 8529,
+      "transport": "TCP",
+      "serviceName": "ArangoDB",
+      "description": "ArangoDB",
+      "risk": "Medium",
+      "category": "Database"
+    },
+    {
+      "port": 8530,
+      "transport": "TCP",
+      "serviceName": "WSUS-HTTP",
+      "description": "Windows Server Update Services",
+      "risk": "Medium",
+      "category": "Microsoft"
+    },
+    {
+      "port": 8531,
+      "transport": "TCP",
+      "serviceName": "WSUS-HTTPS",
+      "description": "WSUS HTTPS",
+      "risk": "Low",
+      "category": "Microsoft"
+    },
+    {
+      "port": 8554,
+      "transport": "TCP",
+      "serviceName": "RTSP-Alt",
+      "description": "RTSP Alternate",
+      "risk": "Medium",
+      "category": "VoIP"
+    },
+    {
+      "port": 8801,
+      "transport": "UDP",
+      "serviceName": "Zoom-Media-1",
+      "description": "Zoom Media UDP",
+      "risk": "Low",
+      "category": "Zoom"
+    },
+    {
+      "port": 8802,
+      "transport": "UDP",
+      "serviceName": "Zoom-Media-2",
+      "description": "Zoom Media UDP Alt",
+      "risk": "Low",
+      "category": "Zoom"
+    },
+    {
+      "port": 8803,
+      "transport": "TCP",
+      "serviceName": "Zoom-Media-TCP",
+      "description": "Zoom Media TCP Fallback",
+      "risk": "Low",
+      "category": "Zoom"
+    },
+    {
+      "port": 8834,
+      "transport": "TCP",
+      "serviceName": "Nessus",
+      "description": "Nessus Scanner",
+      "risk": "Medium",
+      "category": "Security"
+    },
+    {
+      "port": 8880,
+      "transport": "TCP",
+      "serviceName": "WebSphere-SOAP",
+      "description": "WebSphere SOAP Connector",
+      "risk": "Medium",
+      "category": "Enterprise"
+    },
+    {
+      "port": 8883,
+      "transport": "TCP",
+      "serviceName": "MQTTS",
+      "description": "MQTT over TLS",
+      "risk": "Low",
+      "category": "Messaging"
+    },
+    {
+      "port": 8888,
+      "transport": "TCP",
+      "serviceName": "HTTP-Proxy",
+      "description": "HTTP Proxy/Alt",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 8889,
+      "transport": "TCP",
+      "serviceName": "Supermicro-IPMI",
+      "description": "Supermicro IPMI",
+      "risk": "High",
+      "category": "Management"
+    },
+    {
+      "port": 8929,
+      "transport": "TCP",
+      "serviceName": "GitLab-Mattermost",
+      "description": "GitLab Mattermost",
+      "risk": "Medium",
+      "category": "DevOps"
+    },
+    {
+      "port": 9000,
+      "transport": "TCP",
+      "serviceName": "MinIO",
+      "description": "MinIO Object Storage",
+      "risk": "Medium",
+      "category": "Storage"
+    },
+    {
+      "port": 9000,
+      "transport": "UDP",
+      "serviceName": "Zoom-QoS",
+      "description": "Zoom QoS/Media",
+      "risk": "Low",
+      "category": "Zoom"
+    },
+    {
+      "port": 9001,
+      "transport": "TCP",
+      "serviceName": "MinIO-Console",
+      "description": "MinIO Console",
+      "risk": "Medium",
+      "category": "Storage"
+    },
+    {
+      "port": 9028,
+      "transport": "TCP",
+      "serviceName": "Citrix-WEM",
+      "description": "Citrix WEM Infrastructure",
+      "risk": "Medium",
+      "category": "Citrix"
+    },
+    {
+      "port": 9042,
+      "transport": "TCP",
+      "serviceName": "Cassandra",
+      "description": "Apache Cassandra CQL",
+      "risk": "Medium",
+      "category": "Database",
+      "recommendation": "Use client-to-node encryption"
+    },
+    {
+      "port": 9043,
+      "transport": "TCP",
+      "serviceName": "WebSphere-Admin-SSL",
+      "description": "WebSphere Admin SSL",
+      "risk": "Low",
+      "category": "Enterprise"
+    },
+    {
+      "port": 9050,
+      "transport": "TCP",
+      "serviceName": "Tor-SOCKS",
+      "description": "Tor SOCKS Proxy",
+      "risk": "Medium",
+      "category": "Proxy"
+    },
+    {
+      "port": 9051,
+      "transport": "TCP",
+      "serviceName": "Tor-Control",
+      "description": "Tor Control Port",
+      "risk": "Medium",
+      "category": "Proxy"
+    },
+    {
+      "port": 9060,
+      "transport": "TCP",
+      "serviceName": "WebSphere-Admin",
+      "description": "WebSphere Admin Console",
+      "risk": "Medium",
+      "category": "Enterprise"
+    },
+    {
+      "port": 9080,
+      "transport": "TCP",
+      "serviceName": "HTTP-WebSphere",
+      "description": "WebSphere HTTP",
+      "risk": "High",
+      "category": "Web"
+    },
+    {
+      "port": 9090,
+      "transport": "TCP",
+      "serviceName": "Prometheus",
+      "description": "Prometheus",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 9092,
+      "transport": "TCP",
+      "serviceName": "Kafka",
+      "description": "Apache Kafka",
+      "risk": "Medium",
+      "category": "Messaging",
+      "recommendation": "Enable SASL and TLS"
+    },
+    {
+      "port": 9093,
+      "transport": "TCP",
+      "serviceName": "Alertmanager",
+      "description": "Prometheus Alertmanager",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 9100,
+      "transport": "TCP",
+      "serviceName": "Node-Exporter",
+      "description": "Prometheus Node Exporter",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 9101,
+      "transport": "TCP",
+      "serviceName": "JetDirect-1",
+      "description": "HP JetDirect Alt",
+      "risk": "Medium",
+      "category": "Printing"
+    },
+    {
+      "port": 9102,
+      "transport": "TCP",
+      "serviceName": "JetDirect-2",
+      "description": "HP JetDirect Alt 2",
+      "risk": "Medium",
+      "category": "Printing"
+    },
+    {
+      "port": 9200,
+      "transport": "TCP",
+      "serviceName": "Elasticsearch",
+      "description": "Elasticsearch HTTP",
+      "risk": "High",
+      "category": "Database",
+      "recommendation": "Enable X-Pack security"
+    },
+    {
+      "port": 9300,
+      "transport": "TCP",
+      "serviceName": "Elasticsearch-Transport",
+      "description": "Elasticsearch Transport",
+      "risk": "High",
+      "category": "Database"
+    },
+    {
+      "port": 9389,
+      "transport": "TCP",
+      "serviceName": "ADWS",
+      "description": "AD Web Services",
+      "risk": "Medium",
+      "category": "Microsoft"
+    },
+    {
+      "port": 9390,
+      "transport": "TCP",
+      "serviceName": "OpenVAS-Manager",
+      "description": "OpenVAS Manager",
+      "risk": "Medium",
+      "category": "Security"
+    },
+    {
+      "port": 9391,
+      "transport": "TCP",
+      "serviceName": "OpenVAS-Scanner",
+      "description": "OpenVAS Scanner",
+      "risk": "Medium",
+      "category": "Security"
+    },
+    {
+      "port": 9392,
+      "transport": "TCP",
+      "serviceName": "OpenVAS-GSA",
+      "description": "OpenVAS Greenbone",
+      "risk": "Medium",
+      "category": "Security"
+    },
+    {
+      "port": 9418,
+      "transport": "TCP",
+      "serviceName": "Git",
+      "description": "Git Protocol",
+      "risk": "Medium",
+      "category": "DevOps",
+      "recommendation": "Use SSH or HTTPS"
+    },
+    {
+      "port": 9443,
+      "transport": "TCP",
+      "serviceName": "HTTPS-Alt-2",
+      "description": "HTTPS Alternate 2",
+      "risk": "Low",
+      "category": "Web"
+    },
+    {
+      "port": 9996,
+      "transport": "UDP",
+      "serviceName": "sFlow",
+      "description": "sFlow",
+      "risk": "Low",
+      "category": "Management"
+    },
+    {
+      "port": 9997,
+      "transport": "TCP",
+      "serviceName": "Splunk-Forward",
+      "description": "Splunk Forwarder",
+      "risk": "Medium",
+      "category": "Security"
+    },
+    {
+      "port": 9998,
+      "transport": "TCP",
+      "serviceName": "Splunk-Collect",
+      "description": "Splunk Data Collection",
+      "risk": "Medium",
+      "category": "Enterprise"
+    },
+    {
+      "port": 10000,
+      "transport": "TCP",
+      "serviceName": "Veritas-Netbackup",
+      "description": "Veritas NetBackup",
+      "risk": "Medium",
+      "category": "Backup"
+    },
+    {
+      "port": 10001,
+      "transport": "UDP",
+      "serviceName": "UniFi-Discovery",
+      "description": "UniFi Device Discovery",
+      "risk": "Medium",
+      "category": "IoT"
+    },
+    {
+      "port": 10050,
+      "transport": "TCP",
+      "serviceName": "Zabbix-Agent",
+      "description": "Zabbix Agent",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 10051,
+      "transport": "TCP",
+      "serviceName": "Zabbix-Server",
+      "description": "Zabbix Server",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 10123,
+      "transport": "TCP",
+      "serviceName": "SCCM-CMG",
+      "description": "SCCM Cloud Management Gateway",
+      "risk": "Low",
+      "category": "Microsoft"
+    },
+    {
+      "port": 10124,
+      "transport": "TCP",
+      "serviceName": "SCCM-CMG-CDP",
+      "description": "SCCM CMG CDP",
+      "risk": "Low",
+      "category": "Microsoft"
+    },
+    {
+      "port": 10250,
+      "transport": "TCP",
+      "serviceName": "Kubelet",
+      "description": "Kubernetes Kubelet",
+      "risk": "Medium",
+      "category": "Container"
+    },
+    {
+      "port": 10251,
+      "transport": "TCP",
+      "serviceName": "Kube-Scheduler",
+      "description": "Kubernetes Scheduler",
+      "risk": "Medium",
+      "category": "Container"
+    },
+    {
+      "port": 10252,
+      "transport": "TCP",
+      "serviceName": "Kube-Controller",
+      "description": "Kubernetes Controller Manager",
+      "risk": "Medium",
+      "category": "Container"
+    },
+    {
+      "port": 10255,
+      "transport": "TCP",
+      "serviceName": "Kubelet-RO",
+      "description": "Kubelet Read-Only",
+      "risk": "High",
+      "category": "Container",
+      "recommendation": "Disable in production"
+    },
+    {
+      "port": 10443,
+      "transport": "TCP",
+      "serviceName": "GlobalProtect",
+      "description": "Palo Alto GlobalProtect",
+      "risk": "Low",
+      "category": "VPN"
+    },
+    {
+      "port": 11211,
+      "transport": "Both",
+      "serviceName": "Memcached",
+      "description": "Memcached",
+      "risk": "High",
+      "category": "Database",
+      "recommendation": "Bind localhost only"
+    },
+    {
+      "port": 12345,
+      "transport": "UDP",
+      "serviceName": "VMware-vSAN-UDP",
+      "description": "VMware vSAN UDP",
+      "risk": "Medium",
+      "category": "VMware"
+    },
+    {
+      "port": 12489,
+      "transport": "TCP",
+      "serviceName": "NSClient++",
+      "description": "NSClient++",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 13720,
+      "transport": "TCP",
+      "serviceName": "Veritas-BP-VNETD",
+      "description": "NetBackup VNETD",
+      "risk": "Medium",
+      "category": "Backup"
+    },
+    {
+      "port": 13782,
+      "transport": "TCP",
+      "serviceName": "Veritas-BP-BPCD",
+      "description": "NetBackup BPCD",
+      "risk": "Medium",
+      "category": "Backup"
+    },
+    {
+      "port": 15672,
+      "transport": "TCP",
+      "serviceName": "RabbitMQ-Mgmt",
+      "description": "RabbitMQ Management",
+      "risk": "Medium",
+      "category": "Messaging"
+    },
+    {
+      "port": 16384,
+      "transport": "UDP",
+      "serviceName": "RTP-Low",
+      "description": "RTP Dynamic Range Start",
+      "risk": "Medium",
+      "category": "VoIP"
+    },
+    {
+      "port": 17988,
+      "transport": "TCP",
+      "serviceName": "iLO-Virtual-Media",
+      "description": "HPE iLO Virtual Media",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 17990,
+      "transport": "TCP",
+      "serviceName": "iLO-Remote-Console",
+      "description": "HPE iLO Remote Console",
+      "risk": "Medium",
+      "category": "Management"
+    },
+    {
+      "port": 18181,
+      "transport": "TCP",
+      "serviceName": "Check-Point-CPMI",
+      "description": "Check Point Management",
+      "risk": "Medium",
+      "category": "VPN"
+    },
+    {
+      "port": 18182,
+      "transport": "TCP",
+      "serviceName": "Check-Point-CPMI-ALT",
+      "description": "Check Point Mgmt Alt",
+      "risk": "Medium",
+      "category": "VPN"
+    },
+    {
+      "port": 18183,
+      "transport": "TCP",
+      "serviceName": "Check-Point-Log",
+      "description": "Check Point Log Server",
+      "risk": "Medium",
+      "category": "VPN"
+    },
+    {
+      "port": 18184,
+      "transport": "TCP",
+      "serviceName": "Check-Point-CPCA",
+      "description": "Check Point CA",
+      "risk": "Medium",
+      "category": "VPN"
+    },
+    {
+      "port": 18191,
+      "transport": "TCP",
+      "serviceName": "Check-Point-CPD",
+      "description": "Check Point CPD",
+      "risk": "Medium",
+      "category": "VPN"
+    },
+    {
+      "port": 18192,
+      "transport": "TCP",
+      "serviceName": "Check-Point-CPRID",
+      "description": "Check Point CPRID",
+      "risk": "Medium",
+      "category": "VPN"
+    },
+    {
+      "port": 18245,
+      "transport": "TCP",
+      "serviceName": "GE-SRTP",
+      "description": "GE SRTP",
+      "risk": "High",
+      "category": "Industrial"
+    },
+    {
+      "port": 19009,
+      "transport": "TCP",
+      "serviceName": "Check-Point-SIC",
+      "description": "Check Point SIC",
+      "risk": "Medium",
+      "category": "VPN"
+    },
+    {
+      "port": 19132,
+      "transport": "UDP",
+      "serviceName": "Minecraft-Bedrock",
+      "description": "Minecraft Bedrock",
+      "risk": "Low",
+      "category": "Gaming"
+    },
+    {
+      "port": 19302,
+      "transport": "UDP",
+      "serviceName": "Google-STUN",
+      "description": "Google STUN Server",
+      "risk": "Low",
+      "category": "Media"
+    },
+    {
+      "port": 20000,
+      "transport": "TCP",
+      "serviceName": "DNP3",
+      "description": "Distributed Network Protocol 3",
+      "risk": "High",
+      "category": "Industrial"
+    },
+    {
+      "port": 21027,
+      "transport": "UDP",
+      "serviceName": "Syncthing",
+      "description": "Syncthing Discovery",
+      "risk": "Medium",
+      "category": "IoT"
+    },
+    {
+      "port": 22000,
+      "transport": "TCP",
+      "serviceName": "Syncthing-Transfer",
+      "description": "Syncthing File Transfer",
+      "risk": "Medium",
+      "category": "IoT"
+    },
+    {
+      "port": 23451,
+      "transport": "UDP",
+      "serviceName": "VMware-vSAN-Transport",
+      "description": "VMware vSAN Transport",
+      "risk": "Medium",
+      "category": "VMware"
+    },
+    {
+      "port": 25443,
+      "transport": "TCP",
+      "serviceName": "SharePoint-HTTPS",
+      "description": "SharePoint HTTPS",
+      "risk": "Low",
+      "category": "Microsoft"
+    },
+    {
+      "port": 25565,
+      "transport": "TCP",
+      "serviceName": "Minecraft",
+      "description": "Minecraft Server",
+      "risk": "Low",
+      "category": "Gaming"
+    },
+    {
+      "port": 26257,
+      "transport": "TCP",
+      "serviceName": "CockroachDB",
+      "description": "CockroachDB",
+      "risk": "Medium",
+      "category": "Database"
+    },
+    {
+      "port": 27000,
+      "transport": "TCP",
+      "serviceName": "Citrix-License",
+      "description": "Citrix License Server",
+      "risk": "Medium",
+      "category": "Citrix"
+    },
+    {
+      "port": 27015,
+      "transport": "UDP",
+      "serviceName": "Steam-Game",
+      "description": "Steam Game Server",
+      "risk": "Low",
+      "category": "Gaming"
+    },
+    {
+      "port": 27016,
+      "transport": "UDP",
+      "serviceName": "Steam-Game-Alt",
+      "description": "Steam Game Server Alt",
+      "risk": "Low",
+      "category": "Gaming"
+    },
+    {
+      "port": 27017,
+      "transport": "TCP",
+      "serviceName": "MongoDB",
+      "description": "MongoDB",
+      "risk": "High",
+      "category": "Database",
+      "recommendation": "Enable auth and TLS"
+    },
+    {
+      "port": 27017,
+      "transport": "UDP",
+      "serviceName": "Steam-Master",
+      "description": "Steam Master Server",
+      "risk": "Low",
+      "category": "Gaming"
+    },
+    {
+      "port": 27018,
+      "transport": "TCP",
+      "serviceName": "MongoDB-Shard",
+      "description": "MongoDB Shard Server",
+      "risk": "High",
+      "category": "Database"
+    },
+    {
+      "port": 27019,
+      "transport": "TCP",
+      "serviceName": "MongoDB-Config",
+      "description": "MongoDB Config Server",
+      "risk": "High",
+      "category": "Database"
+    },
+    {
+      "port": 30000,
+      "transport": "TCP",
+      "serviceName": "K8s-NodePort-Start",
+      "description": "Kubernetes NodePort Range Start",
+      "risk": "Medium",
+      "category": "Container"
+    },
+    {
+      "port": 30013,
+      "transport": "TCP",
+      "serviceName": "SAP-HANA-SQL-System",
+      "description": "SAP HANA System DB SQL",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 30015,
+      "transport": "TCP",
+      "serviceName": "SAP-HANA-SQL",
+      "description": "SAP HANA SQL/MDX",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 30017,
+      "transport": "TCP",
+      "serviceName": "SAP-HANA-HTTP",
+      "description": "SAP HANA HTTP (XS)",
+      "risk": "High",
+      "category": "SAP"
+    },
+    {
+      "port": 30041,
+      "transport": "TCP",
+      "serviceName": "SAP-HANA-Cockpit",
+      "description": "SAP HANA Cockpit",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 32767,
+      "transport": "TCP",
+      "serviceName": "K8s-NodePort-End",
+      "description": "Kubernetes NodePort Range End",
+      "risk": "Medium",
+      "category": "Container"
+    },
+    {
+      "port": 32767,
+      "transport": "UDP",
+      "serviceName": "RTP-High",
+      "description": "RTP Dynamic Range End",
+      "risk": "Medium",
+      "category": "VoIP"
+    },
+    {
+      "port": 44300,
+      "transport": "TCP",
+      "serviceName": "SAP-ICM-HTTPS",
+      "description": "SAP ICM HTTPS (00)",
+      "risk": "Low",
+      "category": "SAP"
+    },
+    {
+      "port": 44301,
+      "transport": "TCP",
+      "serviceName": "SAP-ICM-HTTPS-01",
+      "description": "SAP ICM HTTPS (01)",
+      "risk": "Low",
+      "category": "SAP"
+    },
+    {
+      "port": 44818,
+      "transport": "TCP",
+      "serviceName": "EtherNet/IP",
+      "description": "EtherNet/IP (CIP)",
+      "risk": "High",
+      "category": "Industrial"
+    },
+    {
+      "port": 47808,
+      "transport": "UDP",
+      "serviceName": "BACnet",
+      "description": "Building Automation and Control",
+      "risk": "High",
+      "category": "Industrial"
+    },
+    {
+      "port": 49152,
+      "transport": "TCP",
+      "serviceName": "RPC-Dynamic",
+      "description": "RPC Dynamic Ports Start",
+      "risk": "Medium",
+      "category": "AD",
+      "recommendation": "Configure fixed RPC port range"
+    },
+    {
+      "port": 50000,
+      "transport": "TCP",
+      "serviceName": "DB2",
+      "description": "IBM DB2",
+      "risk": "Medium",
+      "category": "Database"
+    },
+    {
+      "port": 50000,
+      "transport": "UDP",
+      "serviceName": "Teams-Media-Low",
+      "description": "MS Teams Media Range Start",
+      "risk": "Low",
+      "category": "Teams"
+    },
+    {
+      "port": 50001,
+      "transport": "TCP",
+      "serviceName": "DB2-Admin",
+      "description": "IBM DB2 Admin",
+      "risk": "Medium",
+      "category": "Database"
+    },
+    {
+      "port": 50013,
+      "transport": "TCP",
+      "serviceName": "SAP-StartService",
+      "description": "SAP Start Service HTTP",
+      "risk": "Medium",
+      "category": "SAP"
+    },
+    {
+      "port": 50014,
+      "transport": "TCP",
+      "serviceName": "SAP-StartService-HTTPS",
+      "description": "SAP Start Service HTTPS",
+      "risk": "Low",
+      "category": "SAP"
+    },
+    {
+      "port": 50019,
+      "transport": "UDP",
+      "serviceName": "Teams-Media-High",
+      "description": "MS Teams Media Range End",
+      "risk": "Low",
+      "category": "Teams"
+    },
+    {
+      "port": 51820,
+      "transport": "UDP",
+      "serviceName": "WireGuard",
+      "description": "WireGuard VPN",
+      "risk": "Low",
+      "category": "VPN",
+      "recommendation": "Modern secure VPN"
+    },
+    {
+      "port": 55000,
+      "transport": "TCP",
+      "serviceName": "Wazuh-API",
+      "description": "Wazuh API",
+      "risk": "Medium",
+      "category": "Security"
+    },
+    {
+      "port": 57501,
+      "transport": "TCP",
+      "serviceName": "Skype-Apps-Share",
+      "description": "Skype for Business App Sharing",
+      "risk": "Medium",
+      "category": "Teams"
+    },
+    {
+      "port": 60443,
+      "transport": "TCP",
+      "serviceName": "SonicWall-SSLVPN",
+      "description": "SonicWall SSL VPN",
+      "risk": "Low",
+      "category": "VPN"
+    },
+    {
+      "port": 61613,
+      "transport": "TCP",
+      "serviceName": "STOMP",
+      "description": "Streaming Text Oriented Messaging",
+      "risk": "Medium",
+      "category": "Messaging"
+    },
+    {
+      "port": 61614,
+      "transport": "TCP",
+      "serviceName": "STOMP-TLS",
+      "description": "STOMP over TLS",
+      "risk": "Low",
+      "category": "Messaging"
+    },
+    {
+      "port": 61616,
+      "transport": "TCP",
+      "serviceName": "ActiveMQ-OpenWire",
+      "description": "Apache ActiveMQ OpenWire",
+      "risk": "Medium",
+      "category": "Enterprise"
+    },
+    {
+      "port": 65535,
+      "transport": "TCP",
+      "serviceName": "RPC-Dynamic-End",
+      "description": "RPC Dynamic Ports End",
+      "risk": "Medium",
+      "category": "AD"
     }
   ]
 }
