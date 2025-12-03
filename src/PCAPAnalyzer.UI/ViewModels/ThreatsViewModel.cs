@@ -111,6 +111,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         [ObservableProperty] private string _riskLevel = "Unknown";
         [ObservableProperty] private string _riskLevelColor = "#6B7280";
 
+        // TODO: Move to ThreatsFilterViewModel (filter control properties)
         [ObservableProperty] private bool _showCriticalOnly;
         [ObservableProperty] private bool _showHighOnly;
         [ObservableProperty] private bool _groupByService;
@@ -121,6 +122,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         [ObservableProperty] private bool _hasFiltersApplied = false;
 
         // ==================== SORTING ====================
+        // TODO: Move to ThreatsTableViewModel or ThreatsSortingViewModel (sorting controls)
         [ObservableProperty] private string _selectedSortOption = "Severity ▼";
         public ObservableCollection<string> SortOptions { get; } = new()
         {
@@ -134,6 +136,8 @@ namespace PCAPAnalyzer.UI.ViewModels
         }
 
         // ==================== QUICK FILTER TOGGLES (OR logic within) ====================
+        // TODO: DUPLICATE - Remove these properties, delegate fully to QuickFilters component
+        // These are redundant with QuickFilters.IsInsecureProtocolFilterActive, etc.
         [ObservableProperty] private bool _isInsecureProtocolFilterActive;
         [ObservableProperty] private bool _isKnownCVEFilterActive;
         [ObservableProperty] private bool _isWeakEncryptionFilterActive;
@@ -143,6 +147,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         /// <summary>
         /// Active quick filter chips displayed below the THREAT FILTERS section (purple theme)
         /// </summary>
+        // TODO: Move to QuickFilters component (owns chip display logic)
         public ObservableCollection<ActiveQuickFilterChip> ActiveQuickFilterChips { get; } = new();
 
         // Side-by-side table data now managed by Statistics component
@@ -848,6 +853,8 @@ namespace PCAPAnalyzer.UI.ViewModels
         /// Updates the active quick filter chips collection based on which quick filters are enabled.
         /// Creates visual chips with emoji, label, and remove command.
         /// </summary>
+        // TODO: Move to QuickFilters component - this entire method (76 lines) should be encapsulated
+        // QuickFilters should own chip creation, display, and removal logic
         private void UpdateActiveQuickFilterChips()
         {
             ActiveQuickFilterChips.Clear();
@@ -926,6 +933,12 @@ namespace PCAPAnalyzer.UI.ViewModels
             OnPropertyChanged(nameof(ActiveQuickFilterChips));
         }
 
+        // TODO: CRITICAL - Refactor this 245-line method into sub-methods:
+        // 1. ApplyCommonFilters() - lines 949-1011
+        // 2. ApplyQuickFiltersFromComponent() - delegate to QuickFilters
+        // 3. RecalculateFilteredMetrics() - lines 1042-1090
+        // 4. BuildSecurityThreatItems() - lines 1092-1169
+        // Target: Reduce to <100 lines by extracting 3-4 focused methods
         [SuppressMessage("Maintainability", "CA1502:Avoid excessive complexity",
             Justification = "Threat list update requires processing multiple threat categories, severity levels, filtering criteria, grouping logic, and aggregation operations")]
         private void UpdateThreatsList()
@@ -1178,6 +1191,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         /// <summary>
         /// Applies the selected sort option to the threat list
         /// </summary>
+        // TODO: Move to ThreatsTableViewModel or static ThreatSortingHelper
         private List<EnhancedSecurityThreat> ApplySorting(List<EnhancedSecurityThreat> threats)
         {
             if (!threats.Any()) return threats;
@@ -1484,6 +1498,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             DebugLogger.Log("[ThreatsViewModel] Export completed via ReportExport component");
         }
 
+        // TODO: Move to static ThreatDisplayHelpers class (shared utility methods)
         private string GetSeverityColor(ThreatSeverity severity)
         {
             return severity switch
@@ -1497,6 +1512,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             };
         }
 
+        // TODO: Move to static ThreatDisplayHelpers class
         private ThreatSeverity MapAnomalySeverity(AnomalySeverity anomalySeverity)
         {
             return anomalySeverity switch
@@ -1509,6 +1525,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             };
         }
 
+        // TODO: Move to static ThreatDisplayHelpers class
         private ThreatCategory MapAnomalyCategory(AnomalyCategory anomalyCategory)
         {
             return anomalyCategory switch
@@ -1525,6 +1542,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         /// <summary>
         /// Maps common ports to service names for credential threat display.
         /// </summary>
+        // TODO: Move to static ThreatDisplayHelpers class
         private static string GetServiceName(ushort port) => port switch
         {
             21 => "FTP",
@@ -1553,6 +1571,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             _ => $"Port {port}"
         };
 
+        // TODO: Move to ThreatsFilterViewModel (filter change handlers)
         partial void OnShowCriticalOnlyChanged(bool value)
         {
             // Mutual exclusion: Critical and High+ are mutually exclusive
@@ -1560,6 +1579,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             // Note: Requires Apply button - no auto-update
         }
 
+        // TODO: Move to ThreatsFilterViewModel
         partial void OnShowHighOnlyChanged(bool value)
         {
             // Mutual exclusion: High+ and Critical are mutually exclusive
@@ -1567,16 +1587,19 @@ namespace PCAPAnalyzer.UI.ViewModels
             // Note: Requires Apply button - no auto-update
         }
 
+        // TODO: Move to ThreatsFilterViewModel
         partial void OnSelectedCategoryChanged(string value)
         {
             // Note: Requires Apply button - no auto-update
         }
-        
+
+        // TODO: Move to ThreatsFilterViewModel
         partial void OnSelectedThreatTypeChanged(string value)
         {
             // Note: Requires Apply button - no auto-update
         }
 
+        // TODO: Move to ThreatsFilterViewModel
         partial void OnSearchFilterChanged(string value)
         {
             // Note: Requires Apply button - no auto-update
