@@ -60,40 +60,12 @@ namespace PCAPAnalyzer.UI.ViewModels
         public InsecurePortPaginationViewModel InsecurePortsPagination { get; } = new();
 
         // ==================== COMPONENT VIEWMODELS (Dashboard pattern) ====================
-        /// <summary>
-        /// Component ViewModel for all chart visualizations
-        /// </summary>
         public ThreatsChartsViewModel Charts { get; }
-
-        /// <summary>
-        /// Component ViewModel for full investigation DrillDown
-        /// </summary>
         public ThreatsDrillDownViewModel DrillDown { get; } = new();
-
-        /// <summary>
-        /// Action to navigate to Packet Analysis tab with frame filter.
-        /// Set by MainWindowViewModel to enable cross-tab navigation from DrillDown.
-        /// </summary>
         public Action<List<uint>, string>? NavigateToPacketAnalysis { get; set; }
-
-        /// <summary>
-        /// Component ViewModel for export functionality (CSV, JSON, HTML)
-        /// </summary>
         public ThreatsReportExportViewModel ReportExport { get; }
-
-        /// <summary>
-        /// Component ViewModel for threat analysis and caching (NEW - composition pattern)
-        /// </summary>
         public ThreatsAnalysisViewModel Analysis { get; }
-
-        /// <summary>
-        /// Component ViewModel for quick filter toggles (NEW - composition pattern)
-        /// </summary>
         public ThreatsFilterViewModel QuickFilters { get; } = new();
-
-        /// <summary>
-        /// Component ViewModel for statistics and table data (NEW - composition pattern)
-        /// </summary>
         public ThreatsStatisticsViewModel Statistics { get; } = new();
 
         // Chart series - delegated to Charts component but exposed for backward compatibility
@@ -111,102 +83,98 @@ namespace PCAPAnalyzer.UI.ViewModels
         [ObservableProperty] private string _riskLevel = "Unknown";
         [ObservableProperty] private string _riskLevelColor = "#6B7280";
 
-        // TODO: Move to ThreatsFilterViewModel (filter control properties)
-        [ObservableProperty] private bool _showCriticalOnly;
-        [ObservableProperty] private bool _showHighOnly;
-        [ObservableProperty] private bool _groupByService;
-        [ObservableProperty] private string _selectedCategory = "All";
-        [ObservableProperty] private string _selectedThreatType = "All";
-        [ObservableProperty] private string _searchFilter = "";
-        [ObservableProperty] private ObservableCollection<string> _threatTypes = new();
-        [ObservableProperty] private bool _hasFiltersApplied = false;
+        // ==================== FILTER DROPDOWN PROPERTIES (Delegated to QuickFilters component) ====================
 
-        // ==================== SORTING (Delegated to Statistics component) ====================
+        public bool ShowCriticalOnly
+        {
+            get => QuickFilters.ShowCriticalOnly;
+            set => QuickFilters.ShowCriticalOnly = value;
+        }
 
-        /// <summary>
-        /// Sort options for threat list - delegated to Statistics component
-        /// </summary>
+        public bool ShowHighOnly
+        {
+            get => QuickFilters.ShowHighOnly;
+            set => QuickFilters.ShowHighOnly = value;
+        }
+
+        public bool GroupByService
+        {
+            get => QuickFilters.GroupByService;
+            set => QuickFilters.GroupByService = value;
+        }
+
+        public string SelectedCategory
+        {
+            get => QuickFilters.SelectedCategory;
+            set => QuickFilters.SelectedCategory = value;
+        }
+
+        public string SelectedThreatType
+        {
+            get => QuickFilters.SelectedThreatType;
+            set => QuickFilters.SelectedThreatType = value;
+        }
+
+        public string SearchFilter
+        {
+            get => QuickFilters.SearchFilter;
+            set => QuickFilters.SearchFilter = value;
+        }
+
+        public ObservableCollection<string> ThreatTypes => QuickFilters.ThreatTypes;
+
+        public new bool HasFiltersApplied
+        {
+            get => QuickFilters.HasFiltersApplied;
+            set => QuickFilters.HasFiltersApplied = value;
+        }
+
+        // ==================== SORTING (Delegated to Statistics) ====================
         public ObservableCollection<string> SortOptions => Statistics.SortOptions;
-
-        /// <summary>
-        /// Selected sort option - delegated to Statistics component
-        /// </summary>
         public string SelectedSortOption
         {
             get => Statistics.SelectedSortOption;
             set => Statistics.SelectedSortOption = value;
         }
 
-        // ==================== QUICK FILTER TOGGLES (Delegated to QuickFilters component) ====================
-
-        /// <summary>
-        /// Quick filter: Insecure Protocol - delegated to QuickFilters component
-        /// </summary>
+        // ==================== QUICK FILTER TOGGLES (Delegated to QuickFilters) ====================
         public bool IsInsecureProtocolFilterActive
         {
             get => QuickFilters.IsInsecureProtocolFilterActive;
             set => QuickFilters.IsInsecureProtocolFilterActive = value;
         }
 
-        /// <summary>
-        /// Quick filter: Known CVE - delegated to QuickFilters component
-        /// </summary>
         public bool IsKnownCVEFilterActive
         {
             get => QuickFilters.IsKnownCVEFilterActive;
             set => QuickFilters.IsKnownCVEFilterActive = value;
         }
 
-        /// <summary>
-        /// Quick filter: Weak Encryption - delegated to QuickFilters component
-        /// </summary>
         public bool IsWeakEncryptionFilterActive
         {
             get => QuickFilters.IsWeakEncryptionFilterActive;
             set => QuickFilters.IsWeakEncryptionFilterActive = value;
         }
 
-        /// <summary>
-        /// Quick filter: Auth Issues - delegated to QuickFilters component
-        /// </summary>
         public bool IsAuthIssuesFilterActive
         {
             get => QuickFilters.IsAuthIssuesFilterActive;
             set => QuickFilters.IsAuthIssuesFilterActive = value;
         }
 
-        /// <summary>
-        /// Quick filter: Cleartext - delegated to QuickFilters component
-        /// </summary>
         public bool IsCleartextFilterActive
         {
             get => QuickFilters.IsCleartextFilterActive;
             set => QuickFilters.IsCleartextFilterActive = value;
         }
 
-        /// <summary>
-        /// Active quick filter chips displayed below the THREAT FILTERS section (purple theme)
-        /// Delegated to QuickFilters component
-        /// </summary>
         public ObservableCollection<ActiveQuickFilterChip> ActiveQuickFilterChips => QuickFilters.ActiveQuickFilterChips;
 
         // Side-by-side table data now managed by Statistics component
 
         // ==================== FILTERABLE TAB IMPLEMENTATION ====================
-
-        /// <summary>
-        /// Common filters for protocol, source IP, and destination IP
-        /// </summary>
         public new CommonFilterViewModel CommonFilters { get; } = new();
-
-        /// <summary>
-        /// Tab-specific filter: Threat severity filter
-        /// </summary>
         [ObservableProperty] private string _severityFilter = "All";
-
-        /// <summary>
-        /// Tab-specific filter: Port filter (e.g. "80", "443", "8080")
-        /// </summary>
         [ObservableProperty] private string _portFilter = "";
 
         // ==================== UNIVERSAL FILTER PROPERTIES ====================
@@ -221,25 +189,10 @@ namespace PCAPAnalyzer.UI.ViewModels
         partial void OnFilterPortRangeChanged(string value) => ApplyFilters();
         partial void OnFilterProtocolTypeChanged(string value) => ApplyFilters();
 
-        /// <summary>
-        /// Unique tab identifier for FilterCopyService
-        /// </summary>
         public override string TabName => TabNames.Threats;
-
-        /// <summary>
-        /// IFilterableTab implementation - applies common and tab-specific filters
-        /// </summary>
-        public new void ApplyFilters()
-        {
-            UpdateThreatsList();
-        }
-
-        /// <summary>
-        /// Applies the sophisticated PacketFilter to Threats tab's threat list
-        /// </summary>
+        public new void ApplyFilters() => UpdateThreatsList();
         protected override void ApplySmartFilter(PacketFilter filter)
         {
-            // Apply filter to _allThreats list and update threat statistics
             UpdateThreatsList();
             DebugLogger.Log($"[{TabName}] Smart filters applied to threats data");
         }
@@ -611,8 +564,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                             {
                                 allThreatsCollection.Add(new EnhancedSecurityThreat
                                 {
-                                    Category = MapAnomalyCategory(anomaly.Category),
-                                    Severity = MapAnomalySeverity(anomaly.Severity),
+                                    Category = ThreatDisplayHelpers.MapAnomalyCategory(anomaly.Category),
+                                    Severity = ThreatDisplayHelpers.MapAnomalySeverity(anomaly.Severity),
                                     ThreatName = anomaly.Type,
                                     Description = anomaly.Description,
                                     FirstSeen = anomaly.DetectedAt,
@@ -681,8 +634,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                     {
                         _allThreats.Add(new EnhancedSecurityThreat
                         {
-                            Category = MapAnomalyCategory(anomaly.Category),
-                            Severity = MapAnomalySeverity(anomaly.Severity),
+                            Category = ThreatDisplayHelpers.MapAnomalyCategory(anomaly.Category),
+                            Severity = ThreatDisplayHelpers.MapAnomalySeverity(anomaly.Severity),
                             ThreatName = anomaly.Type,
                             Description = anomaly.Description,
                             FirstSeen = anomaly.DetectedAt,
@@ -707,7 +660,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
                     // Group by destination port to aggregate credential threats by service
                     var credentialsByPort = credentialPackets
-                        .GroupBy(p => new { p.DestinationPort, Service = GetServiceName(p.DestinationPort) })
+                        .GroupBy(p => new { p.DestinationPort, Service = ThreatDisplayHelpers.GetServiceName(p.DestinationPort) })
                         .ToList();
 
                     foreach (var group in credentialsByPort)
@@ -882,13 +835,13 @@ namespace PCAPAnalyzer.UI.ViewModels
                 .Distinct()
                 .OrderBy(name => name)
                 .ToList();
-            
-            ThreatTypes.Clear();
-            ThreatTypes.Add("All");
-            
+
+            QuickFilters.ThreatTypes.Clear();
+            QuickFilters.ThreatTypes.Add("All");
+
             foreach (var threatType in uniqueThreatTypes)
             {
-                ThreatTypes.Add(threatType);
+                QuickFilters.ThreatTypes.Add(threatType);
             }
         }
 
@@ -1075,7 +1028,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     ThreatName = threat.ThreatName,
                     Category = threat.Category.ToString(),
                     Severity = threat.Severity.ToString(),
-                    SeverityColor = GetSeverityColor(threat.Severity),
+                    SeverityColor = ThreatDisplayHelpers.GetSeverityColor(threat.Severity),
                     Service = threat.Service,
                     Port = threat.Port,
                     RiskScore = threat.RiskScore,
@@ -1170,7 +1123,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     ServiceName = profile.ServiceName,
                     Protocol = profile.Protocol,
                     RiskLevel = profile.RiskLevel.ToString(),
-                    RiskColor = GetSeverityColor(profile.RiskLevel),
+                    RiskColor = ThreatDisplayHelpers.GetSeverityColor(profile.RiskLevel),
                     IsEncrypted = profile.IsEncrypted,
                     DetectedPackets = threats.Sum(t => t.OccurrenceCount),
                     IsActive = threats.Any(),
@@ -1435,113 +1388,6 @@ namespace PCAPAnalyzer.UI.ViewModels
                 await ReportExport.ExportAllCommand.ExecuteAsync(null);
             }
             DebugLogger.Log("[ThreatsViewModel] Export completed via ReportExport component");
-        }
-
-        // TODO: Move to static ThreatDisplayHelpers class (shared utility methods)
-        private string GetSeverityColor(ThreatSeverity severity)
-        {
-            return severity switch
-            {
-                ThreatSeverity.Critical => "#EF4444",
-                ThreatSeverity.High => "#F97316",
-                ThreatSeverity.Medium => "#F59E0B",
-                ThreatSeverity.Low => "#3B82F6",
-                ThreatSeverity.Info => "#6B7280",
-                _ => "#6B7280"
-            };
-        }
-
-        // TODO: Move to static ThreatDisplayHelpers class
-        private ThreatSeverity MapAnomalySeverity(AnomalySeverity anomalySeverity)
-        {
-            return anomalySeverity switch
-            {
-                AnomalySeverity.Critical => ThreatSeverity.Critical,
-                AnomalySeverity.High => ThreatSeverity.High,
-                AnomalySeverity.Medium => ThreatSeverity.Medium,
-                AnomalySeverity.Low => ThreatSeverity.Low,
-                _ => ThreatSeverity.Info
-            };
-        }
-
-        // TODO: Move to static ThreatDisplayHelpers class
-        private ThreatCategory MapAnomalyCategory(AnomalyCategory anomalyCategory)
-        {
-            return anomalyCategory switch
-            {
-                AnomalyCategory.Network => ThreatCategory.MaliciousActivity,
-                AnomalyCategory.TCP => ThreatCategory.MaliciousActivity,
-                AnomalyCategory.Application => ThreatCategory.MaliciousActivity,
-                AnomalyCategory.Security => ThreatCategory.KnownVulnerability,
-                AnomalyCategory.Malformed => ThreatCategory.MaliciousActivity,
-                _ => ThreatCategory.MaliciousActivity
-            };
-        }
-
-        /// <summary>
-        /// Maps common ports to service names for credential threat display.
-        /// </summary>
-        // TODO: Move to static ThreatDisplayHelpers class
-        private static string GetServiceName(ushort port) => port switch
-        {
-            21 => "FTP",
-            22 => "SSH",
-            23 => "Telnet",
-            25 => "SMTP",
-            80 => "HTTP",
-            110 => "POP3",
-            143 => "IMAP",
-            161 => "SNMP",
-            389 => "LDAP",
-            443 => "HTTPS",
-            445 => "SMB",
-            465 => "SMTPS",
-            587 => "SMTP",
-            636 => "LDAPS",
-            993 => "IMAPS",
-            995 => "POP3S",
-            1433 => "MSSQL",
-            3306 => "MySQL",
-            3389 => "RDP",
-            5432 => "PostgreSQL",
-            5900 => "VNC",
-            8080 => "HTTP-ALT",
-            8443 => "HTTPS-ALT",
-            _ => $"Port {port}"
-        };
-
-        // TODO: Move to ThreatsFilterViewModel (filter change handlers)
-        partial void OnShowCriticalOnlyChanged(bool value)
-        {
-            // Mutual exclusion: Critical and High+ are mutually exclusive
-            if (value) ShowHighOnly = false;
-            // Note: Requires Apply button - no auto-update
-        }
-
-        // TODO: Move to ThreatsFilterViewModel
-        partial void OnShowHighOnlyChanged(bool value)
-        {
-            // Mutual exclusion: High+ and Critical are mutually exclusive
-            if (value) ShowCriticalOnly = false;
-            // Note: Requires Apply button - no auto-update
-        }
-
-        // TODO: Move to ThreatsFilterViewModel
-        partial void OnSelectedCategoryChanged(string value)
-        {
-            // Note: Requires Apply button - no auto-update
-        }
-
-        // TODO: Move to ThreatsFilterViewModel
-        partial void OnSelectedThreatTypeChanged(string value)
-        {
-            // Note: Requires Apply button - no auto-update
-        }
-
-        // TODO: Move to ThreatsFilterViewModel
-        partial void OnSearchFilterChanged(string value)
-        {
-            // Note: Requires Apply button - no auto-update
         }
 
         // ==================== QUICK FILTER HELPER METHODS ====================

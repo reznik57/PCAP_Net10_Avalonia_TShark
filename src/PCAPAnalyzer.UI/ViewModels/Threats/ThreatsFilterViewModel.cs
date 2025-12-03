@@ -20,6 +20,17 @@ public partial class ThreatsFilterViewModel : ObservableObject
     [ObservableProperty] private bool _isAuthIssuesFilterActive;
     [ObservableProperty] private bool _isCleartextFilterActive;
 
+    // ==================== FILTER DROPDOWN PROPERTIES ====================
+
+    [ObservableProperty] private bool _showCriticalOnly;
+    [ObservableProperty] private bool _showHighOnly;
+    [ObservableProperty] private bool _groupByService;
+    [ObservableProperty] private string _selectedCategory = "All";
+    [ObservableProperty] private string _selectedThreatType = "All";
+    [ObservableProperty] private string _searchFilter = "";
+    [ObservableProperty] private ObservableCollection<string> _threatTypes = new();
+    [ObservableProperty] private bool _hasFiltersApplied = false;
+
     partial void OnIsInsecureProtocolFilterActiveChanged(bool value)
     {
         UpdateActiveChips();
@@ -48,6 +59,33 @@ public partial class ThreatsFilterViewModel : ObservableObject
     {
         UpdateActiveChips();
         FiltersChanged?.Invoke();
+    }
+
+    partial void OnShowCriticalOnlyChanged(bool value)
+    {
+        // Mutual exclusion: Critical and High+ are mutually exclusive
+        if (value) ShowHighOnly = false;
+    }
+
+    partial void OnShowHighOnlyChanged(bool value)
+    {
+        // Mutual exclusion: High+ and Critical are mutually exclusive
+        if (value) ShowCriticalOnly = false;
+    }
+
+    partial void OnSelectedCategoryChanged(string value)
+    {
+        // Note: Requires Apply button - no auto-update
+    }
+
+    partial void OnSelectedThreatTypeChanged(string value)
+    {
+        // Note: Requires Apply button - no auto-update
+    }
+
+    partial void OnSearchFilterChanged(string value)
+    {
+        // Note: Requires Apply button - no auto-update
     }
 
     /// <summary>
