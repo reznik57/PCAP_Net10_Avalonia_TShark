@@ -121,34 +121,74 @@ namespace PCAPAnalyzer.UI.ViewModels
         [ObservableProperty] private ObservableCollection<string> _threatTypes = new();
         [ObservableProperty] private bool _hasFiltersApplied = false;
 
-        // ==================== SORTING ====================
-        // TODO: Move to ThreatsTableViewModel or ThreatsSortingViewModel (sorting controls)
-        [ObservableProperty] private string _selectedSortOption = "Severity ▼";
-        public ObservableCollection<string> SortOptions { get; } = new()
-        {
-            "Severity ▼", "Severity ▲", "Time ▼", "Time ▲",
-            "Occurrences ▼", "Occurrences ▲", "Source IP", "Dest IP"
-        };
+        // ==================== SORTING (Delegated to Statistics component) ====================
 
-        partial void OnSelectedSortOptionChanged(string value)
+        /// <summary>
+        /// Sort options for threat list - delegated to Statistics component
+        /// </summary>
+        public ObservableCollection<string> SortOptions => Statistics.SortOptions;
+
+        /// <summary>
+        /// Selected sort option - delegated to Statistics component
+        /// </summary>
+        public string SelectedSortOption
         {
-            UpdateThreatsList();
+            get => Statistics.SelectedSortOption;
+            set => Statistics.SelectedSortOption = value;
         }
 
-        // ==================== QUICK FILTER TOGGLES (OR logic within) ====================
-        // TODO: DUPLICATE - Remove these properties, delegate fully to QuickFilters component
-        // These are redundant with QuickFilters.IsInsecureProtocolFilterActive, etc.
-        [ObservableProperty] private bool _isInsecureProtocolFilterActive;
-        [ObservableProperty] private bool _isKnownCVEFilterActive;
-        [ObservableProperty] private bool _isWeakEncryptionFilterActive;
-        [ObservableProperty] private bool _isAuthIssuesFilterActive;
-        [ObservableProperty] private bool _isCleartextFilterActive;
+        // ==================== QUICK FILTER TOGGLES (Delegated to QuickFilters component) ====================
+
+        /// <summary>
+        /// Quick filter: Insecure Protocol - delegated to QuickFilters component
+        /// </summary>
+        public bool IsInsecureProtocolFilterActive
+        {
+            get => QuickFilters.IsInsecureProtocolFilterActive;
+            set => QuickFilters.IsInsecureProtocolFilterActive = value;
+        }
+
+        /// <summary>
+        /// Quick filter: Known CVE - delegated to QuickFilters component
+        /// </summary>
+        public bool IsKnownCVEFilterActive
+        {
+            get => QuickFilters.IsKnownCVEFilterActive;
+            set => QuickFilters.IsKnownCVEFilterActive = value;
+        }
+
+        /// <summary>
+        /// Quick filter: Weak Encryption - delegated to QuickFilters component
+        /// </summary>
+        public bool IsWeakEncryptionFilterActive
+        {
+            get => QuickFilters.IsWeakEncryptionFilterActive;
+            set => QuickFilters.IsWeakEncryptionFilterActive = value;
+        }
+
+        /// <summary>
+        /// Quick filter: Auth Issues - delegated to QuickFilters component
+        /// </summary>
+        public bool IsAuthIssuesFilterActive
+        {
+            get => QuickFilters.IsAuthIssuesFilterActive;
+            set => QuickFilters.IsAuthIssuesFilterActive = value;
+        }
+
+        /// <summary>
+        /// Quick filter: Cleartext - delegated to QuickFilters component
+        /// </summary>
+        public bool IsCleartextFilterActive
+        {
+            get => QuickFilters.IsCleartextFilterActive;
+            set => QuickFilters.IsCleartextFilterActive = value;
+        }
 
         /// <summary>
         /// Active quick filter chips displayed below the THREAT FILTERS section (purple theme)
+        /// Delegated to QuickFilters component
         /// </summary>
-        // TODO: Move to QuickFilters component (owns chip display logic)
-        public ObservableCollection<ActiveQuickFilterChip> ActiveQuickFilterChips { get; } = new();
+        public ObservableCollection<ActiveQuickFilterChip> ActiveQuickFilterChips => QuickFilters.ActiveQuickFilterChips;
 
         // Side-by-side table data now managed by Statistics component
 
@@ -292,6 +332,9 @@ namespace PCAPAnalyzer.UI.ViewModels
 
             // Wire up QuickFilters change event
             QuickFilters.FiltersChanged += () => UpdateThreatsList();
+
+            // Wire up Statistics sort change event
+            Statistics.SortChanged += () => UpdateThreatsList();
 
             // Subscribe to filter changes
             if (_filterService != null)
@@ -849,89 +892,6 @@ namespace PCAPAnalyzer.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Updates the active quick filter chips collection based on which quick filters are enabled.
-        /// Creates visual chips with emoji, label, and remove command.
-        /// </summary>
-        // TODO: Move to QuickFilters component - this entire method (76 lines) should be encapsulated
-        // QuickFilters should own chip creation, display, and removal logic
-        private void UpdateActiveQuickFilterChips()
-        {
-            ActiveQuickFilterChips.Clear();
-
-            if (IsInsecureProtocolFilterActive)
-            {
-                ActiveQuickFilterChips.Add(new ActiveQuickFilterChip
-                {
-                    Emoji = "🔓",
-                    DisplayLabel = "Insecure Protocol",
-                    RemoveCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() =>
-                    {
-                        IsInsecureProtocolFilterActive = false;
-                        ApplyFilters();
-                    })
-                });
-            }
-
-            if (IsKnownCVEFilterActive)
-            {
-                ActiveQuickFilterChips.Add(new ActiveQuickFilterChip
-                {
-                    Emoji = "🛡️",
-                    DisplayLabel = "Known CVEs",
-                    RemoveCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() =>
-                    {
-                        IsKnownCVEFilterActive = false;
-                        ApplyFilters();
-                    })
-                });
-            }
-
-            if (IsWeakEncryptionFilterActive)
-            {
-                ActiveQuickFilterChips.Add(new ActiveQuickFilterChip
-                {
-                    Emoji = "🔐",
-                    DisplayLabel = "Weak Encryption",
-                    RemoveCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() =>
-                    {
-                        IsWeakEncryptionFilterActive = false;
-                        ApplyFilters();
-                    })
-                });
-            }
-
-            if (IsAuthIssuesFilterActive)
-            {
-                ActiveQuickFilterChips.Add(new ActiveQuickFilterChip
-                {
-                    Emoji = "🔑",
-                    DisplayLabel = "Auth Issues",
-                    RemoveCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() =>
-                    {
-                        IsAuthIssuesFilterActive = false;
-                        ApplyFilters();
-                    })
-                });
-            }
-
-            if (IsCleartextFilterActive)
-            {
-                ActiveQuickFilterChips.Add(new ActiveQuickFilterChip
-                {
-                    Emoji = "📝",
-                    DisplayLabel = "Cleartext",
-                    RemoveCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(() =>
-                    {
-                        IsCleartextFilterActive = false;
-                        ApplyFilters();
-                    })
-                });
-            }
-
-            // Notify UI that chip count changed for IsVisible binding
-            OnPropertyChanged(nameof(ActiveQuickFilterChips));
-        }
 
         // TODO: CRITICAL - Refactor this 245-line method into sub-methods:
         // 1. ApplyCommonFilters() - lines 949-1011
@@ -943,8 +903,8 @@ namespace PCAPAnalyzer.UI.ViewModels
             Justification = "Threat list update requires processing multiple threat categories, severity levels, filtering criteria, grouping logic, and aggregation operations")]
         private void UpdateThreatsList()
         {
-            // Update active filter chips display
-            UpdateActiveQuickFilterChips();
+            // Update active filter chips display (delegated to QuickFilters component)
+            QuickFilters.UpdateActiveChips();
             // Check if any filters are applied (includes quick filter toggles)
             HasFiltersApplied = CommonFilters.HasActiveFilters ||
                                ShowCriticalOnly || ShowHighOnly ||
@@ -1049,8 +1009,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                 threatsList = groupedThreats;
             }
 
-            // ==================== APPLY SORTING ====================
-            threatsList = ApplySorting(threatsList);
+            // ==================== APPLY SORTING (Delegated to Statistics component) ====================
+            threatsList = Statistics.ApplySorting(threatsList);
 
             // ==================== RECALCULATE METRICS FROM FILTERED THREATS ====================
             // Issue Fix: Stats and charts should reflect filtered threats, not all threats
@@ -1188,27 +1148,6 @@ namespace PCAPAnalyzer.UI.ViewModels
             Statistics.UpdateTableData(_allThreats);
         }
 
-        /// <summary>
-        /// Applies the selected sort option to the threat list
-        /// </summary>
-        // TODO: Move to ThreatsTableViewModel or static ThreatSortingHelper
-        private List<EnhancedSecurityThreat> ApplySorting(List<EnhancedSecurityThreat> threats)
-        {
-            if (!threats.Any()) return threats;
-
-            return SelectedSortOption switch
-            {
-                "Severity ▼" => threats.OrderByDescending(t => t.Severity).ThenByDescending(t => t.RiskScore).ToList(),
-                "Severity ▲" => threats.OrderBy(t => t.Severity).ThenBy(t => t.RiskScore).ToList(),
-                "Time ▼" => threats.OrderByDescending(t => t.LastSeen).ToList(),
-                "Time ▲" => threats.OrderBy(t => t.FirstSeen).ToList(),
-                "Occurrences ▼" => threats.OrderByDescending(t => t.OccurrenceCount).ToList(),
-                "Occurrences ▲" => threats.OrderBy(t => t.OccurrenceCount).ToList(),
-                "Source IP" => threats.OrderBy(t => t.AffectedIPs.FirstOrDefault() ?? "").ToList(),
-                "Dest IP" => threats.OrderBy(t => t.AffectedIPs.Skip(1).FirstOrDefault() ?? "").ToList(),
-                _ => threats.OrderByDescending(t => t.Severity).ThenByDescending(t => t.RiskScore).ToList()
-            };
-        }
 
         private void UpdateInsecurePortsList()
         {
@@ -1772,25 +1711,4 @@ namespace PCAPAnalyzer.UI.ViewModels
         public string EncryptionText => IsEncrypted ? "Encrypted" : "UNENCRYPTED";
     }
 
-    /// <summary>
-    /// Represents an active quick filter chip displayed in the purple-themed active filters section.
-    /// Includes emoji, label, and remove command for interactive filter management.
-    /// </summary>
-    public class ActiveQuickFilterChip : ObservableObject
-    {
-        /// <summary>
-        /// Emoji icon displayed on the chip (e.g., 🔓, 🛡️, 🔐)
-        /// </summary>
-        public string Emoji { get; set; } = "";
-
-        /// <summary>
-        /// Display label for the filter (e.g., "Insecure Protocol", "Known CVEs")
-        /// </summary>
-        public string DisplayLabel { get; set; } = "";
-
-        /// <summary>
-        /// Command to remove this filter chip (clears the corresponding toggle and reapplies filters)
-        /// </summary>
-        public IRelayCommand? RemoveCommand { get; set; }
-    }
 }

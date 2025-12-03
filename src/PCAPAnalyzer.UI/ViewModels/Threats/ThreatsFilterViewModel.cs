@@ -20,6 +20,36 @@ public partial class ThreatsFilterViewModel : ObservableObject
     [ObservableProperty] private bool _isAuthIssuesFilterActive;
     [ObservableProperty] private bool _isCleartextFilterActive;
 
+    partial void OnIsInsecureProtocolFilterActiveChanged(bool value)
+    {
+        UpdateActiveChips();
+        FiltersChanged?.Invoke();
+    }
+
+    partial void OnIsKnownCVEFilterActiveChanged(bool value)
+    {
+        UpdateActiveChips();
+        FiltersChanged?.Invoke();
+    }
+
+    partial void OnIsWeakEncryptionFilterActiveChanged(bool value)
+    {
+        UpdateActiveChips();
+        FiltersChanged?.Invoke();
+    }
+
+    partial void OnIsAuthIssuesFilterActiveChanged(bool value)
+    {
+        UpdateActiveChips();
+        FiltersChanged?.Invoke();
+    }
+
+    partial void OnIsCleartextFilterActiveChanged(bool value)
+    {
+        UpdateActiveChips();
+        FiltersChanged?.Invoke();
+    }
+
     /// <summary>
     /// Active quick filter chips displayed below the THREAT FILTERS section
     /// </summary>

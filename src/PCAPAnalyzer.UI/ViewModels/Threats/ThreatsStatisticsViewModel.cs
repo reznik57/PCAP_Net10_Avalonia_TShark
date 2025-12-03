@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -9,7 +10,7 @@ using PCAPAnalyzer.UI.ViewModels.Components;
 namespace PCAPAnalyzer.UI.ViewModels.Threats;
 
 /// <summary>
-/// Manages threat statistics, metrics display, and table data aggregation.
+/// Manages threat statistics, metrics display, table data aggregation, and sorting.
 /// Extracted from ThreatsViewModel to isolate statistics calculations.
 /// </summary>
 public partial class ThreatsStatisticsViewModel : ObservableObject
@@ -24,6 +25,25 @@ public partial class ThreatsStatisticsViewModel : ObservableObject
     [ObservableProperty] private double _overallRiskScore;
     [ObservableProperty] private string _riskLevel = "Unknown";
     [ObservableProperty] private string _riskLevelColor = "#6B7280";
+
+    // ==================== SORTING ====================
+
+    [ObservableProperty] private string _selectedSortOption = "Severity ▼";
+    public ObservableCollection<string> SortOptions { get; } = new()
+    {
+        "Severity ▼", "Severity ▲", "Time ▼", "Time ▲",
+        "Occurrences ▼", "Occurrences ▲", "Source IP", "Dest IP"
+    };
+
+    /// <summary>
+    /// Event fired when sort option changes
+    /// </summary>
+    public event Action? SortChanged;
+
+    partial void OnSelectedSortOptionChanged(string value)
+    {
+        SortChanged?.Invoke();
+    }
 
     // ==================== SIDE-BY-SIDE TABLE DATA ====================
 
@@ -214,4 +234,25 @@ public partial class ThreatsStatisticsViewModel : ObservableObject
         8080 => "HTTP-Alt",
         _ => "Unknown"
     };
+
+    /// <summary>
+    /// Applies the selected sort option to the threat list
+    /// </summary>
+    public List<EnhancedSecurityThreat> ApplySorting(List<EnhancedSecurityThreat> threats)
+    {
+        if (!threats.Any()) return threats;
+
+        return SelectedSortOption switch
+        {
+            "Severity ▼" => threats.OrderByDescending(t => t.Severity).ThenByDescending(t => t.RiskScore).ToList(),
+            "Severity ▲" => threats.OrderBy(t => t.Severity).ThenBy(t => t.RiskScore).ToList(),
+            "Time ▼" => threats.OrderByDescending(t => t.LastSeen).ToList(),
+            "Time ▲" => threats.OrderBy(t => t.FirstSeen).ToList(),
+            "Occurrences ▼" => threats.OrderByDescending(t => t.OccurrenceCount).ToList(),
+            "Occurrences ▲" => threats.OrderBy(t => t.OccurrenceCount).ToList(),
+            "Source IP" => threats.OrderBy(t => t.AffectedIPs.FirstOrDefault() ?? "").ToList(),
+            "Dest IP" => threats.OrderBy(t => t.AffectedIPs.Skip(1).FirstOrDefault() ?? "").ToList(),
+            _ => threats.OrderByDescending(t => t.Severity).ThenByDescending(t => t.RiskScore).ToList()
+        };
+    }
 }
