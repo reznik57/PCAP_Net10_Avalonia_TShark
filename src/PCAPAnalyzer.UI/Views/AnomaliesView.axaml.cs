@@ -77,106 +77,94 @@ public partial class AnomaliesView : UserControl
 
         try
         {
-            var position = e.GetPosition(chart);
-
-            // Get the actual plot area bounds from LiveCharts Core
-            var drawMargin = chart.CoreChart.DrawMarginLocation;
-            var drawSize = chart.CoreChart.DrawMarginSize;
-
-            double plotAreaLeft = drawMargin.X > 0 ? drawMargin.X : 50;
-            double plotAreaWidth = drawSize.Width > 0 ? drawSize.Width : chart.Bounds.Width - 70;
-
-            var adjustedX = position.X - plotAreaLeft;
-            var relativeX = Math.Max(0, Math.Min(1, adjustedX / plotAreaWidth));
-
-            // Find data from series
-            DateTime? timestamp = null;
-            double critical = 0, high = 0, medium = 0, low = 0;
-
-            foreach (var s in ViewModel.Charts.TimelineSeries)
-            {
-                if (s is LineSeries<DateTimePoint> dateTimeSeries && dateTimeSeries.Values != null)
-                {
-                    var values = dateTimeSeries.Values.ToList();
-                    if (values.Count > 0)
-                    {
-                        var dataIndex = (int)(relativeX * (values.Count - 1));
-                        dataIndex = Math.Max(0, Math.Min(values.Count - 1, dataIndex));
-                        var point = values[dataIndex];
-
-                        timestamp ??= point.DateTime;
-
-                        var name = dateTimeSeries.Name ?? "";
-                        var value = point.Value ?? 0;
-
-                        if (name.Contains("Critical", StringComparison.OrdinalIgnoreCase))
-                            critical = value;
-                        else if (name.Contains("High", StringComparison.OrdinalIgnoreCase))
-                            high = value;
-                        else if (name.Contains("Medium", StringComparison.OrdinalIgnoreCase))
-                            medium = value;
-                        else if (name.Contains("Low", StringComparison.OrdinalIgnoreCase))
-                            low = value;
-                    }
-                }
-            }
+            var relativeX = CalculateRelativeX(chart, e);
+            var (timestamp, critical, high, medium, low) = ExtractChartData(relativeX);
 
             if (timestamp.HasValue)
-            {
-                // Build colored tooltip with inline formatting
-                AnomalyTooltipText.Inlines?.Clear();
-
-                // Timestamp (white)
-                AnomalyTooltipText.Inlines?.Add(new Run($"{timestamp.Value:HH:mm:ss}  |  ")
-                {
-                    Foreground = DefaultColor
-                });
-
-                // Critical (red - #F85149)
-                AnomalyTooltipText.Inlines?.Add(new Run($"Critical: {critical:N0}")
-                {
-                    Foreground = CriticalColor,
-                    FontWeight = FontWeight.Bold
-                });
-
-                AnomalyTooltipText.Inlines?.Add(new Run("  |  ") { Foreground = DefaultColor });
-
-                // High (orange - #F59E0B)
-                AnomalyTooltipText.Inlines?.Add(new Run($"High: {high:N0}")
-                {
-                    Foreground = HighColor,
-                    FontWeight = FontWeight.Bold
-                });
-
-                AnomalyTooltipText.Inlines?.Add(new Run("  |  ") { Foreground = DefaultColor });
-
-                // Medium (yellow - #FCD34D)
-                AnomalyTooltipText.Inlines?.Add(new Run($"Medium: {medium:N0}")
-                {
-                    Foreground = MediumColor,
-                    FontWeight = FontWeight.Bold
-                });
-
-                AnomalyTooltipText.Inlines?.Add(new Run("  |  ") { Foreground = DefaultColor });
-
-                // Low (blue - #3B82F6)
-                AnomalyTooltipText.Inlines?.Add(new Run($"Low: {low:N0}")
-                {
-                    Foreground = LowColor,
-                    FontWeight = FontWeight.Bold
-                });
-            }
+                BuildColoredTooltip(timestamp.Value, critical, high, medium, low);
             else
-            {
-                AnomalyTooltipText.Inlines?.Clear();
-                AnomalyTooltipText.Text = "Hover over chart for details";
-            }
+                ResetTooltip();
         }
         catch
         {
-            AnomalyTooltipText.Inlines?.Clear();
-            AnomalyTooltipText.Text = "Hover over chart for details";
+            ResetTooltip();
         }
+    }
+
+    private double CalculateRelativeX(CartesianChart chart, PointerEventArgs e)
+    {
+        var position = e.GetPosition(chart);
+        var drawMargin = chart.CoreChart.DrawMarginLocation;
+        var drawSize = chart.CoreChart.DrawMarginSize;
+
+        double plotAreaLeft = drawMargin.X > 0 ? drawMargin.X : 50;
+        double plotAreaWidth = drawSize.Width > 0 ? drawSize.Width : chart.Bounds.Width - 70;
+
+        var adjustedX = position.X - plotAreaLeft;
+        return Math.Max(0, Math.Min(1, adjustedX / plotAreaWidth));
+    }
+
+    private (DateTime? timestamp, double critical, double high, double medium, double low) ExtractChartData(double relativeX)
+    {
+        DateTime? timestamp = null;
+        double critical = 0, high = 0, medium = 0, low = 0;
+
+        foreach (var s in ViewModel!.Charts!.TimelineSeries!)
+        {
+            if (s is not LineSeries<DateTimePoint> dateTimeSeries || dateTimeSeries.Values == null)
+                continue;
+
+            var values = dateTimeSeries.Values.ToList();
+            if (values.Count == 0) continue;
+
+            var dataIndex = Math.Clamp((int)(relativeX * (values.Count - 1)), 0, values.Count - 1);
+            var point = values[dataIndex];
+
+            timestamp ??= point.DateTime;
+            var value = point.Value ?? 0;
+
+            (critical, high, medium, low) = MapSeriesValue(dateTimeSeries.Name ?? "", value, critical, high, medium, low);
+        }
+
+        return (timestamp, critical, high, medium, low);
+    }
+
+    private static (double critical, double high, double medium, double low) MapSeriesValue(
+        string name, double value, double critical, double high, double medium, double low)
+    {
+        if (name.Contains("Critical", StringComparison.OrdinalIgnoreCase)) return (value, high, medium, low);
+        if (name.Contains("High", StringComparison.OrdinalIgnoreCase)) return (critical, value, medium, low);
+        if (name.Contains("Medium", StringComparison.OrdinalIgnoreCase)) return (critical, high, value, low);
+        if (name.Contains("Low", StringComparison.OrdinalIgnoreCase)) return (critical, high, medium, value);
+        return (critical, high, medium, low);
+    }
+
+    private void BuildColoredTooltip(DateTime timestamp, double critical, double high, double medium, double low)
+    {
+        AnomalyTooltipText.Inlines?.Clear();
+        AddTooltipRun($"{timestamp:HH:mm:ss}  |  ", DefaultColor, false);
+        AddTooltipRun($"Critical: {critical:N0}", CriticalColor, true);
+        AddTooltipRun("  |  ", DefaultColor, false);
+        AddTooltipRun($"High: {high:N0}", HighColor, true);
+        AddTooltipRun("  |  ", DefaultColor, false);
+        AddTooltipRun($"Medium: {medium:N0}", MediumColor, true);
+        AddTooltipRun("  |  ", DefaultColor, false);
+        AddTooltipRun($"Low: {low:N0}", LowColor, true);
+    }
+
+    private void AddTooltipRun(string text, IBrush color, bool bold)
+    {
+        AnomalyTooltipText.Inlines?.Add(new Run(text)
+        {
+            Foreground = color,
+            FontWeight = bold ? FontWeight.Bold : FontWeight.Normal
+        });
+    }
+
+    private void ResetTooltip()
+    {
+        AnomalyTooltipText.Inlines?.Clear();
+        AnomalyTooltipText.Text = "Hover over chart for details";
     }
 
     private void OnAnomalyChartPointerExited(object? sender, PointerEventArgs e)

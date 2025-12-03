@@ -72,27 +72,27 @@ public partial class FilterGroup : ObservableObject
     /// <summary>
     /// Checks if this filter group has any populated criteria
     /// </summary>
-    public bool HasCriteria()
-    {
-        return !string.IsNullOrWhiteSpace(SourceIP) ||
-               !string.IsNullOrWhiteSpace(DestinationIP) ||
-               !string.IsNullOrWhiteSpace(PortRange) ||
-               !string.IsNullOrWhiteSpace(Protocol) ||
-               (QuickFilters?.Count > 0) ||
-               (Severities?.Count > 0) ||
-               (ThreatCategories?.Count > 0) ||
-               (AnomalySeverities?.Count > 0) ||
-               (AnomalyCategories?.Count > 0) ||
-               (AnomalyDetectors?.Count > 0) ||
-               (Codecs?.Count > 0) ||
-               (QualityLevels?.Count > 0) ||
-               (VoipIssues?.Count > 0) ||
-               !string.IsNullOrWhiteSpace(JitterThreshold) ||
-               !string.IsNullOrWhiteSpace(LatencyThreshold) ||
-               (Countries?.Count > 0) ||
-               (Directions?.Count > 0) ||
-               (Regions?.Count > 0);
-    }
+    public bool HasCriteria() =>
+        HasGeneralCriteria() || HasThreatsCriteria() || HasAnomaliesCriteria() ||
+        HasVoiceQoSCriteria() || HasCountryCriteria();
+
+    private bool HasGeneralCriteria() =>
+        !string.IsNullOrWhiteSpace(SourceIP) || !string.IsNullOrWhiteSpace(DestinationIP) ||
+        !string.IsNullOrWhiteSpace(PortRange) || !string.IsNullOrWhiteSpace(Protocol) ||
+        (QuickFilters?.Count > 0);
+
+    private bool HasThreatsCriteria() =>
+        (Severities?.Count > 0) || (ThreatCategories?.Count > 0);
+
+    private bool HasAnomaliesCriteria() =>
+        (AnomalySeverities?.Count > 0) || (AnomalyCategories?.Count > 0) || (AnomalyDetectors?.Count > 0);
+
+    private bool HasVoiceQoSCriteria() =>
+        (Codecs?.Count > 0) || (QualityLevels?.Count > 0) || (VoipIssues?.Count > 0) ||
+        !string.IsNullOrWhiteSpace(JitterThreshold) || !string.IsNullOrWhiteSpace(LatencyThreshold);
+
+    private bool HasCountryCriteria() =>
+        (Countries?.Count > 0) || (Directions?.Count > 0) || (Regions?.Count > 0);
 
     /// <summary>
     /// Gets a list of all non-empty field descriptions for this group
@@ -100,54 +100,50 @@ public partial class FilterGroup : ObservableObject
     public List<string> GetFieldDescriptions()
     {
         var descriptions = new List<string>();
-
-        // General tab
-        if (!string.IsNullOrWhiteSpace(SourceIP))
-            descriptions.Add($"Src IP: {SourceIP}");
-        if (!string.IsNullOrWhiteSpace(DestinationIP))
-            descriptions.Add($"Dest IP: {DestinationIP}");
-        if (!string.IsNullOrWhiteSpace(PortRange))
-            descriptions.Add($"Port: {PortRange}");
-        if (!string.IsNullOrWhiteSpace(Protocol))
-            descriptions.Add($"Protocol: {Protocol}");
-        if (QuickFilters?.Count > 0)
-            descriptions.AddRange(QuickFilters);
-
-        // Threats tab
-        if (Severities?.Count > 0)
-            descriptions.AddRange(Severities.Select(s => $"Severity: {s}"));
-        if (ThreatCategories?.Count > 0)
-            descriptions.AddRange(ThreatCategories.Select(c => $"Threat: {c}"));
-
-        // Anomalies tab
-        if (AnomalySeverities?.Count > 0)
-            descriptions.AddRange(AnomalySeverities.Select(s => $"Anomaly Sev: {s}"));
-        if (AnomalyCategories?.Count > 0)
-            descriptions.AddRange(AnomalyCategories.Select(c => $"Anomaly Cat: {c}"));
-        if (AnomalyDetectors?.Count > 0)
-            descriptions.AddRange(AnomalyDetectors.Select(d => $"Detector: {d}"));
-
-        // VoiceQoS tab
-        if (Codecs?.Count > 0)
-            descriptions.AddRange(Codecs.Select(c => $"Codec: {c}"));
-        if (QualityLevels?.Count > 0)
-            descriptions.AddRange(QualityLevels.Select(q => $"Quality: {q}"));
-        if (VoipIssues?.Count > 0)
-            descriptions.AddRange(VoipIssues.Select(i => $"Issue: {i}"));
-        if (!string.IsNullOrWhiteSpace(JitterThreshold))
-            descriptions.Add($"Jitter: >{JitterThreshold}ms");
-        if (!string.IsNullOrWhiteSpace(LatencyThreshold))
-            descriptions.Add($"Latency: >{LatencyThreshold}ms");
-
-        // Country tab
-        if (Countries?.Count > 0)
-            descriptions.AddRange(Countries.Select(c => $"Country: {c}"));
-        if (Directions?.Count > 0)
-            descriptions.AddRange(Directions.Select(d => $"Direction: {d}"));
-        if (Regions?.Count > 0)
-            descriptions.AddRange(Regions.Select(r => $"Region: {r}"));
-
+        AddGeneralDescriptions(descriptions);
+        AddThreatsDescriptions(descriptions);
+        AddAnomaliesDescriptions(descriptions);
+        AddVoiceQoSDescriptions(descriptions);
+        AddCountryDescriptions(descriptions);
         return descriptions;
+    }
+
+    private void AddGeneralDescriptions(List<string> descriptions)
+    {
+        if (!string.IsNullOrWhiteSpace(SourceIP)) descriptions.Add($"Src IP: {SourceIP}");
+        if (!string.IsNullOrWhiteSpace(DestinationIP)) descriptions.Add($"Dest IP: {DestinationIP}");
+        if (!string.IsNullOrWhiteSpace(PortRange)) descriptions.Add($"Port: {PortRange}");
+        if (!string.IsNullOrWhiteSpace(Protocol)) descriptions.Add($"Protocol: {Protocol}");
+        if (QuickFilters?.Count > 0) descriptions.AddRange(QuickFilters);
+    }
+
+    private void AddThreatsDescriptions(List<string> descriptions)
+    {
+        if (Severities?.Count > 0) descriptions.AddRange(Severities.Select(s => $"Severity: {s}"));
+        if (ThreatCategories?.Count > 0) descriptions.AddRange(ThreatCategories.Select(c => $"Threat: {c}"));
+    }
+
+    private void AddAnomaliesDescriptions(List<string> descriptions)
+    {
+        if (AnomalySeverities?.Count > 0) descriptions.AddRange(AnomalySeverities.Select(s => $"Anomaly Sev: {s}"));
+        if (AnomalyCategories?.Count > 0) descriptions.AddRange(AnomalyCategories.Select(c => $"Anomaly Cat: {c}"));
+        if (AnomalyDetectors?.Count > 0) descriptions.AddRange(AnomalyDetectors.Select(d => $"Detector: {d}"));
+    }
+
+    private void AddVoiceQoSDescriptions(List<string> descriptions)
+    {
+        if (Codecs?.Count > 0) descriptions.AddRange(Codecs.Select(c => $"Codec: {c}"));
+        if (QualityLevels?.Count > 0) descriptions.AddRange(QualityLevels.Select(q => $"Quality: {q}"));
+        if (VoipIssues?.Count > 0) descriptions.AddRange(VoipIssues.Select(i => $"Issue: {i}"));
+        if (!string.IsNullOrWhiteSpace(JitterThreshold)) descriptions.Add($"Jitter: >{JitterThreshold}ms");
+        if (!string.IsNullOrWhiteSpace(LatencyThreshold)) descriptions.Add($"Latency: >{LatencyThreshold}ms");
+    }
+
+    private void AddCountryDescriptions(List<string> descriptions)
+    {
+        if (Countries?.Count > 0) descriptions.AddRange(Countries.Select(c => $"Country: {c}"));
+        if (Directions?.Count > 0) descriptions.AddRange(Directions.Select(d => $"Direction: {d}"));
+        if (Regions?.Count > 0) descriptions.AddRange(Regions.Select(r => $"Region: {r}"));
     }
 
     /// <summary>
