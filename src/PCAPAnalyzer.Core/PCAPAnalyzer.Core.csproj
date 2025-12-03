@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\Data\ports.json" />
+    <EmbeddedResource Include="Resources\Data\insecure-ports.json" />
   </ItemGroup>
 
 </Project>

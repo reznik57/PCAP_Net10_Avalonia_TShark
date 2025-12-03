@@ -66,7 +66,7 @@ public partial class AnomaliesChartsViewModel : ObservableObject
                 Name = "Time",
                 NamePaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
                 LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
-                Labeler = value => DateTime.FromOADate(value).ToString("HH:mm:ss"),
+                Labeler = value => SafeFromTicks(value),
                 TextSize = 11
             }
         };
@@ -101,6 +101,33 @@ public partial class AnomaliesChartsViewModel : ObservableObject
                 TextSize = 11
             }
         };
+    }
+
+    /// <summary>
+    /// Safely converts DateTime ticks to string, handling invalid values.
+    /// DateTimePoint uses ticks, not OLE dates.
+    /// </summary>
+    private static string SafeFromTicks(double value)
+    {
+        if (double.IsNaN(value) || double.IsInfinity(value))
+        {
+            return "---";
+        }
+
+        try
+        {
+            var ticks = (long)value;
+            // Valid DateTime ticks range
+            if (ticks < DateTime.MinValue.Ticks || ticks > DateTime.MaxValue.Ticks)
+            {
+                return "---";
+            }
+            return new DateTime(ticks).ToString("HH:mm:ss");
+        }
+        catch
+        {
+            return "---";
+        }
     }
 
     public void UpdateTimeline(List<AnomalyTimePoint> timePoints)

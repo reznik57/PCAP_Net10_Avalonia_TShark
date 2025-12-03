@@ -78,6 +78,12 @@ public class ApplicationAnomalyDetector : IAnomalyDetector
             var groupPackets = group.ToList();
             if (groupPackets.Count >= 10) // Threshold for suspicious activity
             {
+                // Get the most common DNS server destination
+                var topDestination = groupPackets
+                    .GroupBy(p => p.DestinationIP)
+                    .OrderByDescending(g => g.Count())
+                    .FirstOrDefault()?.Key ?? "";
+
                 anomalies.Add(new NetworkAnomaly
                 {
                     Category = AnomalyCategory.Application,
@@ -87,13 +93,16 @@ public class ApplicationAnomalyDetector : IAnomalyDetector
                     DetectedAt = groupPackets.First().Timestamp,
                     DetectorName = Name,
                     SourceIP = group.Key ?? "",
+                    DestinationIP = topDestination,
+                    DestinationPort = 53,
                     Protocol = "DNS",
                     AffectedFrames = groupPackets.Select(p => (long)p.FrameNumber).Take(50).ToList(),
                     Metrics = new Dictionary<string, object>
                     {
                         { "SuspiciousQueries", groupPackets.Count },
                         { "AverageQueryLength", groupPackets.Average(p => EstimateDNSQueryLength(p.Info ?? "")) },
-                        { "UniqueDestinations", groupPackets.Select(p => p.DestinationIP).Distinct().Count() }
+                        { "UniqueDestinations", groupPackets.Select(p => p.DestinationIP).Distinct().Count() },
+                        { "TopDNSServer", topDestination }
                     },
                     Recommendation = "Investigate DNS queries for data exfiltration. Consider blocking suspicious domains and monitoring DNS traffic patterns."
                 });
@@ -177,6 +186,20 @@ public class ApplicationAnomalyDetector : IAnomalyDetector
         if (malformed.Count >= 5)
         {
             var firstPacket = malformed.First();
+
+            // Get the most common source and destination from malformed packets
+            var topSource = malformed
+                .Where(p => !string.IsNullOrEmpty(p.SourceIP))
+                .GroupBy(p => p.SourceIP)
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault()?.Key ?? "";
+
+            var topDestination = malformed
+                .Where(p => !string.IsNullOrEmpty(p.DestinationIP))
+                .GroupBy(p => p.DestinationIP)
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault()?.Key ?? "";
+
             anomalies.Add(new NetworkAnomaly
             {
                 Category = AnomalyCategory.Malformed,
@@ -185,12 +208,16 @@ public class ApplicationAnomalyDetector : IAnomalyDetector
                 Description = $"{malformed.Count} malformed or invalid packets detected",
                 DetectedAt = firstPacket.Timestamp,
                 DetectorName = Name,
+                SourceIP = topSource,
+                DestinationIP = topDestination,
                 Protocol = "Various",
                 AffectedFrames = malformed.Select(p => (long)p.FrameNumber).ToList(),
                 Metrics = new Dictionary<string, object>
                 {
                     { "MalformedCount", malformed.Count },
-                    { "Protocols", malformed.Select(p => p.Protocol.ToString()).Distinct().ToList() }
+                    { "Protocols", malformed.Select(p => p.Protocol.ToString()).Distinct().ToList() },
+                    { "TopSourceIP", topSource },
+                    { "TopDestinationIP", topDestination }
                 },
                 Recommendation = "Malformed packets may indicate network issues, misconfigured devices, or potential attacks. Investigate packet structure."
             });

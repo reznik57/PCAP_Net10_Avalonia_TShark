@@ -83,6 +83,11 @@ public partial class AnomaliesDrillDownViewModel : ObservableObject
         ShowDetailPopup($"Target Analysis: {ipAddress}", "Anomalies targeting this IP", anomalies);
     }
 
+    public void ShowPortDetail(string portName, IEnumerable<NetworkAnomaly> anomalies)
+    {
+        ShowDetailPopup($"Port Analysis: {portName}", "Anomalies on this port", anomalies);
+    }
+
     private void ShowDetailPopup(string title, string subtitle, IEnumerable<NetworkAnomaly> anomalies)
     {
         _allDetailAnomalies = anomalies

@@ -12,6 +12,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
     public FilterSummaryViewModel Summary { get; }
     public GeneralFilterTabViewModel GeneralTab { get; }
     public ThreatsFilterTabViewModel ThreatsTab { get; }
+    public AnomaliesFilterTabViewModel AnomaliesTab { get; }
     public VoiceQoSFilterTabViewModel VoiceQoSTab { get; }
     public CountryFilterTabViewModel CountryTab { get; }
 
@@ -51,6 +52,10 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         g.Severities?.Count > 0 || g.ThreatCategories?.Count > 0);
     public bool ThreatsHasExcludeFilters => _filterState.ExcludeGroups.Any(g =>
         g.Severities?.Count > 0 || g.ThreatCategories?.Count > 0);
+    public bool AnomaliesHasIncludeFilters => _filterState.IncludeGroups.Any(g =>
+        g.AnomalySeverities?.Count > 0 || g.AnomalyCategories?.Count > 0 || g.AnomalyDetectors?.Count > 0);
+    public bool AnomaliesHasExcludeFilters => _filterState.ExcludeGroups.Any(g =>
+        g.AnomalySeverities?.Count > 0 || g.AnomalyCategories?.Count > 0 || g.AnomalyDetectors?.Count > 0);
     public bool VoiceQoSHasIncludeFilters => _filterState.IncludeGroups.Any(g =>
         g.Codecs?.Count > 0 || g.QualityLevels?.Count > 0 || g.VoipIssues?.Count > 0);
     public bool VoiceQoSHasExcludeFilters => _filterState.ExcludeGroups.Any(g =>
@@ -70,6 +75,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         // Create tab ViewModels WITHOUT GlobalFilterState
         GeneralTab = new GeneralFilterTabViewModel();
         ThreatsTab = new ThreatsFilterTabViewModel();
+        AnomaliesTab = new AnomaliesFilterTabViewModel();
         VoiceQoSTab = new VoiceQoSFilterTabViewModel();
         CountryTab = new CountryFilterTabViewModel();
     }
@@ -80,6 +86,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         _currentMode = FilterChipMode.Include;
         GeneralTab.SetMode(_currentMode);
         ThreatsTab.SetMode(_currentMode);
+        AnomaliesTab.SetMode(_currentMode);
         VoiceQoSTab.SetMode(_currentMode);
         CountryTab.SetMode(_currentMode);
         NotifyModeChanged();
@@ -91,6 +98,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         _currentMode = FilterChipMode.Exclude;
         GeneralTab.SetMode(_currentMode);
         ThreatsTab.SetMode(_currentMode);
+        AnomaliesTab.SetMode(_currentMode);
         VoiceQoSTab.SetMode(_currentMode);
         CountryTab.SetMode(_currentMode);
         NotifyModeChanged();
@@ -110,6 +118,8 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         OnPropertyChanged(nameof(GeneralHasExcludeFilters));
         OnPropertyChanged(nameof(ThreatsHasIncludeFilters));
         OnPropertyChanged(nameof(ThreatsHasExcludeFilters));
+        OnPropertyChanged(nameof(AnomaliesHasIncludeFilters));
+        OnPropertyChanged(nameof(AnomaliesHasExcludeFilters));
         OnPropertyChanged(nameof(VoiceQoSHasIncludeFilters));
         OnPropertyChanged(nameof(VoiceQoSHasExcludeFilters));
         OnPropertyChanged(nameof(CountryHasIncludeFilters));
@@ -125,6 +135,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         // Collect all pending filters from all tabs
         var general = GeneralTab.GetPendingFilters();
         var threats = ThreatsTab.GetPendingFilters();
+        var anomalies = AnomaliesTab.GetPendingFilters();
         var voip = VoiceQoSTab.GetPendingFilters();
         var country = CountryTab.GetPendingFilters();
 
@@ -143,6 +154,11 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
             // Threats tab
             Severities = threats.Severities.Count > 0 ? threats.Severities : null,
             ThreatCategories = threats.Categories.Count > 0 ? threats.Categories : null,
+
+            // Anomalies tab
+            AnomalySeverities = anomalies.Severities.Count > 0 ? anomalies.Severities : null,
+            AnomalyCategories = anomalies.Categories.Count > 0 ? anomalies.Categories : null,
+            AnomalyDetectors = anomalies.Detectors.Count > 0 ? anomalies.Detectors : null,
 
             // VoiceQoS tab
             Codecs = voip.Codecs.Count > 0 ? voip.Codecs : null,
@@ -175,6 +191,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
             PortRangeInput = "";
             GeneralTab.Reset();
             ThreatsTab.Reset();
+            AnomaliesTab.Reset();
             VoiceQoSTab.Reset();
             CountryTab.Reset();
         }
@@ -197,6 +214,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         // Clear pending state in all tabs
         GeneralTab.Reset();
         ThreatsTab.Reset();
+        AnomaliesTab.Reset();
         VoiceQoSTab.Reset();
         CountryTab.Reset();
 

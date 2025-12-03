@@ -78,6 +78,12 @@ public class VoipAnomalyDetector : ISpecializedDetector
                     var invites = targetPackets.Count(p => p.Info?.Contains("INVITE", StringComparison.OrdinalIgnoreCase) == true);
                     var registers = targetPackets.Count(p => p.Info?.Contains("REGISTER", StringComparison.OrdinalIgnoreCase) == true);
 
+                    // Get the most active source (attacker)
+                    var topSource = targetPackets
+                        .GroupBy(p => p.SourceIP)
+                        .OrderByDescending(g => g.Count())
+                        .First();
+
                     anomalies.Add(new NetworkAnomaly
                     {
                         Category = AnomalyCategory.VoIP,
@@ -86,6 +92,7 @@ public class VoipAnomalyDetector : ISpecializedDetector
                         Description = $"SIP flooding detected: {sipPerSecond:F1} messages/second to {target.Key.DestinationIP}:{target.Key.DestinationPort}",
                         DetectedAt = targetPackets.First().Timestamp,
                         DetectorName = Name,
+                        SourceIP = topSource.Key ?? "",
                         DestinationIP = target.Key.DestinationIP ?? "",
                         DestinationPort = target.Key.DestinationPort,
                         Protocol = "SIP",
@@ -96,7 +103,8 @@ public class VoipAnomalyDetector : ISpecializedDetector
                             { "TotalSIPMessages", targetPackets.Count },
                             { "INVITECount", invites },
                             { "REGISTERCount", registers },
-                            { "UniqueSources", targetPackets.Select(p => p.SourceIP).Distinct().Count() }
+                            { "UniqueSources", targetPackets.Select(p => p.SourceIP).Distinct().Count() },
+                            { "TopSourceIP", topSource.Key ?? "" }
                         },
                         Recommendation = "SIP flooding may indicate DoS attack on VoIP infrastructure. Implement rate limiting, SIP authentication, and consider blocking suspicious sources."
                     });
@@ -138,6 +146,12 @@ public class VoipAnomalyDetector : ISpecializedDetector
 
                 if (responseRate < 0.2) // Less than 20% response rate
                 {
+                    // Get the most common target destination
+                    var topDestination = groupInvites
+                        .GroupBy(p => p.DestinationIP)
+                        .OrderByDescending(g => g.Count())
+                        .FirstOrDefault()?.Key ?? "";
+
                     anomalies.Add(new NetworkAnomaly
                     {
                         Category = AnomalyCategory.VoIP,
@@ -147,13 +161,15 @@ public class VoipAnomalyDetector : ISpecializedDetector
                         DetectedAt = groupInvites.First().Timestamp,
                         DetectorName = Name,
                         SourceIP = group.Key ?? "",
+                        DestinationIP = topDestination,
                         Protocol = "SIP",
                         AffectedFrames = groupInvites.Select(p => (long)p.FrameNumber).ToList(),
                         Metrics = new Dictionary<string, object>
                         {
                             { "TotalINVITEs", groupInvites.Count },
                             { "ResponseRate", responseRate },
-                            { "UniqueDestinations", groupInvites.Select(p => p.DestinationIP).Distinct().Count() }
+                            { "UniqueDestinations", groupInvites.Select(p => p.DestinationIP).Distinct().Count() },
+                            { "TopDestinationIP", topDestination }
                         },
                         Recommendation = "Ghost calls may indicate scanning for vulnerable SIP endpoints. Block the source IP and enable SIP authentication."
                     });
@@ -273,6 +289,12 @@ public class VoipAnomalyDetector : ISpecializedDetector
                 // Look for patterns: many calls, many destinations, short duration
                 if (callsPerHour > 10 && uniqueDestinations > 5)
                 {
+                    // Get the most common target destination
+                    var topDestination = groupPackets
+                        .GroupBy(p => p.DestinationIP)
+                        .OrderByDescending(g => g.Count())
+                        .FirstOrDefault()?.Key ?? "";
+
                     anomalies.Add(new NetworkAnomaly
                     {
                         Category = AnomalyCategory.VoIP,
@@ -282,6 +304,7 @@ public class VoipAnomalyDetector : ISpecializedDetector
                         DetectedAt = groupPackets.First().Timestamp,
                         DetectorName = Name,
                         SourceIP = group.Key ?? "",
+                        DestinationIP = topDestination,
                         Protocol = "SIP",
                         AffectedFrames = groupPackets.Select(p => (long)p.FrameNumber).Take(50).ToList(),
                         Metrics = new Dictionary<string, object>
@@ -289,7 +312,8 @@ public class VoipAnomalyDetector : ISpecializedDetector
                             { "TotalCalls", groupPackets.Count },
                             { "CallsPerHour", callsPerHour },
                             { "UniqueDestinations", uniqueDestinations },
-                            { "TimeWindowHours", timeWindow.TotalHours }
+                            { "TimeWindowHours", timeWindow.TotalHours },
+                            { "TopDestinationIP", topDestination }
                         },
                         Recommendation = "Immediate action required: Potential toll fraud detected. Block source, review call logs, and enable toll fraud prevention mechanisms."
                     });

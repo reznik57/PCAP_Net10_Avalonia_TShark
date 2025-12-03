@@ -67,6 +67,12 @@ public class NetworkAnomalyDetector : IAnomalyDetector
 
                     if (synAckRatio < 0.5) // Less than 50% of SYNs have SYN-ACKs
                     {
+                        // Get the most active source (attacker)
+                        var topSource = targetSyns
+                            .GroupBy(p => p.SourceIP)
+                            .OrderByDescending(g => g.Count())
+                            .First();
+
                         anomalies.Add(new NetworkAnomaly
                         {
                             Category = AnomalyCategory.Network,
@@ -75,6 +81,7 @@ public class NetworkAnomalyDetector : IAnomalyDetector
                             Description = $"Potential SYN flood attack detected against {target.Key.DestinationIP}:{target.Key.DestinationPort}",
                             DetectedAt = targetSyns.First().Timestamp,
                             DetectorName = Name,
+                            SourceIP = topSource.Key ?? "",
                             DestinationIP = target.Key.DestinationIP ?? "",
                             DestinationPort = target.Key.DestinationPort,
                             Protocol = "TCP",
@@ -84,7 +91,9 @@ public class NetworkAnomalyDetector : IAnomalyDetector
                                 { "SYNsPerSecond", synsPerSecond },
                                 { "TotalSYNs", targetSyns.Count },
                                 { "SYNACKRatio", synAckRatio },
-                                { "UniqueSources", targetSyns.Select(p => p.SourceIP).Distinct().Count() }
+                                { "UniqueSources", targetSyns.Select(p => p.SourceIP).Distinct().Count() },
+                                { "TopSourceIP", topSource.Key ?? "" },
+                                { "TopSourcePackets", topSource.Count() }
                             },
                             Recommendation = "Immediate action required: Enable SYN cookies, implement rate limiting, and consider blocking suspicious source IPs."
                         });
@@ -131,6 +140,12 @@ public class NetworkAnomalyDetector : IAnomalyDetector
         foreach (var mapping in ipMacMappings.Where(m => m.Value.Count > 1))
         {
             var relatedPackets = arpPackets.Where(p => p.SourceIP == mapping.Key).ToList();
+            // Get the most common destination from ARP replies involving this IP
+            var topDestination = relatedPackets
+                .Where(p => !string.IsNullOrEmpty(p.DestinationIP))
+                .GroupBy(p => p.DestinationIP)
+                .OrderByDescending(g => g.Count())
+                .FirstOrDefault()?.Key ?? "";
 
             anomalies.Add(new NetworkAnomaly
             {
@@ -141,6 +156,7 @@ public class NetworkAnomalyDetector : IAnomalyDetector
                 DetectedAt = relatedPackets.First().Timestamp,
                 DetectorName = Name,
                 SourceIP = mapping.Key,
+                DestinationIP = topDestination,
                 Protocol = "ARP",
                 AffectedFrames = relatedPackets.Select(p => (long)p.FrameNumber).ToList(),
                 Metrics = new Dictionary<string, object>
@@ -177,6 +193,12 @@ public class NetworkAnomalyDetector : IAnomalyDetector
 
                 if (icmpPerSecond >= ICMP_FLOOD_THRESHOLD)
                 {
+                    // Get the most active source (attacker)
+                    var topSource = targetPackets
+                        .GroupBy(p => p.SourceIP)
+                        .OrderByDescending(g => g.Count())
+                        .First();
+
                     anomalies.Add(new NetworkAnomaly
                     {
                         Category = AnomalyCategory.Network,
@@ -185,6 +207,7 @@ public class NetworkAnomalyDetector : IAnomalyDetector
                         Description = $"ICMP flood detected against {target.Key}: {icmpPerSecond:F1} packets/second",
                         DetectedAt = targetPackets.First().Timestamp,
                         DetectorName = Name,
+                        SourceIP = topSource.Key ?? "",
                         DestinationIP = target.Key ?? "",
                         Protocol = "ICMP",
                         AffectedFrames = targetPackets.Select(p => (long)p.FrameNumber).Take(100).ToList(),
@@ -192,7 +215,9 @@ public class NetworkAnomalyDetector : IAnomalyDetector
                         {
                             { "ICMPPerSecond", icmpPerSecond },
                             { "TotalICMP", targetPackets.Count },
-                            { "UniqueSources", targetPackets.Select(p => p.SourceIP).Distinct().Count() }
+                            { "UniqueSources", targetPackets.Select(p => p.SourceIP).Distinct().Count() },
+                            { "TopSourceIP", topSource.Key ?? "" },
+                            { "TopSourcePackets", topSource.Count() }
                         },
                         Recommendation = "Implement ICMP rate limiting and consider filtering ICMP traffic at the network edge."
                     });

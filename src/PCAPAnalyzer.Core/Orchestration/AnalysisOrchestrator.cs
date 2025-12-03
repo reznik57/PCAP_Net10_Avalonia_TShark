@@ -99,10 +99,10 @@ namespace PCAPAnalyzer.Core.Orchestration
                 // PHASE 2: PARALLEL ANALYSIS (50-92% overall)
                 // ========================================================================
 
-                var (statistics, threats, voiceQoS) = await AnalyzeInParallelAsync(allPackets, coordinator, cancellationToken);
+                var (statistics, threats, anomalies, voiceQoS) = await AnalyzeInParallelAsync(allPackets, coordinator, cancellationToken);
 
                 DebugLogger.Log($"[AnalysisOrchestrator] Analysis complete: {statistics.CountryStatistics.Count} countries, " +
-                                  $"{threats.Count} threats, VoiceQoS={voiceQoS != null}");
+                                  $"{threats.Count} threats, {anomalies.Count} anomalies, VoiceQoS={voiceQoS != null}");
 
                 // ========================================================================
                 // PHASE 3: BUILD RESULT & CACHE (92-100% overall)
@@ -119,6 +119,7 @@ namespace PCAPAnalyzer.Core.Orchestration
                     AllPackets = allPackets,
                     Statistics = statistics,
                     Threats = threats,
+                    Anomalies = anomalies,
 
                     // Tab-specific data
                     CountryTraffic = statistics.CountryStatistics,
@@ -294,7 +295,7 @@ namespace PCAPAnalyzer.Core.Orchestration
         /// PHASE 2: Run parallel analysis across all services.
         /// Uses exact APIs from API_REFERENCE_FOR_AGENTS.md.
         /// </summary>
-        private async Task<(NetworkStatistics statistics, List<SecurityThreat> threats, VoiceQoSAnalysisResult? voiceQoS)>
+        private async Task<(NetworkStatistics statistics, List<SecurityThreat> threats, List<NetworkAnomaly> anomalies, VoiceQoSAnalysisResult? voiceQoS)>
             AnalyzeInParallelAsync(
                 List<PacketInfo> allPackets,
                 ProgressCoordinator coordinator,
@@ -332,7 +333,8 @@ namespace PCAPAnalyzer.Core.Orchestration
                 var threats = ConvertAномaliesToThreats(anomalies);
                 coordinator.ReportThreats(100, $"Threat detection complete: {threats.Count} threats found", threats.Count);
 
-                return threats;
+                // Return both raw anomalies (for Anomalies tab) and converted threats (for Threats tab)
+                return (threats, anomalies);
             }, cancellationToken);
 
             // VoiceQoS analysis (extract QoS-marked packets)
@@ -353,9 +355,11 @@ namespace PCAPAnalyzer.Core.Orchestration
             coordinator.StopPhase("Threat Detection");
             coordinator.StopPhase("VoiceQoS Analysis");
 
+            var threatsResult = await threatsTask;
             return (
                 statistics: await statisticsTask,
-                threats: await threatsTask,
+                threats: threatsResult.threats,
+                anomalies: threatsResult.anomalies,
                 voiceQoS: await voiceQoSTask
             );
         }

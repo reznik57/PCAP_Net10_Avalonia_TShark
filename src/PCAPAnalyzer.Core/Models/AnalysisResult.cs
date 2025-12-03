@@ -41,6 +41,16 @@ namespace PCAPAnalyzer.Core.Models
         public List<SecurityThreat> Threats { get; init; } = new();
 
         // ============================================================================
+        // NETWORK ANOMALIES (Anomalies Tab)
+        // ============================================================================
+
+        /// <summary>
+        /// Raw network anomalies detected by all anomaly detectors.
+        /// Behavioral/traffic deviations: SYN floods, retransmissions, beaconing, etc.
+        /// </summary>
+        public List<NetworkAnomaly> Anomalies { get; init; } = new();
+
+        // ============================================================================
         // COUNTRY TRAFFIC (CountryTraffic Tab)
         // ============================================================================
 

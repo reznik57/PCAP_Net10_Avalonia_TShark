@@ -64,11 +64,13 @@ public partial class AnomalyEndpointViewModel : ObservableObject
 /// </summary>
 public class AnomalyPortViewModel
 {
+    public int Rank { get; set; }
     public int Port { get; set; }
     public string ServiceName { get; set; } = string.Empty;
     public int AnomalyCount { get; set; }
     public double Percentage { get; set; }
     public AnomalySeverity HighestSeverity { get; set; }
+    public List<long> AffectedFrames { get; set; } = new();
 
     public string SeverityColor => HighestSeverity switch
     {

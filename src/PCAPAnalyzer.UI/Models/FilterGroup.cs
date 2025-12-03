@@ -37,6 +37,11 @@ public partial class FilterGroup : ObservableObject
     [ObservableProperty] private List<string>? _severities;
     [ObservableProperty] private List<string>? _threatCategories;
 
+    // ==================== ANOMALIES TAB CRITERIA ====================
+    [ObservableProperty] private List<string>? _anomalySeverities;
+    [ObservableProperty] private List<string>? _anomalyCategories;
+    [ObservableProperty] private List<string>? _anomalyDetectors;
+
     // ==================== VOICEQOS TAB CRITERIA ====================
     [ObservableProperty] private List<string>? _codecs;
     [ObservableProperty] private List<string>? _qualityLevels;
@@ -76,6 +81,9 @@ public partial class FilterGroup : ObservableObject
                (QuickFilters?.Count > 0) ||
                (Severities?.Count > 0) ||
                (ThreatCategories?.Count > 0) ||
+               (AnomalySeverities?.Count > 0) ||
+               (AnomalyCategories?.Count > 0) ||
+               (AnomalyDetectors?.Count > 0) ||
                (Codecs?.Count > 0) ||
                (QualityLevels?.Count > 0) ||
                (VoipIssues?.Count > 0) ||
@@ -110,6 +118,14 @@ public partial class FilterGroup : ObservableObject
             descriptions.AddRange(Severities.Select(s => $"Severity: {s}"));
         if (ThreatCategories?.Count > 0)
             descriptions.AddRange(ThreatCategories.Select(c => $"Threat: {c}"));
+
+        // Anomalies tab
+        if (AnomalySeverities?.Count > 0)
+            descriptions.AddRange(AnomalySeverities.Select(s => $"Anomaly Sev: {s}"));
+        if (AnomalyCategories?.Count > 0)
+            descriptions.AddRange(AnomalyCategories.Select(c => $"Anomaly Cat: {c}"));
+        if (AnomalyDetectors?.Count > 0)
+            descriptions.AddRange(AnomalyDetectors.Select(d => $"Detector: {d}"));
 
         // VoiceQoS tab
         if (Codecs?.Count > 0)

@@ -88,6 +88,16 @@ public class CryptoMiningDetector : ISpecializedDetector
                 var timeWindow = sourcePackets.Max(p => p.Timestamp) - sourcePackets.Min(p => p.Timestamp);
                 var duration = timeWindow.TotalMinutes;
 
+                // Get the most common mining pool destination
+                var topPool = sourcePackets
+                    .GroupBy(p => p.DestinationIP)
+                    .OrderByDescending(g => g.Count())
+                    .FirstOrDefault()?.Key ?? "";
+                var topPoolPort = sourcePackets
+                    .Where(p => p.DestinationIP == topPool)
+                    .Select(p => p.DestinationPort)
+                    .FirstOrDefault();
+
                 anomalies.Add(new NetworkAnomaly
                 {
                     Category = AnomalyCategory.Security,
@@ -97,6 +107,8 @@ public class CryptoMiningDetector : ISpecializedDetector
                     DetectedAt = sourcePackets.First().Timestamp,
                     DetectorName = Name,
                     SourceIP = source.Key ?? "",
+                    DestinationIP = topPool,
+                    DestinationPort = topPoolPort,
                     Protocol = "TCP",
                     AffectedFrames = sourcePackets.Select(p => (long)p.FrameNumber).Take(100).ToList(),
                     Metrics = new Dictionary<string, object>
@@ -105,7 +117,8 @@ public class CryptoMiningDetector : ISpecializedDetector
                         { "TotalBytes", totalBytes },
                         { "PacketCount", sourcePackets.Count },
                         { "DurationMinutes", duration },
-                        { "MiningPools", uniqueDestinations.Take(10).ToList() }
+                        { "MiningPools", uniqueDestinations.Take(10).ToList() },
+                        { "TopMiningPool", topPool }
                     },
                     Evidence = new Dictionary<string, object>
                     {
@@ -143,6 +156,12 @@ public class CryptoMiningDetector : ISpecializedDetector
                     var groupPackets = group.ToList();
                     var totalBytes = groupPackets.Sum(p => (long)p.Length);
 
+                    // Get the most common destination pool
+                    var topDestination = groupPackets
+                        .GroupBy(p => p.DestinationIP)
+                        .OrderByDescending(g => g.Count())
+                        .FirstOrDefault()?.Key ?? "";
+
                     anomalies.Add(new NetworkAnomaly
                     {
                         Category = AnomalyCategory.Security,
@@ -152,6 +171,7 @@ public class CryptoMiningDetector : ISpecializedDetector
                         DetectedAt = groupPackets.First().Timestamp,
                         DetectorName = Name,
                         SourceIP = group.Key.SourceIP ?? "",
+                        DestinationIP = topDestination,
                         DestinationPort = group.Key.DestinationPort,
                         Protocol = "TCP",
                         AffectedFrames = groupPackets.Select(p => (long)p.FrameNumber).Take(50).ToList(),
@@ -160,7 +180,8 @@ public class CryptoMiningDetector : ISpecializedDetector
                             { "UniqueConnections", connections },
                             { "Port", group.Key.DestinationPort },
                             { "TotalBytes", totalBytes },
-                            { "PacketCount", groupPackets.Count }
+                            { "PacketCount", groupPackets.Count },
+                            { "TopDestinationIP", topDestination }
                         },
                         Recommendation = "Multiple connections to mining pools detected. This may indicate mining malware searching for active pools. Investigate and clean the source host."
                     });
@@ -205,6 +226,16 @@ public class CryptoMiningDetector : ISpecializedDetector
 
                 if (subscribes > 0 || authorizes > 0 || submits > 0)
                 {
+                    // Get the most common mining pool destination
+                    var topPool = sourcePackets
+                        .GroupBy(p => p.DestinationIP)
+                        .OrderByDescending(g => g.Count())
+                        .FirstOrDefault()?.Key ?? "";
+                    var topPoolPort = sourcePackets
+                        .Where(p => p.DestinationIP == topPool)
+                        .Select(p => p.DestinationPort)
+                        .FirstOrDefault();
+
                     anomalies.Add(new NetworkAnomaly
                     {
                         Category = AnomalyCategory.Security,
@@ -214,6 +245,8 @@ public class CryptoMiningDetector : ISpecializedDetector
                         DetectedAt = sourcePackets.First().Timestamp,
                         DetectorName = Name,
                         SourceIP = source.Key ?? "",
+                        DestinationIP = topPool,
+                        DestinationPort = topPoolPort,
                         Protocol = "Stratum/TCP",
                         AffectedFrames = sourcePackets.Select(p => (long)p.FrameNumber).ToList(),
                         Metrics = new Dictionary<string, object>
@@ -222,7 +255,8 @@ public class CryptoMiningDetector : ISpecializedDetector
                             { "StratumAuthorizes", authorizes },
                             { "StratumSubmits", submits },
                             { "TotalStratumPackets", sourcePackets.Count },
-                            { "UniquePools", sourcePackets.Select(p => $"{p.DestinationIP}:{p.DestinationPort}").Distinct().Count() }
+                            { "UniquePools", sourcePackets.Select(p => $"{p.DestinationIP}:{p.DestinationPort}").Distinct().Count() },
+                            { "TopMiningPool", topPool }
                         },
                         Recommendation = "Active cryptocurrency mining detected using Stratum protocol. This is strong evidence of cryptomining activity. Block connections immediately and scan for malware."
                     });

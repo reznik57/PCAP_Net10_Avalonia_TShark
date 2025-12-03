@@ -305,6 +305,93 @@
                     </Border>
                 </TabItem>
 
+                <!-- Anomalies Tab with filter indicator -->
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <TextBlock Text="Anomalies"/>
+                            <Ellipse Width="6" Height="6" Fill="#3FB950" VerticalAlignment="Center"
+                                     IsVisible="{Binding AnomaliesHasIncludeFilters}"/>
+                            <Ellipse Width="6" Height="6" Fill="#F85149" VerticalAlignment="Center"
+                                     IsVisible="{Binding AnomaliesHasExcludeFilters}"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Border Padding="16,12" Background="#1C2128" CornerRadius="0,6,6,6" BorderBrush="#30363D" BorderThickness="1">
+                        <StackPanel Spacing="12" DataContext="{Binding AnomaliesTab}">
+                            <!-- Severity Row -->
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Severity" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
+                                <ItemsControl ItemsSource="{Binding SeverityChips}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding ToggleCommand}"
+                                                    Classes="filter-chip"
+                                                    Classes.chip-included="{Binding IsIncluded}"
+                                                    Classes.chip-excluded="{Binding IsExcluded}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <!-- Category Row -->
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Category" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
+                                <ItemsControl ItemsSource="{Binding CategoryChips}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding ToggleCommand}"
+                                                    Classes="filter-chip"
+                                                    Classes.chip-included="{Binding IsIncluded}"
+                                                    Classes.chip-excluded="{Binding IsExcluded}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <!-- Detector Row -->
+                            <StackPanel Spacing="6">
+                                <TextBlock Text="Detectors" FontSize="11" Foreground="#8B949E" FontWeight="SemiBold"/>
+                                <ItemsControl ItemsSource="{Binding DetectorChips}">
+                                    <ItemsControl.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <WrapPanel/>
+                                        </ItemsPanelTemplate>
+                                    </ItemsControl.ItemsPanel>
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                            <Button Content="{Binding Name}"
+                                                    Command="{Binding ToggleCommand}"
+                                                    Classes="filter-chip"
+                                                    Classes.chip-included="{Binding IsIncluded}"
+                                                    Classes.chip-excluded="{Binding IsExcluded}"/>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+
+                            <!-- Search Input -->
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Search" FontSize="11" Foreground="#8B949E"/>
+                                <TextBox Text="{Binding SearchInput}"
+                                         Watermark="e.g. SYN Flood, Cryptomining"
+                                         Classes="filter-input"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </TabItem>
+
                 <!-- VoiceQoS Tab with filter indicator -->
                 <TabItem>
                     <TabItem.Header>

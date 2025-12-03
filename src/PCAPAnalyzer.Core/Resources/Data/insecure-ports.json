@@ -1,0 +1,528 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-12-03",
+  "ports": [
+    {
+      "port": 23,
+      "protocol": "TCP",
+      "serviceName": "Telnet",
+      "riskLevel": "Critical",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "CVE-2020-10188",
+        "Plaintext credentials",
+        "MITM attacks"
+      ],
+      "recommendedAlternative": "SSH (Port 22)",
+      "securityNotes": "Telnet transmits all data including passwords in plaintext. Critical security risk.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 21,
+      "protocol": "TCP",
+      "serviceName": "FTP Control",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Plaintext credentials",
+        "Data interception",
+        "Bounce attacks"
+      ],
+      "recommendedAlternative": "SFTP (Port 22) or FTPS (Port 990)",
+      "securityNotes": "FTP transmits credentials and data in plaintext. High security risk.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 20,
+      "protocol": "TCP",
+      "serviceName": "FTP Data",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Data interception",
+        "MITM attacks"
+      ],
+      "recommendedAlternative": "SFTP or FTPS",
+      "securityNotes": "FTP data channel - unencrypted file transfers.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 80,
+      "protocol": "TCP",
+      "serviceName": "HTTP",
+      "riskLevel": "Medium",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Session hijacking",
+        "Data interception",
+        "MITM attacks"
+      ],
+      "recommendedAlternative": "HTTPS (Port 443)",
+      "securityNotes": "HTTP traffic is unencrypted. Should be used only for non-sensitive data.",
+      "requiresImmediateAction": false
+    },
+    {
+      "port": 389,
+      "protocol": "TCP/UDP",
+      "serviceName": "LDAP",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Plaintext authentication",
+        "Information disclosure",
+        "LDAP injection"
+      ],
+      "recommendedAlternative": "LDAPS (Port 636)",
+      "securityNotes": "LDAP without TLS exposes authentication credentials and directory data.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 161,
+      "protocol": "UDP",
+      "serviceName": "SNMP",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Weak authentication",
+        "Information disclosure",
+        "Default community strings"
+      ],
+      "recommendedAlternative": "SNMPv3 with encryption",
+      "securityNotes": "SNMP v1/v2c uses weak community string authentication. High risk for network device compromise.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 139,
+      "protocol": "TCP",
+      "serviceName": "NetBIOS Session",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "EternalBlue",
+        "SMB relay attacks",
+        "Null sessions"
+      ],
+      "recommendedAlternative": "SMB over 445 with SMBv3 and encryption",
+      "securityNotes": "Legacy SMB/NetBIOS vulnerable to numerous attacks including ransomware.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 445,
+      "protocol": "TCP",
+      "serviceName": "SMB/CIFS",
+      "riskLevel": "Medium",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "EternalBlue",
+        "SMB signing bypass",
+        "Relay attacks"
+      ],
+      "recommendedAlternative": "Use SMBv3 with encryption enabled",
+      "securityNotes": "Ensure SMBv1 is disabled and SMB signing is required.",
+      "requiresImmediateAction": false
+    },
+    {
+      "port": 3389,
+      "protocol": "TCP",
+      "serviceName": "RDP",
+      "riskLevel": "Medium",
+      "isEncrypted": true,
+      "knownVulnerabilities": [
+        "BlueKeep (CVE-2019-0708)",
+        "Brute force attacks",
+        "MitM with weak encryption"
+      ],
+      "recommendedAlternative": "Use RDP with NLA, or VPN + RDP",
+      "securityNotes": "RDP is frequently targeted. Use Network Level Authentication and strong passwords.",
+      "requiresImmediateAction": false
+    },
+    {
+      "port": 5900,
+      "protocol": "TCP",
+      "serviceName": "VNC",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Weak authentication",
+        "No encryption by default",
+        "Password limit (8 chars)"
+      ],
+      "recommendedAlternative": "VNC over SSH tunnel or use RDP",
+      "securityNotes": "VNC has weak security by default. Must be tunneled through SSH/VPN.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 3306,
+      "protocol": "TCP",
+      "serviceName": "MySQL",
+      "riskLevel": "Medium",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Default credentials",
+        "Unencrypted connections",
+        "SQL injection"
+      ],
+      "recommendedAlternative": "Use MySQL with SSL/TLS required",
+      "securityNotes": "Database ports should not be exposed to public networks.",
+      "requiresImmediateAction": false
+    },
+    {
+      "port": 5432,
+      "protocol": "TCP",
+      "serviceName": "PostgreSQL",
+      "riskLevel": "Medium",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Default credentials",
+        "Unencrypted connections",
+        "SQL injection"
+      ],
+      "recommendedAlternative": "Use PostgreSQL with SSL required",
+      "securityNotes": "Database ports should not be exposed to public networks.",
+      "requiresImmediateAction": false
+    },
+    {
+      "port": 6379,
+      "protocol": "TCP",
+      "serviceName": "Redis",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "No authentication by default",
+        "Command injection",
+        "Data exposure"
+      ],
+      "recommendedAlternative": "Use Redis with AUTH and SSL",
+      "securityNotes": "Redis without authentication is critical security risk.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 27017,
+      "protocol": "TCP",
+      "serviceName": "MongoDB",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "No authentication by default",
+        "Data exposure",
+        "Ransomware attacks"
+      ],
+      "recommendedAlternative": "Use MongoDB with authentication and TLS",
+      "securityNotes": "Unsecured MongoDB instances are frequently compromised.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 9200,
+      "protocol": "TCP",
+      "serviceName": "Elasticsearch",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "No authentication by default",
+        "Data exposure",
+        "Remote code execution"
+      ],
+      "recommendedAlternative": "Use Elasticsearch with X-Pack security",
+      "securityNotes": "Elasticsearch without security is critical risk.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 513,
+      "protocol": "TCP",
+      "serviceName": "rlogin",
+      "riskLevel": "Critical",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "No encryption",
+        "Weak authentication",
+        "Trust-based access"
+      ],
+      "recommendedAlternative": "SSH (Port 22)",
+      "securityNotes": "Obsolete protocol with critical security flaws.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 514,
+      "protocol": "TCP",
+      "serviceName": "rsh/rexec",
+      "riskLevel": "Critical",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "No encryption",
+        "No authentication",
+        "Command execution"
+      ],
+      "recommendedAlternative": "SSH (Port 22)",
+      "securityNotes": "Obsolete protocol with critical security flaws.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 69,
+      "protocol": "UDP",
+      "serviceName": "TFTP",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "No authentication",
+        "No encryption",
+        "Directory traversal"
+      ],
+      "recommendedAlternative": "SFTP or SCP",
+      "securityNotes": "TFTP has no security features. Use only in isolated networks.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 135,
+      "protocol": "TCP/UDP",
+      "serviceName": "RPC/DCE endpoint mapper",
+      "riskLevel": "Critical",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Blaster worm",
+        "Remote code execution",
+        "Information disclosure"
+      ],
+      "recommendedAlternative": "Block at firewall, use RPC over HTTPS",
+      "securityNotes": "Windows RPC endpoint mapper - frequently exploited for lateral movement.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 1433,
+      "protocol": "TCP",
+      "serviceName": "MSSQL",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "SQL Slammer worm",
+        "SQL injection",
+        "Default sa password"
+      ],
+      "recommendedAlternative": "Use MSSQL with TLS encryption",
+      "securityNotes": "SQL Server should not be exposed to public networks.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 1521,
+      "protocol": "TCP",
+      "serviceName": "Oracle Database",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "TNS poisoning",
+        "Default credentials",
+        "Remote code execution"
+      ],
+      "recommendedAlternative": "Use Oracle with network encryption",
+      "securityNotes": "Oracle TNS Listener should not be exposed publicly.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 11211,
+      "protocol": "TCP/UDP",
+      "serviceName": "Memcached",
+      "riskLevel": "Critical",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "DDoS amplification",
+        "No authentication",
+        "Data exposure"
+      ],
+      "recommendedAlternative": "Use with SASL auth, bind to localhost",
+      "securityNotes": "Memcached amplification attacks can generate 51,000x traffic.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 2049,
+      "protocol": "TCP/UDP",
+      "serviceName": "NFS",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "No authentication",
+        "Data exposure",
+        "Privilege escalation"
+      ],
+      "recommendedAlternative": "Use NFSv4 with Kerberos",
+      "securityNotes": "NFS shares can expose sensitive data without proper authentication.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 2375,
+      "protocol": "TCP",
+      "serviceName": "Docker API (unencrypted)",
+      "riskLevel": "Critical",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Container escape",
+        "Cryptocurrency mining",
+        "Full system compromise"
+      ],
+      "recommendedAlternative": "Use Docker API with TLS (port 2376)",
+      "securityNotes": "Exposed Docker API allows full control of host system.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 6443,
+      "protocol": "TCP",
+      "serviceName": "Kubernetes API",
+      "riskLevel": "Medium",
+      "isEncrypted": true,
+      "knownVulnerabilities": [
+        "Misconfiguration",
+        "RBAC bypass",
+        "Secrets exposure"
+      ],
+      "recommendedAlternative": "Use with proper RBAC and network policies",
+      "securityNotes": "Kubernetes API server - ensure proper authentication.",
+      "requiresImmediateAction": false
+    },
+    {
+      "port": 2379,
+      "protocol": "TCP",
+      "serviceName": "etcd",
+      "riskLevel": "Critical",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "No authentication",
+        "Secrets exposure",
+        "Cluster compromise"
+      ],
+      "recommendedAlternative": "Use etcd with TLS and authentication",
+      "securityNotes": "etcd stores Kubernetes secrets - critical to secure.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 5984,
+      "protocol": "TCP",
+      "serviceName": "CouchDB",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Admin party mode",
+        "Remote code execution",
+        "Data exposure"
+      ],
+      "recommendedAlternative": "Configure authentication and use HTTPS",
+      "securityNotes": "CouchDB default configuration allows admin access.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 15672,
+      "protocol": "TCP",
+      "serviceName": "RabbitMQ Management",
+      "riskLevel": "Medium",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Default credentials",
+        "Information disclosure"
+      ],
+      "recommendedAlternative": "Use with HTTPS and strong authentication",
+      "securityNotes": "RabbitMQ management console exposes cluster information.",
+      "requiresImmediateAction": false
+    },
+    {
+      "port": 9000,
+      "protocol": "TCP",
+      "serviceName": "Hadoop NameNode",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "No authentication",
+        "Data exposure",
+        "Remote code execution"
+      ],
+      "recommendedAlternative": "Use Kerberos authentication",
+      "securityNotes": "Hadoop clusters without auth are frequently compromised.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 9042,
+      "protocol": "TCP",
+      "serviceName": "Cassandra",
+      "riskLevel": "Medium",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Default configuration",
+        "No encryption",
+        "CQL injection"
+      ],
+      "recommendedAlternative": "Enable authentication and TLS",
+      "securityNotes": "Cassandra native transport should use encryption.",
+      "requiresImmediateAction": false
+    },
+    {
+      "port": 111,
+      "protocol": "TCP/UDP",
+      "serviceName": "Portmapper/rpcbind",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Information disclosure",
+        "DDoS amplification",
+        "Service enumeration"
+      ],
+      "recommendedAlternative": "Block at firewall",
+      "securityNotes": "RPC portmapper reveals available services.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 6000,
+      "protocol": "TCP",
+      "serviceName": "X11",
+      "riskLevel": "High",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Keylogging",
+        "Screenshot capture",
+        "No authentication"
+      ],
+      "recommendedAlternative": "Use X11 forwarding over SSH",
+      "securityNotes": "X11 without authentication allows desktop access.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 623,
+      "protocol": "UDP",
+      "serviceName": "IPMI",
+      "riskLevel": "Critical",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Cipher 0 vulnerability",
+        "Default passwords",
+        "Remote system control"
+      ],
+      "recommendedAlternative": "Use IPMI v2 with strong passwords",
+      "securityNotes": "IPMI provides hardware-level control - critical vulnerability.",
+      "requiresImmediateAction": true
+    },
+    {
+      "port": 5060,
+      "protocol": "TCP/UDP",
+      "serviceName": "SIP",
+      "riskLevel": "Medium",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Call hijacking",
+        "Toll fraud",
+        "Eavesdropping"
+      ],
+      "recommendedAlternative": "Use SIP with TLS (SIPS)",
+      "securityNotes": "Unencrypted VoIP can be intercepted and manipulated.",
+      "requiresImmediateAction": false
+    },
+    {
+      "port": 631,
+      "protocol": "TCP",
+      "serviceName": "CUPS (IPP)",
+      "riskLevel": "Low",
+      "isEncrypted": false,
+      "knownVulnerabilities": [
+        "Information disclosure",
+        "Cross-site scripting"
+      ],
+      "recommendedAlternative": "Restrict to localhost only",
+      "securityNotes": "CUPS printing service should not be exposed.",
+      "requiresImmediateAction": false
+    }
+  ]
+}

@@ -87,6 +87,12 @@ public class IoTAnomalyDetector : ISpecializedDetector
                     var subscribeCount = brokerPackets.Count(p => p.Info?.Contains("Subscribe", StringComparison.OrdinalIgnoreCase) == true);
                     var connectCount = brokerPackets.Count(p => p.Info?.Contains("Connect", StringComparison.OrdinalIgnoreCase) == true);
 
+                    // Get the most active source (attacker)
+                    var topSource = brokerPackets
+                        .GroupBy(p => p.SourceIP)
+                        .OrderByDescending(g => g.Count())
+                        .First();
+
                     anomalies.Add(new NetworkAnomaly
                     {
                         Category = AnomalyCategory.IoT,
@@ -95,6 +101,7 @@ public class IoTAnomalyDetector : ISpecializedDetector
                         Description = $"MQTT flooding detected: {messagesPerSecond:F1} messages/second to broker {broker.Key}",
                         DetectedAt = brokerPackets.First().Timestamp,
                         DetectorName = Name,
+                        SourceIP = topSource.Key ?? "",
                         DestinationIP = broker.Key ?? "",
                         DestinationPort = MQTT_PORT,
                         Protocol = "MQTT",
@@ -106,7 +113,8 @@ public class IoTAnomalyDetector : ISpecializedDetector
                             { "PublishCount", publishCount },
                             { "SubscribeCount", subscribeCount },
                             { "ConnectCount", connectCount },
-                            { "UniqueSources", brokerPackets.Select(p => p.SourceIP).Distinct().Count() }
+                            { "UniqueSources", brokerPackets.Select(p => p.SourceIP).Distinct().Count() },
+                            { "TopSourceIP", topSource.Key ?? "" }
                         },
                         Recommendation = "MQTT flooding may indicate DoS attack on IoT infrastructure. Implement rate limiting, message throttling, and authenticate MQTT clients."
                     });
@@ -138,6 +146,12 @@ public class IoTAnomalyDetector : ISpecializedDetector
             if (uniqueBrokers.Count >= 3) // Device connecting to 3+ different brokers
             {
                 var devicePackets = device.ToList();
+                // Get the most common broker destination
+                var topBroker = devicePackets
+                    .GroupBy(p => p.DestinationIP)
+                    .OrderByDescending(g => g.Count())
+                    .FirstOrDefault()?.Key ?? "";
+
                 anomalies.Add(new NetworkAnomaly
                 {
                     Category = AnomalyCategory.IoT,
@@ -147,13 +161,16 @@ public class IoTAnomalyDetector : ISpecializedDetector
                     DetectedAt = devicePackets.First().Timestamp,
                     DetectorName = Name,
                     SourceIP = device.Key ?? "",
+                    DestinationIP = topBroker,
+                    DestinationPort = MQTT_PORT,
                     Protocol = "MQTT",
                     AffectedFrames = devicePackets.Select(p => (long)p.FrameNumber).ToList(),
                     Metrics = new Dictionary<string, object>
                     {
                         { "BrokerCount", uniqueBrokers.Count },
                         { "Brokers", uniqueBrokers },
-                        { "ConnectionAttempts", devicePackets.Count }
+                        { "ConnectionAttempts", devicePackets.Count },
+                        { "TopBrokerIP", topBroker }
                     },
                     Recommendation = "IoT device connecting to multiple brokers may indicate compromise or misconfiguration. Investigate device behavior and ensure proper network segmentation."
                 });
@@ -203,6 +220,12 @@ public class IoTAnomalyDetector : ISpecializedDetector
 
                     if (amplificationRatio >= COAP_AMPLIFICATION_RATIO)
                     {
+                        // Get the most common CoAP server destination
+                        var topDestination = sourceRequests
+                            .GroupBy(p => p.DestinationIP)
+                            .OrderByDescending(g => g.Count())
+                            .FirstOrDefault()?.Key ?? "";
+
                         anomalies.Add(new NetworkAnomaly
                         {
                             Category = AnomalyCategory.IoT,
@@ -212,6 +235,8 @@ public class IoTAnomalyDetector : ISpecializedDetector
                             DetectedAt = sourceRequests.First().Timestamp,
                             DetectorName = Name,
                             SourceIP = source.Key ?? "",
+                            DestinationIP = topDestination,
+                            DestinationPort = COAP_PORT,
                             Protocol = "CoAP",
                             AffectedFrames = sourceRequests.Concat(relatedResponses).Select(p => (long)p.FrameNumber).Take(100).ToList(),
                             Metrics = new Dictionary<string, object>
@@ -220,7 +245,8 @@ public class IoTAnomalyDetector : ISpecializedDetector
                                 { "RequestCount", sourceRequests.Count },
                                 { "ResponseCount", relatedResponses.Count },
                                 { "TotalRequestBytes", totalRequestSize },
-                                { "TotalResponseBytes", totalResponseSize }
+                                { "TotalResponseBytes", totalResponseSize },
+                                { "TopCoAPServer", topDestination }
                             },
                             Recommendation = "CoAP amplification attack detected. Block source IP and implement CoAP request rate limiting. Consider disabling CoAP on public interfaces."
                         });
@@ -264,6 +290,12 @@ public class IoTAnomalyDetector : ISpecializedDetector
             {
                 var attemptsPerMinute = attempts.Count / Math.Max(timeWindow.TotalMinutes, 1);
 
+                // Get the most targeted broker/server
+                var topTarget = attempts
+                    .GroupBy(p => p.DestinationIP)
+                    .OrderByDescending(g => g.Count())
+                    .FirstOrDefault()?.Key ?? "";
+
                 anomalies.Add(new NetworkAnomaly
                 {
                     Category = AnomalyCategory.IoT,
@@ -273,6 +305,8 @@ public class IoTAnomalyDetector : ISpecializedDetector
                     DetectedAt = attempts.First().Timestamp,
                     DetectorName = Name,
                     SourceIP = source.Key ?? "",
+                    DestinationIP = topTarget,
+                    DestinationPort = attempts.First().DestinationPort,
                     Protocol = attempts.First().DestinationPort == MQTT_PORT ? "MQTT" : "CoAP",
                     AffectedFrames = attempts.Select(p => (long)p.FrameNumber).ToList(),
                     Metrics = new Dictionary<string, object>
@@ -280,7 +314,8 @@ public class IoTAnomalyDetector : ISpecializedDetector
                         { "ConnectionAttempts", attempts.Count },
                         { "AttemptsPerMinute", attemptsPerMinute },
                         { "TimeWindowMinutes", timeWindow.TotalMinutes },
-                        { "TargetedBrokers", attempts.Select(p => p.DestinationIP).Distinct().Count() }
+                        { "TargetedBrokers", attempts.Select(p => p.DestinationIP).Distinct().Count() },
+                        { "TopTargetIP", topTarget }
                     },
                     Recommendation = "Multiple connection attempts may indicate scanning or brute force attack. Enable authentication, implement rate limiting, and consider blocking the source."
                 });
