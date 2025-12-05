@@ -2,40 +2,41 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PCAPAnalyzer.UI.Controls.PopupTableView"
              x:CompileBindings="False">
-    
+
     <UserControl.Styles>
         <Style Selector="DataGrid">
-            <Setter Property="Background" Value="#1A1A24"/>
-            <Setter Property="RowBackground" Value="#22272E"/>
+            <Setter Property="Background" Value="{DynamicResource PopupBgSecondary}"/>
+            <Setter Property="RowBackground" Value="{DynamicResource PopupBgTertiary}"/>
             <Setter Property="GridLinesVisibility" Value="Horizontal"/>
-            <Setter Property="HorizontalGridLinesBrush" Value="#3A3A4A"/>
+            <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource PopupBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#3A3A4A"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PopupBorder}"/>
             <Setter Property="CanUserResizeColumns" Value="True"/>
             <Setter Property="CanUserSortColumns" Value="True"/>
             <Setter Property="IsReadOnly" Value="True"/>
             <Setter Property="SelectionMode" Value="Single"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="{DynamicResource PopupText}"/>
         </Style>
-        
+
         <Style Selector="DataGridColumnHeader">
-            <Setter Property="Background" Value="#0F0F18"/>
-            <Setter Property="Foreground" Value="#00D4FF"/>
+            <Setter Property="Background" Value="{DynamicResource PopupBg}"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentCyan}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Padding" Value="8,4"/>
             <Setter Property="BorderThickness" Value="0,0,1,1"/>
-            <Setter Property="BorderBrush" Value="#3A3A4A"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PopupBorder}"/>
         </Style>
-        
+
         <Style Selector="DataGridRow:selected">
-            <Setter Property="Background" Value="#00D4FF20"/>
+            <Setter Property="Background" Value="{DynamicResource ColorPrimaryTintLight}"/>
         </Style>
-        
-        <Style Selector="DataGridRow:hover">
-            <Setter Property="Background" Value="#00D4FF10"/>
+
+        <Style Selector="DataGridRow:pointerover">
+            <Setter Property="Background" Value="{DynamicResource ColorPrimaryTintLight}"/>
+            <Setter Property="Opacity" Value="0.5"/>
         </Style>
     </UserControl.Styles>
-    
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -44,14 +45,14 @@
 
         <!-- Filter Search Box -->
         <Border Grid.Row="0"
-                Background="#0F0F18"
-                BorderBrush="#3A3A4A"
+                Background="{DynamicResource PopupBg}"
+                BorderBrush="{DynamicResource PopupBorder}"
                 BorderThickness="0,0,0,1"
                 Padding="16,12">
             <Grid ColumnDefinitions="Auto,*">
                 <Path Grid.Column="0"
                       Data="M 15.5 14 H 14.71 L 14.43 13.73 C 15.41 12.59 16 11.11 16 9.5 C 16 5.91 13.09 3 9.5 3 C 5.91 3 3 5.91 3 9.5 C 3 13.09 5.91 16 9.5 16 C 11.11 16 12.59 15.41 13.73 14.43 L 14 14.71 V 15.5 L 19 20.49 L 20.49 19 L 15.5 14 Z M 9.5 14 C 7.01 14 5 11.99 5 9.5 C 5 7.01 7.01 5 9.5 5 C 11.99 5 14 7.01 14 9.5 C 14 11.99 11.99 14 9.5 14 Z"
-                      Fill="#6C7086"
+                      Fill="{DynamicResource TextMuted}"
                       Width="16"
                       Height="16"
                       VerticalAlignment="Center"
@@ -59,9 +60,9 @@
                 <TextBox Grid.Column="1"
                          Text="{Binding FilterText, Mode=TwoWay}"
                          Watermark="Filter results... (search by IP, port, protocol, service, etc.)"
-                         Background="#1A1A24"
-                         Foreground="#CDD6F4"
-                         BorderBrush="#3A3A4A"
+                         Background="{DynamicResource PopupBgSecondary}"
+                         Foreground="{DynamicResource PopupText}"
+                         BorderBrush="{DynamicResource PopupBorder}"
                          BorderThickness="1"
                          CornerRadius="4"
                          Padding="8,6"/>
@@ -76,109 +77,109 @@
                       ItemsSource="{Binding FilteredTableData}"
                       AutoGenerateColumns="False">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="IP Address" 
-                                   Binding="{Binding Address}" 
+                <DataGridTextColumn Header="IP Address"
+                                   Binding="{Binding Address}"
                                    Width="*"
                                    MinWidth="200"/>
-                <DataGridTextColumn Header="Packets" 
-                                   Binding="{Binding PacketCount, StringFormat='{}{0:N0}'}" 
+                <DataGridTextColumn Header="Packets"
+                                   Binding="{Binding PacketCount, StringFormat='{}{0:N0}'}"
                                    Width="120"/>
-                <DataGridTextColumn Header="Bytes" 
-                                   Binding="{Binding BytesFormatted}" 
+                <DataGridTextColumn Header="Bytes"
+                                   Binding="{Binding BytesFormatted}"
                                    Width="120"/>
-                <DataGridTextColumn Header="Percentage" 
-                                   Binding="{Binding Percentage, StringFormat='{}{0:F1}%'}" 
+                <DataGridTextColumn Header="Percentage"
+                                   Binding="{Binding Percentage, StringFormat='{}{0:F1}%'}"
                                    Width="100"/>
-                <DataGridTextColumn Header="Type" 
-                                   Binding="{Binding Type}" 
+                <DataGridTextColumn Header="Type"
+                                   Binding="{Binding Type}"
                                    Width="120"/>
             </DataGrid.Columns>
         </DataGrid>
-        
+
             <!-- Destinations Table -->
             <DataGrid x:Name="DestinationsGrid"
                       IsVisible="{Binding IsDestinationsTable}"
                       ItemsSource="{Binding FilteredTableData}"
                       AutoGenerateColumns="False">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="IP Address" 
-                                   Binding="{Binding Address}" 
+                <DataGridTextColumn Header="IP Address"
+                                   Binding="{Binding Address}"
                                    Width="*"
                                    MinWidth="200"/>
-                <DataGridTextColumn Header="Packets" 
-                                   Binding="{Binding PacketCount, StringFormat='{}{0:N0}'}" 
+                <DataGridTextColumn Header="Packets"
+                                   Binding="{Binding PacketCount, StringFormat='{}{0:N0}'}"
                                    Width="120"/>
-                <DataGridTextColumn Header="Bytes" 
-                                   Binding="{Binding BytesFormatted}" 
+                <DataGridTextColumn Header="Bytes"
+                                   Binding="{Binding BytesFormatted}"
                                    Width="120"/>
-                <DataGridTextColumn Header="Percentage" 
-                                   Binding="{Binding Percentage, StringFormat='{}{0:F1}%'}" 
+                <DataGridTextColumn Header="Percentage"
+                                   Binding="{Binding Percentage, StringFormat='{}{0:F1}%'}"
                                    Width="100"/>
-                <DataGridTextColumn Header="Type" 
-                                   Binding="{Binding Type}" 
+                <DataGridTextColumn Header="Type"
+                                   Binding="{Binding Type}"
                                    Width="120"/>
             </DataGrid.Columns>
         </DataGrid>
-        
+
             <!-- Conversations Table -->
             <DataGrid x:Name="ConversationsGrid"
                       IsVisible="{Binding IsConversationsTable}"
                       ItemsSource="{Binding FilteredTableData}"
                       AutoGenerateColumns="False">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Source IP:Port" 
-                                   Binding="{Binding SourceDisplay}" 
+                <DataGridTextColumn Header="Source IP:Port"
+                                   Binding="{Binding SourceDisplay}"
                                    Width="*"
                                    MinWidth="220"/>
-                <DataGridTextColumn Header="Destination IP:Port" 
-                                   Binding="{Binding DestinationDisplay}" 
+                <DataGridTextColumn Header="Destination IP:Port"
+                                   Binding="{Binding DestinationDisplay}"
                                    Width="*"
                                    MinWidth="220"/>
-                <DataGridTextColumn Header="Protocol" 
-                                   Binding="{Binding Protocol}" 
+                <DataGridTextColumn Header="Protocol"
+                                   Binding="{Binding Protocol}"
                                    Width="100"/>
-                <DataGridTextColumn Header="Packets" 
-                                   Binding="{Binding PacketCount, StringFormat='{}{0:N0}'}" 
+                <DataGridTextColumn Header="Packets"
+                                   Binding="{Binding PacketCount, StringFormat='{}{0:N0}'}"
                                    Width="100"/>
-                <DataGridTextColumn Header="Duration" 
-                                   Binding="{Binding DurationFormatted}" 
+                <DataGridTextColumn Header="Duration"
+                                   Binding="{Binding DurationFormatted}"
                                    Width="120"/>
             </DataGrid.Columns>
         </DataGrid>
-        
+
             <!-- Services Table -->
             <DataGrid x:Name="ServicesGrid"
                       IsVisible="{Binding IsServicesTable}"
                       ItemsSource="{Binding FilteredTableData}"
                       AutoGenerateColumns="False">
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Service Name" 
-                                   Binding="{Binding ServiceName}" 
+                <DataGridTextColumn Header="Service Name"
+                                   Binding="{Binding ServiceName}"
                                    Width="*"
                                    MinWidth="150"/>
-                <DataGridTextColumn Header="Port" 
-                                   Binding="{Binding Port}" 
+                <DataGridTextColumn Header="Port"
+                                   Binding="{Binding Port}"
                                    Width="80"/>
-                <DataGridTextColumn Header="Protocol" 
-                                   Binding="{Binding Protocol}" 
+                <DataGridTextColumn Header="Protocol"
+                                   Binding="{Binding Protocol}"
                                    Width="100"/>
-                <DataGridTextColumn Header="Packets" 
-                                   Binding="{Binding PacketCount, StringFormat='{}{0:N0}'}" 
+                <DataGridTextColumn Header="Packets"
+                                   Binding="{Binding PacketCount, StringFormat='{}{0:N0}'}"
                                    Width="120"/>
-                <DataGridTextColumn Header="Unique Hosts" 
-                                   Binding="{Binding UniqueHostCount}" 
+                <DataGridTextColumn Header="Unique Hosts"
+                                   Binding="{Binding UniqueHostCount}"
                                    Width="120"/>
                 <DataGridTemplateColumn Header="Encryption" Width="100">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <Panel HorizontalAlignment="Center">
-                                <TextBlock Text="🔒" 
-                                          Foreground="#10B981"
-                                          FontSize="16"
+                                <TextBlock Text="🔒"
+                                          Foreground="{DynamicResource PopupSuccess}"
+                                          FontSize="{DynamicResource FontSizeLarge}"
                                           IsVisible="{Binding IsEncrypted}"/>
-                                <TextBlock Text="⚠️" 
-                                          Foreground="#F59E0B"
-                                          FontSize="16"
+                                <TextBlock Text="⚠️"
+                                          Foreground="{DynamicResource ThreatMedium}"
+                                          FontSize="{DynamicResource FontSizeLarge}"
                                           IsVisible="{Binding !IsEncrypted}"/>
                             </Panel>
                         </DataTemplate>

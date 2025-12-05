@@ -45,7 +45,7 @@
                                   Fill="{DynamicResource TextPrimary}"
                                   Width="16" Height="16"
                                   Stretch="Uniform"/>
-                            <TextBlock Text="Configure" FontSize="13" FontWeight="Medium"/>
+                            <TextBlock Text="Configure" FontSize="{StaticResource FontSizeMedium}" FontWeight="Medium"/>
                         </StackPanel>
                     </Button>
 
@@ -61,7 +61,7 @@
                                   Width="14" Height="14"
                                   Stretch="Uniform"/>
                             <TextBlock Text="Start"
-                                       FontSize="13"
+                                       FontSize="{StaticResource FontSizeMedium}"
                                        FontWeight="SemiBold"
                                        Foreground="White"/>
                         </StackPanel>
@@ -78,7 +78,7 @@
                                     Background="White"
                                     CornerRadius="2"/>
                             <TextBlock Text="Stop"
-                                       FontSize="13"
+                                       FontSize="{StaticResource FontSizeMedium}"
                                        FontWeight="SemiBold"
                                        Foreground="White"/>
                         </StackPanel>
@@ -95,7 +95,7 @@
                                   Fill="{DynamicResource TextPrimary}"
                                   Width="14" Height="14"
                                   Stretch="Uniform"/>
-                            <TextBlock Text="Pause" FontSize="13" FontWeight="Medium"/>
+                            <TextBlock Text="Pause" FontSize="{StaticResource FontSizeMedium}" FontWeight="Medium"/>
                         </StackPanel>
                     </Button>
 
@@ -111,7 +111,7 @@
                                   Width="14" Height="14"
                                   Stretch="Uniform"/>
                             <TextBlock Text="Resume"
-                                       FontSize="13"
+                                       FontSize="{StaticResource FontSizeMedium}"
                                        FontWeight="SemiBold"
                                        Foreground="White"/>
                         </StackPanel>
@@ -138,7 +138,7 @@
                                   Fill="{DynamicResource TextPrimary}"
                                   Width="16" Height="16"
                                   Stretch="Uniform"/>
-                            <TextBlock Text="Export" FontSize="13" FontWeight="Medium"/>
+                            <TextBlock Text="Export" FontSize="{StaticResource FontSizeMedium}" FontWeight="Medium"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -150,19 +150,19 @@
                             VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="Interface:"
-                                   FontSize="11"
+                                   FontSize="{StaticResource FontSizeSmall}"
                                    Foreground="{DynamicResource TextMuted}"/>
                         <TextBlock Text="{Binding SelectedInterfaceName}"
-                                   FontSize="11"
+                                   FontSize="{StaticResource FontSizeSmall}"
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource AccentBlue}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="Filter:"
-                                   FontSize="11"
+                                   FontSize="{StaticResource FontSizeSmall}"
                                    Foreground="{DynamicResource TextMuted}"/>
                         <TextBlock Text="{Binding AppliedFilter}"
-                                   FontSize="11"
+                                   FontSize="{StaticResource FontSizeSmall}"
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource AccentGreen}"/>
                     </StackPanel>
@@ -173,7 +173,7 @@
                             Orientation="Vertical"
                             HorizontalAlignment="Right">
                     <TextBlock Text="{Binding SessionId, StringFormat='Session: {0}'}"
-                               FontSize="10"
+                               FontSize="{StaticResource FontSizeXS}"
                                Foreground="{DynamicResource TextMuted}"
                                IsVisible="{Binding IsCapturing}"/>
                 </StackPanel>
@@ -183,7 +183,7 @@
         <!-- Main Content Area -->
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="320"/> <!-- Statistics Panel -->
+                <ColumnDefinition Width="Auto" MinWidth="280" MaxWidth="400"/> <!-- Statistics Panel -->
                 <ColumnDefinition Width="*"/>   <!-- Packet List -->
             </Grid.ColumnDefinitions>
 
@@ -214,17 +214,17 @@
 
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
                             <TextBlock Text="Live Packets"
-                                       FontSize="14"
+                                       FontSize="{StaticResource FontSizeInput}"
                                        FontWeight="SemiBold"
                                        Foreground="{DynamicResource TextPrimary}"/>
                             <Border Classes="badge badge-blue">
                                 <TextBlock Text="{Binding PacketListViewModel.PacketsDisplayed, StringFormat='{}{0:N0} displayed'}"
-                                           FontSize="11"/>
+                                           FontSize="{StaticResource FontSizeSmall}"/>
                             </Border>
                             <Border Classes="badge badge-green"
                                     IsVisible="{Binding IsCapturing}">
                                 <TextBlock Text="LIVE"
-                                           FontSize="11"
+                                           FontSize="{StaticResource FontSizeSmall}"
                                            FontWeight="Bold"/>
                             </Border>
                         </StackPanel>
@@ -275,7 +275,7 @@
                                             Padding="8,4"
                                             HorizontalAlignment="Left">
                                         <TextBlock Text="{Binding Protocol}"
-                                                   FontSize="11"
+                                                   FontSize="{StaticResource FontSizeSmall}"
                                                    FontWeight="Medium"
                                                    Foreground="White"/>
                                     </Border>
@@ -316,7 +316,7 @@
                         <!-- Animation moved to LiveCaptureStyles.axaml with .status-pulse class -->
                     </Ellipse>
                     <TextBlock Text="{Binding StatusMessage}"
-                               FontSize="12"
+                               FontSize="{StaticResource FontSizeBase}"
                                FontWeight="Medium"
                                Foreground="{DynamicResource TextPrimary}"/>
                 </StackPanel>
@@ -324,14 +324,14 @@
                 <!-- Error Message -->
                 <TextBlock Grid.Column="1"
                            Text="{Binding ErrorMessage}"
-                           FontSize="12"
+                           FontSize="{StaticResource FontSizeBase}"
                            Foreground="{DynamicResource AccentRed}"
                            IsVisible="{Binding HasError}"
                            Margin="16,0"/>
 
                 <!-- Total Packet Count -->
                 <TextBlock Grid.Column="2"
-                           FontSize="12"
+                           FontSize="{StaticResource FontSizeBase}"
                            Foreground="{DynamicResource TextSecondary}">
                     <Run Text="Total:"/>
                     <Run Text="{Binding PacketListViewModel.TotalPacketCount, StringFormat='{}{0:N0}'}"

@@ -2,12 +2,13 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Orchestration;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.ViewModels.Components;
 
 namespace PCAPAnalyzer.UI.ViewModels.FileAnalysis;
@@ -22,6 +23,10 @@ namespace PCAPAnalyzer.UI.ViewModels.FileAnalysis;
 /// </summary>
 public partial class FileAnalysisProgressViewModel : ObservableObject
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     // ==================== THROTTLING ====================
     private long _lastStagesNotifyTicks;
     private const int STAGES_NOTIFY_THROTTLE_MS = 100;
@@ -118,7 +123,7 @@ public partial class FileAnalysisProgressViewModel : ObservableObject
     /// </summary>
     public void OnProgressUpdate(AnalysisProgress progress)
     {
-        Dispatcher.UIThread.Post(() =>
+        Dispatcher.Post(() =>
         {
             // Update accurate progress (0-100% from ProgressCoordinator)
             ProgressPercentage = progress.Percent;
@@ -257,7 +262,7 @@ public partial class FileAnalysisProgressViewModel : ObservableObject
     {
         DebugLogger.Log($"[FileAnalysisProgressViewModel] UpdateQuickStatsFromResult - TotalPackets: {result.TotalPackets:N0}");
 
-        Dispatcher.UIThread.Post(() =>
+        Dispatcher.Post(() =>
         {
             QuickStats.TotalPackets = result.TotalPackets;
             TotalPacketsInFile = result.TotalPackets;
@@ -291,7 +296,7 @@ public partial class FileAnalysisProgressViewModel : ObservableObject
         var packetsProgress = (double)currentCount / totalPackets;
         var currentPps = (long)(currentCount / (elapsed.TotalSeconds + 0.01));
 
-        Dispatcher.UIThread.Post(() =>
+        Dispatcher.Post(() =>
         {
             PacketsProcessed = currentCount;
             PacketsPerSecond = currentPps;

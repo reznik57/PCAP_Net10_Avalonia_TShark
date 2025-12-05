@@ -8,18 +8,15 @@
              x:Class="PCAPAnalyzer.UI.Views.Controls.StatsBarControl"
              x:DataType="vm:StatsBarControlViewModel">
 
-    <!-- 📊 Statistics Bar Control - Harmonized with FilterPanelControl Styling -->
-    <Border Background="#161B22" BorderBrush="#30363D" BorderThickness="1"
-            CornerRadius="6" Padding="20,16" Margin="0,0,0,16"
-            BoxShadow="0 2 4 #00000020">
+    <!-- 📊 Statistics Bar Control - SLACK STYLE -->
+    <Border Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource BackgroundElevated}" BorderThickness="1"
+            CornerRadius="12" Padding="20,16" Margin="0,0,0,16"
+            BoxShadow="0 2 8 0 #00000026">
         <Grid RowDefinitions="Auto,12,Auto">
-            <!-- Section Header with Accent Bar -->
-            <Grid Grid.Row="0" ColumnDefinitions="Auto,*">
-                <Border Grid.Column="0" Width="3" Height="20" Background="{Binding AccentColor, FallbackValue='#58A6FF'}"
-                        CornerRadius="1.5" Margin="0,0,12,0" VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="1" Text="{Binding SectionTitle, FallbackValue='STATISTICS'}"
-                           FontSize="13" FontWeight="Bold" Foreground="#E6EDF3" VerticalAlignment="Center"/>
-            </Grid>
+            <!-- Section Header -->
+            <TextBlock Grid.Row="0" Text="{Binding SectionTitle, FallbackValue='STATISTICS'}"
+                       FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"
+                       LetterSpacing="0.5"/>
 
             <!-- Statistics Grid (Auto-responsive) -->
             <ItemsControl Grid.Row="2" ItemsSource="{Binding Stats}">
@@ -32,25 +29,25 @@
 
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="models:StatItem">
-                        <!-- Individual Stat Card -->
-                        <Border Background="#0D1117" BorderBrush="#21262D" BorderThickness="1"
-                                CornerRadius="6" Padding="16,12" Margin="4">
+                        <!-- Individual Stat Card - SLACK STYLE (neutral borders) -->
+                        <Border Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BackgroundElevated}" BorderThickness="1"
+                                CornerRadius="8" Padding="16,12" Margin="4">
                             <StackPanel Spacing="6">
                                 <!-- Label -->
-                                <TextBlock Text="{Binding Label}" FontSize="9" FontWeight="SemiBold"
-                                           Foreground="#6E7681" LetterSpacing="0.5" TextWrapping="NoWrap"/>
+                                <TextBlock Text="{Binding Label}" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource TextMutedBrush}" LetterSpacing="0.5" TextWrapping="NoWrap"/>
 
                                 <!-- Value with Icon -->
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock Text="{Binding Icon}" FontSize="14" VerticalAlignment="Center"
+                                    <TextBlock Text="{Binding Icon}" FontSize="{StaticResource FontSizeInput}" VerticalAlignment="Center"
                                                IsVisible="{Binding Icon, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                                    <TextBlock Text="{Binding Value}" FontSize="16" FontWeight="Bold"
+                                    <TextBlock Text="{Binding Value}" FontSize="{StaticResource FontSizeLarge}" FontWeight="SemiBold"
                                                Foreground="{Binding ValueColor}" VerticalAlignment="Center"
                                                TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
 
-                                <!-- Secondary Text (Filtered stats) - Remove left margin for alignment -->
-                                <TextBlock Text="{Binding SecondaryText}" FontSize="11"
+                                <!-- Secondary Text (Filtered stats) -->
+                                <TextBlock Text="{Binding SecondaryText}" FontSize="{StaticResource FontSizeSmall}"
                                            Foreground="{Binding SecondaryColor}"
                                            IsVisible="{Binding SecondaryText, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                            TextTrimming="CharacterEllipsis"

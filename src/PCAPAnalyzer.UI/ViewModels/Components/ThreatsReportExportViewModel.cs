@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -26,7 +27,7 @@ public partial class ThreatsReportExportViewModel : ObservableObject
     // Export state
     [ObservableProperty] private bool _isExporting;
     [ObservableProperty] private string _exportStatusMessage = "";
-    [ObservableProperty] private string _exportStatusColor = "#10B981";
+    [ObservableProperty] private string _exportStatusColor = ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981");
     [ObservableProperty] private double _exportProgress;
     [ObservableProperty] private bool _showExportStatus;
 
@@ -100,7 +101,7 @@ public partial class ThreatsReportExportViewModel : ObservableObject
             IsExporting = true;
             ShowExportStatus = true;
             ExportStatusMessage = "Exporting reports...";
-            ExportStatusColor = "#3B82F6";
+            ExportStatusColor = ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6");
 
             try
             {
@@ -123,14 +124,14 @@ public partial class ThreatsReportExportViewModel : ObservableObject
 
                 ExportProgress = 1.0;
                 ExportStatusMessage = $"✓ Exported 3 files to {basePath}";
-                ExportStatusColor = "#10B981";
+                ExportStatusColor = ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981");
 
                 DebugLogger.Log($"[ThreatsExport] Exported all formats to {basePath}");
             }
             catch (Exception ex)
             {
                 ExportStatusMessage = $"✗ Export failed: {ex.Message}";
-                ExportStatusColor = "#EF4444";
+                ExportStatusColor = ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444");
                 DebugLogger.Log($"[ThreatsExport] Export all failed: {ex.Message}");
             }
             finally
@@ -165,18 +166,18 @@ public partial class ThreatsReportExportViewModel : ObservableObject
             IsExporting = true;
             ShowExportStatus = true;
             ExportStatusMessage = $"Exporting {extension.ToUpper()}...";
-            ExportStatusColor = "#3B82F6";
+            ExportStatusColor = ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6");
 
             try
             {
                 await exportFunc(result.Path.LocalPath);
                 ExportStatusMessage = $"✓ Exported to {Path.GetFileName(result.Path.LocalPath)}";
-                ExportStatusColor = "#10B981";
+                ExportStatusColor = ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981");
             }
             catch (Exception ex)
             {
                 ExportStatusMessage = $"✗ Export failed: {ex.Message}";
-                ExportStatusColor = "#EF4444";
+                ExportStatusColor = ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444");
             }
             finally
             {

@@ -11,8 +11,8 @@
         <converters:StageProgressVisibilityConverter x:Key="StageProgressVisibility"/>
     </UserControl.Resources>
 
-    <Border Background="#1E1E2E"
-            BorderBrush="#313244"
+    <Border Background="{DynamicResource BackgroundPanel}"
+            BorderBrush="{DynamicResource BorderPrimary}"
             BorderThickness="1"
             CornerRadius="8"
             Padding="16">
@@ -20,9 +20,9 @@
             <!-- Header with overall progress -->
             <StackPanel Spacing="8">
                 <TextBlock Text="Analysis Progress"
-                          FontSize="14"
+                          FontSize="{StaticResource FontSizeInput}"
                           FontWeight="SemiBold"
-                          Foreground="#CDD6F4"/>
+                          Foreground="{DynamicResource TextPrimaryBrush}"/>
 
                 <Grid ColumnDefinitions="*,Auto">
                     <ProgressBar Grid.Column="0"
@@ -30,27 +30,27 @@
                                Maximum="100"
                                Height="8"
                                CornerRadius="4"
-                               Background="#313244"
-                               Foreground="#3B82F6"
+                               Background="{DynamicResource BorderPrimary}"
+                               Foreground="{DynamicResource AccentPrimary}"
                                IsIndeterminate="{Binding IsProgressIndeterminate}"/>
 
                     <TextBlock Grid.Column="1"
                              Text="{Binding AnalysisProgress, StringFormat='{}{0:F0}%'}"
-                             FontSize="12"
+                             FontSize="{StaticResource FontSizeBase}"
                              FontWeight="Medium"
-                             Foreground="#CDD6F4"
+                             Foreground="{DynamicResource TextPrimaryBrush}"
                              Margin="8,0,0,0"/>
                 </Grid>
 
                 <TextBlock Text="{Binding ProgressMessage}"
-                          FontSize="11"
-                          Foreground="#6C7086"
+                          FontSize="{StaticResource FontSizeSmall}"
+                          Foreground="{DynamicResource TextMutedBrush}"
                           TextWrapping="Wrap"/>
             </StackPanel>
 
             <!-- Real-Time Metrics Display -->
-            <Border Background="#181825"
-                    BorderBrush="#45475A"
+            <Border Background="{DynamicResource BackgroundDark}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}"
                     BorderThickness="1"
                     CornerRadius="6"
                     Padding="12"
@@ -59,16 +59,16 @@
                     <!-- Packets Analyzed -->
                     <StackPanel Grid.Column="0" Grid.Row="0" Spacing="2" Margin="0,0,8,4">
                         <TextBlock Text="📦 Packets Analyzed"
-                                 FontSize="10"
+                                 FontSize="{StaticResource FontSizeXS}"
                                  FontWeight="Medium"
-                                 Foreground="#7F849C"/>
+                                 Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <StackPanel Orientation="Horizontal" Spacing="4">
-                            <TextBlock FontSize="13"
+                            <TextBlock FontSize="{StaticResource FontSizeMedium}"
                                      FontWeight="SemiBold"
-                                     Foreground="#CDD6F4">
+                                     Foreground="{DynamicResource TextPrimaryBrush}">
                                 <Run Text="{Binding RealtimePacketsAnalyzed, StringFormat='{}{0:N0}'}"/>
-                                <Run Text="/" Foreground="#6C7086"/>
-                                <Run Text="{Binding RealtimeTotalPackets, StringFormat='{}{0:N0}'}" Foreground="#9399B2"/>
+                                <Run Text="/" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <Run Text="{Binding RealtimeTotalPackets, StringFormat='{}{0:N0}'}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </TextBlock>
                         </StackPanel>
                     </StackPanel>
@@ -76,29 +76,29 @@
                     <!-- Processing Rate -->
                     <StackPanel Grid.Column="1" Grid.Row="0" Spacing="2" Margin="0,0,8,4">
                         <TextBlock Text="⚡ Processing Rate"
-                                 FontSize="10"
+                                 FontSize="{StaticResource FontSizeXS}"
                                  FontWeight="Medium"
-                                 Foreground="#7F849C"/>
+                                 Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBlock Text="{Binding RealtimePacketsPerSecond, StringFormat='{}{0:N0} pkt/s'}"
-                                 FontSize="13"
+                                 FontSize="{StaticResource FontSizeMedium}"
                                  FontWeight="SemiBold"
-                                 Foreground="#A6E3A1"/>
+                                 Foreground="{DynamicResource SlackSuccess}"/>
                     </StackPanel>
 
                     <!-- Data Volume -->
                     <StackPanel Grid.Column="2" Grid.Row="0" Spacing="2" Margin="0,0,8,4">
                         <TextBlock Text="💾 Data Volume"
-                                 FontSize="10"
+                                 FontSize="{StaticResource FontSizeXS}"
                                  FontWeight="Medium"
-                                 Foreground="#7F849C"/>
+                                 Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <StackPanel Orientation="Horizontal" Spacing="4">
-                            <TextBlock FontSize="13"
+                            <TextBlock FontSize="{StaticResource FontSizeMedium}"
                                      FontWeight="SemiBold"
-                                     Foreground="#CDD6F4">
+                                     Foreground="{DynamicResource TextPrimaryBrush}">
                                 <Run Text="{Binding RealtimeMegabytesAnalyzed, StringFormat='{}{0:F1}'}"/>
-                                <Run Text="/" Foreground="#6C7086"/>
-                                <Run Text="{Binding RealtimeTotalMegabytes, StringFormat='{}{0:F1}'}" Foreground="#9399B2"/>
-                                <Run Text="MB" Foreground="#6C7086"/>
+                                <Run Text="/" Foreground="{DynamicResource TextMutedBrush}"/>
+                                <Run Text="{Binding RealtimeTotalMegabytes, StringFormat='{}{0:F1}'}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <Run Text="MB" Foreground="{DynamicResource TextMutedBrush}"/>
                             </TextBlock>
                         </StackPanel>
                     </StackPanel>
@@ -106,30 +106,30 @@
                     <!-- Elapsed Time -->
                     <StackPanel Grid.Column="3" Grid.Row="0" Spacing="2" Margin="0,0,0,4">
                         <TextBlock Text="⏱️ Elapsed Time"
-                                 FontSize="10"
+                                 FontSize="{StaticResource FontSizeXS}"
                                  FontWeight="Medium"
-                                 Foreground="#7F849C"/>
+                                 Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBlock Text="{Binding RealtimeElapsedTime, StringFormat='{}{0:mm\\:ss}'}"
-                                 FontSize="13"
+                                 FontSize="{StaticResource FontSizeMedium}"
                                  FontWeight="SemiBold"
-                                 Foreground="#F9E2AF"/>
+                                 Foreground="{DynamicResource SlackWarning}"/>
                     </StackPanel>
 
                     <!-- Remaining Time (spans 2 columns) -->
                     <StackPanel Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Spacing="2">
                         <TextBlock Text="⏳ Remaining Time"
-                                 FontSize="10"
+                                 FontSize="{StaticResource FontSizeXS}"
                                  FontWeight="Medium"
-                                 Foreground="#7F849C"/>
+                                 Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBlock Text="{Binding RealtimeRemainingTimeFormatted}"
-                                 FontSize="13"
+                                 FontSize="{StaticResource FontSizeMedium}"
                                  FontWeight="SemiBold"
-                                 Foreground="#89B4FA"
+                                 Foreground="{DynamicResource SlackInfo}"
                                  IsVisible="{Binding RealtimeRemainingTimeFormatted, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                         <TextBlock Text="Calculating..."
-                                 FontSize="13"
+                                 FontSize="{StaticResource FontSizeMedium}"
                                  FontWeight="SemiBold"
-                                 Foreground="#6C7086"
+                                 Foreground="{DynamicResource TextMutedBrush}"
                                  IsVisible="{Binding RealtimeRemainingTimeFormatted, Converter={x:Static StringConverters.IsNullOrEmpty}}"/>
                     </StackPanel>
 
@@ -137,26 +137,26 @@
                     <StackPanel Grid.Column="2" Grid.Row="1" Spacing="2"
                               IsVisible="{Binding RealtimeThreatsDetected, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <TextBlock Text="🚨 Threats Detected"
-                                 FontSize="10"
+                                 FontSize="{StaticResource FontSizeXS}"
                                  FontWeight="Medium"
-                                 Foreground="#7F849C"/>
+                                 Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBlock Text="{Binding RealtimeThreatsDetected, StringFormat='{}{0:N0}'}"
-                                 FontSize="13"
+                                 FontSize="{StaticResource FontSizeMedium}"
                                  FontWeight="SemiBold"
-                                 Foreground="#F38BA8"/>
+                                 Foreground="{DynamicResource SlackDanger}"/>
                     </StackPanel>
 
                     <!-- Unique IPs Processed -->
                     <StackPanel Grid.Column="3" Grid.Row="1" Spacing="2"
                               IsVisible="{Binding RealtimeUniqueIPsProcessed, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <TextBlock Text="🌐 Unique IPs"
-                                 FontSize="10"
+                                 FontSize="{StaticResource FontSizeXS}"
                                  FontWeight="Medium"
-                                 Foreground="#7F849C"/>
+                                 Foreground="{DynamicResource TextSecondaryBrush}"/>
                         <TextBlock Text="{Binding RealtimeUniqueIPsProcessed, StringFormat='{}{0:N0}'}"
-                                 FontSize="13"
+                                 FontSize="{StaticResource FontSizeMedium}"
                                  FontWeight="SemiBold"
-                                 Foreground="#94E2D5"/>
+                                 Foreground="{DynamicResource SlackInfo}"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -171,7 +171,7 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:AnalysisProgressStage">
                         <Border Margin="0,0,6,6"
-                               Background="#1E1E2E"
+                               Background="{DynamicResource BackgroundPanel}"
                                BorderThickness="1"
                                CornerRadius="4"
                                Padding="8,4"
@@ -181,14 +181,14 @@
                                 <StackPanel Spacing="4" MaxWidth="300">
                                     <TextBlock Text="{Binding Name}"
                                              FontWeight="SemiBold"
-                                             FontSize="12"
-                                             Foreground="#CDD6F4"/>
+                                             FontSize="{StaticResource FontSizeBase}"
+                                             Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     <TextBlock Text="{Binding Detail}"
-                                             FontSize="11"
-                                             Foreground="#BAC2DE"
+                                             FontSize="{StaticResource FontSizeSmall}"
+                                             Foreground="{DynamicResource TextSecondaryBrush}"
                                              TextWrapping="Wrap"/>
-                                    <TextBlock FontSize="10"
-                                             Foreground="#6C7086"
+                                    <TextBlock FontSize="{StaticResource FontSizeXS}"
+                                             Foreground="{DynamicResource TextMutedBrush}"
                                              IsVisible="{Binding ElapsedTime, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
                                         <Run Text="Time: "/>
                                         <Run Text="{Binding ElapsedTime}" FontWeight="Medium"/>
@@ -207,14 +207,14 @@
                                 <!-- Stage name and timing -->
                                 <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding Name}"
-                                             FontSize="11"
+                                             FontSize="{StaticResource FontSizeSmall}"
                                              FontWeight="Medium"
                                              Foreground="{Binding State, Converter={StaticResource StageStateToBrush}, ConverterParameter='Text'}"/>
 
                                     <TextBlock Text="{Binding ElapsedTime, StringFormat='({0})'}"
-                                             FontSize="10"
+                                             FontSize="{StaticResource FontSizeXS}"
                                              FontWeight="Normal"
-                                             Foreground="#6C7086"
+                                             Foreground="{DynamicResource TextMutedBrush}"
                                              IsVisible="{Binding ElapsedTime, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                 </StackPanel>
                             </StackPanel>

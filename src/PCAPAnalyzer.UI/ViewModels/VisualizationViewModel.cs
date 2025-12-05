@@ -13,6 +13,7 @@ using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.UI.Services.Visualization;
 using SkiaSharp;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels
 {
@@ -84,8 +85,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                 new DateTimeAxis(TimeSpan.FromSeconds(1), date => date.ToString("HH:mm:ss"))
                 {
                     Name = "Time",
-                    NamePaint = new SolidColorPaint(SKColors.White),
-                    LabelsPaint = new SolidColorPaint(SKColors.LightGray)
+                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextPrimary", "#E6EDF3"))),
+                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E")))
                 }
             };
 
@@ -94,8 +95,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                 new Axis
                 {
                     Name = "Value",
-                    NamePaint = new SolidColorPaint(SKColors.White),
-                    LabelsPaint = new SolidColorPaint(SKColors.LightGray)
+                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextPrimary", "#E6EDF3"))),
+                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E")))
                 }
             };
         }
@@ -161,7 +162,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                         return new LiveChartsCore.Kernel.Coordinate(index, point.Value);
                     },
                     Fill = null,
-                    Stroke = new SolidColorPaint(SKColor.Parse("#3B82F6"), 2),
+                    Stroke = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6")), 2),
                     GeometrySize = 0,
                     LineSmoothness = 0,
                     Name = "Throughput"
@@ -197,7 +198,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                         Intensity = cell.Intensity,
                         IntensityText = cell.Intensity > 10 ? cell.Intensity.ToString() : "",
                         CellColor = GetHeatColor(intensity),
-                        TextColor = intensity > 0.5 ? "#FFFFFF" : "#000000",
+                        TextColor = intensity > 0.5 ? ThemeColorHelper.GetColorHex("TextPrimary", "#FFFFFF") : ThemeColorHelper.GetColorHex("BackgroundPrimary", "#0D1117"),
                         Tooltip = $"{cell.YValue} at {cell.XValue}: {cell.Intensity:N0} packets"
                     });
                 }
@@ -232,7 +233,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     {
                         return new LiveChartsCore.Kernel.Coordinate(index, bar.Count);
                     },
-                    Fill = new SolidColorPaint(SKColor.Parse("#10B981")),
+                    Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"))),
                     Name = "Packet Size Distribution"
                 };
 
@@ -271,7 +272,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                         Y = y,
                         NodeSize = Math.Max(20, Math.Min(60, node.Size / 100)),
                         NodeRadius = "50%",
-                        NodeColor = node.Type == "source" ? "#3B82F6" : "#10B981",
+                        NodeColor = node.Type == "source" ? ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6") : ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
                         Tooltip = $"{node.Label}\nPackets: {node.Size:N0}"
                     });
                 }
@@ -289,7 +290,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                             StartPoint = new Avalonia.Point(sourceNode.X, sourceNode.Y),
                             EndPoint = new Avalonia.Point(targetNode.X, targetNode.Y),
                             Thickness = Math.Max(1, Math.Min(5, edge.Weight / 1000)),
-                            EdgeColor = "#718096"
+                            EdgeColor = ThemeColorHelper.GetColorHex("TextMuted", "#718096")
                         });
                     }
                 }
@@ -304,11 +305,11 @@ namespace PCAPAnalyzer.UI.ViewModels
         private string GetHeatColor(double intensity)
         {
             // Heat color scheme: blue (cold) -> red (hot)
-            if (intensity < 0.2) return "#3B82F6";
-            if (intensity < 0.4) return "#10B981";
-            if (intensity < 0.6) return "#FCD34D";
-            if (intensity < 0.8) return "#F59E0B";
-            return "#EF4444";
+            if (intensity < 0.2) return ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6");
+            if (intensity < 0.4) return ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981");
+            if (intensity < 0.6) return ThemeColorHelper.GetColorHex("AccentYellow", "#FCD34D");
+            if (intensity < 0.8) return ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B");
+            return ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444");
         }
 
         [RelayCommand]
@@ -380,8 +381,8 @@ namespace PCAPAnalyzer.UI.ViewModels
         public string YValue { get; set; } = string.Empty;
         public long Intensity { get; set; }
         public string IntensityText { get; set; } = string.Empty;
-        public string CellColor { get; set; } = "#808080";
-        public string TextColor { get; set; } = "#FFFFFF";
+        public string CellColor { get; set; } = ThemeColorHelper.GetColorHex("TextMuted", "#808080");
+        public string TextColor { get; set; } = ThemeColorHelper.GetColorHex("TextPrimary", "#FFFFFF");
         public string Tooltip { get; set; } = string.Empty;
     }
 
@@ -393,7 +394,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         public double Y { get; set; }
         public double NodeSize { get; set; } = 30;
         public string NodeRadius { get; set; } = "50%";
-        public string NodeColor { get; set; } = "#3B82F6";
+        public string NodeColor { get; set; } = ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6");
         public string Tooltip { get; set; } = string.Empty;
     }
 
@@ -402,7 +403,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         public Avalonia.Point StartPoint { get; set; }
         public Avalonia.Point EndPoint { get; set; }
         public double Thickness { get; set; } = 1;
-        public string EdgeColor { get; set; } = "#718096";
+        public string EdgeColor { get; set; } = ThemeColorHelper.GetColorHex("TextMuted", "#718096");
     }
 
     public class HistogramBar

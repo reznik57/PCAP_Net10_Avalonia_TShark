@@ -1,5 +1,6 @@
 using System;
 using CommunityToolkit.Mvvm.ComponentModel;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Capture;
 
@@ -70,18 +71,9 @@ public partial class PacketViewModel : ObservableObject
     private bool _hasAnomaly;
 
     /// <summary>
-    /// Color coding for protocol visualization
+    /// Color coding for protocol visualization - uses ThemeColorHelper
     /// </summary>
-    public string ProtocolColor => Protocol?.ToUpperInvariant() switch
-    {
-        "TCP" => "#58A6FF",
-        "UDP" => "#3FB950",
-        "ICMP" => "#F0E68C",
-        "DNS" => "#D2A8FF",
-        "HTTP" or "HTTPS" => "#FF7B72",
-        "ARP" => "#FFA657",
-        _ => "#8B949E"
-    };
+    public string ProtocolColor => ThemeColorHelper.GetProtocolColorHex(Protocol ?? "");
 
     /// <summary>
     /// Formatted timestamp for display

@@ -25,19 +25,19 @@
                 </Setter.Value>
             </Setter>
             <Setter Property="Padding" Value="20,20,20,20"/>
-            <Setter Property="BorderBrush" Value="#3A3A4A"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderPrimary}"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
         </Style>
-        
+
         <Style Selector="TextBlock.detail-label">
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Foreground" Value="#B8D4E8"/>
             <Setter Property="Margin" Value="0,0,8,0"/>
         </Style>
-        
+
         <Style Selector="TextBlock.detail-value">
             <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
     </Window.Styles>
@@ -52,10 +52,10 @@
         <!-- Header -->
         <Border Grid.Row="0" Classes="header-panel">
             <StackPanel>
-                <TextBlock Text="{Binding Title}" 
-                          FontSize="20" 
-                          FontWeight="Bold" 
-                          Foreground="#FFFFFF"
+                <TextBlock Text="{Binding Title}"
+                          FontSize="{StaticResource FontSizeXL}"
+                          FontWeight="Bold"
+                          Foreground="{DynamicResource TextPrimaryBrush}"
                           Margin="0,0,0,10"/>
                 
                 <Grid>
@@ -91,9 +91,9 @@
         </Border>
         
         <!-- Packet Numbers List -->
-        <Border Grid.Row="1" 
-                Background="#0A0A0F"
-                BorderBrush="#2A2A3A"
+        <Border Grid.Row="1"
+                Background="{DynamicResource BackgroundDark}"
+                BorderBrush="{DynamicResource BackgroundCard}"
                 BorderThickness="1"
                 Margin="10,10,10,10"
                 CornerRadius="8"
@@ -103,10 +103,10 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                
-                <TextBlock Grid.Row="0" 
+
+                <TextBlock Grid.Row="0"
                           Text="Associated Packet Numbers"
-                          FontSize="14"
+                          FontSize="{StaticResource FontSizeInput}"
                           FontWeight="SemiBold"
                           Foreground="#B8D4E8"
                           Margin="0,0,0,10"/>
@@ -122,8 +122,8 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:PacketNumberViewModel">
-                                <Border Background="#1A1A24"
-                                        BorderBrush="#3A3A4A"
+                                <Border Background="{DynamicResource BackgroundPanel}"
+                                        BorderBrush="{DynamicResource BorderPrimary}"
                                         BorderThickness="1"
                                         CornerRadius="4"
                                         Margin="3,3,3,3"
@@ -132,7 +132,7 @@
                                     <TextBlock Text="{Binding Number, StringFormat='#{0}'}"
                                               Foreground="#00D4FF"
                                               FontFamily="Consolas,monospace"
-                                              FontSize="13"/>
+                                              FontSize="{StaticResource FontSizeMedium}"/>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -142,9 +142,9 @@
         </Border>
         
         <!-- Footer with Actions -->
-        <Border Grid.Row="2" 
-                Background="#1A1A24"
-                BorderBrush="#3A3A4A"
+        <Border Grid.Row="2"
+                Background="{DynamicResource BackgroundPanel}"
+                BorderBrush="{DynamicResource BorderPrimary}"
                 BorderThickness="0,1,0,0"
                 Padding="20,15">
             <Grid>
@@ -153,9 +153,9 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                
+
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="5">
-                    <TextBlock Text="Display Range:" 
+                    <TextBlock Text="Display Range:"
                               VerticalAlignment="Center"
                               Foreground="#B8D4E8"
                               Margin="0,0,10,0"/>
@@ -171,12 +171,12 @@
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
                     <Button Content="Export List"
                            Command="{Binding ExportCommand}"
-                           Background="#3B82F6"
+                           Background="{DynamicResource AccentPrimary}"
                            Foreground="White"
                            Padding="12,6"/>
                     <Button Content="Copy Numbers"
                            Command="{Binding CopyCommand}"
-                           Background="#10B981"
+                           Background="{DynamicResource SlackSuccess}"
                            Foreground="White"
                            Padding="12,6"/>
                     <Button Content="Close"

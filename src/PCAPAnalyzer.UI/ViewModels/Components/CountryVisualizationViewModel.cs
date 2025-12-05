@@ -7,6 +7,7 @@ using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.UI.Utilities;
 using SkiaSharp;
 using PCAPAnalyzer.Core.Utilities;
 
@@ -21,6 +22,29 @@ public partial class CountryVisualizationViewModel : ObservableObject
     private NetworkStatistics? _currentStatistics;
     private HashSet<string> _excludedCountries = new();
 
+    // Static color references for theme consistency
+    private static readonly string DefaultContinentColor = ThemeColorHelper.GetColorHex("BackgroundLevel1", "#1C2128");
+    private static readonly string ColorMuted = ThemeColorHelper.GetColorHex("TextMuted", "#6B7280");
+    private static readonly string ColorHighRisk = ThemeColorHelper.GetColorHex("ColorDanger", "#DC2626");
+    private static readonly string ColorHighTraffic = ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444");
+    private static readonly string ColorMediumTraffic = ThemeColorHelper.GetColorHex("ColorOrange", "#F97316");
+    private static readonly string ColorLowTraffic = ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6");
+
+    // Chart colors
+    private static readonly string[] ChartColors = new[]
+    {
+        ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
+        ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
+        ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
+        ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"),
+        ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6"),
+        ThemeColorHelper.GetColorHex("AccentPink", "#EC4899"),
+        ThemeColorHelper.GetColorHex("AccentTeal", "#14B8A6"),
+        ThemeColorHelper.GetColorHex("ColorOrange", "#F97316"),
+        ThemeColorHelper.GetColorHex("AccentIndigo", "#6366F1"),
+        ThemeColorHelper.GetColorHex("AccentLime", "#84CC16")
+    };
+
     // Chart data
     [ObservableProperty] private ObservableCollection<ISeries> _countryChartSeries = new();
 
@@ -28,14 +52,14 @@ public partial class CountryVisualizationViewModel : ObservableObject
     [ObservableProperty] private Dictionary<string, double> _countryMapData = new();
 
     // Continent colors based on traffic
-    [ObservableProperty] private string _northAmericaColor = "#1C2128";
-    [ObservableProperty] private string _southAmericaColor = "#1C2128";
-    [ObservableProperty] private string _europeColor = "#1C2128";
-    [ObservableProperty] private string _africaColor = "#1C2128";
-    [ObservableProperty] private string _asiaColor = "#1C2128";
-    [ObservableProperty] private string _oceaniaColor = "#1C2128";
-    [ObservableProperty] private string _internalColor = "#1C2128";
-    [ObservableProperty] private string _ipv6Color = "#1C2128";
+    [ObservableProperty] private string _northAmericaColor = DefaultContinentColor;
+    [ObservableProperty] private string _southAmericaColor = DefaultContinentColor;
+    [ObservableProperty] private string _europeColor = DefaultContinentColor;
+    [ObservableProperty] private string _africaColor = DefaultContinentColor;
+    [ObservableProperty] private string _asiaColor = DefaultContinentColor;
+    [ObservableProperty] private string _oceaniaColor = DefaultContinentColor;
+    [ObservableProperty] private string _internalColor = DefaultContinentColor;
+    [ObservableProperty] private string _ipv6Color = DefaultContinentColor;
 
     /// <summary>
     /// Event raised when visualization data has been updated
@@ -82,7 +106,7 @@ public partial class CountryVisualizationViewModel : ObservableObject
                 {
                     Values = new[] { 1.0 },
                     Name = "No Data",
-                    Fill = new SolidColorPaint(SKColor.Parse("#6B7280"))
+                    Fill = new SolidColorPaint(SKColor.Parse(ColorMuted))
                 }
             };
             DebugLogger.Log("[CountryVisualizationViewModel] No country statistics - showing 'No Data' chart");
@@ -90,11 +114,6 @@ public partial class CountryVisualizationViewModel : ObservableObject
         }
 
         var series = new ObservableCollection<ISeries>();
-        var colors = new[]
-        {
-            "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
-            "#EC4899", "#14B8A6", "#F97316", "#6366F1", "#84CC16"
-        };
 
         // Filter excluded countries
         var filteredCountries = _currentStatistics.CountryStatistics.Values
@@ -113,7 +132,7 @@ public partial class CountryVisualizationViewModel : ObservableObject
         int colorIndex = 0;
         foreach (var country in topCountries)
         {
-            var color = country.IsHighRisk ? "#DC2626" : colors[colorIndex % colors.Length];
+            var color = country.IsHighRisk ? ColorHighRisk : ChartColors[colorIndex % ChartColors.Length];
             series.Add(new PieSeries<double>
             {
                 Values = new[] { (double)country.TotalPackets },
@@ -138,7 +157,7 @@ public partial class CountryVisualizationViewModel : ObservableObject
             {
                 Values = new[] { (double)otherPackets },
                 Name = $"Others ({othersPercentage:F1}%)",
-                Fill = new SolidColorPaint(SKColor.Parse("#6B7280")),
+                Fill = new SolidColorPaint(SKColor.Parse(ColorMuted)),
                 DataLabelsPaint = new SolidColorPaint(SKColors.White),
                 DataLabelsSize = 12,
                 InnerRadius = 60
@@ -241,14 +260,14 @@ public partial class CountryVisualizationViewModel : ObservableObject
     /// </summary>
     private void ResetContinentColors()
     {
-        NorthAmericaColor = "#1C2128";
-        SouthAmericaColor = "#1C2128";
-        EuropeColor = "#1C2128";
-        AfricaColor = "#1C2128";
-        AsiaColor = "#1C2128";
-        OceaniaColor = "#1C2128";
-        InternalColor = "#1C2128";
-        Ipv6Color = "#1C2128";
+        NorthAmericaColor = DefaultContinentColor;
+        SouthAmericaColor = DefaultContinentColor;
+        EuropeColor = DefaultContinentColor;
+        AfricaColor = DefaultContinentColor;
+        AsiaColor = DefaultContinentColor;
+        OceaniaColor = DefaultContinentColor;
+        InternalColor = DefaultContinentColor;
+        Ipv6Color = DefaultContinentColor;
     }
 
     /// <summary>
@@ -256,47 +275,36 @@ public partial class CountryVisualizationViewModel : ObservableObject
     /// </summary>
     private string GetTrafficColor(long traffic, long maxTraffic)
     {
-        if (traffic == 0) return "#1C2128"; // No traffic - dark gray
+        if (traffic == 0) return DefaultContinentColor;
 
         var ratio = (double)traffic / maxTraffic;
         return ratio switch
         {
-            > 0.66 => "#EF4444", // High traffic - red
-            > 0.33 => "#F97316", // Medium traffic - orange
-            > 0 => "#3B82F6",    // Low traffic - blue
-            _ => "#1C2128"       // No traffic - dark gray
+            > 0.66 => ColorHighTraffic,
+            > 0.33 => ColorMediumTraffic,
+            > 0 => ColorLowTraffic,
+            _ => DefaultContinentColor
         };
     }
 
     /// <summary>
-    /// Gets continent name from country code
+    /// Gets continent name from country code for use as dictionary key.
+    /// Uses centralized ContinentData mapping.
     /// </summary>
-    private string GetContinentName(string countryCode)
+    private static string GetContinentName(string countryCode)
     {
-        // Handle special cases
-        if (countryCode == "INTERNAL" || countryCode == "PRIV") return "Internal";
-        if (countryCode == "IPV6" || countryCode == "IP6") return "IPv6";
-
-        // North America
-        if (new[] { "US", "CA", "MX" }.Contains(countryCode)) return "NorthAmerica";
-
-        // South America
-        if (new[] { "BR", "AR", "CL", "CO", "PE", "VE", "EC", "BO", "UY", "PY", "GY", "SR", "GF" }.Contains(countryCode))
-            return "SouthAmerica";
-
-        // Europe
-        if (new[] { "GB", "FR", "DE", "IT", "ES", "NL", "BE", "SE", "NO", "DK", "FI", "PL", "UA", "RO", "CZ", "PT", "GR", "HU", "AT", "CH", "IE", "BG", "RS", "HR", "SK", "LT", "SI", "LV", "EE", "LU", "MT", "CY", "IS", "AL", "MK", "ME", "BA", "MD", "BY", "XK" }.Contains(countryCode))
-            return "Europe";
-
-        // Africa
-        if (new[] { "ZA", "EG", "NG", "KE", "GH", "TZ", "UG", "DZ", "MA", "AO", "SD", "ET", "MZ", "MG", "CM", "CI", "NE", "BF", "ML", "MW", "ZM", "SN", "SO", "TD", "ZW", "GN", "RW", "BJ", "TN", "BI", "SS", "TG", "SL", "LY", "LR", "MR", "CF", "ER", "GM", "BW", "GA", "GW", "GQ", "MU", "SZ", "DJ", "RE", "KM", "CV", "ST", "SC" }.Contains(countryCode))
-            return "Africa";
-
-        // Oceania
-        if (new[] { "AU", "NZ", "PG", "FJ", "NC", "PF", "SB", "GU", "VU", "FM", "KI", "MH", "PW", "NR", "TO", "AS", "MP", "WS", "TV" }.Contains(countryCode))
-            return "Oceania";
-
-        // Default to Asia
-        return "Asia";
+        var code = ContinentData.GetContinentCode(countryCode);
+        return code switch
+        {
+            "NA" => "NorthAmerica",
+            "SA" => "SouthAmerica",
+            "EU" => "Europe",
+            "AS" => "Asia",
+            "AF" => "Africa",
+            "OC" => "Oceania",
+            "INT" => "Internal",
+            "IP6" => "IPv6",
+            _ => "Asia" // Default fallback
+        };
     }
 }

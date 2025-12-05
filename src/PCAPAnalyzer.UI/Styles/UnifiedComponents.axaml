@@ -336,9 +336,9 @@
     </Style>
 
     <Style Selector="Button.success-button">
-        <Setter Property="Background" Value="#238636"/>
+        <Setter Property="Background" Value="{DynamicResource ColorSuccess}"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="BorderBrush" Value="#2EA043"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ColorSuccess}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="6"/>
         <Setter Property="Padding" Value="12,8"/>
@@ -347,18 +347,18 @@
     </Style>
 
     <Style Selector="Button.success-button:pointerover">
-        <Setter Property="Background" Value="#2EA043"/>
-        <Setter Property="BorderBrush" Value="#3FB950"/>
+        <Setter Property="Background" Value="{DynamicResource ColorSuccessHover}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ColorSuccessHover}"/>
     </Style>
 
     <Style Selector="Button.success-button:pressed">
-        <Setter Property="Background" Value="#238636"/>
+        <Setter Property="Background" Value="{DynamicResource ColorSuccess}"/>
     </Style>
 
     <Style Selector="Button.warning-button">
-        <Setter Property="Background" Value="#9E6A03"/>
+        <Setter Property="Background" Value="{DynamicResource ThreatMedium}"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="BorderBrush" Value="#D29922"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ThreatMediumBorder}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="6"/>
         <Setter Property="Padding" Value="12,8"/>
@@ -367,18 +367,18 @@
     </Style>
 
     <Style Selector="Button.warning-button:pointerover">
-        <Setter Property="Background" Value="#BF8700"/>
-        <Setter Property="BorderBrush" Value="#E3B341"/>
+        <Setter Property="Background" Value="{DynamicResource ColorWarning}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ColorWarning}"/>
     </Style>
 
     <Style Selector="Button.warning-button:pressed">
-        <Setter Property="Background" Value="#9E6A03"/>
+        <Setter Property="Background" Value="{DynamicResource ThreatMediumBorder}"/>
     </Style>
 
     <Style Selector="Button.danger-button">
-        <Setter Property="Background" Value="#DA3633"/>
+        <Setter Property="Background" Value="{DynamicResource ThreatCritical}"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="BorderBrush" Value="#F85149"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ThreatCriticalBorder}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="6"/>
         <Setter Property="Padding" Value="12,8"/>
@@ -387,12 +387,12 @@
     </Style>
 
     <Style Selector="Button.danger-button:pointerover">
-        <Setter Property="Background" Value="#F85149"/>
-        <Setter Property="BorderBrush" Value="#FF7B72"/>
+        <Setter Property="Background" Value="{DynamicResource ColorDanger}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ColorDanger}"/>
     </Style>
 
     <Style Selector="Button.danger-button:pressed">
-        <Setter Property="Background" Value="#DA3633"/>
+        <Setter Property="Background" Value="{DynamicResource ColorDangerHover}"/>
     </Style>
 
 </Styles>

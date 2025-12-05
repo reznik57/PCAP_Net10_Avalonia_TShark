@@ -15,7 +15,6 @@ namespace PCAPAnalyzer.Core.Services;
 /// <summary>
 /// Unified anomaly detection service using Composite pattern.
 /// Aggregates multiple specialized detectors to provide comprehensive anomaly detection.
-/// Replaces AnomalyDetectionService, EnhancedAnomalyDetectionService, and SpecializedTrafficAnomalyService.
 /// </summary>
 public interface IUnifiedAnomalyDetectionService
 {
@@ -57,7 +56,7 @@ public class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionService
     private readonly List<IAnomalyDetector> _detectors = new();
     private readonly object _lock = new();
 
-    public UnifiedAnomalyDetectionService()
+    public UnifiedAnomalyDetectionService(IGeoIPService? geoIPService = null)
     {
         // Register default detectors in priority order
         RegisterDetector(new NetworkAnomalyDetector());
@@ -69,6 +68,9 @@ public class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionService
         RegisterDetector(new IoTAnomalyDetector());
         RegisterDetector(new CryptoMiningDetector());
         RegisterDetector(new DataExfiltrationDetector());
+
+        // Register geo-aware detectors (require GeoIP service for full functionality)
+        RegisterDetector(new GeoThreatDetector(geoIPService));
     }
 
     public async Task<List<NetworkAnomaly>> DetectAllAnomaliesAsync(

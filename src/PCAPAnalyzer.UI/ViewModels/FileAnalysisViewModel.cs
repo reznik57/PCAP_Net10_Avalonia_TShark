@@ -7,15 +7,17 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Threading;
+using Avalonia.Threading; // Required for DispatcherTimer only
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Orchestration;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.ViewModels.Components;
 using PCAPAnalyzer.UI.ViewModels.FileAnalysis;
 
@@ -30,6 +32,10 @@ namespace PCAPAnalyzer.UI.ViewModels;
 /// </summary>
 public partial class FileAnalysisViewModel : ObservableObject, IDisposable
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     private readonly Services.IFileDialogService? _fileDialogService;
     private readonly ITSharkService _tsharkService;
     private readonly ISessionAnalysisCache _sessionCache;
@@ -193,7 +199,7 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
 
     private void OnStageDurationUpdated(string stageName, TimeSpan duration)
     {
-        Dispatcher.UIThread.Post(() =>
+        Dispatcher.Post(() =>
         {
             switch (stageName)
             {
@@ -291,7 +297,7 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
         {
             var (firstTime, lastTime) = await _tsharkService.GetCaptureTimeRangeAsync(filePath);
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await Dispatcher.InvokeAsync(() =>
             {
                 CaptureStartTime = firstTime;
                 CaptureEndTime = lastTime;
@@ -487,7 +493,7 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
 
     private async Task UpdateUIAfterCounting(long totalPackets)
     {
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        await Dispatcher.InvokeAsync(() =>
         {
             ProgressViewModel.TotalPacketsInFile = totalPackets;
             ProgressViewModel.TotalBytesFormatted = "0 B";
@@ -496,7 +502,7 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
 
     private void UpdateUIProgress(int count, long bytes)
     {
-        Dispatcher.UIThread.Post(() =>
+        Dispatcher.Post(() =>
         {
             ProgressViewModel.PacketsProcessed = count;
             ProgressViewModel.TotalBytesFormatted = NumberFormatter.FormatBytes(bytes);
@@ -518,7 +524,7 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
 
     private async Task HandleAnalysisCancellation()
     {
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        await Dispatcher.InvokeAsync(() =>
         {
             IsAnalyzing = false;
             _progressTimer.Stop();
@@ -527,7 +533,7 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
 
     private async Task HandleAnalysisError()
     {
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        await Dispatcher.InvokeAsync(() =>
         {
             IsAnalyzing = false;
             IsAnalysisComplete = false;
@@ -622,11 +628,12 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
     }
 
     // ==================== NAVIGATION COMMANDS ====================
+    // Tab order: FileManager(0), PacketAnalysis(1), Dashboard(2), CountryTraffic(3), VoiceQoS(4), Threats(5), Anomalies(6), HostInventory(7), Compare(8), Reports(9)
 
-    [RelayCommand] private void NavigateToPacketAnalysis() => NavigateToTab?.Invoke(0);
-    [RelayCommand] private void NavigateToDashboard() => NavigateToTab?.Invoke(1);
-    [RelayCommand] private void NavigateToThreats() => NavigateToTab?.Invoke(2);
-    [RelayCommand] private void NavigateToVoiceQoS() => NavigateToTab?.Invoke(3);
+    [RelayCommand] private void NavigateToPacketAnalysis() => NavigateToTab?.Invoke(1);
+    [RelayCommand] private void NavigateToDashboard() => NavigateToTab?.Invoke(2);
+    [RelayCommand] private void NavigateToThreats() => NavigateToTab?.Invoke(5);
+    [RelayCommand] private void NavigateToVoiceQoS() => NavigateToTab?.Invoke(4);
 
     // ==================== FILTER COMMANDS ====================
 

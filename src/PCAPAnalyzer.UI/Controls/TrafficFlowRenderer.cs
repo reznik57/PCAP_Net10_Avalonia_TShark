@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Media;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.Controls
 {
@@ -26,54 +27,60 @@ namespace PCAPAnalyzer.UI.Controls
 
         private void InitializeProtocolStyles()
         {
+            // HTTP - Blue for general web traffic
             _protocolStyles[Protocol.HTTP] = new FlowStyle
             {
-                Color = Color.FromRgb(59, 130, 246),     // Blue
+                Color = ThemeColorHelper.GetColor("ProtocolHTTP", "#3B82F6"),
                 LineWidth = 2.0,
                 AnimationSpeed = 0.02,
                 ParticleSize = 3.0,
                 DashPattern = null // Solid line
             };
 
+            // HTTPS - Green for secure traffic
             _protocolStyles[Protocol.HTTPS] = new FlowStyle
             {
-                Color = Color.FromRgb(34, 197, 94),      // Green
+                Color = ThemeColorHelper.GetColor("ColorSuccess", "#22C55E"),
                 LineWidth = 2.5,
                 AnimationSpeed = 0.025,
                 ParticleSize = 3.5,
                 DashPattern = null // Solid line for secure
             };
 
+            // DNS - Orange/Yellow for name resolution
             _protocolStyles[Protocol.DNS] = new FlowStyle
             {
-                Color = Color.FromRgb(251, 191, 36),     // Yellow
+                Color = ThemeColorHelper.GetColor("ProtocolDNS", "#FBBF24"),
                 LineWidth = 1.5,
                 AnimationSpeed = 0.03,
                 ParticleSize = 2.5,
                 DashPattern = new List<double> { 3, 2 } // Dashed for intermittent
             };
 
+            // TCP - Purple for connection-oriented
             _protocolStyles[Protocol.TCP] = new FlowStyle
             {
-                Color = Color.FromRgb(147, 51, 234),     // Purple
+                Color = ThemeColorHelper.GetColor("AccentPurple", "#9333EA"),
                 LineWidth = 2.0,
                 AnimationSpeed = 0.02,
                 ParticleSize = 3.0,
                 DashPattern = null
             };
 
+            // UDP - Red for connectionless
             _protocolStyles[Protocol.UDP] = new FlowStyle
             {
-                Color = Color.FromRgb(239, 68, 68),      // Red
+                Color = ThemeColorHelper.GetColor("ProtocolUDP", "#EF4444"),
                 LineWidth = 1.8,
                 AnimationSpeed = 0.035,
                 ParticleSize = 2.8,
                 DashPattern = new List<double> { 5, 3 } // Dashed for connectionless
             };
 
+            // ICMP - Light red for diagnostic
             _protocolStyles[Protocol.ICMP] = new FlowStyle
             {
-                Color = Color.FromRgb(245, 101, 101),    // Light Red
+                Color = ThemeColorHelper.GetColor("ProtocolICMP", "#F56565"),
                 LineWidth = 1.0,
                 AnimationSpeed = 0.05,
                 ParticleSize = 2.0,
@@ -261,7 +268,7 @@ namespace PCAPAnalyzer.UI.Controls
             // Show byte count label
             if (flow.ByteCount > 1024 * 1024) // Show for traffic > 1MB
             {
-                var sizeText = NumberFormatter.FormatBytes(flow.ByteCount);
+                var sizeText = PCAPAnalyzer.Core.Utilities.NumberFormatter.FormatBytes(flow.ByteCount);
                 var typeface = new Typeface("Segoe UI", FontStyle.Normal, FontWeight.Normal);
                 var formattedText = new FormattedText(sizeText, 
                     System.Globalization.CultureInfo.CurrentCulture,

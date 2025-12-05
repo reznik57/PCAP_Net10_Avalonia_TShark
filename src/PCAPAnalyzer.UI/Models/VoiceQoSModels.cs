@@ -58,7 +58,7 @@ public class LatencyConnectionItem : ObservableObject
     public string P95LatencyFormatted => $"{P95Latency:F2} ms";
     public string Duration => TimeFormatter.FormatAsSeconds(LastSeen - FirstSeen);
     public string LatencySeverity => AverageLatency >= 200 ? "Critical" : AverageLatency >= 100 ? "High" : "Medium";
-    public string SeverityColor => AverageLatency >= 200 ? "#003366" : AverageLatency >= 100 ? "#1F6FEB" : "#87CEEB";
+    public string SeverityColor => ThemeColorHelper.GetQoSSeverityColorHex("latency", LatencySeverity);
 }
 
 /// <summary>
@@ -88,7 +88,7 @@ public class JitterConnectionItem : ObservableObject
     public string P95JitterFormatted => $"{P95Jitter:F2} ms";
     public string Duration => TimeFormatter.FormatAsSeconds(LastSeen - FirstSeen);
     public string JitterSeverity => AverageJitter >= 50 ? "Critical" : AverageJitter >= 30 ? "High" : "Medium";
-    public string SeverityColor => AverageJitter >= 50 ? "#DC143C" : AverageJitter >= 30 ? "#FF8C00" : "#FFD700";
+    public string SeverityColor => ThemeColorHelper.GetQoSSeverityColorHex("jitter", JitterSeverity);
 }
 
 /// <summary>

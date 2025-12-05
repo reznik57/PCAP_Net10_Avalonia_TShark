@@ -1,10 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Services;
 
 namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS;
 
@@ -14,6 +16,10 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS;
 /// </summary>
 public partial class VoiceQoSStatisticsViewModel : ObservableObject
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     private readonly object _collectionLock = new();
 
     // Top sources/destinations (Top 30 each)
@@ -132,7 +138,7 @@ public partial class VoiceQoSStatisticsViewModel : ObservableObject
             .ToList();
 
         // Update UI collections (with thread-safety)
-        Dispatcher.UIThread.InvokeAsync(() =>
+        Dispatcher.InvokeAsync(() =>
         {
             lock (_collectionLock)
             {

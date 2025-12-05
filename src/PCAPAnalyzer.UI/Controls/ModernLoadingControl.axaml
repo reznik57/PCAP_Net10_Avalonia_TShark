@@ -46,7 +46,7 @@
                         <!-- Loading text -->
                         <TextBlock Text="{Binding LoadingMessage, FallbackValue='Processing...'}"
                                    HorizontalAlignment="Center"
-                                   FontSize="16"
+                                   FontSize="{StaticResource FontSizeLarge}"
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource TextPrimary}"/>
                         
@@ -61,7 +61,7 @@
                         <!-- Additional info text -->
                         <TextBlock Text="{Binding LoadingSubMessage}"
                                    HorizontalAlignment="Center"
-                                   FontSize="12"
+                                   FontSize="{StaticResource FontSizeBase}"
                                    Foreground="{DynamicResource TextMuted}"
                                    IsVisible="{Binding HasSubMessage}"/>
                     </StackPanel>

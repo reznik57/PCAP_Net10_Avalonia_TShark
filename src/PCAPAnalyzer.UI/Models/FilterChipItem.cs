@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.Models;
 
@@ -76,21 +77,27 @@ public partial class FilterChipItem : ObservableObject
 
     /// <summary>
     /// Background color based on filter mode.
-    /// INCLUDE = Green tint (#1A3D1A), EXCLUDE = Red tint (#3D1A1A)
+    /// INCLUDE = Green tint, EXCLUDE = Red tint
     /// </summary>
-    public string ChipBackgroundColor => IsExclude ? "#3D1A1A" : "#1A3D1A";
+    public string ChipBackgroundColor => IsExclude
+        ? ThemeColorHelper.GetColorHex("BackgroundDangerTint", "#3D1A1A")
+        : ThemeColorHelper.GetColorHex("BackgroundSuccessTint", "#1A3D1A");
 
     /// <summary>
     /// Border color based on filter mode.
-    /// INCLUDE = Green (#2EA043), EXCLUDE = Red (#F85149)
+    /// INCLUDE = Green, EXCLUDE = Red
     /// </summary>
-    public string ChipBorderColor => IsExclude ? "#F85149" : "#2EA043";
+    public string ChipBorderColor => IsExclude
+        ? ThemeColorHelper.GetColorHex("ColorDanger", "#F85149")
+        : ThemeColorHelper.GetColorHex("ColorSuccess", "#2EA043");
 
     /// <summary>
     /// Text color based on filter mode.
-    /// INCLUDE = Light Green (#7EE787), EXCLUDE = Light Red (#FF7B72)
+    /// INCLUDE = Light Green, EXCLUDE = Light Red
     /// </summary>
-    public string ChipTextColor => IsExclude ? "#FF7B72" : "#7EE787";
+    public string ChipTextColor => IsExclude
+        ? ThemeColorHelper.GetColorHex("TextDangerLight", "#FF7B72")
+        : ThemeColorHelper.GetColorHex("TextSuccessLight", "#7EE787");
 
     /// <summary>
     /// Mode prefix for display label.

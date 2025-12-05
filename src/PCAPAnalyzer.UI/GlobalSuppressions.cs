@@ -28,7 +28,7 @@ using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Security", "CA5394:Do not use insecure randomness",
     Scope = "type",
-    Target = "~T:PCAPAnalyzer.UI.ViewModels.EnhancedMapViewModel",
+    Target = "~T:PCAPAnalyzer.UI.ViewModels.GeographicMapViewModel",
     Justification = "Random used only for map visualization effects (pulse timing, animation phases), not for security")]
 
 [assembly: SuppressMessage("Security", "CA5394:Do not use insecure randomness",

@@ -33,21 +33,21 @@
         <Style Selector="TextBlock.title">
             <Setter Property="FontSize" Value="28" />
             <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Foreground" Value="White" />
         </Style>
         <Style Selector="TextBlock.subtitle">
             <Setter Property="FontSize" Value="14" />
-            <Setter Property="Foreground" Value="#F0F6FC" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         </Style>
         <Style Selector="TextBlock.stat-label">
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="#C9D1D9" />
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
             <Setter Property="FontWeight" Value="Medium" />
         </Style>
         <Style Selector="TextBlock.stat-value">
             <Setter Property="FontSize" Value="32" />
             <Setter Property="FontWeight" Value="Bold" />
-            <Setter Property="Foreground" Value="#FFFFFF" />
+            <Setter Property="Foreground" Value="White" />
         </Style>
         <Style Selector="ScrollViewer.fixed-height-table">
             <Setter Property="Height" Value="440"/>
@@ -57,11 +57,11 @@
     </Window.Styles>
 
     <DockPanel>
-        <!-- Status Bar -->
-        <Border DockPanel.Dock="Bottom" Classes="status-bar-unified">
+        <!-- Status Bar - SLACK STYLE -->
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,1,0,0" Padding="16,8">
             <Grid ColumnDefinitions="Auto,*,Auto">
                 <!-- Status Indicator -->
-                <Border Grid.Column="0" Padding="14,8" Background="#0D1117" BorderBrush="#58A6FF" BorderThickness="2" CornerRadius="8" BoxShadow="0 0 12 2 #58A6FF40">
+                <Border Grid.Column="0" Padding="12,6" Background="{DynamicResource BackgroundCard}" CornerRadius="6">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Ellipse Width="8" Height="8" Fill="{Binding StatusColor}" VerticalAlignment="Center">
                             <Ellipse.Styles>
@@ -75,52 +75,34 @@
                                 </Style>
                             </Ellipse.Styles>
                         </Ellipse>
-                        <TextBlock Text="⚡ ANALYZING" FontSize="12" FontWeight="Black" Foreground="#58A6FF" VerticalAlignment="Center" Margin="0,0,6,0" IsVisible="{Binding IsAnalyzing}">
-                            <TextBlock.Effect><DropShadowEffect Color="#58A6FF" BlurRadius="8" Opacity="0.6"/></TextBlock.Effect>
-                        </TextBlock>
-                        <TextBlock Text="{Binding Status}" FontSize="12" FontWeight="SemiBold" Foreground="#C9D1D9" VerticalAlignment="Center" IsVisible="{Binding !IsAnalyzing}"/>
-                        <TextBlock Text="{Binding PerformanceStatus}" FontSize="12" FontWeight="Medium" Foreground="#C9D1D9" VerticalAlignment="Center" IsVisible="{Binding IsAnalyzing}"/>
-                        <Border Background="#238636" CornerRadius="4" Padding="8,3" Margin="6,0,0,0" BorderBrush="#2EA043" BorderThickness="1" IsVisible="{Binding AnalysisProgress, Converter={x:Static ObjectConverters.IsNotNull}}">
-                            <TextBlock Text="{Binding AnalysisProgress, StringFormat='{}{0:F0}%'}" FontSize="11" FontWeight="Black" Foreground="White">
-                                <TextBlock.Effect><DropShadowEffect Color="#238636" BlurRadius="6" Opacity="0.8"/></TextBlock.Effect>
-                            </TextBlock>
+                        <TextBlock Text="ANALYZING" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackInfo}" VerticalAlignment="Center" Margin="0,0,6,0" IsVisible="{Binding IsAnalyzing}"/>
+                        <TextBlock Text="{Binding Status}" FontSize="{StaticResource FontSizeBase}" FontWeight="Medium" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" IsVisible="{Binding !IsAnalyzing}"/>
+                        <TextBlock Text="{Binding PerformanceStatus}" FontSize="{StaticResource FontSizeBase}" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" IsVisible="{Binding IsAnalyzing}"/>
+                        <Border Background="{DynamicResource SlackSuccess}" CornerRadius="4" Padding="8,3" Margin="6,0,0,0" IsVisible="{Binding AnalysisProgress, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <TextBlock Text="{Binding AnalysisProgress, StringFormat='{}{0:F0}%'}" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="White"/>
                         </Border>
                     </StackPanel>
                 </Border>
 
                 <!-- Memory + Screenshot -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="12" Margin="12,0,0,0">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="Memory:" Classes="status-bar-label"/>
-                        <TextBlock Text="{Binding MemoryUsage}" Classes="status-bar-value"/>
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <TextBlock Text="Memory:" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding MemoryUsage}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="Medium" VerticalAlignment="Center"/>
                     </StackPanel>
-                    <Button Command="{Binding TakeScreenshotCommand}" ToolTip.Tip="Take Screenshot - Save current view as image" Padding="14,9" Background="#0D1117" BorderBrush="#58A6FF" BorderThickness="2" CornerRadius="8" HorizontalAlignment="Center" VerticalAlignment="Center" Cursor="Hand" Name="ScreenshotButton">
-                        <Button.Effect><DropShadowEffect Color="#58A6FF" BlurRadius="16" Opacity="0.6" OffsetX="0" OffsetY="0"/></Button.Effect>
+                    <Button Command="{Binding TakeScreenshotCommand}" ToolTip.Tip="Take Screenshot" Padding="12,6" Background="Transparent" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="6" Cursor="Hand" Name="ScreenshotButton">
                         <Button.Styles>
-                            <Style Selector="Button">
-                                <Style.Animations>
-                                    <Animation Duration="0:0:2" IterationCount="INFINITE" PlaybackDirection="Alternate">
-                                        <KeyFrame Cue="0%"><Setter Property="BorderBrush" Value="#58A6FF"/></KeyFrame>
-                                        <KeyFrame Cue="100%"><Setter Property="BorderBrush" Value="#79C0FF"/></KeyFrame>
-                                    </Animation>
-                                </Style.Animations>
-                            </Style>
                             <Style Selector="Button:pointerover">
-                                <Setter Property="Background" Value="#161B22"/>
-                                <Setter Property="BorderBrush" Value="#79C0FF"/>
-                                <Setter Property="RenderTransform" Value="scale(1.05)"/>
+                                <Setter Property="Background" Value="{DynamicResource BackgroundElevated}"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource TextDisabled}"/>
                             </Style>
                             <Style Selector="Button:pressed">
-                                <Setter Property="Background" Value="#0D1117"/>
-                                <Setter Property="BorderBrush" Value="#58A6FF"/>
-                                <Setter Property="RenderTransform" Value="scale(0.95)"/>
+                                <Setter Property="Background" Value="{DynamicResource BackgroundActive}"/>
                             </Style>
                         </Button.Styles>
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="📸" FontSize="18" VerticalAlignment="Center">
-                                <TextBlock.Effect><DropShadowEffect Color="#58A6FF" BlurRadius="10" Opacity="0.6"/></TextBlock.Effect>
-                            </TextBlock>
-                            <TextBlock Text="Screenshot" FontSize="13" FontWeight="Bold" Foreground="#E6EDF3" VerticalAlignment="Center"/>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="📸" FontSize="{StaticResource FontSizeInput}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Screenshot" FontSize="{StaticResource FontSizeBase}" FontWeight="Medium" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -129,52 +111,46 @@
 
         <!-- Main Content with Progress Overlay -->
         <Grid>
-            <!-- TabControl (background layer) -->
+            <!-- TabControl (background layer) - SLACK STYLE -->
             <TabControl Name="MainTabControl" Background="{DynamicResource BackgroundDark}" SelectedIndex="{Binding SelectedTabIndex}">
             <TabControl.Styles>
+                <!-- Slack-style tabs: borderless, bottom accent line -->
                 <Style Selector="TabItem">
                     <Setter Property="FontSize" Value="13" />
-                    <Setter Property="Padding" Value="14,8" />
-                    <Setter Property="Margin" Value="2" />
-                    <Setter Property="Background" Value="#161B22" />
-                    <!-- ✅ FIX: Remove Foreground - let emoji+text control their own colors -->
-                    <Setter Property="BorderThickness" Value="1" />
-                    <Setter Property="BorderBrush" Value="#30363D" />
-                    <Setter Property="CornerRadius" Value="6" />
+                    <Setter Property="Padding" Value="16,12" />
+                    <Setter Property="Margin" Value="0,0,4,0" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+                    <Setter Property="BorderThickness" Value="0,0,0,3" />
+                    <Setter Property="BorderBrush" Value="Transparent" />
+                    <Setter Property="CornerRadius" Value="8,8,0,0" />
                     <Setter Property="Transitions">
                         <Transitions>
                             <BrushTransition Property="Background" Duration="0:0:0.15" />
                             <BrushTransition Property="BorderBrush" Duration="0:0:0.15" />
+                            <BrushTransition Property="Foreground" Duration="0:0:0.15" />
                         </Transitions>
                     </Setter>
                 </Style>
                 <Style Selector="TabItem:pointerover">
-                    <Setter Property="Background" Value="#21262D" />
-                    <!-- ✅ FIX: Remove Foreground - preserve emoji colors on hover -->
-                    <Setter Property="BorderBrush" Value="#484F58" />
+                    <Setter Property="Background" Value="{DynamicResource BackgroundElevated}" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                 </Style>
                 <Style Selector="TabItem:selected">
-                    <Setter Property="Background">
-                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                            <GradientStop Offset="0" Color="#1F4788" />
-                            <GradientStop Offset="1" Color="#1A3A6E" />
-                        </LinearGradientBrush>
-                    </Setter>
-                    <!-- ✅ FIX: Remove Foreground setter to keep colored icons/text -->
-                    <Setter Property="FontWeight" Value="SemiBold" />
-                    <Setter Property="BorderBrush" Value="#58A6FF" />
-                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="Background" Value="Transparent" />
+                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="FontWeight" Value="Medium" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource AccentPrimary}" />
+                    <Setter Property="BorderThickness" Value="0,0,0,3" />
                 </Style>
-                <!-- Selected tab maintains colors on hover -->
                 <Style Selector="TabItem:selected:pointerover">
-                    <Setter Property="Background">
-                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                            <GradientStop Offset="0" Color="#2558A0" />
-                            <GradientStop Offset="1" Color="#1F4788" />
-                        </LinearGradientBrush>
-                    </Setter>
-                    <!-- ✅ FIX: Remove Foreground setter to keep colored icons/text -->
-                    <Setter Property="BorderBrush" Value="#79C0FF" />
+                    <Setter Property="Background" Value="{DynamicResource BackgroundElevated}" />
+                    <Setter Property="Foreground" Value="White" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource SlackInfo}" />
+                </Style>
+                <Style Selector="TabItem:disabled">
+                    <Setter Property="Foreground" Value="{DynamicResource TextDisabled}" />
+                    <Setter Property="Opacity" Value="0.5" />
                 </Style>
             </TabControl.Styles>
 
@@ -182,8 +158,8 @@
             <TabItem>
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="{Binding FileManagerBadge}" FontSize="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="📂 File Manager" FontSize="13" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding FileManagerBadge}" FontSize="{StaticResource FontSizeInput}" VerticalAlignment="Center"/>
+                        <TextBlock Text="📂 File Manager" FontSize="{StaticResource FontSizeMedium}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
                 <ns3:FileManagerView DataContext="{Binding FileManagerViewModel}" />
@@ -193,26 +169,26 @@
             <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="{Binding PacketAnalysisBadge}" FontSize="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="📦 Packet Analysis" FontSize="13" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding PacketAnalysisBadge}" FontSize="{StaticResource FontSizeInput}" VerticalAlignment="Center"/>
+                        <TextBlock Text="📦 Packet Analysis" FontSize="{StaticResource FontSizeMedium}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="{DynamicResource BackgroundDarkest}">
                     <Grid Margin="24" RowDefinitions="Auto,16,Auto,16,Auto,16,Auto,16,Auto">
                         <!-- ✅ CLEANUP: FileSelectionControl removed (now in File Manager tab with awesome progress panel) -->
 
-                        <!-- Row 0: Filter Panel UserControl -->
-                        <ctrl:FilterPanelControl Grid.Row="0" DataContext="{Binding}" />
+                        <!-- Row 0: UnifiedFilterPanelControl (Dashboard pattern) -->
+                        <ctrl:UnifiedFilterPanelControl Grid.Row="0" />
 
                         <!-- Row 2: Statistics Bar UserControl -->
                         <ctrl:StatsBarControl Grid.Row="2" DataContext="{Binding PacketAnalysisStats}" />
 
-                        <!-- Row 4: Packets Over Time Chart (filtered packets only) -->
-                        <Border Grid.Row="4" Background="#0D1117" CornerRadius="8" BorderBrush="#30363D" BorderThickness="1"
-                                MinHeight="340" IsVisible="{Binding Charts.HasPacketData}">
+                        <!-- Row 4: Packets Over Time Chart (filtered packets only) - SLACK STYLE -->
+                        <Border Grid.Row="4" Background="{DynamicResource BackgroundPanel}" CornerRadius="12" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1"
+                                MinHeight="340" IsVisible="{Binding Charts.HasPacketData}" BoxShadow="0 2 8 0 #00000026">
                             <Grid RowDefinitions="Auto,Auto,*,Auto">
                                 <!-- Chart Header -->
-                                <Border Grid.Row="0" Background="#161B22" CornerRadius="8,8,0,0" BorderBrush="#30363D" BorderThickness="0,0,0,1" Padding="0">
+                                <Border Grid.Row="0" Background="{DynamicResource BackgroundCard}" CornerRadius="12,12,0,0" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Padding="0">
                                     <Grid Margin="20,12">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
@@ -220,16 +196,16 @@
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Border Width="3" Height="20" Background="#58A6FF" CornerRadius="1.5" Margin="0,0,12,0"/>
-                                            <TextBlock Text="Packets Over Time" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
-                                            <Border Background="#21262D" CornerRadius="4" Padding="8,2" Margin="12,0,0,0" BorderBrush="#30363D" BorderThickness="1">
-                                                <TextBlock Text="{Binding Charts.FilteredPacketCount, StringFormat='{}Filtered: {0:N0}'}" FontSize="11" Foreground="#58A6FF" FontWeight="Medium"/>
+                                            <Border Width="3" Height="20" Background="{DynamicResource AccentPrimary}" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                            <TextBlock Text="Packets Over Time" FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            <Border Background="{DynamicResource BackgroundElevated}" CornerRadius="12" Padding="10,4" Margin="12,0,0,0" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1">
+                                                <TextBlock Text="{Binding Charts.FilteredPacketCount, StringFormat='{}Filtered: {0:N0}'}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource SlackInfo}" FontWeight="Medium"/>
                                             </Border>
                                         </StackPanel>
                                         <!-- Toggle Buttons: Packets/Throughput and Top5/Top10 -->
                                         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" Margin="0,0,12,0" VerticalAlignment="Center">
-                                            <ToggleButton IsChecked="{Binding Charts.ShowStreamActivityAsThroughput}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="10,4" CornerRadius="4" ToolTip.Tip="Toggle Packets/Throughput">
-                                                <TextBlock FontSize="11" Foreground="#8B949E">
+                                            <ToggleButton IsChecked="{Binding Charts.ShowStreamActivityAsThroughput}" Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Padding="10,4" CornerRadius="6" ToolTip.Tip="Toggle Packets/Throughput">
+                                                <TextBlock FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}">
                                                     <TextBlock.Text>
                                                         <MultiBinding StringFormat="{}{0}">
                                                             <Binding Path="Charts.ShowStreamActivityAsThroughput" Converter="{StaticResource ThroughputModeConverter}"/>
@@ -237,8 +213,8 @@
                                                     </TextBlock.Text>
                                                 </TextBlock>
                                             </ToggleButton>
-                                            <ToggleButton IsChecked="{Binding Charts.ShowTop10Streams}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="10,4" CornerRadius="4" ToolTip.Tip="Toggle Top 5/Top 10">
-                                                <TextBlock FontSize="11" Foreground="#8B949E">
+                                            <ToggleButton IsChecked="{Binding Charts.ShowTop10Streams}" Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Padding="10,4" CornerRadius="6" ToolTip.Tip="Toggle Top 5/Top 10">
+                                                <TextBlock FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}">
                                                     <TextBlock.Text>
                                                         <MultiBinding StringFormat="{}{0}">
                                                             <Binding Path="Charts.ShowTop10Streams" Converter="{StaticResource PortTimelineCountConverter}"/>
@@ -249,23 +225,23 @@
                                         </StackPanel>
                                         <!-- Zoom Buttons -->
                                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                                            <Button Command="{Binding Charts.ZoomInPacketsTimelineCommand}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom In">
-                                                <TextBlock Text="🔍+" FontSize="12" Foreground="#8B949E"/>
+                                            <Button Command="{Binding Charts.ZoomInPacketsTimelineCommand}" Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Padding="8,4" CornerRadius="6" ToolTip.Tip="Zoom In">
+                                                <TextBlock Text="🔍+" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                             </Button>
-                                            <Button Command="{Binding Charts.ZoomOutPacketsTimelineCommand}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom Out">
-                                                <TextBlock Text="🔍-" FontSize="12" Foreground="#8B949E"/>
+                                            <Button Command="{Binding Charts.ZoomOutPacketsTimelineCommand}" Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Padding="8,4" CornerRadius="6" ToolTip.Tip="Zoom Out">
+                                                <TextBlock Text="🔍-" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                             </Button>
-                                            <Button Command="{Binding Charts.ResetPacketsTimelineZoomCommand}" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Reset Zoom">
-                                                <TextBlock Text="⟲" FontSize="12" Foreground="#8B949E"/>
+                                            <Button Command="{Binding Charts.ResetPacketsTimelineZoomCommand}" Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Padding="8,4" CornerRadius="6" ToolTip.Tip="Reset Zoom">
+                                                <TextBlock Text="⟲" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                             </Button>
                                         </StackPanel>
                                     </Grid>
                                 </Border>
 
                                 <!-- Custom Interactive Legend (horizontal, above chart) - Two-line format for streams -->
-                                <Border Grid.Row="1" Background="#161B22" CornerRadius="6" Margin="20,10,20,0" Padding="12,6">
+                                <Border Grid.Row="1" Background="{DynamicResource BackgroundCard}" CornerRadius="8" Margin="20,10,20,0" Padding="12,6">
                                     <Grid ColumnDefinitions="Auto,*">
-                                        <TextBlock Grid.Column="0" Text="Series:" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                                        <TextBlock Grid.Column="0" Text="Series:" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,12,0"/>
                                         <ItemsControl Grid.Column="1" ItemsSource="{Binding Charts.LegendItems}">
                                             <ItemsControl.ItemsPanel>
                                                 <ItemsPanelTemplate>
@@ -297,9 +273,9 @@
                                                             <StackPanel Grid.Column="2" Orientation="Vertical" Spacing="1" VerticalAlignment="Center">
                                                                 <!-- Line 1: Source IP (or "Total" for non-streams) - colored to match series -->
                                                                 <TextBlock Text="{Binding SourceIP, FallbackValue='Total', TargetNullValue='Total'}"
-                                                                           FontSize="11" FontWeight="SemiBold" Foreground="{Binding ColorBrush}"/>
+                                                                           FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{Binding ColorBrush}"/>
                                                                 <!-- Line 2: Arrow + Dest IP (hidden for Total) - dimmed series color -->
-                                                                <TextBlock IsVisible="{Binding IsStream}" FontSize="10" Foreground="{Binding ColorBrushDimmed}">
+                                                                <TextBlock IsVisible="{Binding IsStream}" FontSize="{StaticResource FontSizeXS}" Foreground="{Binding ColorBrushDimmed}">
                                                                     <Run Text="→ "/><Run Text="{Binding DestIP}"/>
                                                                 </TextBlock>
                                                             </StackPanel>
@@ -328,24 +304,24 @@
                                     LegendPosition="Hidden"/>
 
                                 <!-- Tooltip Bar with colored inline text (shows Total + Top 5 streams) -->
-                                <Border Grid.Row="3" Height="36" Margin="20,0,20,10" Background="#1C2128" CornerRadius="6" BorderBrush="#30363D" BorderThickness="1">
-                                    <TextBlock x:Name="PacketsOverTimeTooltipText" FontSize="11" FontWeight="Medium" Foreground="#F0F6FC" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+                                <Border Grid.Row="3" Height="36" Margin="20,0,20,10" Background="{DynamicResource BackgroundCard}" CornerRadius="8" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                                    <TextBlock x:Name="PacketsOverTimeTooltipText" FontSize="{StaticResource FontSizeSmall}" FontWeight="Medium" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,0" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
                                 </Border>
                             </Grid>
                         </Border>
 
-                        <!-- Row 6: Top Streams Tables (exact copy of Dashboard Top Connections) -->
+                        <!-- Row 6: Top Streams Tables - SLACK STYLE -->
                         <Grid Grid.Row="6" Margin="0,0,0,24" IsVisible="{Binding Charts.HasPacketData}">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
 
                             <!-- By Packets -->
-                            <Border Grid.Column="0" Classes="modern-card-unified" Margin="0,0,12,0">
+                            <Border Grid.Column="0" Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="12" Margin="0,0,12,0" BoxShadow="0 2 8 0 #00000026">
                                 <Grid>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                                    <Border Grid.Row="0" Classes="table-header-unified">
+                                    <Border Grid.Row="0" Background="{DynamicResource BackgroundCard}" CornerRadius="12,12,0,0" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Padding="0" Height="48">
                                         <Grid Margin="20,0">
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#06B6D4" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Streams by Packets" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="{DynamicResource SlackInfo}" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Streams by Packets" FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
                                         </Grid>
                                     </Border>
                                     <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
@@ -359,10 +335,10 @@
                                                             <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
                                                             <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2">
                                                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                                                    <TextBlock FontSize="11" Foreground="#F0F6FC"><Run Text="{Binding SourceIP}"/><Run Text=":" Foreground="#8B949E"/><Run Text="{Binding SourcePort}" Foreground="#06B6D4"/></TextBlock>
-                                                                    <TextBlock Text="{Binding ServiceName}" FontSize="9" Foreground="#8B5CF6" VerticalAlignment="Center" IsVisible="{Binding ServiceName.Length}"/>
+                                                                    <TextBlock FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextPrimaryBrush}"><Run Text="{Binding SourceIP}"/><Run Text=":" Foreground="{DynamicResource TextMutedBrush}"/><Run Text="{Binding SourcePort}" Foreground="{DynamicResource SlackInfo}"/></TextBlock>
+                                                                    <TextBlock Text="{Binding ServiceName}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource AccentPurpleBrush}" VerticalAlignment="Center" IsVisible="{Binding ServiceName.Length}"/>
                                                                 </StackPanel>
-                                                                <TextBlock FontSize="10" Foreground="#8B949E"><Run Text="↔ "/><Run Text="{Binding DestinationIP}"/><Run Text=":"/><Run Text="{Binding DestPort}" Foreground="#06B6D4"/></TextBlock>
+                                                                <TextBlock FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}"><Run Text="↔ "/><Run Text="{Binding DestinationIP}"/><Run Text=":"/><Run Text="{Binding DestPort}" Foreground="{DynamicResource SlackInfo}"/></TextBlock>
                                                             </StackPanel>
                                                             <Grid Grid.Column="2" Margin="8,0">
                                                                 <Border Classes="percentage-track">
@@ -372,7 +348,7 @@
                                                                     </Grid>
                                                                 </Border>
                                                             </Grid>
-                                                            <TextBlock Grid.Column="3" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="12" FontWeight="SemiBold" Foreground="#06B6D4" HorizontalAlignment="Right"/>
+                                                            <TextBlock Grid.Column="3" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackInfo}" HorizontalAlignment="Right"/>
                                                             <Button Grid.Column="4" Command="{Binding $parent[Window].DataContext.Charts.ShowStreamDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
                                                         </Grid>
                                                     </Border>
@@ -383,14 +359,14 @@
                                 </Grid>
                             </Border>
 
-                            <!-- By Bytes -->
-                            <Border Grid.Column="1" Classes="modern-card-unified" Margin="12,0,0,0">
+                            <!-- By Bytes - SLACK STYLE -->
+                            <Border Grid.Column="1" Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="12" Margin="12,0,0,0" BoxShadow="0 2 8 0 #00000026">
                                 <Grid>
                                     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                                    <Border Grid.Row="0" Classes="table-header-unified">
+                                    <Border Grid.Row="0" Background="{DynamicResource BackgroundCard}" CornerRadius="12,12,0,0" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Padding="0" Height="48">
                                         <Grid Margin="20,0">
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="#14B8A6" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Streams by Bytes" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/></StackPanel>
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"><Border Width="3" Height="20" Background="{DynamicResource SlackSuccess}" CornerRadius="1.5" Margin="0,0,12,0"/><TextBlock Text="Top Streams by Bytes" FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/></StackPanel>
                                         </Grid>
                                     </Border>
                                     <ScrollViewer Grid.Row="1" Classes="fixed-height-table">
@@ -404,10 +380,10 @@
                                                             <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
                                                             <StackPanel Grid.Column="1" Orientation="Vertical" Spacing="2">
                                                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                                                    <TextBlock FontSize="11" Foreground="#F0F6FC"><Run Text="{Binding SourceIP}"/><Run Text=":" Foreground="#8B949E"/><Run Text="{Binding SourcePort}" Foreground="#14B8A6"/></TextBlock>
-                                                                    <TextBlock Text="{Binding ServiceName}" FontSize="9" Foreground="#8B5CF6" VerticalAlignment="Center" IsVisible="{Binding ServiceName.Length}"/>
+                                                                    <TextBlock FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextPrimaryBrush}"><Run Text="{Binding SourceIP}"/><Run Text=":" Foreground="{DynamicResource TextMutedBrush}"/><Run Text="{Binding SourcePort}" Foreground="{DynamicResource SlackSuccess}"/></TextBlock>
+                                                                    <TextBlock Text="{Binding ServiceName}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource AccentPurpleBrush}" VerticalAlignment="Center" IsVisible="{Binding ServiceName.Length}"/>
                                                                 </StackPanel>
-                                                                <TextBlock FontSize="10" Foreground="#8B949E"><Run Text="↔ "/><Run Text="{Binding DestinationIP}"/><Run Text=":"/><Run Text="{Binding DestPort}" Foreground="#14B8A6"/></TextBlock>
+                                                                <TextBlock FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}"><Run Text="↔ "/><Run Text="{Binding DestinationIP}"/><Run Text=":"/><Run Text="{Binding DestPort}" Foreground="{DynamicResource SlackSuccess}"/></TextBlock>
                                                             </StackPanel>
                                                             <Grid Grid.Column="2" Margin="8,0">
                                                                 <Border Classes="percentage-track">
@@ -417,7 +393,7 @@
                                                                     </Grid>
                                                                 </Border>
                                                             </Grid>
-                                                            <TextBlock Grid.Column="3" Text="{Binding ByteCountFormatted}" FontSize="12" FontWeight="SemiBold" Foreground="#14B8A6" HorizontalAlignment="Right"/>
+                                                            <TextBlock Grid.Column="3" Text="{Binding ByteCountFormatted}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackSuccess}" HorizontalAlignment="Right"/>
                                                             <Button Grid.Column="4" Command="{Binding $parent[Window].DataContext.Charts.ShowStreamDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
                                                         </Grid>
                                                     </Border>
@@ -440,8 +416,8 @@
             <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="{Binding DashboardBadge}" FontSize="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="📊 Dashboard" FontSize="13" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding DashboardBadge}" FontSize="{StaticResource FontSizeInput}" VerticalAlignment="Center"/>
+                        <TextBlock Text="📊 Dashboard" FontSize="{StaticResource FontSizeMedium}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
                 <ns3:DashboardView DataContext="{Binding DashboardViewModel}" />
@@ -449,34 +425,17 @@
             <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="{Binding ThreatsBadge}" FontSize="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="🛡️ Security Threats" FontSize="13" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding CountryTrafficBadge}" FontSize="{StaticResource FontSizeInput}" VerticalAlignment="Center"/>
+                        <TextBlock Text="🌍 Country Traffic" FontSize="{StaticResource FontSizeMedium}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
-                <ns3:ThreatsView DataContext="{Binding ThreatsViewModel}" />
+                <ns3:CountryTrafficView DataContext="{Binding CountryTrafficViewModel}" />
             </TabItem>
             <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="{Binding AnomaliesBadge}" FontSize="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="🔬 Anomalies" FontSize="13" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </TabItem.Header>
-                <ns3:AnomaliesView DataContext="{Binding AnomaliesViewModel}" />
-            </TabItem>
-            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="🖥️ Host Inventory" FontSize="13" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </TabItem.Header>
-                <ns3:HostInventoryView DataContext="{Binding HostInventoryViewModel}" />
-            </TabItem>
-            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
-                <TabItem.Header>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="{Binding VoiceQoSBadge}" FontSize="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="📞 Voice / QoS" FontSize="13" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding VoiceQoSBadge}" FontSize="{StaticResource FontSizeInput}" VerticalAlignment="Center"/>
+                        <TextBlock Text="📞 Voice / QoS" FontSize="{StaticResource FontSizeMedium}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
                 <ns3:VoiceQoSView DataContext="{Binding VoiceQoSViewModel}" />
@@ -484,16 +443,33 @@
             <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="{Binding CountryTrafficBadge}" FontSize="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="🌍 Country Traffic" FontSize="13" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding ThreatsBadge}" FontSize="{StaticResource FontSizeInput}" VerticalAlignment="Center"/>
+                        <TextBlock Text="🛡️ Security Threats" FontSize="{StaticResource FontSizeMedium}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
-                <ns3:CountryTrafficView_Enhanced DataContext="{Binding CountryTrafficViewModel}" />
+                <ns3:ThreatsView DataContext="{Binding ThreatsViewModel}" />
             </TabItem>
             <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="🔍 Compare" FontSize="13" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding AnomaliesBadge}" FontSize="{StaticResource FontSizeInput}" VerticalAlignment="Center"/>
+                        <TextBlock Text="🔬 Anomalies" FontSize="{StaticResource FontSizeMedium}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ns3:AnomaliesView DataContext="{Binding AnomaliesViewModel}" />
+            </TabItem>
+            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="🖥️ Host Inventory" FontSize="{StaticResource FontSizeMedium}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ns3:HostInventoryView DataContext="{Binding HostInventoryViewModel}" />
+            </TabItem>
+            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="🔍 Compare" FontSize="{StaticResource FontSizeMedium}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
                 <ns3:CompareView DataContext="{Binding CompareViewModel}" />
@@ -501,7 +477,7 @@
             <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="📈 Reports" FontSize="13" VerticalAlignment="Center"/>
+                        <TextBlock Text="📈 Reports" FontSize="{StaticResource FontSizeMedium}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
                 <ns3:ReportView DataContext="{Binding ReportViewModel}" />
@@ -514,23 +490,23 @@
                  See: docs/ARCHITECTURE_REVIEW_2025-01-19.md - Critical Issue C1 -->
 
             <!-- Stream Analysis Popup Overlay (for Packets Over Time chart click - stream-focused) -->
-            <Border Background="#80000000" IsVisible="{Binding Charts.IsStreamPopupOpen}"
+            <Border Background="{StaticResource OverlayBlack50}" IsVisible="{Binding Charts.IsStreamPopupOpen}"
                     PointerPressed="OnStreamPopupBackgroundPressed">
                 <Border HorizontalAlignment="Center" VerticalAlignment="Center"
-                        Background="#0D1117" CornerRadius="8" BorderBrush="#30363D" BorderThickness="1"
+                        Background="{DynamicResource PopupBgBrush}" CornerRadius="8" BorderBrush="{DynamicResource PopupBorderBrush}" BorderThickness="1"
                         MinWidth="400" MaxWidth="500" Padding="16"
                         DataContext="{Binding Charts.StreamPopupViewModel}">
                     <StackPanel Spacing="16">
                         <!-- Header -->
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock Grid.Column="0" Text="{Binding TimeDisplay, StringFormat='Time: {0}'}"
-                                       FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                       FontSize="{StaticResource FontSizeLarge}" FontWeight="SemiBold" Foreground="{DynamicResource PopupTextBrush}"/>
                             <Button Grid.Column="1" Command="{Binding CloseCommand}"
-                                    Background="Transparent" BorderThickness="0" Foreground="#8B949E"
-                                    FontSize="14" Padding="4" Cursor="Hand" Content="✕">
+                                    Background="Transparent" BorderThickness="0" Foreground="{DynamicResource PopupTextSecondaryBrush}"
+                                    FontSize="{StaticResource FontSizeInput}" Padding="4" Cursor="Hand" Content="✕">
                                 <Button.Styles>
                                     <Style Selector="Button:pointerover">
-                                        <Setter Property="Foreground" Value="#F0F6FC"/>
+                                        <Setter Property="Foreground" Value="{StaticResource PopupText}"/>
                                     </Style>
                                 </Button.Styles>
                             </Button>
@@ -538,22 +514,22 @@
 
                         <!-- Traffic Summary -->
                         <StackPanel Spacing="8">
-                            <TextBlock Text="TRAFFIC SUMMARY" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
+                            <TextBlock Text="TRAFFIC SUMMARY" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource PopupTextSecondaryBrush}"/>
                             <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto">
                                 <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="4">
-                                    <TextBlock Text="Packets:" Foreground="#8B949E" FontSize="12"/>
-                                    <TextBlock Text="{Binding TotalPackets, StringFormat='{}{0:N0}'}" Foreground="#F0F6FC" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Packets:" Foreground="{DynamicResource PopupTextSecondaryBrush}" FontSize="{StaticResource FontSizeBase}"/>
+                                    <TextBlock Text="{Binding TotalPackets, StringFormat='{}{0:N0}'}" Foreground="{DynamicResource PopupTextBrush}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold"/>
                                 </StackPanel>
                                 <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" Spacing="4">
-                                    <TextBlock Text="Traffic:" Foreground="#8B949E" FontSize="12"/>
-                                    <TextBlock Text="{Binding TotalBytesDisplay}" Foreground="#F0F6FC" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Traffic:" Foreground="{DynamicResource PopupTextSecondaryBrush}" FontSize="{StaticResource FontSizeBase}"/>
+                                    <TextBlock Text="{Binding TotalBytesDisplay}" Foreground="{DynamicResource PopupTextBrush}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold"/>
                                 </StackPanel>
                             </Grid>
                         </StackPanel>
 
                         <!-- Top Streams -->
                         <StackPanel Spacing="8" IsVisible="{Binding Streams.Count}">
-                            <TextBlock Text="TOP STREAMS" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
+                            <TextBlock Text="TOP STREAMS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource PopupTextSecondaryBrush}"/>
                             <ItemsControl ItemsSource="{Binding Streams}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
@@ -566,13 +542,13 @@
                                                     </Border.Background>
                                                 </Border>
                                                 <!-- Stream name -->
-                                                <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="12" Foreground="#58A6FF"
+                                                <TextBlock Grid.Column="1" Text="{Binding DisplayName}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource PopupLinkBrush}"
                                                            TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                                                 <!-- Packet count -->
                                                 <TextBlock Grid.Column="2" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}"
-                                                           FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                                           FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource PopupTextSecondaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                                 <!-- Bytes -->
-                                                <TextBlock Grid.Column="3" Text="{Binding DisplayBytes}" FontSize="11" Foreground="#8B949E"
+                                                <TextBlock Grid.Column="3" Text="{Binding DisplayBytes}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource PopupTextSecondaryBrush}"
                                                            HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                             </Grid>
                                         </Border>
@@ -582,21 +558,21 @@
                         </StackPanel>
 
                         <!-- Action Buttons -->
-                        <Border Background="#161B22" CornerRadius="4" Padding="8">
+                        <Border Background="{DynamicResource PopupBgSecondaryBrush}" CornerRadius="4" Padding="8">
                             <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                                <Button Command="{Binding CopyCommand}" Background="#21262D" BorderBrush="#30363D" BorderThickness="1"
+                                <Button Command="{Binding CopyCommand}" Background="{DynamicResource PopupBgTertiaryBrush}" BorderBrush="{DynamicResource PopupBorderBrush}" BorderThickness="1"
                                         CornerRadius="4" Padding="12,6" Cursor="Hand" Content="Copy">
                                     <Button.Styles>
                                         <Style Selector="Button:pointerover">
-                                            <Setter Property="Background" Value="#30363D"/>
+                                            <Setter Property="Background" Value="{StaticResource PopupBorder}"/>
                                         </Style>
                                     </Button.Styles>
                                 </Button>
-                                <Button Command="{Binding CloseCommand}" Background="#238636" BorderThickness="0"
+                                <Button Command="{Binding CloseCommand}" Background="{DynamicResource PopupSuccessBrush}" BorderThickness="0"
                                         CornerRadius="4" Padding="12,6" Cursor="Hand" Content="Close" Foreground="White">
                                     <Button.Styles>
                                         <Style Selector="Button:pointerover">
-                                            <Setter Property="Background" Value="#2EA043"/>
+                                            <Setter Property="Background" Value="{StaticResource PopupSuccessHover}"/>
                                         </Style>
                                     </Button.Styles>
                                 </Button>
@@ -608,7 +584,7 @@
 
             <!-- DrillDown Detail Popup Overlay (for Top Streams Details - Dashboard-style) -->
             <!-- Click on dark overlay closes the popup -->
-            <Border Background="#80000000" IsVisible="{Binding Charts.DrillDown.IsVisible}"
+            <Border Background="{StaticResource OverlayBlack50}" IsVisible="{Binding Charts.DrillDown.IsVisible}"
                     PointerPressed="OnDrillDownOverlayPressed">
                 <Border HorizontalAlignment="Center" VerticalAlignment="Center"
                         PointerPressed="OnDrillDownPopupPressed">

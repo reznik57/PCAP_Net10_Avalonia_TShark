@@ -4,113 +4,21 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Media;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.Defaults;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Models;
-using PCAPAnalyzer.UI.Models;
-using SkiaSharp;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Services;
+using PCAPAnalyzer.UI.Utilities;
+using SkiaSharp;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
-
-/// <summary>
-/// Represents a legend item for interactive series toggling.
-/// Supports two-line display: SourceIP on line 1, DestIP on line 2.
-/// </summary>
-public partial class SeriesLegendItem : ObservableObject
-{
-    [ObservableProperty] private string _name = "";
-    [ObservableProperty] private string _color = "#58A6FF";
-    [ObservableProperty] private bool _isVisible = true;
-    [ObservableProperty] private int _seriesIndex;
-
-    /// <summary>Source IP for two-line display (null for "Total" series)</summary>
-    [ObservableProperty] private string? _sourceIP;
-
-    /// <summary>Destination IP for two-line display (null for "Total" series)</summary>
-    [ObservableProperty] private string? _destIP;
-
-    /// <summary>True if this is a stream (has source/dest), false for "Total"</summary>
-    public bool IsStream => !string.IsNullOrEmpty(SourceIP);
-
-    /// <summary>Returns a SolidColorBrush for the Color hex string (for XAML binding)</summary>
-    public IBrush ColorBrush => new SolidColorBrush(Avalonia.Media.Color.Parse(Color));
-
-    /// <summary>Returns a dimmed brush for secondary text</summary>
-    public IBrush ColorBrushDimmed => new SolidColorBrush(Avalonia.Media.Color.Parse(Color)) { Opacity = 0.7 };
-
-    public Action<int, bool>? OnToggle { get; set; }
-
-    partial void OnIsVisibleChanged(bool value)
-    {
-        OnToggle?.Invoke(SeriesIndex, value);
-    }
-}
-
-/// <summary>
-/// Represents a network stream (conversation) for chart display.
-/// Uses IP:Port format for detailed granularity in Packet Analysis tab.
-/// </summary>
-public class StreamInfo
-{
-    public string SourceIP { get; set; } = "";
-    public int SourcePort { get; set; }
-    public string DestIP { get; set; } = "";
-    public int DestPort { get; set; }
-    /// <summary>
-    /// Canonical stream key - must match the key format used in UpdatePacketsOverTimeChart
-    /// Format: "{IP1}:{Port1}↔{IP2}:{Port2}" (sorted by IP:Port string for consistency)
-    /// </summary>
-    public string StreamKey { get; set; } = "";
-    public int TotalPackets { get; set; }
-    public long TotalBytes { get; set; }
-    public string DisplayName => SourcePort > 0 || DestPort > 0
-        ? $"{SourceIP}:{SourcePort} → {DestIP}:{DestPort}"
-        : $"{SourceIP} → {DestIP}";
-}
-
-/// <summary>
-/// Represents a stream row for the Top Streams tables (IP:Port based for detailed analysis)
-/// </summary>
-public class TopStreamTableItem
-{
-    public int Rank { get; set; }
-    public string SourceIP { get; set; } = "";
-    public int SourcePort { get; set; }
-    public string DestinationIP { get; set; } = "";
-    public int DestPort { get; set; }
-    public string StreamKey { get; set; } = "";
-    public int PacketCount { get; set; }
-    public long ByteCount { get; set; }
-    public double Percentage { get; set; }
-    public string DisplayName => SourcePort > 0 || DestPort > 0
-        ? $"{SourceIP}:{SourcePort} ↔ {DestinationIP}:{DestPort}"
-        : $"{SourceIP} ↔ {DestinationIP}";
-    public string ByteCountFormatted => PCAPAnalyzer.Core.Utilities.NumberFormatter.FormatBytes(ByteCount);
-    /// <summary>
-    /// Service name based on well-known port (uses lower port for identification)
-    /// </summary>
-    public string ServiceName => PCAPAnalyzer.Core.Security.PortDatabase.GetServiceName(
-        (ushort)Math.Min(SourcePort > 0 ? SourcePort : 65535, DestPort > 0 ? DestPort : 65535), true) ?? "";
-}
-
-/// <summary>
-/// Data point for Packets Over Time chart with stream breakdown
-/// </summary>
-public class PacketsTimelineDataPoint
-{
-    public DateTime Time { get; set; }
-    public int TotalCount { get; set; }
-    public long TotalBytes { get; set; }
-    public Dictionary<string, int> StreamCounts { get; set; } = new();
-    public Dictionary<string, long> StreamBytes { get; set; } = new();
-}
 
 /// <summary>
 /// Manages chart data and visualization for the main window.
@@ -118,6 +26,10 @@ public class PacketsTimelineDataPoint
 /// </summary>
 public partial class MainWindowChartsViewModel : ObservableObject
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     public ObservableCollection<ISeries> ProtocolSeries { get; }
     public ObservableCollection<ISeries> TrafficSeries { get; }
 
@@ -268,9 +180,20 @@ public partial class MainWindowChartsViewModel : ObservableObject
     // Top 5 streams for the current filter
     private List<StreamInfo> _topStreams = new();
 
-    // Stream colors (consistent with Dashboard port colors, 10 colors for Top 10 support)
-    private static readonly string[] StreamColors = { "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
-                                                       "#06B6D4", "#EC4899", "#F97316", "#84CC16", "#6366F1" };
+    // Stream colors (consistent with Dashboard port colors, 10 colors for Top 10 support) - resolved at runtime
+    private static string[]? _streamColorsCache;
+    private static string[] StreamColors => _streamColorsCache ??= new[] {
+        ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
+        ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
+        ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
+        ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"),
+        ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6"),
+        ThemeColorHelper.GetColorHex("AccentCyan", "#06B6D4"),
+        ThemeColorHelper.GetColorHex("AccentPink", "#EC4899"),
+        ThemeColorHelper.GetColorHex("ColorOrange", "#F97316"),
+        ThemeColorHelper.GetColorHex("ColorLime", "#84CC16"),
+        ThemeColorHelper.GetColorHex("AccentIndigo", "#6366F1")
+    };
 
     /// <summary>
     /// Gets the top streams for external access (used by click handler)
@@ -326,7 +249,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
     {
         try
         {
-            Dispatcher.UIThread.InvokeAsync(() =>
+            Dispatcher.InvokeAsync(() =>
             {
                 try
                 {
@@ -440,7 +363,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
                 LabelsRotation = 45,
                 TextSize = 10,
                 SeparatorsPaint = new SolidColorPaint(SKColors.LightGray.WithAlpha(50)),
-                LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E"))
+                LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E")))
             }
         };
 
@@ -454,8 +377,8 @@ public partial class MainWindowChartsViewModel : ObservableObject
                 TextSize = 10,
                 SeparatorsPaint = new SolidColorPaint(SKColors.LightGray.WithAlpha(50)),
                 MinLimit = 0,
-                NamePaint = new SolidColorPaint(SKColor.Parse("#58A6FF")),
-                LabelsPaint = new SolidColorPaint(SKColor.Parse("#58A6FF"))
+                NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"))),
+                LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF")))
             }
         };
     }
@@ -476,9 +399,9 @@ public partial class MainWindowChartsViewModel : ObservableObject
             // Cache for toggle rebuilds
             _lastFilteredPackets = filteredPackets;
 
-            if (!Dispatcher.UIThread.CheckAccess())
+            if (!Dispatcher.CheckAccess())
             {
-                Dispatcher.UIThread.InvokeAsync(() => UpdatePacketsOverTimeChart(filteredPackets, forceUpdate));
+                Dispatcher.InvokeAsync(() => UpdatePacketsOverTimeChart(filteredPackets, forceUpdate));
                 return;
             }
 
@@ -665,7 +588,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
             var newLegendItems = new ObservableCollection<SeriesLegendItem>();
 
             // Primary series: Total packets (with fill area)
-            const string totalColor = "#58A6FF";
+            var totalColor = ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF");
             newSeries.Add(new LineSeries<ObservablePoint>
             {
                 Values = totalDataPoints,
@@ -775,8 +698,8 @@ public partial class MainWindowChartsViewModel : ObservableObject
                     yAxis.Labeler = ShowStreamActivityAsThroughput
                         ? (value => FormatBytes((long)value))
                         : (value => value >= 1000 ? $"{value / 1000:F1}K" : $"{value:F0}");
-                    yAxis.NamePaint = new SolidColorPaint(SKColor.Parse(ShowStreamActivityAsThroughput ? "#10B981" : "#58A6FF"));
-                    yAxis.LabelsPaint = new SolidColorPaint(SKColor.Parse(ShowStreamActivityAsThroughput ? "#10B981" : "#58A6FF"));
+                    yAxis.NamePaint = new SolidColorPaint(SKColor.Parse(ShowStreamActivityAsThroughput ? ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981") : ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF")));
+                    yAxis.LabelsPaint = new SolidColorPaint(SKColor.Parse(ShowStreamActivityAsThroughput ? ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981") : ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF")));
                 }
             }
 
@@ -1176,9 +1099,9 @@ public partial class MainWindowChartsViewModel : ObservableObject
         DebugLogger.Log($"[Charts] ShowStreamDetails: {item.SourceIP} ↔ {item.DestinationIP}");
 
         // Ensure on UI thread
-        if (!Dispatcher.UIThread.CheckAccess())
+        if (!Dispatcher.CheckAccess())
         {
-            Dispatcher.UIThread.InvokeAsync(() => ShowStreamDetails(item));
+            Dispatcher.InvokeAsync(() => ShowStreamDetails(item));
             return;
         }
 

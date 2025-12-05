@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Base
 {
@@ -83,30 +84,26 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
         }
 
         /// <summary>
-        /// Common color palette for charts
+        /// Common color palette for charts - delegates to ThemeColorHelper
         /// </summary>
         protected static class ChartColors
         {
-            public const string Blue = "#3B82F6";
-            public const string Green = "#10B981";
-            public const string Amber = "#F59E0B";
-            public const string Purple = "#8B5CF6";
-            public const string Pink = "#EC4899";
-            public const string Teal = "#14B8A6";
-            public const string Orange = "#F97316";
-            public const string Red = "#EF4444";
-            public const string Indigo = "#6366F1";
-            public const string Gray = "#6B7280";
+            public static string Blue => ThemeColorHelper.GetChartColorHex(0);
+            public static string Green => ThemeColorHelper.GetChartColorHex(1);
+            public static string Amber => ThemeColorHelper.GetChartColorHex(2);
+            public static string Red => ThemeColorHelper.GetChartColorHex(3);
+            public static string Purple => ThemeColorHelper.GetChartColorHex(4);
+            public static string Pink => ThemeColorHelper.GetChartColorHex(5);
+            public static string Cyan => ThemeColorHelper.GetChartColorHex(6);
+            public static string Lime => ThemeColorHelper.GetChartColorHex(7);
+            public static string Orange => ThemeColorHelper.GetChartColorHex(8);
+            public static string Indigo => ThemeColorHelper.GetChartColorHex(9);
+            public static string Teal => ThemeColorHelper.ChartTealHex;
+            public static string Gray => ThemeColorHelper.ChartGrayHex;
 
-            public static readonly string[] Palette = new[]
-            {
-                Blue, Green, Purple, Pink, Teal, Orange, Red, Indigo, Amber, Gray
-            };
+            public static string[] Palette => ThemeColorHelper.GetChartColorPalette();
 
-            public static string GetColor(int index)
-            {
-                return Palette[index % Palette.Length];
-            }
+            public static string GetColor(int index) => ThemeColorHelper.GetChartColorHex(index);
         }
     }
 }

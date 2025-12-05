@@ -1,4 +1,5 @@
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.Helpers;
 
@@ -9,19 +10,11 @@ namespace PCAPAnalyzer.UI.Helpers;
 public static class ThreatDisplayHelpers
 {
     /// <summary>
-    /// Gets severity color for UI display
+    /// Gets severity color for UI display (from theme resources)
     /// </summary>
     public static string GetSeverityColor(ThreatSeverity severity)
     {
-        return severity switch
-        {
-            ThreatSeverity.Critical => "#EF4444",
-            ThreatSeverity.High => "#F97316",
-            ThreatSeverity.Medium => "#F59E0B",
-            ThreatSeverity.Low => "#3B82F6",
-            ThreatSeverity.Info => "#6B7280",
-            _ => "#6B7280"
-        };
+        return ThemeColorHelper.GetThreatSeverityColorHex(severity.ToString());
     }
 
     /// <summary>

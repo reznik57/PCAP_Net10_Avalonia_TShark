@@ -145,6 +145,12 @@ public partial class CountryStatisticsViewModel : ObservableObject
             DebugLogger.Log($"[CountryStatisticsViewModel] Set CountryTrafficStatistics with {CountryTrafficStatistics.Count} countries");
             var totalPackets = CountryTrafficStatistics.Values.Sum(c => c.TotalPackets);
             DebugLogger.Log($"[CountryStatisticsViewModel] Total packets in country statistics: {totalPackets:N0}");
+            // Log ALL keys for debugging
+            var allKeys = string.Join(", ", CountryTrafficStatistics.Keys.OrderBy(k => k));
+            DebugLogger.Log($"[CountryStatisticsViewModel] ALL keys: {allKeys}");
+            // Check if DE specifically exists
+            var hasDe = CountryTrafficStatistics.ContainsKey("DE");
+            DebugLogger.Log($"[CountryStatisticsViewModel] Contains 'DE': {hasDe}");
         }
 
         // Update continent traffic statistics
@@ -245,33 +251,11 @@ public partial class CountryStatisticsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Gets continent code from country code
+    /// Gets continent code from country code.
+    /// Uses centralized ContinentData mapping.
     /// </summary>
-    private string GetContinentCode(string countryCode)
-    {
-        // Map country codes to continents (simplified)
-        // This should ideally use the GeoIP service's continent mapping
-        if (countryCode == "INTERNAL") return "INT";
-        if (countryCode == "IPV6") return "IP6";
-
-        // North America
-        if (new[] { "US", "CA", "MX" }.Contains(countryCode)) return "NA";
-
-        // South America
-        if (new[] { "BR", "AR", "CL", "CO", "PE", "VE", "EC", "BO", "UY", "PY", "GY", "SR", "GF" }.Contains(countryCode)) return "SA";
-
-        // Europe
-        if (new[] { "GB", "FR", "DE", "IT", "ES", "NL", "BE", "SE", "NO", "DK", "FI", "PL", "UA", "RO", "CZ", "PT", "GR", "HU", "AT", "CH", "IE", "BG", "RS", "HR", "SK", "LT", "SI", "LV", "EE", "LU", "MT", "CY", "IS", "AL", "MK", "ME", "BA", "MD", "BY", "XK" }.Contains(countryCode)) return "EU";
-
-        // Africa
-        if (new[] { "ZA", "EG", "NG", "KE", "GH", "TZ", "UG", "DZ", "MA", "AO", "SD", "ET", "MZ", "MG", "CM", "CI", "NE", "BF", "ML", "MW", "ZM", "SN", "SO", "TD", "ZW", "GN", "RW", "BJ", "TN", "BI", "SS", "TG", "SL", "LY", "LR", "MR", "CF", "ER", "GM", "BW", "GA", "GW", "GQ", "MU", "SZ", "DJ", "RE", "KM", "CV", "ST", "SC" }.Contains(countryCode)) return "AF";
-
-        // Oceania
-        if (new[] { "AU", "NZ", "PG", "FJ", "NC", "PF", "SB", "GU", "VU", "FM", "KI", "MH", "PW", "NR", "TO", "AS", "MP", "WS", "TV" }.Contains(countryCode)) return "OC";
-
-        // Default to Asia
-        return "AS";
-    }
+    private static string GetContinentCode(string countryCode)
+        => ContinentData.GetContinentCode(countryCode);
 
     /// <summary>
     /// Formats packet count for display

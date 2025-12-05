@@ -11,6 +11,8 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using LiveChartsCore.Defaults;
 using SkiaSharp;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Utilities;
 using PCAPAnalyzer.UI.ViewModels;
 using PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -33,8 +35,15 @@ public partial class MainWindow
     private LineSeries<ObservablePoint>? _packetsHighlightLine;
     private int _lastPacketsHighlightIndex = -1;
 
-    // Stream colors (must match MainWindowChartsViewModel.StreamColors)
-    private static readonly string[] StreamColors = { "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6" };
+    // Stream colors (must match MainWindowChartsViewModel.StreamColors) - lazy initialized for theme support
+    private static string[]? _streamColorsCache;
+    private static string[] StreamColors => _streamColorsCache ??= new[] {
+        ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
+        ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
+        ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
+        ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"),
+        ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6")
+    };
 
     /// <summary>
     /// Resets highlight series references when the chart series collection is rebuilt.
@@ -169,13 +178,13 @@ public partial class MainWindow
                 // Time prefix (white)
                 tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run($"🕐 {dataPoint.Time:HH:mm:ss}  •  ")
                 {
-                    Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#F0F6FC"))
+                    Foreground = new Avalonia.Media.SolidColorBrush(ThemeColorHelper.GetColor("TextPrimary", "#F0F6FC"))
                 });
 
-                // Total packets (blue - #58A6FF)
+                // Total packets (blue)
                 tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run($"📦 Total: {dataPoint.TotalCount:N0}")
                 {
-                    Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#58A6FF")),
+                    Foreground = new Avalonia.Media.SolidColorBrush(ThemeColorHelper.GetColor("AccentBlue", "#58A6FF")),
                     FontWeight = Avalonia.Media.FontWeight.Bold
                 });
 
@@ -188,7 +197,7 @@ public partial class MainWindow
 
                     tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run("  •  ")
                     {
-                        Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#F0F6FC"))
+                        Foreground = new Avalonia.Media.SolidColorBrush(ThemeColorHelper.GetColor("TextPrimary", "#F0F6FC"))
                     });
 
                     var colorHex = StreamColors[i];
@@ -242,8 +251,8 @@ public partial class MainWindow
                 {
                     Values = new ObservableCollection<ObservablePoint> { new(timestamp.Ticks, value) },
                     GeometrySize = 12,
-                    Fill = new SolidColorPaint(SKColor.Parse("#FFD700")),
-                    Stroke = new SolidColorPaint(SKColor.Parse("#FFA500")) { StrokeThickness = 2 },
+                    Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentGold", "#FFD700"))),
+                    Stroke = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentOrange", "#FFA500"))) { StrokeThickness = 2 },
                     Name = "Highlight",
                     IsVisibleAtLegend = false,
                     ZIndex = 1000,
@@ -265,7 +274,7 @@ public partial class MainWindow
                         new(timestamp.Ticks, minY),
                         new(timestamp.Ticks, maxY)
                     },
-                    Stroke = new SolidColorPaint(SKColor.Parse("#FFD700")) { StrokeThickness = 4f },  // Thick like Dashboard
+                    Stroke = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentGold", "#FFD700"))) { StrokeThickness = 4f },  // Thick like Dashboard
                     Fill = null,
                     GeometrySize = 0,
                     LineSmoothness = 0,

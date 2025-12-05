@@ -28,6 +28,19 @@ public partial class AnomaliesDrillDownViewModel : ObservableObject
     [ObservableProperty] private int _detailMediumCount;
     [ObservableProperty] private int _detailLowCount;
 
+    // Time-point details popup (click on chart)
+    [ObservableProperty] private bool _isTimePointPopupOpen;
+    [ObservableProperty] private DateTime _timePointTimestamp;
+    [ObservableProperty] private int _timePointTotalAnomalies;
+    [ObservableProperty] private string _timePointTopSource = string.Empty;
+    [ObservableProperty] private int _timePointTopSourceCount;
+    [ObservableProperty] private string _timePointTopDestination = string.Empty;
+    [ObservableProperty] private int _timePointTopDestinationCount;
+    [ObservableProperty] private string _timePointTopPort = string.Empty;
+    [ObservableProperty] private int _timePointTopPortCount;
+    public ObservableCollection<AnomalyCategoryViewModel> TimePointCategories { get; } = new();
+    public ObservableCollection<NetworkAnomaly> TimePointTopAnomalies { get; } = new();
+
     // Anomaly list in detail popup
     public ObservableCollection<NetworkAnomaly> DetailAnomalies { get; } = new();
     public ObservableCollection<AnomalyCategoryViewModel> DetailCategoryBreakdown { get; } = new();
@@ -86,6 +99,82 @@ public partial class AnomaliesDrillDownViewModel : ObservableObject
     public void ShowPortDetail(string portName, IEnumerable<NetworkAnomaly> anomalies)
     {
         ShowDetailPopup($"Port Analysis: {portName}", "Anomalies on this port", anomalies);
+    }
+
+    public void ShowCategoryDetail(string categoryName, IEnumerable<NetworkAnomaly> anomalies)
+    {
+        ShowDetailPopup($"Category Analysis: {categoryName}", "Anomalies in this category", anomalies);
+    }
+
+    /// <summary>
+    /// Shows time-point details popup with top sources, destinations, ports, and category breakdown
+    /// </summary>
+    public void ShowTimePointDetails(DateTime timestamp, TimeSpan windowSize, IEnumerable<NetworkAnomaly> allAnomalies)
+    {
+        var windowStart = timestamp - TimeSpan.FromTicks(windowSize.Ticks / 2);
+        var windowEnd = timestamp + TimeSpan.FromTicks(windowSize.Ticks / 2);
+
+        var windowAnomalies = allAnomalies
+            .Where(a => a.DetectedAt >= windowStart && a.DetectedAt <= windowEnd)
+            .ToList();
+
+        if (windowAnomalies.Count == 0)
+            return;
+
+        TimePointTimestamp = timestamp;
+        TimePointTotalAnomalies = windowAnomalies.Count;
+
+        // Top source
+        var topSource = windowAnomalies
+            .Where(a => !string.IsNullOrEmpty(a.SourceIP))
+            .GroupBy(a => a.SourceIP)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        TimePointTopSource = topSource?.Key ?? "N/A";
+        TimePointTopSourceCount = topSource?.Count() ?? 0;
+
+        // Top destination
+        var topDest = windowAnomalies
+            .Where(a => !string.IsNullOrEmpty(a.DestinationIP))
+            .GroupBy(a => a.DestinationIP)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        TimePointTopDestination = topDest?.Key ?? "N/A";
+        TimePointTopDestinationCount = topDest?.Count() ?? 0;
+
+        // Top port
+        var topPort = windowAnomalies
+            .Where(a => a.DestinationPort > 0)
+            .GroupBy(a => a.DestinationPort)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        TimePointTopPort = topPort != null ? $"Port {topPort.Key}" : "N/A";
+        TimePointTopPortCount = topPort?.Count() ?? 0;
+
+        // Category breakdown
+        TimePointCategories.Clear();
+        var categories = windowAnomalies
+            .GroupBy(a => a.Category)
+            .Select(g => new AnomalyCategoryViewModel
+            {
+                Category = g.Key,
+                Count = g.Count(),
+                Percentage = (double)g.Count() / windowAnomalies.Count * 100
+            })
+            .OrderByDescending(c => c.Count);
+        foreach (var cat in categories)
+            TimePointCategories.Add(cat);
+
+        // Top anomalies (first 5)
+        TimePointTopAnomalies.Clear();
+        var topAnomalies = windowAnomalies
+            .OrderByDescending(a => a.Severity)
+            .ThenByDescending(a => a.DetectedAt)
+            .Take(5);
+        foreach (var anomaly in topAnomalies)
+            TimePointTopAnomalies.Add(anomaly);
+
+        IsTimePointPopupOpen = true;
     }
 
     private void ShowDetailPopup(string title, string subtitle, IEnumerable<NetworkAnomaly> anomalies)
@@ -173,9 +262,21 @@ public partial class AnomaliesDrillDownViewModel : ObservableObject
         _allDetailAnomalies.Clear();
     }
 
+    [RelayCommand]
+    private void CloseTimePointPopup()
+    {
+        IsTimePointPopupOpen = false;
+        TimePointCategories.Clear();
+        TimePointTopAnomalies.Clear();
+        TimePointTopSource = string.Empty;
+        TimePointTopDestination = string.Empty;
+        TimePointTopPort = string.Empty;
+    }
+
     public void Clear()
     {
         CloseTimeSlicePopup();
         CloseDetailPopup();
+        CloseTimePointPopup();
     }
 }

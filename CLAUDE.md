@@ -82,8 +82,13 @@ PCAP File → TSharkService → PacketInfo Channel → AnalysisOrchestrator
 **MainWindowViewModel** (`src/PCAPAnalyzer.UI/ViewModels/MainWindowViewModel.cs`):
 - Orchestrates 5 component ViewModels via composition pattern
 - Components: `FileManager`, `Analysis`, `UIState`, `PacketManager`, `Charts`
-- Tab ViewModels: `DashboardViewModel`, `ThreatsViewModel`, `VoiceQoSViewModel`, `CountryTrafficViewModel`
+- Tab ViewModels: `DashboardViewModel`, `ThreatsViewModel`, `VoiceQoSViewModel`, `CountryTrafficViewModel`, `AnomaliesViewModel`
 - Uses `ITabFilterService` for tab-isolated filtering (not global)
+
+**Component ViewModels** (`src/PCAPAnalyzer.UI/ViewModels/Components/`):
+- Large ViewModels decomposed into focused components (50+ component files)
+- Pattern: `MainWindow*ViewModel` for main window, `Dashboard*ViewModel` for dashboard tab, etc.
+- Each tab owns its own `*ChartsViewModel`, `*FilterViewModel`, `*DrillDownViewModel`
 
 **Filter System**:
 - `ITabFilterService` (transient) - Tab-specific filter instances
@@ -111,6 +116,13 @@ PCAP File → TSharkService → PacketInfo Channel → AnalysisOrchestrator
 **AnalysisResult** (`src/PCAPAnalyzer.Core/Models/AnalysisResult.cs`):
 - Complete preloaded result for all tabs
 - Cached in `SessionAnalysisCache` for instant tab switching
+
+### JSON Data Pattern
+
+Static detection data moved from hardcoded C# to embedded JSON resources:
+- `src/PCAPAnalyzer.Core/Data/Ports/port-database.json` - 400+ port definitions
+- `src/PCAPAnalyzer.Core/Data/OsFingerprinting/*.json` - TCP signatures, JA3 fingerprints, MAC vendors
+- Loaded via `*Loader` classes with deserialization to typed models
 
 ## Project-Specific Rules
 

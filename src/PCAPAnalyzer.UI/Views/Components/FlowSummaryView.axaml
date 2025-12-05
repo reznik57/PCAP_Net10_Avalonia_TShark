@@ -9,8 +9,8 @@
     </UserControl.Styles>
     <Grid RowDefinitions="Auto,*">
         <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Spacing="8">
-            <TextBlock Text="Flows" FontSize="20" FontWeight="SemiBold"/>
-            <TextBlock Text="{Binding TotalFlows, StringFormat='({0:N0} total)'}" FontSize="14" VerticalAlignment="Bottom"/>
+            <TextBlock Text="Flows" FontSize="{StaticResource FontSizeXL}" FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding TotalFlows, StringFormat='({0:N0} total)'}" FontSize="{StaticResource FontSizeInput}" VerticalAlignment="Bottom"/>
             <Button Content="Export CSV" Command="{Binding ExportCsvCommand}" Margin="20,0,0,0"/>
             <Button Content="Export PDF" Command="{Binding ExportPdfCommand}"/>
         </StackPanel>

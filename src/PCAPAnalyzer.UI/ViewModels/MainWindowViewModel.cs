@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Threading;
+using Avalonia.Threading; // Required for DispatcherTimer only
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using LiveChartsCore;
@@ -23,6 +23,7 @@ using PCAPAnalyzer.UI.Interfaces;
 using PCAPAnalyzer.UI.Models;
 using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
 using PCAPAnalyzer.UI.ViewModels.Base;
 using PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -53,7 +54,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     [ObservableProperty] private CountryTrafficViewModel _countryTrafficViewModel;
     [ObservableProperty] private ReportViewModel _reportViewModel;
     [ObservableProperty] private CompareViewModel? _compareViewModel;
-    [ObservableProperty] private EnhancedMapViewModel _enhancedMapViewModel;
+    [ObservableProperty] private GeographicMapViewModel _geographicMapViewModel;
     [ObservableProperty] private FlowSummaryViewModel _flowSummaryViewModel = new();
     [ObservableProperty] private TopTalkersViewModel? _topTalkersViewModel;
     [ObservableProperty] private AnomalyViewModel? _anomalyViewModel;
@@ -66,6 +67,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
     // ==================== SERVICES ====================
 
+    private readonly IDispatcherService _dispatcher;
     private readonly ITSharkService _tsharkService;
 
     // Tab-specific filter services (isolated per tab)
@@ -91,8 +93,8 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     // ==================== FILTER VIEWMODELS ====================
 
     public FilterViewModel FilterViewModel { get; }
-    public EnhancedFilterViewModel EnhancedFilterViewModel { get; }
-    public FilterStatisticsViewModel Statistics => EnhancedFilterViewModel.Statistics;
+    public PacketFilterViewModel PacketFilterViewModel { get; }
+    public FilterStatisticsViewModel Statistics => PacketFilterViewModel.Statistics;
 
     // ==================== PROPERTIES ====================
 
@@ -144,6 +146,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
     public MainWindowViewModel()
         : this(
+            App.Services?.GetService<IDispatcherService>() ?? new AvaloniaDispatcherService(),
             App.Services?.GetService<ITSharkService>() ?? new TSharkService(NullLogger<TSharkService>.Instance),
             App.Services?.GetService<IInsecurePortDetector>() ?? new InsecurePortDetector(),
             App.Services?.GetService<IStatisticsService>(),
@@ -160,6 +163,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "CA1506:Avoid excessive class coupling", Justification = "Constructor must initialize all required services and dependencies for main application ViewModel")]
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "CA1502:Avoid excessive complexity", Justification = "Main ViewModel constructor requires sequential initialization of many interdependent services")]
     public MainWindowViewModel(
+        IDispatcherService dispatcherService,
         ITSharkService tsharkService,
         IInsecurePortDetector insecurePortDetector,
         IStatisticsService? statisticsService,
@@ -174,6 +178,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         ISessionAnalysisCache? sessionCache = null)
         : base(filterBuilder ?? App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService())
     {
+        _dispatcher = dispatcherService ?? throw new ArgumentNullException(nameof(dispatcherService));
         _tsharkService = tsharkService ?? throw new ArgumentNullException(nameof(tsharkService));
         _insecurePortDetector = insecurePortDetector ?? new InsecurePortDetector();
         _geoIpService = geoIpService ?? throw new ArgumentNullException(nameof(geoIpService), "GeoIPService must be provided via DI");
@@ -196,19 +201,16 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         _countryTrafficFilterService = new TabFilterService("Country Traffic", new FilterServiceCore());
 
         FileManager = new MainWindowFileViewModel();
-        Analysis = new MainWindowAnalysisViewModel(_tsharkService);
+        Analysis = new MainWindowAnalysisViewModel(_dispatcher, _tsharkService);
         UIState = new MainWindowUIStateViewModel();
         var packetDetails = packetDetailsViewModel ?? App.Services?.GetService<PacketDetailsViewModel>();
         if (packetDetails == null)
         {
 
             var protocolParser = new ProtocolParser();
-            var hexFormatter = new HexFormatter();
             var streamAnalyzer = new StreamAnalyzer();
-            var hexDataService = new PCAPAnalyzer.Core.Services.HexDataService(
-                Microsoft.Extensions.Logging.Abstractions.NullLogger<PCAPAnalyzer.Core.Services.HexDataService>.Instance);
             var deepDiveService = new ProtocolDeepDiveService();
-            packetDetails = new PacketDetailsViewModel(protocolParser, hexFormatter, streamAnalyzer, hexDataService, deepDiveService);
+            packetDetails = new PacketDetailsViewModel(protocolParser, streamAnalyzer, deepDiveService);
         }
         PacketManager = new MainWindowPacketViewModel(_packetAnalysisFilterService, packetDetails);
 
@@ -243,7 +245,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
         // Initialize filter view models
         FilterViewModel = new FilterViewModel(PacketManager.ApplyFilter);
-        EnhancedFilterViewModel = new EnhancedFilterViewModel(_packetAnalysisFilterService, PacketManager.ApplyFilter);
+        PacketFilterViewModel = new PacketFilterViewModel(_packetAnalysisFilterService, PacketManager.ApplyFilter);
 
         // Subscribe to Packet Analysis tab filter service events (only this tab triggers UI updates)
         _packetAnalysisFilterService.FilterChanged += OnFilterServiceChanged;
@@ -268,7 +270,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         var globalFilterState = App.Services?.GetService<Models.GlobalFilterState>();
         var anomalyFrameIndexService = App.Services?.GetService<IAnomalyFrameIndexService>();
         DashboardViewModel = new DashboardViewModel(
-            _statisticsService, _anomalyService,
+            _dispatcher, _statisticsService, _anomalyService,
             filterService: _dashboardFilterService,
             dashboardFilterService: null, csvExportService: null, fileDialogService: null,
             filterBuilder: null, filterPresetService: null,
@@ -285,11 +287,11 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
         var cacheService = App.Services?.GetService<PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService>();
         var credentialService = App.Services?.GetService<PCAPAnalyzer.Core.Services.Credentials.ICredentialDetectionService>();
-        ThreatsViewModel = new ThreatsViewModel(_insecurePortDetector, _anomalyService, credentialService, _threatsFilterService, cacheService);
+        ThreatsViewModel = new ThreatsViewModel(_dispatcher, _insecurePortDetector, _anomalyService, credentialService, _threatsFilterService, cacheService);
         ThreatsViewModel.NavigateToPacketAnalysis = OnNavigateToPacketAnalysisFromThreat;
-        VoiceQoSViewModel = new VoiceQoSViewModel();
-        CountryTrafficViewModel = new CountryTrafficViewModel(_geoIpService, _countryTrafficFilterService);
-        EnhancedMapViewModel = new EnhancedMapViewModel(_geoIpService, _statisticsService);
+        VoiceQoSViewModel = new VoiceQoSViewModel(_dispatcher);
+        CountryTrafficViewModel = new CountryTrafficViewModel(_dispatcher, _geoIpService, _countryTrafficFilterService);
+        GeographicMapViewModel = new GeographicMapViewModel(_geoIpService, _statisticsService);
 
         var packetComparer = App.Services?.GetService<IPacketComparer>();
         var compareFileDialogService = App.Services?.GetService<IFileDialogService>();
@@ -327,7 +329,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         _updateTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _updateTimer.Tick += UpdateUI;
         RegisterTabsWithCoordinator();
-        UIState.UpdateStatus("Please select a PCAP file to analyze", "#4ADE80");
+        UIState.UpdateStatus("Please select a PCAP file to analyze", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
     }
 
     private void RegisterTabsWithCoordinator()
@@ -360,10 +362,10 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     {
         var (fileName, fileSize, expectedDataSize) = FileManager.GetFileInfo();
         UIState.UpdateStatus(
-            $"File loaded: {fileName} (File: {NumberFormatter.FormatBytes(fileSize)})",
-            "#4ADE80"
+            $"File loaded: {fileName} (File: {Core.Utilities.NumberFormatter.FormatBytes(fileSize)})",
+            ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80")
         );
-        Analysis.ProgressMessage = $"Ready to analyze • Expected data: ~{NumberFormatter.FormatBytes(expectedDataSize)}";
+        Analysis.ProgressMessage = $"Ready to analyze • Expected data: ~{Core.Utilities.NumberFormatter.FormatBytes(expectedDataSize)}";
         OnPropertyChanged(nameof(ShowNoFileWarning));
         OnPropertyChanged(nameof(CanAnalyze));
         OnPropertyChanged(nameof(HasFile));
@@ -386,7 +388,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     {
         _sessionCache.Clear();
 
-        UIState.UpdateStatus("No file selected", "#4ADE80");
+        UIState.UpdateStatus("No file selected", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
         Analysis.ProgressMessage = "Select or drop a PCAP file to analyze";
         UIState.HasResults = false;
         OnPropertyChanged(nameof(ShowNoFileWarning));
@@ -404,7 +406,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     {
         if (string.IsNullOrEmpty(FileManager.CurrentFile))
         {
-            UIState.UpdateStatus("No file selected", "#FF5252");
+            UIState.UpdateStatus("No file selected", ThemeColorHelper.GetColorHex("ColorDanger", "#FF5252"));
             return;
         }
 
@@ -435,7 +437,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         catch (Exception ex)
         {
             DebugLogger.Critical($"[MainWindowViewModel] Analysis error: {ex.Message}");
-            UIState.UpdateStatus($"Error: {ex.Message}", "#FF5252");
+            UIState.UpdateStatus($"Error: {ex.Message}", ThemeColorHelper.GetColorHex("ColorDanger", "#FF5252"));
             Analysis.IsAnalyzing = false;
             UIState.SetAnalysisStatus(false);
             throw;
@@ -472,12 +474,12 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             Analysis.IsAnalyzing = false;
             UIState.CanAccessAnalysisTabs = true;
             UIState.SetAnalysisStatus(false);
-            UIState.UpdateStatus($"Analysis complete: {result.TotalPackets:N0} packets ({elapsed:F1}s)", "#4CAF50");
+            UIState.UpdateStatus($"Analysis complete: {result.TotalPackets:N0} packets ({elapsed:F1}s)", ThemeColorHelper.GetColorHex("ColorSuccess", "#4CAF50"));
         }
         catch (Exception ex)
         {
             DebugLogger.Critical($"[ERROR] Preload analysis failed: {ex.Message}");
-            UIState.UpdateStatus($"Analysis error: {ex.Message}", "#FF5252");
+            UIState.UpdateStatus($"Analysis error: {ex.Message}", ThemeColorHelper.GetColorHex("ColorDanger", "#FF5252"));
             Analysis.IsAnalyzing = false;
             UIState.SetAnalysisStatus(false);
             throw;
@@ -487,8 +489,8 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     private async Task PopulateViewModelsFromCacheAsync(AnalysisResult result)
     {
         UIState.HasResults = true;
-        EnhancedFilterViewModel.IsAnalyzing = false;
-        EnhancedFilterViewModel.CanApplyFilters = true;
+        PacketFilterViewModel.IsAnalyzing = false;
+        PacketFilterViewModel.CanApplyFilters = true;
 
         if (PacketManager != null)
         {
@@ -542,200 +544,17 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         }
     }
 
-    private void OnFileAnalysisCompleted(AnalysisCompletedEventArgs args)
-    {
-        if (!args.IsSuccessful)
-        {
-            DebugLogger.Critical($"[MainWindowViewModel] Analysis failed: {args.ErrorMessage}");
-            Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                UIState.UpdateStatus($"Analysis failed: {args.ErrorMessage}", "#F85149");
-                UIState.CanAccessAnalysisTabs = false;
-            });
-            return;
-        }
-
-        Dispatcher.UIThread.InvokeAsync(async () =>
-        {
-            if (!string.IsNullOrEmpty(args.FilePath))
-                FileManager.CurrentFile = args.FilePath;
-
-            await PacketManager.InitializePacketStoreAsync(CancellationToken.None);
-
-            if (!string.IsNullOrEmpty(args.FilePath))
-            {
-                PacketManager?.PacketDetails?.SetPcapPath(args.FilePath);
-                PacketManager?.PacketDetails?.SetPacketStore(PacketManager.ActivePacketStore);
-            }
-
-            if (args.Packets != null && args.Packets.Count > 0 && PacketManager != null)
-                await PacketManager.ActivePacketStore.InsertPacketsAsync(args.Packets, CancellationToken.None);
-
-            var cachedResult = _sessionCache.Get();
-            if (cachedResult != null)
-            {
-                FileAnalysisViewModel?.ReportTabLoadingProgress(0, "Populating tabs from cache...");
-                await PopulateViewModelsFromCacheAsync(cachedResult);
-                FileAnalysisViewModel?.ReportTabLoadingProgress(100, "Tabs populated");
-                FileAnalysisViewModel?.CompleteAnalysis();
-            }
-            else
-                OnAnalysisCompleted(this, args.Statistics);
-
-            if (FileAnalysisViewModel != null && args.Packets != null)
-                await CalculateFileAnalysisQuickStats(args.Statistics, args.Packets);
-
-            UIState.CanAccessAnalysisTabs = true;
-            UIState.HasResults = true;
-            UIState.UpdateStatus($"Analysis complete: {args.Packets?.Count ?? 0:N0} packets analyzed", "#4ADE80");
-        });
-    }
-
-    private async Task CalculateFileAnalysisQuickStats(NetworkStatistics statistics, IReadOnlyList<Core.Models.PacketInfo> packets)
-    {
-        await Task.Run(() =>
-        {
-            if (FileAnalysisViewModel == null) return;
-            var quickStats = FileAnalysisViewModel.QuickStats;
-            quickStats.TotalPackets = packets.Count;
-            quickStats.TotalTrafficMB = statistics.TotalBytes / 1024.0 / 1024.0;
-            quickStats.UniqueIPs = statistics.AllUniqueIPs.Count;
-            quickStats.UniquePorts = statistics.UniquePortCount;
-            quickStats.Conversations = statistics.TotalConversationCount;
-            quickStats.Threats = statistics.DetectedThreats?.Count ?? 0;
-            quickStats.Anomalies = 0;
-            quickStats.UniqueProtocols = statistics.ProtocolStats.Count;
-            quickStats.ProcessingRate = FileAnalysisViewModel.ElapsedTime.TotalSeconds > 0
-                ? (long)(packets.Count / FileAnalysisViewModel.ElapsedTime.TotalSeconds)
-                : 0;
-        });
-    }
-
-    private void OnAnalysisCompleted(object? sender, NetworkStatistics statistics)
-    {
-        _updateTimer.Stop();
-        Dispatcher.UIThread.InvokeAsync(async () =>
-        {
-            UIState.UpdateStatus($"Analysis completed. Processing results...", "#4ADE80");
-            UIState.HasResults = true;
-            UIState.CanAccessAnalysisTabs = false;
-            EnhancedFilterViewModel.IsAnalyzing = false;
-            EnhancedFilterViewModel.CanApplyFilters = true;
-
-            try
-            {
-                FileAnalysisViewModel?.ReportTabLoadingProgress(0, "Loading Packet Analysis tab...");
-                Analysis.ReportTabProgress(Analysis.GetPacketAnalysisStageKey(), 0, "Populating packet list...");
-                await PacketManager.PopulateFullPacketListAsync(statistics);
-                Analysis.ReportTabProgress(Analysis.GetPacketAnalysisStageKey(), 75, "Applying filters...");
-                PacketManager.ApplyFilter(new PacketFilter());
-                var filteredCount = PacketManager.GetFilteredPackets().Count;
-                UIState.UpdatePaginationInfo(filteredCount);
-                UIState.GoToPage(1);
-                Analysis.CompleteTabStage(Analysis.GetPacketAnalysisStageKey(),
-                    $"Packet list ready ({filteredCount:N0} packets)");
-                FileAnalysisViewModel?.ReportTabLoadingProgress(15, $"Packet Analysis loaded ({filteredCount:N0} packets)");
-                UpdatePacketAnalysisStats();
-                var filteredPacketsForChart = PacketManager.GetFilteredPackets();
-                Charts.UpdatePacketsOverTimeChart(filteredPacketsForChart);
-
-                FileAnalysisViewModel?.ReportTabLoadingProgress(15, "Loading tabs in parallel...");
-                var packets = PacketManager.GetFilteredPackets().ToList();
-                var stats = _tsharkService.GetStatistics();
-                Charts.UpdateCharts(stats);
-
-                var dashboardCountryTask = Task.Run(async () =>
-                {
-                    await Dispatcher.UIThread.InvokeAsync(async () => await UpdateDashboardAsync(forceUpdate: true));
-                    if (CountryTrafficViewModel != null)
-                    {
-                        await Dispatcher.UIThread.InvokeAsync(async () =>
-                        {
-                            CountryTrafficViewModel.SetPackets(packets);
-                            var enrichedStats = DashboardViewModel?.CurrentStatistics ?? statistics;
-                            await CountryTrafficViewModel.UpdateStatistics(enrichedStats);
-                        });
-                    }
-                    return 0;
-                });
-
-                var threatsTask = Task.Run(async () =>
-                {
-                    if (ThreatsViewModel != null)
-                        await ThreatsViewModel.UpdateThreatsAsync(packets);
-                    return 0;
-                });
-
-                var anomalyTask = Task.Run(async () =>
-                {
-                    var detectedAnomalies = await _anomalyService.DetectAllAnomaliesAsync(packets);
-                    await Dispatcher.UIThread.InvokeAsync(async () =>
-                    {
-                        AnomalyViewModel?.UpdateAnomalies(detectedAnomalies);
-                        if (AnomaliesViewModel != null)
-                            await AnomaliesViewModel.LoadFromAnalysisResultAsync(detectedAnomalies);
-                        DashboardViewModel?.UpdateAnomalySummary(detectedAnomalies);
-                    });
-                    return 0;
-                });
-
-                var voiceQoSTask = Task.Run(async () =>
-                {
-                    if (VoiceQoSViewModel != null)
-                        await VoiceQoSViewModel.AnalyzePacketsAsync(packets);
-                    return 0;
-                });
-
-                FileAnalysisViewModel?.ReportTabLoadingProgress(50, "Analyzing Dashboard, Threats, VoiceQoS, Country...");
-                await Task.WhenAll(dashboardCountryTask, threatsTask, anomalyTask, voiceQoSTask);
-
-                Analysis.CompleteTabStage(Analysis.GetDashboardStageKey(), $"Dashboard ready");
-                Analysis.CompleteTabStage(Analysis.GetThreatsStageKey(), $"Threats detected");
-                Analysis.CompleteTabStage(Analysis.GetVoiceQoSStageKey(), $"VoIP analysis complete");
-                Analysis.CompleteTabStage(Analysis.GetCountryTrafficStageKey(), $"Geographic analysis complete");
-                FileAnalysisViewModel?.ReportTabLoadingProgress(95, "All tabs loaded");
-
-                Analysis.ReportTabProgress(Analysis.GetFinalizingStageKey(), 0, "Finalizing analysis...");
-                try
-                {
-                    Analysis.ReportTabProgress(Analysis.GetFinalizingStageKey(), 50, "Running background tools...");
-                    _ = Task.Run(async () =>
-                    {
-                        try { await RunExternalToolsAsync(statistics); }
-                        catch (Exception toolEx)
-                        {
-                            DebugLogger.Log($"[MainWindowViewModel] External tools failed: {toolEx.Message}");
-                        }
-                    });
-                }
-                catch (Exception ex)
-                {
-                    DebugLogger.Log($"[MainWindowViewModel] Failed to start external tools: {ex.Message}");
-                }
-
-                Analysis.ReportTabProgress(Analysis.GetFinalizingStageKey(), 100, "Finalizing complete");
-                Analysis.CompleteTabStage(Analysis.GetFinalizingStageKey(), "Analysis complete");
-                FileAnalysisViewModel?.CompleteAnalysis();
-                UIState.CanAccessAnalysisTabs = FileManager.HasFile;
-                UIState.UpdateStatus($"Analysis complete. {Analysis.PacketCount:N0} packets analyzed.", "#4ADE80");
-            }
-            catch (Exception ex)
-            {
-                DebugLogger.Log($"[MainWindowViewModel] Tab loading error: {ex.Message}");
-                FileAnalysisViewModel?.CompleteAnalysis();
-                UIState.CanAccessAnalysisTabs = FileManager.HasFile;
-                UIState.UpdateStatus($"Analysis complete with some errors: {ex.Message}", "#FFA500");
-            }
-        });
-    }
+    // NOTE: OnFileAnalysisCompleted, CalculateFileAnalysisQuickStats, OnAnalysisCompleted,
+    // ProcessAnalysisCompletionAsync, FinalizeAnalysisAsync, RunExternalToolsAsync
+    // moved to MainWindowViewModel.AnalysisCompletion.cs
 
     private void OnAnalysisStopped(object? sender, EventArgs e)
     {
         _updateTimer.Stop();
-        UIState.UpdateStatus($"Analysis stopped. Processed {Analysis.PacketCount:N0} packets", "#FF5252");
+        UIState.UpdateStatus($"Analysis stopped. Processed {Analysis.PacketCount:N0} packets", ThemeColorHelper.GetColorHex("ColorDanger", "#FF5252"));
         UIState.CanAccessAnalysisTabs = FileManager.HasFile;
-        EnhancedFilterViewModel.IsAnalyzing = false;
-        EnhancedFilterViewModel.CanApplyFilters = true;
+        PacketFilterViewModel.IsAnalyzing = false;
+        PacketFilterViewModel.CanApplyFilters = true;
 
         // Update dashboard with final data
         _ = UpdateDashboardAsync();
@@ -744,10 +563,10 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     private void OnAnalysisFailed(object? sender, Exception ex)
     {
         _updateTimer.Stop();
-        UIState.UpdateStatus($"Error: {ex.Message}", "#FF5252");
+        UIState.UpdateStatus($"Error: {ex.Message}", ThemeColorHelper.GetColorHex("ColorDanger", "#FF5252"));
         UIState.CanAccessAnalysisTabs = FileManager.HasFile;
-        EnhancedFilterViewModel.IsAnalyzing = false;
-        EnhancedFilterViewModel.CanApplyFilters = true;
+        PacketFilterViewModel.IsAnalyzing = false;
+        PacketFilterViewModel.CanApplyFilters = true;
     }
 
     private void OnPacketBatchProcessed(object? sender, (long packets, long bytes, NetworkStatistics? stats) data)
@@ -793,14 +612,14 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
             if (CountryTrafficViewModel != null)
             {
-                await Dispatcher.UIThread.InvokeAsync(() => CountryTrafficViewModel.SetPackets(sample));
+                await _dispatcher.InvokeAsync(() => CountryTrafficViewModel.SetPackets(sample));
                 await CountryTrafficViewModel.UpdateStatistics(statistics);
             }
 
-            if (EnhancedMapViewModel != null)
+            if (GeographicMapViewModel != null)
             {
-                await Dispatcher.UIThread.InvokeAsync(() => EnhancedMapViewModel.SetPackets(sample));
-                await EnhancedMapViewModel.UpdateStatistics(statistics);
+                await _dispatcher.InvokeAsync(() => GeographicMapViewModel.SetPackets(sample));
+                await GeographicMapViewModel.UpdateStatistics(statistics);
             }
 
             if (ReportViewModel != null && ThreatsViewModel != null)
@@ -825,54 +644,18 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
                         FirstSeen = c.StartTime,
                         LastSeen = c.EndTime
                     }).ToList();
-                await Dispatcher.UIThread.InvokeAsync(() => FlowSummaryViewModel.LoadFlows(flows));
+                await _dispatcher.InvokeAsync(() => FlowSummaryViewModel.LoadFlows(flows));
             }
 
             if (TopTalkersViewModel != null)
             {
                 // Convert to List as TopTalkersViewModel expects List<PacketInfo>
-                await Dispatcher.UIThread.InvokeAsync(async () => await TopTalkersViewModel.UpdateData(statistics, sample.ToList()));
+                await _dispatcher.InvokeAsync(async () => await TopTalkersViewModel.UpdateData(statistics, sample.ToList()));
             }
         }
         catch (Exception ex)
         {
             DebugLogger.Log($"[MainWindowViewModel] Supplementary view update failed: {ex.Message}");
-        }
-    }
-
-    private async Task RunExternalToolsAsync(NetworkStatistics statistics)
-    {
-        try
-        {
-            var currentFile = FileManager.CurrentFile;
-            if (string.IsNullOrWhiteSpace(currentFile))
-                return;
-
-            if (_suricataService.IsAvailable)
-            {
-                var outputDir = System.IO.Path.Combine(Environment.CurrentDirectory, "analysis", "suricata", System.IO.Path.GetFileNameWithoutExtension(currentFile) + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss"));
-                var alerts = await _suricataService.RunAsync(currentFile, outputDir, CancellationToken.None);
-                DebugLogger.Log($"[Suricata] Parsed {alerts.Count} alerts");
-                if (alerts.Count > 0 && ThreatsViewModel != null)
-                {
-                    await Dispatcher.UIThread.InvokeAsync(() => ThreatsViewModel.SetSuricataAlerts(alerts));
-                }
-            }
-
-            if (_yaraService.IsAvailable)
-            {
-                var yaraOutput = System.IO.Path.Combine(Environment.CurrentDirectory, "analysis", "yara", System.IO.Path.GetFileNameWithoutExtension(currentFile) + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log");
-                var matches = await _yaraService.RunAsync(currentFile, yaraOutput, CancellationToken.None);
-                DebugLogger.Log($"[YARA] Matches: {matches.Count}");
-                if (matches.Count > 0 && ThreatsViewModel != null)
-                {
-                    await Dispatcher.UIThread.InvokeAsync(() => ThreatsViewModel.SetYaraMatches(matches));
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[PostAnalysis] Error: {ex.Message}");
         }
     }
 
@@ -905,7 +688,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         // Calculate traffic percentage from Analysis stats
         var totalBytes = Analysis.FinalStatistics?.TotalBytes ?? 0;
         FilteredTrafficPercentage = totalBytes > 0 ? (PacketManager.FilteredBytes * 100.0 / totalBytes) : 0;
-        EnhancedFilterViewModel.UpdateStatistics(totalCount, filteredCount);
+        PacketFilterViewModel.UpdateStatistics(totalCount, filteredCount);
 
         // Update PacketAnalysisStats bar
         UpdatePacketAnalysisStats();
@@ -927,14 +710,14 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
         if (packetIndex < 0)
         {
-            UIState.UpdateStatus($"Packet #{frameNumber:N0} not found in current view", "#FF5252");
+            UIState.UpdateStatus($"Packet #{frameNumber:N0} not found in current view", ThemeColorHelper.GetColorHex("ColorDanger", "#FF5252"));
             return;
         }
 
         UIState.GoToPage(pageNumber);
         var packet = filteredPackets[packetIndex];
         _ = PacketManager.SelectPacketAsync(packet);
-        UIState.UpdateStatus($"Navigated to packet #{frameNumber:N0} (page {pageNumber})", "#4ADE80");
+        UIState.UpdateStatus($"Navigated to packet #{frameNumber:N0} (page {pageNumber})", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
     }
 
     private void OnSearchStreamRequested(object? sender, string searchPattern)
@@ -944,17 +727,17 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         if (string.IsNullOrWhiteSpace(searchPattern))
         {
             UIState.StreamSearchStatus = "";
-            UIState.UpdateStatus("Stream filter cleared", "#4ADE80");
+            UIState.UpdateStatus("Stream filter cleared", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
         }
         else if (matchCount == 0)
         {
             UIState.StreamSearchStatus = "No matches";
-            UIState.UpdateStatus($"No packets found matching '{searchPattern}'", "#FF5252");
+            UIState.UpdateStatus($"No packets found matching '{searchPattern}'", ThemeColorHelper.GetColorHex("ColorDanger", "#FF5252"));
         }
         else
         {
             UIState.StreamSearchStatus = $"{matchCount:N0} packets";
-            UIState.UpdateStatus($"Filtered to {matchCount:N0} packets matching '{searchPattern}'", "#4ADE80");
+            UIState.UpdateStatus($"Filtered to {matchCount:N0} packets matching '{searchPattern}'", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
             UIState.GoToPage(1);
             PacketManager.UpdatePageDisplay(1, UIState.PageSize);
         }
@@ -994,13 +777,13 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         _tsharkService.ResetService();
 
         FilterViewModel.ClearFilterCommand.Execute(null);
-        EnhancedFilterViewModel.ClearFilterCommand.Execute(null);
+        PacketFilterViewModel.ClearFilterCommand.Execute(null);
 
         UIState.UpdateStatus(
             string.IsNullOrEmpty(FileManager.CurrentFile)
                 ? "Select or drop a PCAP file to analyze"
                 : "Capture loaded. Use 'Analyze' to re-run if needed.",
-            "#4A9FFF"
+            ThemeColorHelper.GetColorHex("AccentBlue", "#4A9FFF")
         );
 
         if (FileManager.HasFile && System.IO.File.Exists(FileManager.CurrentFile))
@@ -1034,7 +817,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     {
         _navigationComponent.NavigateToPacketAnalysisFromThreat(frameNumbers, context);
         SelectedTabIndex = 1; // Navigate to Packet Analysis tab
-        UIState.UpdateStatus($"Showing {frameNumbers.Count} packets for: {context}", "#4ADE80");
+        UIState.UpdateStatus($"Showing {frameNumbers.Count} packets for: {context}", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
     }
 
     private void OnFileManagerPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -1073,7 +856,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         if (DashboardViewModel != null)
         {
             _dashboardFilterService.CopyFilterFrom(_packetAnalysisFilterService);
-            UIState.UpdateStatus("Filters copied to Dashboard", "#4ADE80");
+            UIState.UpdateStatus("Filters copied to Dashboard", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
         }
     }
 
@@ -1082,7 +865,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         if (ThreatsViewModel != null)
         {
             _threatsFilterService.CopyFilterFrom(_packetAnalysisFilterService);
-            UIState.UpdateStatus("Filters copied to Security Threats", "#4ADE80");
+            UIState.UpdateStatus("Filters copied to Security Threats", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
         }
     }
 
@@ -1091,7 +874,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         if (VoiceQoSViewModel != null)
         {
             _voiceQoSFilterService.CopyFilterFrom(_packetAnalysisFilterService);
-            UIState.UpdateStatus("Filters copied to Voice/QoS", "#4ADE80");
+            UIState.UpdateStatus("Filters copied to Voice/QoS", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
         }
     }
 
@@ -1100,7 +883,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         if (CountryTrafficViewModel != null)
         {
             _countryTrafficFilterService.CopyFilterFrom(_packetAnalysisFilterService);
-            UIState.UpdateStatus("Filters copied to Country Traffic", "#4ADE80");
+            UIState.UpdateStatus("Filters copied to Country Traffic", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
         }
     }
 

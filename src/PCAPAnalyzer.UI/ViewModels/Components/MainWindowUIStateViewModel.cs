@@ -2,11 +2,12 @@ using System;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Threading;
+using Avalonia.Threading; // Required for DispatcherTimer only
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.Core.Monitoring;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -16,9 +17,17 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 /// </summary>
 public partial class MainWindowUIStateViewModel : ObservableObject
 {
+    // Static color references for theme consistency
+    private static readonly string ColorReady = ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80");
+    private static readonly string ColorAnalyzing = ThemeColorHelper.GetColorHex("AccentBlue", "#4A9FFF");
+    private static readonly string ColorWarning = ThemeColorHelper.GetColorHex("ColorWarning", "#FFC107");
+    private static readonly string ColorError = ThemeColorHelper.GetColorHex("ColorDanger", "#FF5252");
+    private static readonly string ColorMuted = ThemeColorHelper.GetColorHex("TextMuted", "#8B949E");
+    private static readonly string ColorSuccess = ThemeColorHelper.GetColorHex("ColorSuccess", "#22C55E");
+
     // Status and Display
     [ObservableProperty] private string _status = "Ready";
-    [ObservableProperty] private string _statusColor = "#4ADE80";
+    [ObservableProperty] private string _statusColor = ColorReady;
     [ObservableProperty] private bool _hasResults;
     [ObservableProperty] private bool _canAccessAnalysisTabs = false;
     [ObservableProperty] private string _lastScreenshotInfo = "No screenshot taken yet";
@@ -89,11 +98,11 @@ public partial class MainWindowUIStateViewModel : ObservableObject
     {
         if (isAnalyzing)
         {
-            StatusColor = "#4A9FFF";
+            StatusColor = ColorAnalyzing;
         }
         else
         {
-            StatusColor = "#4ADE80";
+            StatusColor = ColorReady;
         }
     }
 
@@ -231,7 +240,7 @@ public partial class MainWindowUIStateViewModel : ObservableObject
         try
         {
             Status = "📸 Taking screenshot...";
-            StatusColor = "#FFC107";
+            StatusColor = ColorWarning;
             DebugLogger.Log("[Screenshot] Starting screenshot capture...");
 
             var mainWindow = Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
@@ -241,7 +250,7 @@ public partial class MainWindowUIStateViewModel : ObservableObject
             if (mainWindow == null)
             {
                 Status = "Cannot access main window";
-                StatusColor = "#FF5252";
+                StatusColor = ColorError;
                 DebugLogger.Log("[Screenshot] ERROR: Cannot access main window");
                 return;
             }
@@ -250,15 +259,19 @@ public partial class MainWindowUIStateViewModel : ObservableObject
             var currentTabIndex = tabControl?.SelectedIndex ?? 0;
 
             // ✅ Enhanced logging for screenshot naming diagnosis
+            // Tab order: FileManager(0), PacketAnalysis(1), Dashboard(2), CountryTraffic(3), VoiceQoS(4), Threats(5), Anomalies(6), HostInventory(7), Compare(8), Reports(9)
             var tabName = currentTabIndex switch
             {
                 0 => "FileManager",
                 1 => "PacketAnalysis",
                 2 => "Dashboard",
-                3 => "SecurityThreats",
+                3 => "CountryTraffic",
                 4 => "VoiceQoS",
-                5 => "CountryTraffic",
-                6 => "Reports",
+                5 => "Threats",
+                6 => "Anomalies",
+                7 => "HostInventory",
+                8 => "Compare",
+                9 => "Reports",
                 _ => "Unknown"
             };
             DebugLogger.Log($"[Screenshot] Current tab index: {currentTabIndex} → Tab name: {tabName}");
@@ -268,25 +281,25 @@ public partial class MainWindowUIStateViewModel : ObservableObject
             if (success)
             {
                 Status = "✅ Screenshot saved successfully";
-                StatusColor = "#4ADE80";
+                StatusColor = ColorReady;
                 LastScreenshotInfo = $"Screenshot saved at {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
                 DebugLogger.Log("[Screenshot] Screenshot saved successfully");
             }
             else
             {
                 Status = "Screenshot cancelled";
-                StatusColor = "#8B949E";
+                StatusColor = ColorMuted;
                 DebugLogger.Log("[Screenshot] Screenshot cancelled by user");
             }
 
             await Task.Delay(3000);
             Status = "Ready";
-            StatusColor = "#22C55E";
+            StatusColor = ColorSuccess;
         }
         catch (Exception ex)
         {
             Status = $"Screenshot error: {ex.Message}";
-            StatusColor = "#FF5252";
+            StatusColor = ColorError;
             DebugLogger.Log($"[Screenshot] ERROR: {ex.Message}");
             DebugLogger.Log($"[Screenshot] Stack trace: {ex.StackTrace}");
         }
@@ -302,7 +315,7 @@ public partial class MainWindowUIStateViewModel : ObservableObject
         try
         {
             Status = "Taking full page screenshot...";
-            StatusColor = "#FFC107";
+            StatusColor = ColorWarning;
 
             int? tabIndex = parameter as int?;
 
@@ -313,7 +326,7 @@ public partial class MainWindowUIStateViewModel : ObservableObject
             if (mainWindow == null)
             {
                 Status = "Cannot access main window";
-                StatusColor = "#FF5252";
+                StatusColor = ColorError;
                 return;
             }
 
@@ -322,22 +335,22 @@ public partial class MainWindowUIStateViewModel : ObservableObject
             if (success)
             {
                 Status = "Full page screenshot saved successfully";
-                StatusColor = "#4ADE80";
+                StatusColor = ColorReady;
                 LastScreenshotInfo = $"Full page screenshot saved at {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
             }
             else
             {
                 Status = "Screenshot cancelled or failed";
-                StatusColor = "#FF5252";
+                StatusColor = ColorError;
             }
 
             await Task.Delay(3000);
-            StatusColor = "#4ADE80";
+            StatusColor = ColorReady;
         }
         catch (Exception ex)
         {
             Status = $"Screenshot failed: {ex.Message}";
-            StatusColor = "#FF5252";
+            StatusColor = ColorError;
             DebugLogger.Log($"[MainWindowUIStateViewModel] Full screenshot error: {ex}");
         }
     }
@@ -445,7 +458,7 @@ public partial class MainWindowUIStateViewModel : ObservableObject
     public void ResetState()
     {
         Status = "Ready";
-        StatusColor = "#4ADE80";
+        StatusColor = ColorReady;
         HasResults = false;
         ResetPagination();
     }

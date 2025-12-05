@@ -38,7 +38,7 @@
                             Margin="0,0,12,0">
                         <TextBlock Text="{Binding FrameNumber, StringFormat='#{0}'}"
                                    FontWeight="Bold"
-                                   FontSize="12"
+                                   FontSize="{StaticResource FontSizeBase}"
                                    Foreground="White"/>
                     </Border>
                     
@@ -50,14 +50,14 @@
                             Padding="8,4">
                         <TextBlock Text="{Binding Protocol}"
                                    FontWeight="SemiBold"
-                                   FontSize="12"
+                                   FontSize="{StaticResource FontSizeBase}"
                                    Foreground="White"/>
                     </Border>
                     
                     <!-- Timestamp -->
                     <TextBlock Grid.Column="2" 
                                Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}"
-                               FontSize="12"
+                               FontSize="{StaticResource FontSizeBase}"
                                Foreground="{DynamicResource TextMuted}"
                                VerticalAlignment="Center"/>
                 </Grid>
@@ -79,11 +79,11 @@
                               VerticalAlignment="Center"/>
                         <StackPanel>
                             <TextBlock Text="{Binding SourceIP}"
-                                       FontSize="14"
+                                       FontSize="{StaticResource FontSizeInput}"
                                        FontWeight="Medium"
                                        Foreground="{DynamicResource TextPrimary}"/>
                             <TextBlock Text="{Binding SourcePort, StringFormat='Port: {0}'}"
-                                       FontSize="11"
+                                       FontSize="{StaticResource FontSizeSmall}"
                                        Foreground="{DynamicResource TextMuted}"/>
                         </StackPanel>
                     </StackPanel>
@@ -101,12 +101,12 @@
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
                         <StackPanel>
                             <TextBlock Text="{Binding DestinationIP}"
-                                       FontSize="14"
+                                       FontSize="{StaticResource FontSizeInput}"
                                        FontWeight="Medium"
                                        Foreground="{DynamicResource TextPrimary}"
                                        HorizontalAlignment="Right"/>
                             <TextBlock Text="{Binding DestinationPort, StringFormat='Port: {0}'}"
-                                       FontSize="11"
+                                       FontSize="{StaticResource FontSizeSmall}"
                                        Foreground="{DynamicResource TextMuted}"
                                        HorizontalAlignment="Right"/>
                         </StackPanel>
@@ -128,7 +128,7 @@
                     <!-- Info Text -->
                     <TextBlock Grid.Column="0"
                                Text="{Binding Info}"
-                               FontSize="12"
+                               FontSize="{StaticResource FontSizeBase}"
                                Foreground="{DynamicResource TextSecondary}"
                                TextTrimming="CharacterEllipsis"
                                ToolTip.Tip="{Binding Info}"/>
@@ -140,7 +140,7 @@
                             Padding="8,4"
                             Margin="8,0,0,0">
                         <TextBlock Text="{Binding Length, StringFormat='{}{0} bytes'}"
-                                   FontSize="11"
+                                   FontSize="{StaticResource FontSizeSmall}"
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource TextMuted}"/>
                     </Border>

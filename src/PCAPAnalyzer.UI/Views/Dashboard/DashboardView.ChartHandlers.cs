@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using Avalonia.Controls;
 using Avalonia.Input;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
 using PCAPAnalyzer.UI.ViewModels;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -249,49 +250,49 @@ namespace PCAPAnalyzer.UI.Views
                     // Time prefix (white)
                     tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run($"🕐 {timestamp.Value:HH:mm:ss}  •  ")
                     {
-                        Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#F0F6FC"))
+                        Foreground = new Avalonia.Media.SolidColorBrush(ThemeColorHelper.GetColor("TextPrimary", "#F0F6FC"))
                     });
 
-                    // Throughput (green - #3FB950)
+                    // Throughput (green)
                     tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run($"📊 {throughputMBs:F2} MB/s")
                     {
-                        Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#3FB950")),
+                        Foreground = new Avalonia.Media.SolidColorBrush(ThemeColorHelper.GetColor("ColorSuccess", "#3FB950")),
                         FontWeight = Avalonia.Media.FontWeight.Bold
                     });
 
                     tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run("  •  ")
                     {
-                        Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#F0F6FC"))
+                        Foreground = new Avalonia.Media.SolidColorBrush(ThemeColorHelper.GetColor("TextPrimary", "#F0F6FC"))
                     });
 
-                    // Packets/s (blue - #58A6FF)
+                    // Packets/s (blue)
                     tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run($"📦 {packetsPerSec:N0} pkt/s")
                     {
-                        Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#58A6FF")),
+                        Foreground = new Avalonia.Media.SolidColorBrush(ThemeColorHelper.GetColor("AccentBlue", "#58A6FF")),
                         FontWeight = Avalonia.Media.FontWeight.Bold
                     });
 
                     tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run("  •  ")
                     {
-                        Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#F0F6FC"))
+                        Foreground = new Avalonia.Media.SolidColorBrush(ThemeColorHelper.GetColor("TextPrimary", "#F0F6FC"))
                     });
 
-                    // Anomalies (red - #F85149)
+                    // Anomalies (red)
                     tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run($"⚠️ {anomalies:N0} anomalies")
                     {
-                        Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#F85149")),
+                        Foreground = new Avalonia.Media.SolidColorBrush(ThemeColorHelper.GetColor("ColorDanger", "#F85149")),
                         FontWeight = Avalonia.Media.FontWeight.Bold
                     });
 
                     tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run("  •  ")
                     {
-                        Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#F0F6FC"))
+                        Foreground = new Avalonia.Media.SolidColorBrush(ThemeColorHelper.GetColor("TextPrimary", "#F0F6FC"))
                     });
 
-                    // Threats (purple - #A855F7)
+                    // Threats (purple)
                     tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run($"🛡️ {threats:N0} threats")
                     {
-                        Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#A855F7")),
+                        Foreground = new Avalonia.Media.SolidColorBrush(ThemeColorHelper.GetColor("AccentPurple", "#A855F7")),
                         FontWeight = Avalonia.Media.FontWeight.Bold
                     });
 
@@ -410,7 +411,7 @@ namespace PCAPAnalyzer.UI.Views
 
                                 // Format based on whether it's throughput or packets
                                 var formattedValue = vm.ShowPortActivityAsThroughput
-                                    ? NumberFormatter.FormatBytes((long)value) + "/s"
+                                    ? Core.Utilities.NumberFormatter.FormatBytes((long)value) + "/s"
                                     : $"{value:F0} pkt/s";
                                 tooltipParts.Add($"{name}: {formattedValue}");
                             }
@@ -462,12 +463,22 @@ namespace PCAPAnalyzer.UI.Views
                     var timeStr = timestamp.HasValue ? $"🕐 {timestamp.Value:HH:mm:ss}" : $"📍 Index {dataIndex}";
                     tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run($"{timeStr}  •  ")
                     {
-                        Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#F0F6FC"))
+                        Foreground = new Avalonia.Media.SolidColorBrush(ThemeColorHelper.GetColor("TextPrimary", "#F0F6FC"))
                     });
 
                     // Port color palette (same as DashboardViewModelExtensions.cs:519)
-                    var portColors = new[] { "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
-                                           "#06B6D4", "#EC4899", "#F97316", "#84CC16", "#6366F1" };
+                    var portColors = new[] {
+                        ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
+                        ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
+                        ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
+                        ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"),
+                        ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6"),
+                        ThemeColorHelper.GetColorHex("AccentCyan", "#06B6D4"),
+                        ThemeColorHelper.GetColorHex("AccentPink", "#EC4899"),
+                        ThemeColorHelper.GetColorHex("AccentOrange", "#F97316"),
+                        ThemeColorHelper.GetColorHex("AccentLime", "#84CC16"),
+                        ThemeColorHelper.GetColorHex("AccentIndigo", "#6366F1")
+                    };
 
                     // Add each port with its corresponding color
                     for (int i = 0; i < tooltipParts.Count; i++)
@@ -476,11 +487,11 @@ namespace PCAPAnalyzer.UI.Views
                         {
                             tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run("  •  ")
                             {
-                                Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse("#F0F6FC"))
+                                Foreground = new Avalonia.Media.SolidColorBrush(ThemeColorHelper.GetColor("TextPrimary", "#F0F6FC"))
                             });
                         }
 
-                        var colorHex = i < portColors.Length ? portColors[i] : "#6B7280"; // Default gray for ports beyond color array
+                        var colorHex = i < portColors.Length ? portColors[i] : ThemeColorHelper.GetColorHex("TextMuted", "#6B7280"); // Default gray for ports beyond color array
                         tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run($"🔌 {tooltipParts[i]}")
                         {
                             Foreground = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.Parse(colorHex)),

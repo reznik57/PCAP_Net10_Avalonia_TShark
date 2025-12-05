@@ -23,6 +23,7 @@ using PCAPAnalyzer.UI.Models;
 using PCAPAnalyzer.UI.Constants;
 using PCAPAnalyzer.UI.ViewModels.Base;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels;
 
@@ -44,6 +45,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // ==================== SERVICES ====================
 
+    private readonly IDispatcherService _dispatcher;
     private readonly IStatisticsService _statisticsService;
     private readonly IUnifiedAnomalyDetectionService _anomalyService;
     private readonly ITabFilterService? _filterService;
@@ -185,7 +187,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     [ObservableProperty] private int _tcpAnomalyCount;
     [ObservableProperty] private string _tcpHealthStatus = "Unknown";
-    [ObservableProperty] private string _tcpHealthColor = "#6B7280";
+    [ObservableProperty] private string _tcpHealthColor = ThemeColorHelper.GetColorHex("TextMuted", "#6B7280");
 
     // ==================== FILTERING STATE ====================
 
@@ -196,7 +198,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     [ObservableProperty] private bool _isExporting = false;
     [ObservableProperty] private string? _exportStatusMessage;
-    [ObservableProperty] private string _exportStatusColor = "#10B981"; // Default success green
+    [ObservableProperty] private string _exportStatusColor = ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"); // Default success green
     private System.Threading.CancellationTokenSource? _exportStatusCts;
 
     // ==================== FILTER PRESETS ====================
@@ -213,6 +215,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     public DashboardViewModel()
         : this(
+            App.Services?.GetService<IDispatcherService>() ?? new AvaloniaDispatcherService(),
             App.Services?.GetRequiredService<IStatisticsService>() ?? throw new InvalidOperationException("IStatisticsService not registered"),
             App.Services?.GetService<IUnifiedAnomalyDetectionService>() ?? new UnifiedAnomalyDetectionService(),
             new TabFilterService("Dashboard", new FilterServiceCore()),
@@ -227,6 +230,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     }
 
     public DashboardViewModel(
+        IDispatcherService dispatcherService,
         IStatisticsService statisticsService,
         IUnifiedAnomalyDetectionService anomalyService,
         ITabFilterService? filterService,
@@ -240,6 +244,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         Action<string>? navigateToTab = null)
         : base(filterBuilder ?? new SmartFilterBuilderService())
     {
+        _dispatcher = dispatcherService ?? throw new ArgumentNullException(nameof(dispatcherService));
         _statisticsService = statisticsService;
         _anomalyService = anomalyService;
         _filterService = filterService;
@@ -409,7 +414,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         // Update Charts component
         var chartsStartTime = DateTime.Now;
         DebugLogger.Log($"[DashboardViewModel] Updating Charts component...");
-        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        await _dispatcher.InvokeAsync(() =>
         {
             Charts.UpdateAllCharts(statistics);
         });
@@ -419,7 +424,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         // Update Statistics component
         var statsStartTime = DateTime.Now;
         DebugLogger.Log($"[DashboardViewModel] Updating Statistics component...");
-        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        await _dispatcher.InvokeAsync(() =>
         {
             Statistics.UpdateAllStatistics(statistics, isFiltered: false);
 
@@ -540,7 +545,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             if (!IsFilterActive)
             {
                 _filteredPackets = null;
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+                await _dispatcher.InvokeAsync(() =>
                 {
                     // CRITICAL: Set statistics FIRST, before any chart updates
                     _currentStatistics = _unfilteredStatistics;
@@ -615,7 +620,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             FilterProgress = 0.95;
 
             // Update UI
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            await _dispatcher.InvokeAsync(() =>
             {
                 _filteredPackets = filteredList;
                 _filteredStatistics = filteredStats;
@@ -650,10 +655,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     }
 
     [RelayCommand]
-    private async Task ApplyFilterAsync()
-    {
-        await ApplyFiltersAsync();
-    }
+    private async Task ApplyFilterAsync() => await ApplyFiltersAsync();
 
     [RelayCommand]
     public void FilterByConnection(object? parameter)
@@ -663,12 +665,9 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             FilterSourceIP = connection.SourceAddress;
             FilterDestinationIP = connection.DestinationAddress;
             FilterPortRange = $"{connection.SourcePort},{connection.DestinationPort}";
-
-            // Map protocol to string (free-text now, not index)
             FilterProtocolType = connection.Protocol;
-
             ExportStatusMessage = $"🔍 Filtered by: {connection.SourceDisplay} ↔ {connection.DestinationDisplay}";
-            ExportStatusColor = "#3B82F6";
+            ExportStatusColor = ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6");
             _ = AutoClearExportStatusAsync();
         }
     }
@@ -676,445 +675,29 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     [RelayCommand]
     private void ClearFilter()
     {
-        // Clear common filters
         CommonFilters.Clear();
-
-        // Clear tab-specific filters
         TrafficTypeFilter = "All";
         PortRangeFilter = "";
-
-        // Clear legacy filters
         FilterText = "";
         FilterStartTime = null;
         FilterEndTime = null;
         FilterProtocol = "All";
         FilterSeverity = "All";
-
-        // ==================== CLEAR SHARED FILTERS ====================
-        // These are stored in NetworkQuickFilters (single source of truth)
         NetworkQuickFilters.ClearAll();
-
-        // ==================== CLEAR DASHBOARD-ONLY FILTERS ====================
-        // L7 Protocol Filters
-        FilterTlsV10Toggle = false;
-        FilterTlsV11Toggle = false;
-        FilterTlsV12Toggle = false;
-        FilterTlsV13Toggle = false;
-        FilterHttpToggle = false;
-        FilterHttpsToggle = false;
-        FilterDnsToggle = false;
-        FilterSnmpToggle = false;
-        FilterSshToggle = false;
-        FilterFtpToggle = false;
-        FilterSmtpToggle = false;
-        FilterStunToggle = false;
-        FilterDhcpServerToggle = false;
-
-        // VPN Protocol Filters
-        FilterWireGuardToggle = false;
-        FilterOpenVpnToggle = false;
-        FilterIkeV2Toggle = false;
-        FilterIpsecToggle = false;
-        FilterL2tpToggle = false;
-        FilterPptpToggle = false;
-
-        // Reset logic controls
+        FilterTlsV10Toggle = FilterTlsV11Toggle = FilterTlsV12Toggle = FilterTlsV13Toggle = false;
+        FilterHttpToggle = FilterHttpsToggle = FilterDnsToggle = FilterSnmpToggle = false;
+        FilterSshToggle = FilterFtpToggle = FilterSmtpToggle = FilterStunToggle = FilterDhcpServerToggle = false;
+        FilterWireGuardToggle = FilterOpenVpnToggle = FilterIkeV2Toggle = false;
+        FilterIpsecToggle = FilterL2tpToggle = FilterPptpToggle = false;
         FilterUseAndMode = true;
         FilterUseNotMode = false;
-
         IsFilterActive = false;
         Statistics.ClearFilteredStatistics();
-
-        DebugLogger.Log("[DashboardViewModel] Cleared all filters (NetworkQuickFilters + Dashboard-only)");
+        DebugLogger.Log("[DashboardViewModel] Cleared all filters");
     }
 
-    private async Task UpdateFilteredStatisticsAsync()
-    {
-        // Cancel any in-progress filter operation
-        _filterCancellationTokenSource?.Cancel();
-        _filterCancellationTokenSource = new CancellationTokenSource();
-        var cancellationToken = _filterCancellationTokenSource.Token;
-
-        try
-        {
-            if (_allPackets == null || _allPackets.Count == 0)
-            {
-                DebugLogger.Log("[DashboardViewModel] No packets available for filtering");
-                return;
-            }
-
-            IsFilteringInProgress = true;
-            FilterProgress = 0.0;
-
-            var startTime = DateTime.Now;
-            DebugLogger.Log($"[DashboardViewModel] Starting async filter on {_allPackets.Count:N0} packets");
-
-            // Build smart filter state from current toggle values
-            var smartFilters = BuildSmartFilterState();
-            var hasSmartFilters = smartFilters.HasActiveFilters;
-
-            // Check if any filters are active
-            var hasCommonFilters = CommonFilters.HasActiveFilters ||
-                                   TrafficTypeFilter != "All" ||
-                                   !string.IsNullOrWhiteSpace(PortRangeFilter) ||
-                                   !string.IsNullOrWhiteSpace(FilterText) ||
-                                   FilterStartTime.HasValue ||
-                                   FilterEndTime.HasValue ||
-                                   FilterProtocol != "All";
-
-            IsFilterActive = hasCommonFilters || hasSmartFilters;
-
-            // Update filter descriptions for badge display
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                ActiveFilterDescriptions.Clear();
-                if (hasSmartFilters)
-                {
-                    var descriptions = _dashboardFilterService.GetActiveFilterDescriptions(smartFilters);
-                    foreach (var desc in descriptions)
-                    {
-                        ActiveFilterDescriptions.Add(desc);
-                    }
-                }
-            });
-
-            if (!IsFilterActive)
-            {
-                _filteredPackets = null;
-
-                // Update UI to show unfiltered data
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    // CRITICAL: Set statistics FIRST, before any chart updates
-                    _currentStatistics = _unfilteredStatistics;
-
-                    Statistics.ClearFilteredStatistics();
-
-                    // CRITICAL: Update charts with full unfiltered data when filters are cleared
-                    if (_unfilteredStatistics != null)
-                    {
-                        Statistics.UpdateAllStatistics(_unfilteredStatistics, isFiltered: false);
-                        Charts.UpdateAllCharts(_unfilteredStatistics);
-                        DebugLogger.Log("[DashboardViewModel] Legacy filter cleared - Charts restored to unfiltered data");
-                    }
-
-                    // CRITICAL: Refresh extended collections (with ranking) for UI bindings
-                    UpdateExtendedCollections();
-
-                    // CRITICAL: Update Port Activity Timeline LAST to ensure _currentStatistics is set
-                    UpdatePortActivityTimeline();
-                });
-
-                DebugLogger.Log("[DashboardViewModel] No filters active, using unfiltered packets");
-                return;
-            }
-
-            // Phase 1: Apply common/legacy filters (quick, done on UI thread for small sets, or background for large)
-            var preFilteredPackets = await Task.Run(() =>
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                return ApplyCommonFilters(_allPackets);
-            }, cancellationToken);
-
-            FilterProgress = 0.3;
-
-            // Phase 2: Apply smart filters using the optimized service
-            List<PacketInfo> filteredList;
-            if (hasSmartFilters)
-            {
-                var progress = new Progress<double>(p => FilterProgress = 0.3 + (p * 0.5)); // 30-80%
-                var anomalyFrameSet = BuildAnomalyFrameSet();
-                filteredList = await _dashboardFilterService.ApplySmartFiltersAsync(
-                    preFilteredPackets,
-                    smartFilters,
-                    anomalyFrameSet,
-                    FilterUseAndMode,
-                    FilterUseNotMode,
-                    progress,
-                    cancellationToken);
-            }
-            else
-            {
-                filteredList = preFilteredPackets;
-            }
-
-            FilterProgress = 0.8;
-            cancellationToken.ThrowIfCancellationRequested();
-
-            // Phase 3: Calculate statistics on background thread
-            var filteredStats = await Task.Run(() =>
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                return _statisticsService.CalculateStatistics(filteredList);
-            }, cancellationToken);
-
-            FilterProgress = 0.95;
-            cancellationToken.ThrowIfCancellationRequested();
-
-            // Phase 4: Update UI (must be on UI thread)
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                _filteredPackets = filteredList;
-                _filteredStatistics = filteredStats;
-                _currentStatistics = filteredStats; // Update current statistics to filtered for timeline/other views
-                Statistics.UpdateAllStatistics(filteredStats, isFiltered: true);
-                Charts.UpdateAllCharts(filteredStats);
-
-                // Update extended collections (with ranking) for UI bindings
-                UpdateExtendedCollections();
-
-                // Update Port Activity Timeline chart with filtered statistics
-                UpdatePortActivityTimeline();
-            });
-
-            FilterProgress = 1.0;
-
-            var elapsed = (DateTime.Now - startTime).TotalSeconds;
-            DebugLogger.Log($"[DashboardViewModel] Async filter complete in {elapsed:F2}s: {filteredList.Count:N0}/{_allPackets.Count:N0} packets");
-        }
-        catch (OperationCanceledException)
-        {
-            DebugLogger.Log("[DashboardViewModel] Filter operation cancelled");
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[DashboardViewModel] Error in async filtering: {ex.Message}");
-        }
-        finally
-        {
-            IsFilteringInProgress = false;
-        }
-    }
-
-    private List<PacketInfo> ApplyCommonFilters(IReadOnlyList<PacketInfo> packets)
-    {
-        // Build a combined predicate for single-pass evaluation
-        var predicates = new List<Func<PacketInfo, bool>>();
-
-        // Common filters
-        if (!string.IsNullOrWhiteSpace(CommonFilters.ProtocolFilter))
-        {
-            var filter = CommonFilters.ProtocolFilter;
-            predicates.Add(p => p.Protocol.ToString().Contains(filter, StringComparison.OrdinalIgnoreCase));
-        }
-
-        if (!string.IsNullOrWhiteSpace(CommonFilters.SourceIPFilter))
-        {
-            var filter = CommonFilters.SourceIPFilter;
-            predicates.Add(p => p.SourceIP.Contains(filter, StringComparison.OrdinalIgnoreCase));
-        }
-
-        if (!string.IsNullOrWhiteSpace(CommonFilters.DestinationIPFilter))
-        {
-            var filter = CommonFilters.DestinationIPFilter;
-            predicates.Add(p => p.DestinationIP.Contains(filter, StringComparison.OrdinalIgnoreCase));
-        }
-
-        // Tab-specific filters
-        if (TrafficTypeFilter != "All")
-        {
-            var filter = TrafficTypeFilter;
-            predicates.Add(p => p.Protocol.ToString().Equals(filter, StringComparison.OrdinalIgnoreCase));
-        }
-
-        // Port range filter - now supports ranges like "80-443" or comma-separated "80,443,8080"
-        if (!string.IsNullOrWhiteSpace(PortRangeFilter))
-        {
-            var portPredicate = BuildPortRangePredicate(PortRangeFilter);
-            if (portPredicate != null)
-                predicates.Add(portPredicate);
-        }
-
-        // Legacy filters
-        if (!string.IsNullOrWhiteSpace(FilterText))
-        {
-            var filter = FilterText;
-            predicates.Add(p =>
-                p.SourceIP.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
-                p.DestinationIP.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
-                (p.Info?.Contains(filter, StringComparison.OrdinalIgnoreCase) ?? false));
-        }
-
-        if (FilterStartTime.HasValue)
-        {
-            var startTime = FilterStartTime.Value;
-            predicates.Add(p => p.Timestamp >= startTime);
-        }
-
-        if (FilterEndTime.HasValue)
-        {
-            var endTime = FilterEndTime.Value;
-            predicates.Add(p => p.Timestamp <= endTime);
-        }
-
-        if (FilterProtocol != "All")
-        {
-            var filter = FilterProtocol;
-            predicates.Add(p => p.Protocol.ToString() == filter);
-        }
-
-        // Single-pass evaluation
-        if (predicates.Count == 0)
-            return packets as List<PacketInfo> ?? packets.ToList();
-
-        var result = new List<PacketInfo>(packets.Count / 2);
-        foreach (var packet in packets)
-        {
-            var passes = true;
-            foreach (var pred in predicates)
-            {
-                if (!pred(packet))
-                {
-                    passes = false;
-                    break;
-                }
-            }
-            if (passes)
-                result.Add(packet);
-        }
-
-        return result;
-    }
-
-    private static Func<PacketInfo, bool>? BuildPortRangePredicate(string portFilter)
-    {
-        var ports = new HashSet<ushort>();
-        var ranges = new List<(ushort min, ushort max)>();
-
-        foreach (var part in portFilter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-        {
-            if (part.Contains('-', StringComparison.Ordinal))
-            {
-                var rangeParts = part.Split('-');
-                if (rangeParts.Length == 2 &&
-                    ushort.TryParse(rangeParts[0].Trim(), out var minPort) &&
-                    ushort.TryParse(rangeParts[1].Trim(), out var maxPort))
-                {
-                    ranges.Add((Math.Min(minPort, maxPort), Math.Max(minPort, maxPort)));
-                }
-            }
-            else if (ushort.TryParse(part, out var singlePort))
-            {
-                ports.Add(singlePort);
-            }
-        }
-
-        if (ports.Count == 0 && ranges.Count == 0)
-            return null;
-
-        return p =>
-        {
-            // Check exact port matches
-            if (ports.Contains(p.SourcePort) || ports.Contains(p.DestinationPort))
-                return true;
-
-            // Check port ranges
-            foreach (var (min, max) in ranges)
-            {
-                if ((p.SourcePort >= min && p.SourcePort <= max) ||
-                    (p.DestinationPort >= min && p.DestinationPort <= max))
-                    return true;
-            }
-
-            return false;
-        };
-    }
-
-    private AnomalyFrameSet BuildAnomalyFrameSet()
-    {
-        return new AnomalyFrameSet
-        {
-            AllFrames = new HashSet<long>(_anomalyFrameNumbers),
-            HighSeverityFrames = new HashSet<long>(_highSeverityFrames),
-            TcpAnomalyFrames = new HashSet<long>(_tcpAnomalyFrames),
-            NetworkAnomalyFrames = new HashSet<long>(_networkAnomalyFrames)
-        };
-    }
-
-    private DashboardSmartFilters BuildSmartFilterState()
-    {
-        return new DashboardSmartFilters
-        {
-            // ==================== INHERITED FROM SmartFilterableTab ====================
-            // These use base class wrappers → NetworkQuickFilters (single source of truth)
-
-            // Network Type Filters
-            Rfc1918 = FilterRfc1918Toggle,
-            PublicIP = FilterPublicIpToggle,
-            Apipa = FilterApipaToggle,
-            Ipv4 = FilterIPv4Toggle,
-            Ipv6 = FilterIPv6Toggle,
-            Multicast = FilterMulticastToggle,
-            Broadcast = FilterBroadcastToggle,
-            Anycast = FilterAnycastToggle,
-
-            // Security Filters
-            Insecure = FilterInsecureToggle,
-            Anomalies = FilterAnomaliesToggle,
-            Suspicious = FilterSuspiciousToggle,
-            TcpIssues = FilterTcpIssuesToggle,
-            DnsAnomalies = FilterDnsAnomaliesToggle,
-            PortScans = FilterPortScansToggle,
-
-            // Traffic Pattern Filters
-            JumboFrames = FilterJumboFramesToggle,
-            PrivateToPublic = FilterPrivateToPublicToggle,
-            PublicToPrivate = FilterPublicToPrivateToggle,
-            LinkLocal = FilterLinkLocalToggle,
-            Loopback = FilterLoopbackToggle,
-
-            // TCP Performance
-            Retransmissions = FilterRetransmissionsToggle,
-            ZeroWindow = FilterZeroWindowToggle,
-            KeepAlive = FilterKeepAliveToggle,
-            ConnectionRefused = FilterConnectionRefusedToggle,
-            WindowFull = FilterWindowFullToggle,
-
-            // Security Audit
-            CleartextAuth = FilterCleartextAuthToggle,
-            ObsoleteCrypto = FilterObsoleteCryptoToggle,
-            DnsTunneling = FilterDnsTunnelingToggle,
-            ScanTraffic = FilterScanTrafficToggle,
-            NonStandardPorts = FilterNonStandardPortsToggle,
-            SmbV1 = FilterSmbV1Toggle,
-
-            // Clean View
-            HideBroadcast = FilterHideBroadcastToggle,
-            ApplicationDataOnly = FilterApplicationDataOnlyToggle,
-            HideTunnelOverhead = FilterHideTunnelOverheadToggle,
-
-            // Protocol Errors
-            HttpErrors = FilterHttpErrorsToggle,
-            DnsFailures = FilterDnsFailuresToggle,
-            IcmpUnreachable = FilterIcmpUnreachableToggle,
-
-            // ==================== DASHBOARD-ONLY FILTERS ====================
-            // These use [ObservableProperty] declared in this class
-
-            // L7 Protocol Filters
-            TlsV10 = FilterTlsV10Toggle,
-            TlsV11 = FilterTlsV11Toggle,
-            TlsV12 = FilterTlsV12Toggle,
-            TlsV13 = FilterTlsV13Toggle,
-            Http = FilterHttpToggle,
-            Https = FilterHttpsToggle,
-            Dns = FilterDnsToggle,
-            Snmp = FilterSnmpToggle,
-            Ssh = FilterSshToggle,
-            Ftp = FilterFtpToggle,
-            Smtp = FilterSmtpToggle,
-            Stun = FilterStunToggle,
-            Dhcp = FilterDhcpServerToggle,
-
-            // VPN Protocol Filters
-            WireGuard = FilterWireGuardToggle,
-            OpenVPN = FilterOpenVpnToggle,
-            IkeV2 = FilterIkeV2Toggle,
-            Ipsec = FilterIpsecToggle,
-            L2tp = FilterL2tpToggle,
-            Pptp = FilterPptpToggle
-        };
-    }
+    // NOTE: UpdateFilteredStatisticsAsync, ApplyCommonFilters, BuildPortRangePredicate,
+    // BuildAnomalyFrameSet, BuildSmartFilterState moved to DashboardViewModel.Filtering.cs
 
     // ==================== FILTER SERVICE INTEGRATION ====================
 
@@ -1212,22 +795,22 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             if (TcpAnomalyCount == 0)
             {
                 TcpHealthStatus = "Healthy";
-                TcpHealthColor = "#10B981"; // Green
+                TcpHealthColor = ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"); // Green
             }
             else if (TcpAnomalyCount < 10)
             {
                 TcpHealthStatus = "Minor Issues";
-                TcpHealthColor = "#FCD34D"; // Yellow
+                TcpHealthColor = ThemeColorHelper.GetColorHex("ColorYellow", "#FCD34D"); // Yellow
             }
             else if (TcpAnomalyCount < 50)
             {
                 TcpHealthStatus = "Degraded";
-                TcpHealthColor = "#F59E0B"; // Orange
+                TcpHealthColor = ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"); // Orange
             }
             else
             {
                 TcpHealthStatus = "Critical";
-                TcpHealthColor = "#DC2626"; // Red
+                TcpHealthColor = ThemeColorHelper.GetColorHex("ColorDanger", "#DC2626"); // Red
             }
         }
         catch (Exception ex)
@@ -1246,182 +829,6 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         // Stratified sampling to maintain temporal distribution
         var step = packets.Count / sampleSize;
         return packets.Where((p, i) => i % step == 0).Take(sampleSize).ToList();
-    }
-
-    // ==================== FILTER PRESET COMMANDS ====================
-
-    private async Task LoadPresetsAsync()
-    {
-        if (_filterPresetService == null)
-        {
-            DebugLogger.Log("[DashboardViewModel] FilterPresetService not available");
-            return;
-        }
-
-        try
-        {
-            IsLoadingPresets = true;
-            var presets = await _filterPresetService.GetAllPresetsAsync();
-
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                AvailablePresets.Clear();
-                foreach (var preset in presets)
-                {
-                    AvailablePresets.Add(preset);
-                }
-            });
-
-            DebugLogger.Log($"[DashboardViewModel] Loaded {presets.Count} filter presets");
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[DashboardViewModel] Error loading presets: {ex.Message}");
-        }
-        finally
-        {
-            IsLoadingPresets = false;
-        }
-    }
-
-    [RelayCommand]
-    private async Task ApplyPresetAsync()
-    {
-        if (SelectedPreset == null || _filterPresetService == null)
-        {
-            return;
-        }
-
-        try
-        {
-            DebugLogger.Log($"[DashboardViewModel] Applying preset: {SelectedPreset.Name}");
-
-            // Apply preset to this ViewModel
-            _filterPresetService.ApplyPreset(SelectedPreset, this);
-
-            // Trigger filter update
-            await ApplyFiltersAsync();
-
-            ExportStatusMessage = $"Applied preset: {SelectedPreset.Name}";
-            ExportStatusColor = "#3B82F6"; // Blue
-            _ = AutoClearExportStatusAsync();
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[DashboardViewModel] Error applying preset: {ex.Message}");
-            ExportStatusMessage = $"Error applying preset: {ex.Message}";
-            ExportStatusColor = "#DC2626"; // Red
-            _ = AutoClearExportStatusAsync();
-        }
-    }
-
-    [RelayCommand]
-    private async Task SaveCurrentAsPresetAsync(string? presetName)
-    {
-        if (_filterPresetService == null)
-        {
-            ExportStatusMessage = "Preset service not available";
-            ExportStatusColor = "#DC2626"; // Red
-            _ = AutoClearExportStatusAsync();
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(presetName))
-        {
-            ExportStatusMessage = "Preset name is required";
-            ExportStatusColor = "#DC2626"; // Red
-            _ = AutoClearExportStatusAsync();
-            return;
-        }
-
-        try
-        {
-            // Create preset from current ViewModel state
-            var preset = _filterPresetService.CreateFromViewModel(
-                presetName,
-                $"Custom preset created on {DateTime.Now:yyyy-MM-dd HH:mm}",
-                this);
-
-            // Save preset
-            var success = await _filterPresetService.SavePresetAsync(preset);
-
-            if (success)
-            {
-                // Reload presets to show new one
-                await LoadPresetsAsync();
-
-                ExportStatusMessage = $"Saved preset: {presetName}";
-                ExportStatusColor = "#10B981"; // Green
-                DebugLogger.Log($"[DashboardViewModel] Saved new preset: {presetName}");
-            }
-            else
-            {
-                ExportStatusMessage = $"Cannot save preset: {presetName} (conflicts with built-in)";
-                ExportStatusColor = "#DC2626"; // Red
-                DebugLogger.Log($"[DashboardViewModel] Failed to save preset: {presetName}");
-            }
-
-            _ = AutoClearExportStatusAsync();
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[DashboardViewModel] Error saving preset: {ex.Message}");
-            ExportStatusMessage = $"Error saving preset: {ex.Message}";
-            ExportStatusColor = "#DC2626"; // Red
-            _ = AutoClearExportStatusAsync();
-        }
-    }
-
-    [RelayCommand]
-    private async Task DeletePresetAsync(FilterPreset? preset)
-    {
-        if (preset == null || _filterPresetService == null)
-        {
-            return;
-        }
-
-        if (preset.IsBuiltIn)
-        {
-            ExportStatusMessage = "Cannot delete built-in presets";
-            ExportStatusColor = "#DC2626"; // Red
-            _ = AutoClearExportStatusAsync();
-            return;
-        }
-
-        try
-        {
-            var success = await _filterPresetService.DeletePresetAsync(preset.Name);
-
-            if (success)
-            {
-                // Reload presets to remove deleted one
-                await LoadPresetsAsync();
-
-                // Clear selection if deleted preset was selected
-                if (SelectedPreset?.Name == preset.Name)
-                {
-                    SelectedPreset = null;
-                }
-
-                ExportStatusMessage = $"Deleted preset: {preset.Name}";
-                ExportStatusColor = "#10B981"; // Green
-                DebugLogger.Log($"[DashboardViewModel] Deleted preset: {preset.Name}");
-            }
-            else
-            {
-                ExportStatusMessage = $"Failed to delete preset: {preset.Name}";
-                ExportStatusColor = "#DC2626"; // Red
-            }
-
-            _ = AutoClearExportStatusAsync();
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[DashboardViewModel] Error deleting preset: {ex.Message}");
-            ExportStatusMessage = $"Error deleting preset: {ex.Message}";
-            ExportStatusColor = "#DC2626"; // Red
-            _ = AutoClearExportStatusAsync();
-        }
     }
 
     // ==================== DISPOSAL ====================
@@ -1572,109 +979,10 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         OnPropertyChanged(e.PropertyName);
     }
 
-    // ==================== COMPATIBILITY LAYER ====================
-
-    // Statistics properties (delegate to Statistics component)
-    public bool IsLoadingStats => Statistics.IsLoadingStats;
-    public bool IsLoadingFilteredStats => Statistics.ShowFilteredStats;
-    public bool ShowFilteredStats => Statistics.ShowFilteredStats;
-
-    // Basic statistics
-    public long TotalPackets => Statistics.TotalPackets;
-    public string TotalBytesFormatted => Statistics.TotalBytesFormatted;
-    public int UniqueIPs => Statistics.UniqueIPs;
-    public int UniqueDestinationPorts => Statistics.DifferentPorts;
-    public int ActiveConversations => Statistics.ActiveConversations;
-    public int ThreatCount => Statistics.ThreatCount;
-    public int TotalAnomalies => Statistics.ThreatCount;
-
-    // Filtered statistics
-    public long FilteredTotalPackets => Statistics.FilteredTotalPackets;
-    public double FilteredPacketsPercentage => Statistics.TotalPackets > 0 ? (Statistics.FilteredTotalPackets * 100.0 / Statistics.TotalPackets) : 0;
-    public string FilteredTotalBytesFormatted => Statistics.FilteredTotalBytesFormatted;
-    public double FilteredTrafficPercentage => (_unfilteredStatistics != null && _filteredStatistics != null && _unfilteredStatistics.TotalBytes > 0)
-        ? (_filteredStatistics.TotalBytes * 100.0 / _unfilteredStatistics.TotalBytes) : 0;
-    public int FilteredUniqueIPs => Statistics.FilteredUniqueIPs;
-    public double FilteredIPsPercentage => Statistics.UniqueIPs > 0 ? (Statistics.FilteredUniqueIPs * 100.0 / Statistics.UniqueIPs) : 0;
-    public int FilteredDifferentPorts => Statistics.FilteredDifferentPorts;
-    public double FilteredDifferentPortsPercentage => Statistics.DifferentPorts > 0 ? (Statistics.FilteredDifferentPorts * 100.0 / Statistics.DifferentPorts) : 0;
-    public int FilteredConversationCount => Statistics.FilteredConversationCount;
-    public double FilteredConversationsPercentage => Statistics.ActiveConversations > 0 ? (Statistics.FilteredConversationCount * 100.0 / Statistics.ActiveConversations) : 0;
-    public int FilteredSecurityThreats => Statistics.FilteredSecurityThreats;
-    public double FilteredThreatsPercentage => Statistics.ThreatCount > 0 ? (Statistics.FilteredSecurityThreats * 100.0 / Statistics.ThreatCount) : 0;
-    public int FilteredAnomalies => Statistics.FilteredAnomalies;
-    public double FilteredAnomaliesPercentage => Statistics.ThreatCount > 0 ? (Statistics.FilteredAnomalies * 100.0 / Statistics.ThreatCount) : 0;
-    public int FilteredProtocolCount => Statistics.FilteredProtocolCount;
-    public double FilteredProtocolsPercentage => Statistics.UniqueProtocols > 0 ? (Statistics.FilteredProtocolCount * 100.0 / Statistics.UniqueProtocols) : 0;
-
-    // Endpoint collections
-    public ObservableCollection<EndpointViewModel> TopSources => Statistics.TopSources;
-    public ObservableCollection<EndpointViewModel> TopSourcesByBytes => Statistics.TopSourcesByBytes;
-    public ObservableCollection<EndpointViewModel> TopSourcesDisplay => Statistics.TopSourcesDisplay;
-    public ObservableCollection<EndpointViewModel> TopSourcesByBytesDisplay => Statistics.TopSourcesByBytesDisplay;
-    public ObservableCollection<EndpointViewModel> TopDestinations => Statistics.TopDestinations;
-    public ObservableCollection<EndpointViewModel> TopDestinationsByBytes => Statistics.TopDestinationsByBytes;
-    public ObservableCollection<EndpointViewModel> TopDestinationsDisplay => Statistics.TopDestinationsDisplay;
-    public ObservableCollection<EndpointViewModel> TopDestinationsByBytesDisplay => Statistics.TopDestinationsByBytesDisplay;
-
-    // Port collections
-    public ObservableCollection<TopPortViewModel> TopPorts => Statistics.TopPorts;
-    public ObservableCollection<TopPortViewModel> TopPortsByPacketsDisplay => Statistics.TopPortsByPacketsDisplay;
-    public ObservableCollection<TopPortViewModel> TopPortsByBytesDisplay => Statistics.TopPortsByBytesDisplay;
-
-    // Conversation collections
-    public ObservableCollection<ConversationViewModel> TopConversations => Statistics.TopConversations;
-    public ObservableCollection<ConversationViewModel> TopConversationsByBytes => Statistics.TopConversationsByBytes;
-
-    // Charts properties (delegate to Charts component)
-    public ObservableCollection<ISeries> TimelineSeries => Charts.TimelineSeries;
-    public Axis[] XAxes => Charts.XAxes;
-    public Axis[] YAxes => Charts.YAxes;
-    public ObservableCollection<ISeries> ThroughputSeries => Charts.ThroughputSeries;
-    public ObservableCollection<ISeries> ProtocolSeries => Charts.ProtocolSeries;
-    public ObservableCollection<ISeries> PortSeries => Charts.PortSeries;
-    public ObservableCollection<ISeries> PortByBytesSeries => Charts.PortByBytesSeries;
-    public ObservableCollection<ISeries> PortByPacketsSeries => Charts.PortByPacketsSeries;
-
-    public void UpdateThroughputChart(NetworkStatistics statistics)
-    {
-        Charts.UpdateThroughputChart(statistics);
-    }
-
-    public void UpdateThroughputChart()
-    {
-        if (_currentStatistics != null)
-        {
-            Charts.UpdateThroughputChart(_currentStatistics);
-        }
-    }
-
-    public void UpdateStatistics(NetworkStatistics statistics)
-    {
-        _nextStatisticsOverride = statistics;
-    }
-
     public async Task UpdateStatistics(NetworkStatistics statistics, IReadOnlyList<PacketInfo> packets)
     {
         _nextStatisticsOverride = statistics;
         await UpdateStatisticsAsync(packets);
-    }
-
-    public void ResetStatistics()
-    {
-        _currentStatistics = null;
-        _unfilteredStatistics = null;
-        _filteredStatistics = null;
-        _allPackets = null;
-        _filteredPackets = null;
-
-        Statistics.TopSources.Clear();
-        Statistics.TopDestinations.Clear();
-        Statistics.TopPorts.Clear();
-        Statistics.TopConversations.Clear();
-        Charts.TimelineSeries.Clear();
-        Charts.ThroughputSeries.Clear();
-        Charts.ProtocolSeries.Clear();
     }
 
     // ==================== ITabPopulationTarget IMPLEMENTATION ====================

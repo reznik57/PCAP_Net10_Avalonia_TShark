@@ -12,31 +12,32 @@
         <converters:ByteFormatConverter x:Key="ByteFormatConverter"/>
     </UserControl.Resources>
 
+    <!-- SLACK STYLE -->
     <UserControl.Styles>
         <Style Selector="Border.modern-card">
-            <Setter Property="Background" Value="#0D1117"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundDark}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="0"/>
         </Style>
 
         <Style Selector="Border.control-panel">
-            <Setter Property="Background" Value="#161B22"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundPanel}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="Padding" Value="20"/>
         </Style>
 
         <Style Selector="ComboBox.view-selector">
             <Setter Property="MinWidth" Value="180"/>
-            <Setter Property="Background" Value="#161B22"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundPanel}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
         </Style>
 
         <Style Selector="Button.export-button">
-            <Setter Property="Background" Value="#238636"/>
-            <Setter Property="BorderBrush" Value="#2EA043"/>
+            <Setter Property="Background" Value="{DynamicResource AccentPrimary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource ColorPrimaryHover}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="12,6"/>
             <Setter Property="CornerRadius" Value="6"/>
@@ -44,11 +45,11 @@
         </Style>
 
         <Style Selector="DataGridRow:selected">
-            <Setter Property="Background" Value="#1F6FEB40"/>
+            <Setter Property="Background" Value="#1264A340"/>
         </Style>
 
         <Style Selector="DataGridRow:pointerover">
-            <Setter Property="Background" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource BorderSubtleBrush}"/>
         </Style>
     </UserControl.Styles>
 
@@ -68,27 +69,27 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Width="4" Height="24" Background="#3FB950" CornerRadius="2" Margin="0,0,12,0"/>
+                    <Border Width="4" Height="24" Background="{DynamicResource SlackSuccess}" CornerRadius="2" Margin="0,0,12,0"/>
                     <TextBlock Text="Top Talkers Report"
-                             FontSize="18"
+                             FontSize="{StaticResource FontSizeXL}"
                              FontWeight="SemiBold"
-                             Foreground="#F0F6FC"/>
+                             Foreground="{DynamicResource TextPrimaryBrush}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="View:" VerticalAlignment="Center" Foreground="#8B949E" FontSize="12"/>
+                    <TextBlock Text="View:" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{StaticResource FontSizeBase}"/>
                     <ComboBox ItemsSource="{Binding ViewOptions}"
                             SelectedItem="{Binding SelectedView}"
                             Classes="view-selector"
                             Width="160"/>
 
-                    <TextBlock Text="Metric:" VerticalAlignment="Center" Foreground="#8B949E" FontSize="12" Margin="16,0,0,0"/>
+                    <TextBlock Text="Metric:" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{StaticResource FontSizeBase}" Margin="16,0,0,0"/>
                     <ComboBox ItemsSource="{Binding MetricOptions}"
                             SelectedItem="{Binding SelectedMetric}"
                             Classes="view-selector"
                             Width="100"/>
 
-                    <TextBlock Text="Top:" VerticalAlignment="Center" Foreground="#8B949E" FontSize="12" Margin="16,0,0,0"/>
+                    <TextBlock Text="Top:" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{StaticResource FontSizeBase}" Margin="16,0,0,0"/>
                     <ComboBox ItemsSource="{Binding TopNOptions}"
                             SelectedItem="{Binding TopN}"
                             Classes="view-selector"
@@ -98,7 +99,7 @@
         </Border>
 
         <!-- Summary Statistics -->
-        <Border Grid.Row="1" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,0,1" Padding="20,12">
+        <Border Grid.Row="1" Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Padding="20,12">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -109,27 +110,27 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="Total Packets" FontSize="10" Foreground="#8B949E" Margin="0,0,0,4"/>
+                    <TextBlock Text="Total Packets" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                     <TextBlock Text="{Binding TotalPackets, StringFormat='{}{0:N0}'}"
-                             FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                             FontSize="{StaticResource FontSizeLarge}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1">
-                    <TextBlock Text="Total Bytes" FontSize="10" Foreground="#8B949E" Margin="0,0,0,4"/>
+                    <TextBlock Text="Total Bytes" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                     <TextBlock Text="{Binding TotalBytesFormatted}"
-                             FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                             FontSize="{StaticResource FontSizeLarge}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2">
-                    <TextBlock Text="Unique Endpoints" FontSize="10" Foreground="#8B949E" Margin="0,0,0,4"/>
+                    <TextBlock Text="Unique Endpoints" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                     <TextBlock Text="{Binding UniqueEndpoints, StringFormat='{}{0:N0}'}"
-                             FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                             FontSize="{StaticResource FontSizeLarge}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="3">
-                    <TextBlock Text="Top Talkers Coverage" FontSize="10" Foreground="#8B949E" Margin="0,0,0,4"/>
+                    <TextBlock Text="Top Talkers Coverage" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,4"/>
                     <TextBlock Text="{Binding TopTalkersPercentage, StringFormat='{}{0:F1}%'}"
-                             FontSize="16" FontWeight="SemiBold" Foreground="#3FB950"/>
+                             FontSize="{StaticResource FontSizeLarge}" FontWeight="SemiBold" Foreground="{DynamicResource SlackSuccess}"/>
                 </StackPanel>
 
                 <Button Grid.Column="4"
@@ -138,8 +139,8 @@
                        Classes="export-button"
                        ToolTip.Tip="Export top talkers to CSV">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="📊" FontSize="14"/>
-                        <TextBlock Text="Export CSV" FontSize="12"/>
+                        <TextBlock Text="📊" FontSize="{StaticResource FontSizeInput}"/>
+                        <TextBlock Text="Export CSV" FontSize="{StaticResource FontSizeBase}"/>
                     </StackPanel>
                 </Button>
             </Grid>
@@ -162,11 +163,11 @@
                     </Grid.RowDefinitions>
 
                     <!-- Header -->
-                    <Border Grid.Row="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,0,1" Height="48">
+                    <Border Grid.Row="0" Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Height="48">
                         <Grid Margin="20,0">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <Border Width="3" Height="20" Background="#3FB950" CornerRadius="1.5" Margin="0,0,12,0"/>
-                                <TextBlock FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC">
+                                <Border Width="3" Height="20" Background="{DynamicResource SlackSuccess}" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                <TextBlock FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}">
                                     <TextBlock.Text>
                                         <MultiBinding StringFormat="{}{0} ({1} entries)">
                                             <Binding Path="SelectedView"/>
@@ -185,8 +186,8 @@
                             SelectionMode="Single"
                             IsReadOnly="True"
                             GridLinesVisibility="None"
-                            Background="#0D1117"
-                            RowBackground="#0D1117"
+                            Background="{DynamicResource BackgroundDark}"
+                            RowBackground="{DynamicResource BackgroundDark}"
                             HeadersVisibility="Column"
                             CanUserSortColumns="True"
                             CanUserResizeColumns="True"
@@ -203,23 +204,23 @@
                             <DataGridTextColumn Header="Total Pkts" Binding="{Binding PacketCountFormatted}" Width="100" FontWeight="SemiBold"/>
                             <DataGridTextColumn Header="Total Bytes" Binding="{Binding ByteCountFormatted}" Width="100" FontWeight="SemiBold"/>
                             <DataGridTextColumn Header="Type" Binding="{Binding TypeDisplay}" Width="80"/>
-                            <DataGridTextColumn Header="" Binding="{Binding RiskIndicator}" Width="30" FontSize="16"/>
+                            <DataGridTextColumn Header="" Binding="{Binding RiskIndicator}" Width="30" FontSize="{StaticResource FontSizeLarge}"/>
                         </DataGrid.Columns>
 
                         <DataGrid.Styles>
                             <Style Selector="DataGridColumnHeader">
-                                <Setter Property="Background" Value="#161B22"/>
-                                <Setter Property="Foreground" Value="#8B949E"/>
+                                <Setter Property="Background" Value="{DynamicResource BackgroundPanel}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
                                 <Setter Property="FontSize" Value="11"/>
                                 <Setter Property="FontWeight" Value="SemiBold"/>
                                 <Setter Property="Padding" Value="8,12"/>
                                 <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                                <Setter Property="BorderBrush" Value="#30363D"/>
+                                <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
                             </Style>
 
                             <Style Selector="DataGridRow">
                                 <Setter Property="Height" Value="36"/>
-                                <Setter Property="Foreground" Value="#F0F6FC"/>
+                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
                             </Style>
 
                             <Style Selector="DataGridCell">
@@ -236,7 +237,7 @@
 
             <!-- Splitter -->
             <GridSplitter Grid.Column="1"
-                        Background="#30363D"
+                        Background="{DynamicResource BorderSubtleBrush}"
                         ResizeDirection="Columns"
                         Width="5"/>
 
@@ -249,11 +250,11 @@
                     </Grid.RowDefinitions>
 
                     <!-- Header -->
-                    <Border Grid.Row="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,0,1" Height="48">
+                    <Border Grid.Row="0" Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Height="48">
                         <Grid Margin="20,0">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <Border Width="3" Height="20" Background="#1F6FEB" CornerRadius="1.5" Margin="0,0,12,0"/>
-                                <TextBlock Text="Talker Details" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                <Border Width="3" Height="20" Background="{DynamicResource AccentPrimary}" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                <TextBlock Text="Talker Details" FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -263,10 +264,10 @@
                         <StackPanel Margin="20" Spacing="20">
 
                             <!-- Selected Talker Info -->
-                            <Border Background="#161B22" CornerRadius="6" Padding="16" IsVisible="{Binding SelectedTalker, Converter={x:Static ObjectConverters.IsNotNull}}">
+                            <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="6" Padding="16" IsVisible="{Binding SelectedTalker, Converter={x:Static ObjectConverters.IsNotNull}}">
                                 <StackPanel Spacing="12">
-                                    <TextBlock Text="Selected Endpoint" FontSize="12" Foreground="#8B949E" FontWeight="SemiBold"/>
-                                    <TextBlock Text="{Binding SelectedTalker.Address}" FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                    <TextBlock Text="Selected Endpoint" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding SelectedTalker.Address}" FontSize="{StaticResource FontSizeLarge}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
 
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -275,13 +276,13 @@
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel Grid.Column="0" Spacing="4">
-                                            <TextBlock Text="Country" FontSize="10" Foreground="#8B949E"/>
-                                            <TextBlock Text="{Binding SelectedTalker.Country}" FontSize="12" Foreground="#F0F6FC"/>
+                                            <TextBlock Text="Country" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBlock Text="{Binding SelectedTalker.Country}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="1" Spacing="4">
-                                            <TextBlock Text="Type" FontSize="10" Foreground="#8B949E"/>
-                                            <TextBlock Text="{Binding SelectedTalker.TypeDisplay}" FontSize="12" Foreground="#F0F6FC"/>
+                                            <TextBlock Text="Type" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBlock Text="{Binding SelectedTalker.TypeDisplay}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                         </StackPanel>
                                     </Grid>
 
@@ -292,27 +293,27 @@
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel Grid.Column="0" Spacing="4">
-                                            <TextBlock Text="Total Packets" FontSize="10" Foreground="#8B949E"/>
-                                            <TextBlock Text="{Binding SelectedTalker.PacketCountFormatted}" FontSize="14" FontWeight="SemiBold" Foreground="#3FB950"/>
+                                            <TextBlock Text="Total Packets" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBlock Text="{Binding SelectedTalker.PacketCountFormatted}" FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource SlackSuccess}"/>
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="1" Spacing="4">
-                                            <TextBlock Text="Total Bytes" FontSize="10" Foreground="#8B949E"/>
-                                            <TextBlock Text="{Binding SelectedTalker.ByteCountFormatted}" FontSize="14" FontWeight="SemiBold" Foreground="#3FB950"/>
+                                            <TextBlock Text="Total Bytes" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                            <TextBlock Text="{Binding SelectedTalker.ByteCountFormatted}" FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource SlackSuccess}"/>
                                         </StackPanel>
                                     </Grid>
                                 </StackPanel>
                             </Border>
 
                             <!-- Protocol Breakdown -->
-                            <Border Background="#161B22" CornerRadius="6" Padding="16" IsVisible="{Binding ProtocolBreakdown.Count}">
+                            <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="6" Padding="16" IsVisible="{Binding ProtocolBreakdown.Count}">
                                 <StackPanel Spacing="12">
-                                    <TextBlock Text="Protocol Breakdown" FontSize="12" Foreground="#8B949E" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Protocol Breakdown" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold"/>
 
                                     <ItemsControl ItemsSource="{Binding ProtocolBreakdown}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Border Margin="0,4" Background="#0D1117" CornerRadius="4" Padding="12,8">
+                                                <Border Margin="0,4" Background="{DynamicResource BackgroundDark}" CornerRadius="4" Padding="12,8">
                                                     <Grid>
                                                         <Grid.ColumnDefinitions>
                                                             <ColumnDefinition Width="80"/>
@@ -320,16 +321,16 @@
                                                             <ColumnDefinition Width="80"/>
                                                         </Grid.ColumnDefinitions>
 
-                                                        <TextBlock Grid.Column="0" Text="{Binding Protocol}" FontSize="12" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                                        <TextBlock Grid.Column="0" Text="{Binding Protocol}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
 
-                                                        <Border Grid.Column="1" Background="#21262D" CornerRadius="3" Height="16" VerticalAlignment="Center" Margin="8,0">
-                                                            <Border Background="#3FB950"
+                                                        <Border Grid.Column="1" Background="{DynamicResource BorderSubtleBrush}" CornerRadius="3" Height="16" VerticalAlignment="Center" Margin="8,0">
+                                                            <Border Background="{DynamicResource SlackSuccess}"
                                                                    CornerRadius="3"
                                                                    HorizontalAlignment="Left"
                                                                    Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=100}"/>
                                                         </Border>
 
-                                                        <TextBlock Grid.Column="2" Text="{Binding PercentageFormatted}" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Right"/>
+                                                        <TextBlock Grid.Column="2" Text="{Binding PercentageFormatted}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right"/>
                                                     </Grid>
                                                 </Border>
                                             </DataTemplate>
@@ -339,9 +340,9 @@
                             </Border>
 
                             <!-- Conversations Involving This Talker -->
-                            <Border Background="#161B22" CornerRadius="6" Padding="16" IsVisible="{Binding TalkerConversations.Count}">
+                            <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="6" Padding="16" IsVisible="{Binding TalkerConversations.Count}">
                                 <StackPanel Spacing="12">
-                                    <TextBlock FontSize="12" Foreground="#8B949E" FontWeight="SemiBold">
+                                    <TextBlock FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold">
                                         <TextBlock.Text>
                                             <MultiBinding StringFormat="Conversations ({0})">
                                                 <Binding Path="TalkerConversations.Count"/>
@@ -352,15 +353,15 @@
                                     <ItemsControl ItemsSource="{Binding TalkerConversations}" MaxHeight="400">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Border Margin="0,4" Background="#0D1117" CornerRadius="4" Padding="12,8">
+                                                <Border Margin="0,4" Background="{DynamicResource BackgroundDark}" CornerRadius="4" Padding="12,8">
                                                     <StackPanel Spacing="4">
-                                                        <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#F0F6FC">
+                                                        <TextBlock FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}">
                                                             <Run Text="{Binding SourceAddress}"/>
-                                                            <Run Text=":" Foreground="#8B949E"/>
+                                                            <Run Text=":" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                                             <Run Text="{Binding SourcePort}"/>
-                                                            <Run Text="→" Foreground="#8B949E"/>
+                                                            <Run Text="→" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                                             <Run Text="{Binding DestinationAddress}"/>
-                                                            <Run Text=":" Foreground="#8B949E"/>
+                                                            <Run Text=":" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                                             <Run Text="{Binding DestinationPort}"/>
                                                         </TextBlock>
 
@@ -371,9 +372,9 @@
                                                                 <ColumnDefinition Width="Auto"/>
                                                             </Grid.ColumnDefinitions>
 
-                                                            <TextBlock Grid.Column="0" Text="{Binding Protocol}" FontSize="10" Foreground="#3FB950" Margin="0,0,8,0"/>
-                                                            <TextBlock Grid.Column="1" Text="{Binding BytesFormatted}" FontSize="10" Foreground="#8B949E"/>
-                                                            <TextBlock Grid.Column="2" Text="{Binding State}" FontSize="10" Foreground="#8B949E"/>
+                                                            <TextBlock Grid.Column="0" Text="{Binding Protocol}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource SlackSuccess}" Margin="0,0,8,0"/>
+                                                            <TextBlock Grid.Column="1" Text="{Binding BytesFormatted}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                            <TextBlock Grid.Column="2" Text="{Binding State}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                                         </Grid>
                                                     </StackPanel>
                                                 </Border>
@@ -384,12 +385,12 @@
                             </Border>
 
                             <!-- Empty State -->
-                            <Border Background="#161B22" CornerRadius="6" Padding="40,60" IsVisible="{Binding SelectedTalker, Converter={x:Static ObjectConverters.IsNull}}">
+                            <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="6" Padding="40,60" IsVisible="{Binding SelectedTalker, Converter={x:Static ObjectConverters.IsNull}}">
                                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
-                                    <TextBlock Text="📊" FontSize="48" HorizontalAlignment="Center" Opacity="0.5"/>
+                                    <TextBlock Text="📊" FontSize="{StaticResource FontSizeDisplay}" HorizontalAlignment="Center" Opacity="0.5"/>
                                     <TextBlock Text="Select a talker to view details"
-                                             FontSize="14"
-                                             Foreground="#8B949E"
+                                             FontSize="{StaticResource FontSizeInput}"
+                                             Foreground="{DynamicResource TextSecondaryBrush}"
                                              HorizontalAlignment="Center"/>
                                 </StackPanel>
                             </Border>

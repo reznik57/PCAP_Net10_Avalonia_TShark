@@ -19,14 +19,14 @@
         
         <!-- Header -->
         <TextBlock Grid.Row="0" Text="Filter Packets" 
-                   FontSize="20" FontWeight="Bold" 
+                   FontSize="{StaticResource FontSizeXL}" FontWeight="Bold" 
                    Foreground="{DynamicResource TextPrimary}"
                    Margin="0,0,0,10"/>
         
         <!-- Help Text -->
         <TextBlock Grid.Row="1" 
                    Text="Tip: Use '!' prefix for NOT filters (e.g., !192.168 excludes packets from/to 192.168.x.x)" 
-                   FontSize="12" FontStyle="Italic"
+                   FontSize="{StaticResource FontSizeBase}" FontStyle="Italic"
                    Foreground="{DynamicResource TextSecondary}"
                    TextWrapping="Wrap"
                    Margin="0,0,0,15"/>

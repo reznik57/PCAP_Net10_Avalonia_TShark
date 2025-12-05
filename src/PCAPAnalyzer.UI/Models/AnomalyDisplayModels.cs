@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.Models;
 
@@ -43,11 +44,11 @@ public partial class AnomalyEndpointViewModel : ObservableObject
 
     public string SeverityColor => HighestSeverity switch
     {
-        AnomalySeverity.Critical => "#F85149",
-        AnomalySeverity.High => "#F59E0B",
-        AnomalySeverity.Medium => "#FCD34D",
-        AnomalySeverity.Low => "#3B82F6",
-        _ => "#8B949E"
+        AnomalySeverity.Critical => ThemeColorHelper.GetColorHex("ColorDanger", "#F85149"),
+        AnomalySeverity.High => ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
+        AnomalySeverity.Medium => ThemeColorHelper.GetColorHex("AccentYellow", "#FCD34D"),
+        AnomalySeverity.Low => ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
+        _ => ThemeColorHelper.GetColorHex("TextMuted", "#8B949E")
     };
 
     public string CategoryBadges => Categories.Count switch
@@ -74,11 +75,11 @@ public class AnomalyPortViewModel
 
     public string SeverityColor => HighestSeverity switch
     {
-        AnomalySeverity.Critical => "#F85149",
-        AnomalySeverity.High => "#F59E0B",
-        AnomalySeverity.Medium => "#FCD34D",
-        AnomalySeverity.Low => "#3B82F6",
-        _ => "#8B949E"
+        AnomalySeverity.Critical => ThemeColorHelper.GetColorHex("ColorDanger", "#F85149"),
+        AnomalySeverity.High => ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
+        AnomalySeverity.Medium => ThemeColorHelper.GetColorHex("AccentYellow", "#FCD34D"),
+        AnomalySeverity.Low => ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
+        _ => ThemeColorHelper.GetColorHex("TextMuted", "#8B949E")
     };
 }
 
@@ -93,14 +94,14 @@ public class AnomalyCategoryViewModel
 
     public string Color => Category switch
     {
-        AnomalyCategory.Network => "#3B82F6",
-        AnomalyCategory.TCP => "#10B981",
-        AnomalyCategory.Application => "#F59E0B",
-        AnomalyCategory.VoIP => "#8B5CF6",
-        AnomalyCategory.IoT => "#06B6D4",
-        AnomalyCategory.Security => "#F85149",
-        AnomalyCategory.Malformed => "#EC4899",
-        _ => "#8B949E"
+        AnomalyCategory.Network => ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
+        AnomalyCategory.TCP => ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
+        AnomalyCategory.Application => ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
+        AnomalyCategory.VoIP => ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6"),
+        AnomalyCategory.IoT => ThemeColorHelper.GetColorHex("AccentCyan", "#06B6D4"),
+        AnomalyCategory.Security => ThemeColorHelper.GetColorHex("ColorDanger", "#F85149"),
+        AnomalyCategory.Malformed => ThemeColorHelper.GetColorHex("AccentPink", "#EC4899"),
+        _ => ThemeColorHelper.GetColorHex("TextMuted", "#8B949E")
     };
 }
 

@@ -7,13 +7,20 @@ using System.Windows.Input;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
+using PCAPAnalyzer.UI.Services;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels
 {
     public partial class ReportViewModel : ObservableObject
     {
+        private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+            ?? throw new InvalidOperationException("IDispatcherService not registered");
+        private IDispatcherService? _dispatcher;
+
         private readonly IReportGeneratorService _reportService;
         private NetworkStatistics? _currentStatistics;
         private List<SecurityThreat> _currentThreats = new();
@@ -88,9 +95,9 @@ namespace PCAPAnalyzer.UI.ViewModels
         public async Task UpdateData(NetworkStatistics statistics, List<SecurityThreat> threats)
         {
             // Ensure we're on the UI thread for the entire update process
-            if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+            if (!Dispatcher.CheckAccess())
             {
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () => await UpdateData(statistics, threats));
+                await Dispatcher.InvokeAsync(async () => await UpdateData(statistics, threats));
                 return;
             }
             
@@ -327,23 +334,23 @@ namespace PCAPAnalyzer.UI.ViewModels
         {
             return severity switch
             {
-                SeverityLevel.Critical => "#EF4444",
-                SeverityLevel.High => "#F59E0B",
-                SeverityLevel.Medium => "#3B82F6",
-                SeverityLevel.Low => "#10B981",
-                _ => "#6B7280"
+                SeverityLevel.Critical => ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"),
+                SeverityLevel.High => ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
+                SeverityLevel.Medium => ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
+                SeverityLevel.Low => ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
+                _ => ThemeColorHelper.GetColorHex("TextMuted", "#6B7280")
             };
         }
-        
+
         private string GetPriorityColor(RemediationPriority priority)
         {
             return priority switch
             {
-                RemediationPriority.Immediate => "#EF4444",
-                RemediationPriority.High => "#F59E0B",
-                RemediationPriority.Medium => "#3B82F6",
-                RemediationPriority.Low => "#10B981",
-                _ => "#6B7280"
+                RemediationPriority.Immediate => ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"),
+                RemediationPriority.High => ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
+                RemediationPriority.Medium => ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
+                RemediationPriority.Low => ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
+                _ => ThemeColorHelper.GetColorHex("TextMuted", "#6B7280")
             };
         }
     }

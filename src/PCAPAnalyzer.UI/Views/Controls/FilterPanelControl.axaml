@@ -6,20 +6,20 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="PCAPAnalyzer.UI.Views.Controls.FilterPanelControl">
 
-    <Border Classes="modern-card-unified" Padding="20,16" Margin="0,0,0,20" BorderThickness="2" BorderBrush="#30363D">
+    <Border Classes="modern-card-unified" Padding="20,16" Margin="0,0,0,20" BorderThickness="2" BorderBrush="{DynamicResource BorderSubtleBrush}">
         <StackPanel Spacing="16">
 
             <!-- INCLUDE FILTERS Section -->
-            <Border Background="#0A1628" BorderBrush="#3B82F6" BorderThickness="2"
+            <Border Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource AccentPrimary}" BorderThickness="2"
                     CornerRadius="8" Padding="16,14">
                 <Grid RowDefinitions="Auto,14,Auto">
                     <!-- Header -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
-                        <TextBlock Text="INCLUDE FILTERS" FontSize="13" FontWeight="Bold" Foreground="#3B82F6" VerticalAlignment="Center"/>
-                        <Border Background="#1C2128" BorderBrush="#3B82F6" BorderThickness="1"
+                        <TextBlock Text="INCLUDE FILTERS" FontSize="{StaticResource FontSizeMedium}" FontWeight="Bold" Foreground="{DynamicResource AccentPrimary}" VerticalAlignment="Center"/>
+                        <Border Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource AccentPrimary}" BorderThickness="1"
                                 CornerRadius="4" Padding="6,2" VerticalAlignment="Center"
                                 ToolTip.Tip="Show packets matching these criteria. Use comma for OR (80,443 = port 80 OR 443). Different fields use AND logic.">
-                            <TextBlock Text="ℹ️ Different fields = AND • Same field values = OR" FontSize="9" Foreground="#58A6FF"/>
+                            <TextBlock Text="ℹ️ Different fields = AND • Same field values = OR" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource SlackInfo}"/>
                         </Border>
                     </StackPanel>
 
@@ -27,48 +27,48 @@
                     <Grid Grid.Row="2" ColumnDefinitions="180,12,180,12,140,12,160">
                         <!-- Source IP -->
                         <StackPanel Grid.Column="0" Spacing="6">
-                            <TextBlock Text="Source IP" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding SourceIPFilter}" Watermark="e.g. 192.168.1.1,10.0.0.1" FontSize="12" KeyDown="FilterTextBox_KeyDown"
+                            <TextBlock Text="Source IP" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBox Text="{Binding SourceIPFilter}" Watermark="e.g. 192.168.1.1,10.0.0.1" FontSize="{StaticResource FontSizeBase}" KeyDown="FilterTextBox_KeyDown"
                                      BorderBrush="{Binding SourceIPFilter, Converter={StaticResource IPValidationConverter}}"
                                      ToolTip.Tip="Enter IP, comma-separated IPs, CIDR (192.168.0.0/24), or wildcard (192.168.*.*)"/>
                         </StackPanel>
 
                         <!-- Destination IP -->
                         <StackPanel Grid.Column="2" Spacing="6">
-                            <TextBlock Text="Destination IP" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding DestinationIPFilter}" Watermark="e.g. 10.0.0.1" FontSize="12" KeyDown="FilterTextBox_KeyDown"
+                            <TextBlock Text="Destination IP" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBox Text="{Binding DestinationIPFilter}" Watermark="e.g. 10.0.0.1" FontSize="{StaticResource FontSizeBase}" KeyDown="FilterTextBox_KeyDown"
                                      BorderBrush="{Binding DestinationIPFilter, Converter={StaticResource IPValidationConverter}}"
                                      ToolTip.Tip="Enter IP, comma-separated IPs, CIDR (10.0.0.0/8), or wildcard (10.*.*.*)"/>
                         </StackPanel>
 
                         <!-- Port Range -->
                         <StackPanel Grid.Column="4" Spacing="6">
-                            <TextBlock Text="Port Range" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding PortRangeFilter}" Watermark="e.g. 80,443,137-139" FontSize="12" KeyDown="FilterTextBox_KeyDown"
+                            <TextBlock Text="Port Range" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBox Text="{Binding PortRangeFilter}" Watermark="e.g. 80,443,137-139" FontSize="{StaticResource FontSizeBase}" KeyDown="FilterTextBox_KeyDown"
                                      BorderBrush="{Binding PortRangeFilter, Converter={StaticResource PortValidationConverter}}"
                                      ToolTip.Tip="Enter port, comma-separated ports, or range (8000-8100)"/>
                         </StackPanel>
 
                         <!-- Protocol Type -->
                         <StackPanel Grid.Column="6" Spacing="6">
-                            <TextBlock Text="Protocol Type (L4 / L7)" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding ProtocolFilter}" Watermark="e.g. TCP, HTTP" FontSize="12" KeyDown="FilterTextBox_KeyDown"/>
+                            <TextBlock Text="Protocol Type (L4 / L7)" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBox Text="{Binding ProtocolFilter}" Watermark="e.g. TCP, HTTP" FontSize="{StaticResource FontSizeBase}" KeyDown="FilterTextBox_KeyDown"/>
                         </StackPanel>
                     </Grid>
                 </Grid>
             </Border>
 
             <!-- EXCLUDE FILTERS Section -->
-            <Border Background="#1A0A0A" BorderBrush="#EF4444" BorderThickness="2"
+            <Border Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource SlackDanger}" BorderThickness="2"
                     CornerRadius="8" Padding="16,14">
                 <Grid RowDefinitions="Auto,14,Auto">
                     <!-- Header -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
-                        <TextBlock Text="EXCLUDE FILTERS (NOT)" FontSize="13" FontWeight="Bold" Foreground="#EF4444" VerticalAlignment="Center"/>
-                        <Border Background="#1C2128" BorderBrush="#EF4444" BorderThickness="1"
+                        <TextBlock Text="EXCLUDE FILTERS (NOT)" FontSize="{StaticResource FontSizeMedium}" FontWeight="Bold" Foreground="{DynamicResource SlackDanger}" VerticalAlignment="Center"/>
+                        <Border Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource SlackDanger}" BorderThickness="1"
                                 CornerRadius="4" Padding="6,2" VerticalAlignment="Center"
                                 ToolTip.Tip="Always takes precedence. Removes packets even if they match INCLUDE filters. Use comma for OR (22,23 = exclude SSH OR Telnet).">
-                            <TextBlock Text="ℹ️ Always takes precedence" FontSize="9" Foreground="#F87171"/>
+                            <TextBlock Text="ℹ️ Always takes precedence" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource SlackDanger}"/>
                         </Border>
                     </StackPanel>
 
@@ -76,32 +76,32 @@
                     <Grid Grid.Row="2" ColumnDefinitions="180,12,180,12,140,12,160">
                         <!-- NOT Source IP -->
                         <StackPanel Grid.Column="0" Spacing="6">
-                            <TextBlock Text="NOT Source IP" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding NotSourceIPFilter}" Watermark="e.g. 192.168.1.0/24" FontSize="12" KeyDown="FilterTextBox_KeyDown"
+                            <TextBlock Text="NOT Source IP" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBox Text="{Binding NotSourceIPFilter}" Watermark="e.g. 192.168.1.0/24" FontSize="{StaticResource FontSizeBase}" KeyDown="FilterTextBox_KeyDown"
                                      BorderBrush="{Binding NotSourceIPFilter, Converter={StaticResource IPValidationConverter}}"
                                      ToolTip.Tip="Exclude IP, comma-separated IPs, CIDR, or wildcard"/>
                         </StackPanel>
 
                         <!-- NOT Destination IP -->
                         <StackPanel Grid.Column="2" Spacing="6">
-                            <TextBlock Text="NOT Destination IP" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding NotDestinationIPFilter}" Watermark="e.g. 10.0.0.0/8" FontSize="12" KeyDown="FilterTextBox_KeyDown"
+                            <TextBlock Text="NOT Destination IP" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBox Text="{Binding NotDestinationIPFilter}" Watermark="e.g. 10.0.0.0/8" FontSize="{StaticResource FontSizeBase}" KeyDown="FilterTextBox_KeyDown"
                                      BorderBrush="{Binding NotDestinationIPFilter, Converter={StaticResource IPValidationConverter}}"
                                      ToolTip.Tip="Exclude IP, comma-separated IPs, CIDR, or wildcard"/>
                         </StackPanel>
 
                         <!-- NOT Port Range -->
                         <StackPanel Grid.Column="4" Spacing="6">
-                            <TextBlock Text="NOT Port Range" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding NotPortRangeFilter}" Watermark="e.g. 137-139" FontSize="12" KeyDown="FilterTextBox_KeyDown"
+                            <TextBlock Text="NOT Port Range" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBox Text="{Binding NotPortRangeFilter}" Watermark="e.g. 137-139" FontSize="{StaticResource FontSizeBase}" KeyDown="FilterTextBox_KeyDown"
                                      BorderBrush="{Binding NotPortRangeFilter, Converter={StaticResource PortValidationConverter}}"
                                      ToolTip.Tip="Exclude port, comma-separated ports, or range"/>
                         </StackPanel>
 
                         <!-- NOT Protocol Type -->
                         <StackPanel Grid.Column="6" Spacing="6">
-                            <TextBlock Text="NOT Protocol Type (L4 / L7)" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBox Text="{Binding NotProtocolFilter}" Watermark="e.g. ICMP" FontSize="12" KeyDown="FilterTextBox_KeyDown"/>
+                            <TextBlock Text="NOT Protocol Type (L4 / L7)" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBox Text="{Binding NotProtocolFilter}" Watermark="e.g. ICMP" FontSize="{StaticResource FontSizeBase}" KeyDown="FilterTextBox_KeyDown"/>
                         </StackPanel>
                     </Grid>
                 </Grid>
@@ -117,38 +117,38 @@
                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12">
                             <!-- Mode Icon + Title + Mode Badge - ALL DYNAMIC -->
                             <TextBlock Text="{Binding QuickFilterIsIncludeMode, Converter={x:Static converters:BoolToColorConverter.QuickFilterModeIcon}}"
-                                       FontSize="16" VerticalAlignment="Center"/>
-                            <TextBlock Text="QUICK FILTERS" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"
+                                       FontSize="{StaticResource FontSizeLarge}" VerticalAlignment="Center"/>
+                            <TextBlock Text="QUICK FILTERS" FontSize="{StaticResource FontSizeInput}" FontWeight="Bold" VerticalAlignment="Center"
                                        Foreground="{Binding QuickFilterIsIncludeMode, Converter={x:Static converters:BoolToColorConverter.QuickFilterTitle}}"/>
                             <!-- Dynamic Mode Label Badge -->
                             <Border CornerRadius="6" Padding="12,4" BorderThickness="2"
                                     Background="{Binding QuickFilterIsIncludeMode, Converter={x:Static converters:BoolToColorConverter.QuickFilterModeLabelBackground}}"
                                     BorderBrush="{Binding QuickFilterIsIncludeMode, Converter={x:Static converters:BoolToColorConverter.QuickFilterModeLabelBorder}}">
                                 <TextBlock Text="{Binding QuickFilterIsIncludeMode, Converter={x:Static converters:BoolToColorConverter.QuickFilterModeText}}"
-                                           FontSize="11" FontWeight="Bold"
+                                           FontSize="{StaticResource FontSizeSmall}" FontWeight="Bold"
                                            Foreground="{Binding QuickFilterIsIncludeMode, Converter={x:Static converters:BoolToColorConverter.QuickFilterModeLabelForeground}}"/>
                             </Border>
                             <!-- Info tooltip -->
-                            <Border Background="#1C2128" BorderBrush="#484F58" BorderThickness="1"
+                            <Border Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1"
                                     CornerRadius="4" Padding="8,3" VerticalAlignment="Center"
                                     ToolTip.Tip="One-click toggles for common filter patterns. Multiple selections use OR logic.">
-                                <TextBlock Text="ℹ️ Click to toggle • Multiple = OR" FontSize="9" Foreground="#8B949E"/>
+                                <TextBlock Text="ℹ️ Click to toggle • Multiple = OR" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Border>
                         </StackPanel>
                         <!-- Mode Toggle Button - PROMINENT -->
                         <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
-                            <TextBlock Text="Switch Mode:" FontSize="12" FontWeight="SemiBold" Foreground="#8B949E" VerticalAlignment="Center"/>
+                            <TextBlock Text="Switch Mode:" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
                             <ToggleButton IsChecked="{Binding QuickFilterIsIncludeMode}" Classes="mode-toggle"
                                           ToolTip.Tip="Toggle between INCLUDE (show matching) and EXCLUDE (hide matching) modes"
                                           Width="110" Height="32">
                                 <Panel>
                                     <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding QuickFilterIsIncludeMode}" HorizontalAlignment="Center">
-                                        <TextBlock Text="✓" FontSize="14" FontWeight="Bold"/>
-                                        <TextBlock Text="INCLUDE" FontSize="12" FontWeight="Bold"/>
+                                        <TextBlock Text="✓" FontSize="{StaticResource FontSizeInput}" FontWeight="Bold"/>
+                                        <TextBlock Text="INCLUDE" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding !QuickFilterIsIncludeMode}" HorizontalAlignment="Center">
-                                        <TextBlock Text="✕" FontSize="14" FontWeight="Bold"/>
-                                        <TextBlock Text="EXCLUDE" FontSize="12" FontWeight="Bold"/>
+                                        <TextBlock Text="✕" FontSize="{StaticResource FontSizeInput}" FontWeight="Bold"/>
+                                        <TextBlock Text="EXCLUDE" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold"/>
                                     </StackPanel>
                                 </Panel>
                             </ToggleButton>
@@ -157,255 +157,255 @@
 
                     <!-- Network Type Row -->
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="Network:" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E" Width="60" VerticalAlignment="Center"/>
+                        <TextBlock Text="Network:" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Width="60" VerticalAlignment="Center"/>
                         <ToggleButton IsChecked="{Binding FilterRfc1918Toggle}" Classes="quick-filter blue"
                                       ToolTip.Tip="Private IPs (10.x, 172.16-31.x, 192.168.x)">
-                            <TextBlock Text="RFC1918" FontSize="11"/>
+                            <TextBlock Text="RFC1918" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterPublicIpToggle}" Classes="quick-filter blue"
                                       ToolTip.Tip="Public/Internet-routable IPs">
-                            <TextBlock Text="Public" FontSize="11"/>
+                            <TextBlock Text="Public" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterIPv4Toggle}" Classes="quick-filter blue"
                                       ToolTip.Tip="IPv4 traffic only">
-                            <TextBlock Text="IPv4" FontSize="11"/>
+                            <TextBlock Text="IPv4" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterIPv6Toggle}" Classes="quick-filter blue"
                                       ToolTip.Tip="IPv6 traffic only">
-                            <TextBlock Text="IPv6" FontSize="11"/>
+                            <TextBlock Text="IPv6" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterMulticastToggle}" Classes="quick-filter blue"
                                       ToolTip.Tip="Multicast traffic (224.0.0.0/4)">
-                            <TextBlock Text="Multicast" FontSize="11"/>
+                            <TextBlock Text="Multicast" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                     </StackPanel>
 
                     <!-- Security Row -->
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="Security:" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E" Width="60" VerticalAlignment="Center"/>
+                        <TextBlock Text="Security:" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Width="60" VerticalAlignment="Center"/>
                         <ToggleButton IsChecked="{Binding FilterInsecureToggle}" Classes="quick-filter red"
                                       ToolTip.Tip="Insecure protocols (HTTP, FTP, Telnet, TLS 1.0/1.1)">
-                            <TextBlock Text="Insecure" FontSize="11"/>
+                            <TextBlock Text="Insecure" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterAnomaliesToggle}" Classes="quick-filter red"
                                       ToolTip.Tip="All detected anomalies">
-                            <TextBlock Text="Anomalies" FontSize="11"/>
+                            <TextBlock Text="Anomalies" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterSuspiciousToggle}" Classes="quick-filter red"
                                       ToolTip.Tip="High-severity suspicious activity">
-                            <TextBlock Text="Suspicious" FontSize="11"/>
+                            <TextBlock Text="Suspicious" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterTcpIssuesToggle}" Classes="quick-filter red"
                                       ToolTip.Tip="TCP retransmissions, out-of-order packets">
-                            <TextBlock Text="TCP Issues" FontSize="11"/>
+                            <TextBlock Text="TCP Issues" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterPortScansToggle}" Classes="quick-filter red"
                                       ToolTip.Tip="Port scanning activity">
-                            <TextBlock Text="Port Scans" FontSize="11"/>
+                            <TextBlock Text="Port Scans" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                     </StackPanel>
 
                     <!-- Protocol Row -->
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="Protocol:" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E" Width="60" VerticalAlignment="Center"/>
+                        <TextBlock Text="Protocol:" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Width="60" VerticalAlignment="Center"/>
                         <ToggleButton IsChecked="{Binding FilterDnsToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="DNS queries and responses">
-                            <TextBlock Text="DNS" FontSize="11"/>
+                            <TextBlock Text="DNS" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterHttpToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="HTTP traffic (cleartext)">
-                            <TextBlock Text="HTTP" FontSize="11"/>
+                            <TextBlock Text="HTTP" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterHttpsToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="HTTPS/TLS encrypted web traffic">
-                            <TextBlock Text="HTTPS" FontSize="11"/>
+                            <TextBlock Text="HTTPS" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterSshToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="SSH encrypted traffic">
-                            <TextBlock Text="SSH" FontSize="11"/>
+                            <TextBlock Text="SSH" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterSmtpToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="SMTP email traffic">
-                            <TextBlock Text="SMTP" FontSize="11"/>
+                            <TextBlock Text="SMTP" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterFtpToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="FTP file transfer (cleartext)">
-                            <TextBlock Text="FTP" FontSize="11"/>
+                            <TextBlock Text="FTP" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterSnmpToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="SNMP network management">
-                            <TextBlock Text="SNMP" FontSize="11"/>
+                            <TextBlock Text="SNMP" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterStunToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="STUN/WebRTC traversal">
-                            <TextBlock Text="STUN" FontSize="11"/>
+                            <TextBlock Text="STUN" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterDhcpServerToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="DHCP address assignment">
-                            <TextBlock Text="DHCP" FontSize="11"/>
+                            <TextBlock Text="DHCP" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                     </StackPanel>
 
                     <!-- TLS Versions Row -->
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="TLS Ver:" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E" Width="60" VerticalAlignment="Center"/>
+                        <TextBlock Text="TLS Ver:" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Width="60" VerticalAlignment="Center"/>
                         <ToggleButton IsChecked="{Binding FilterTlsV10Toggle}" Classes="quick-filter red"
                                       ToolTip.Tip="TLS 1.0 (deprecated, insecure)">
-                            <TextBlock Text="TLS 1.0" FontSize="11"/>
+                            <TextBlock Text="TLS 1.0" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterTlsV11Toggle}" Classes="quick-filter red"
                                       ToolTip.Tip="TLS 1.1 (deprecated, insecure)">
-                            <TextBlock Text="TLS 1.1" FontSize="11"/>
+                            <TextBlock Text="TLS 1.1" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterTlsV12Toggle}" Classes="quick-filter green"
                                       ToolTip.Tip="TLS 1.2 (secure, widely used)">
-                            <TextBlock Text="TLS 1.2" FontSize="11"/>
+                            <TextBlock Text="TLS 1.2" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterTlsV13Toggle}" Classes="quick-filter green"
                                       ToolTip.Tip="TLS 1.3 (modern, most secure)">
-                            <TextBlock Text="TLS 1.3" FontSize="11"/>
+                            <TextBlock Text="TLS 1.3" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                     </StackPanel>
 
                     <!-- VPN Protocols Row -->
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="VPN:" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E" Width="60" VerticalAlignment="Center"/>
+                        <TextBlock Text="VPN:" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Width="60" VerticalAlignment="Center"/>
                         <ToggleButton IsChecked="{Binding FilterWireGuardToggle}" Classes="quick-filter blue"
                                       ToolTip.Tip="WireGuard VPN (port 51820)">
-                            <TextBlock Text="WireGuard" FontSize="11"/>
+                            <TextBlock Text="WireGuard" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterOpenVpnToggle}" Classes="quick-filter blue"
                                       ToolTip.Tip="OpenVPN (port 1194)">
-                            <TextBlock Text="OpenVPN" FontSize="11"/>
+                            <TextBlock Text="OpenVPN" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterIkeV2Toggle}" Classes="quick-filter blue"
                                       ToolTip.Tip="IKEv2/IPSec (ports 500, 4500)">
-                            <TextBlock Text="IKEv2" FontSize="11"/>
+                            <TextBlock Text="IKEv2" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterIpsecToggle}" Classes="quick-filter blue"
                                       ToolTip.Tip="IPSec ESP/AH protocols">
-                            <TextBlock Text="IPSec" FontSize="11"/>
+                            <TextBlock Text="IPSec" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterL2tpToggle}" Classes="quick-filter blue"
                                       ToolTip.Tip="L2TP tunnel (port 1701)">
-                            <TextBlock Text="L2TP" FontSize="11"/>
+                            <TextBlock Text="L2TP" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterPptpToggle}" Classes="quick-filter blue"
                                       ToolTip.Tip="PPTP VPN (port 1723, legacy)">
-                            <TextBlock Text="PPTP" FontSize="11"/>
+                            <TextBlock Text="PPTP" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                     </StackPanel>
 
                     <!-- Traffic Pattern Row -->
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="Traffic:" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E" Width="60" VerticalAlignment="Center"/>
+                        <TextBlock Text="Traffic:" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Width="60" VerticalAlignment="Center"/>
                         <ToggleButton IsChecked="{Binding FilterPrivateToPublicToggle}" Classes="quick-filter green"
                                       ToolTip.Tip="Egress: Private → Public (outbound to internet)">
-                            <TextBlock Text="Egress" FontSize="11"/>
+                            <TextBlock Text="Egress" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterPublicToPrivateToggle}" Classes="quick-filter green"
                                       ToolTip.Tip="Ingress: Public → Private (inbound from internet)">
-                            <TextBlock Text="Ingress" FontSize="11"/>
+                            <TextBlock Text="Ingress" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterJumboFramesToggle}" Classes="quick-filter green"
                                       ToolTip.Tip="Large packets (>1500 bytes)">
-                            <TextBlock Text="Large Pkts" FontSize="11"/>
+                            <TextBlock Text="Large Pkts" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterLoopbackToggle}" Classes="quick-filter green"
                                       ToolTip.Tip="Loopback traffic (127.0.0.0/8)">
-                            <TextBlock Text="Loopback" FontSize="11"/>
+                            <TextBlock Text="Loopback" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterLinkLocalToggle}" Classes="quick-filter green"
                                       ToolTip.Tip="Link-local addresses (169.254.x.x)">
-                            <TextBlock Text="Link-Local" FontSize="11"/>
+                            <TextBlock Text="Link-Local" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                     </StackPanel>
 
                     <!-- TCP Performance Row -->
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="TCP Perf:" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E" Width="60" VerticalAlignment="Center"/>
+                        <TextBlock Text="TCP Perf:" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Width="60" VerticalAlignment="Center"/>
                         <ToggleButton IsChecked="{Binding FilterRetransmissionsToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="TCP retransmissions - packet loss indicator">
-                            <TextBlock Text="Retrans" FontSize="11"/>
+                            <TextBlock Text="Retrans" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterZeroWindowToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="TCP zero window - receiver congestion">
-                            <TextBlock Text="Zero Win" FontSize="11"/>
+                            <TextBlock Text="Zero Win" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterKeepAliveToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="TCP keep-alive packets - idle connections">
-                            <TextBlock Text="Keep-Alive" FontSize="11"/>
+                            <TextBlock Text="Keep-Alive" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterConnectionRefusedToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="Connection refused (RST) - failed connections">
-                            <TextBlock Text="Conn Refused" FontSize="11"/>
+                            <TextBlock Text="Conn Refused" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterWindowFullToggle}" Classes="quick-filter orange"
                                       ToolTip.Tip="Window full - sender capped by receiver">
-                            <TextBlock Text="Win Full" FontSize="11"/>
+                            <TextBlock Text="Win Full" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                     </StackPanel>
 
                     <!-- Security Audit Row -->
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="Audit:" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E" Width="60" VerticalAlignment="Center"/>
+                        <TextBlock Text="Audit:" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Width="60" VerticalAlignment="Center"/>
                         <ToggleButton IsChecked="{Binding FilterCleartextAuthToggle}" Classes="quick-filter red"
                                       ToolTip.Tip="Cleartext authentication (HTTP Basic, FTP USER, Telnet)">
-                            <TextBlock Text="Clear Auth" FontSize="11"/>
+                            <TextBlock Text="Clear Auth" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterObsoleteCryptoToggle}" Classes="quick-filter red"
                                       ToolTip.Tip="Obsolete crypto (TLS 1.0/1.1, SSLv3)">
-                            <TextBlock Text="Old Crypto" FontSize="11"/>
+                            <TextBlock Text="Old Crypto" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterDnsTunnelingToggle}" Classes="quick-filter red"
                                       ToolTip.Tip="Potential DNS tunneling (long query names)">
-                            <TextBlock Text="DNS Tunnel" FontSize="11"/>
+                            <TextBlock Text="DNS Tunnel" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterScanTrafficToggle}" Classes="quick-filter red"
                                       ToolTip.Tip="Nmap/scan traffic patterns">
-                            <TextBlock Text="Scan" FontSize="11"/>
+                            <TextBlock Text="Scan" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterNonStandardPortsToggle}" Classes="quick-filter red"
                                       ToolTip.Tip="HTTP on non-standard ports">
-                            <TextBlock Text="Non-Std Port" FontSize="11"/>
+                            <TextBlock Text="Non-Std Port" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterSmbV1Toggle}" Classes="quick-filter red"
                                       ToolTip.Tip="SMBv1 traffic (vulnerable to EternalBlue)">
-                            <TextBlock Text="SMBv1" FontSize="11"/>
+                            <TextBlock Text="SMBv1" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                     </StackPanel>
 
                     <!-- Clean View Row -->
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="Clean:" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E" Width="60" VerticalAlignment="Center"/>
+                        <TextBlock Text="Clean:" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Width="60" VerticalAlignment="Center"/>
                         <ToggleButton IsChecked="{Binding FilterHideBroadcastToggle}" Classes="quick-filter purple"
                                       ToolTip.Tip="Hide broadcast/discovery (ARP, SSDP, mDNS, LLMNR)">
-                            <TextBlock Text="Hide Bcast" FontSize="11"/>
+                            <TextBlock Text="Hide Bcast" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterApplicationDataOnlyToggle}" Classes="quick-filter purple"
                                       ToolTip.Tip="Show only application data (packets with payload)">
-                            <TextBlock Text="App Data" FontSize="11"/>
+                            <TextBlock Text="App Data" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterHideTunnelOverheadToggle}" Classes="quick-filter purple"
                                       ToolTip.Tip="Hide tunnel overhead (ESP, GRE, IPIP)">
-                            <TextBlock Text="Hide Tunnels" FontSize="11"/>
+                            <TextBlock Text="Hide Tunnels" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                     </StackPanel>
 
                     <!-- Protocol Errors Row -->
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="Errors:" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E" Width="60" VerticalAlignment="Center"/>
+                        <TextBlock Text="Errors:" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Width="60" VerticalAlignment="Center"/>
                         <ToggleButton IsChecked="{Binding FilterHttpErrorsToggle}" Classes="quick-filter red"
                                       ToolTip.Tip="HTTP 4xx/5xx error responses">
-                            <TextBlock Text="HTTP Err" FontSize="11"/>
+                            <TextBlock Text="HTTP Err" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterDnsFailuresToggle}" Classes="quick-filter red"
                                       ToolTip.Tip="DNS failures (NXDOMAIN, SERVFAIL, REFUSED)">
-                            <TextBlock Text="DNS Fail" FontSize="11"/>
+                            <TextBlock Text="DNS Fail" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                         <ToggleButton IsChecked="{Binding FilterIcmpUnreachableToggle}" Classes="quick-filter red"
                                       ToolTip.Tip="ICMP unreachable messages">
-                            <TextBlock Text="ICMP Unreach" FontSize="11"/>
+                            <TextBlock Text="ICMP Unreach" FontSize="{StaticResource FontSizeSmall}"/>
                         </ToggleButton>
                     </StackPanel>
                 </StackPanel>
@@ -418,16 +418,16 @@
                         Classes="primary-action" Height="32" Padding="20,0"
                         HotKey="Ctrl+Enter" ToolTip.Tip="Apply Filters (Ctrl+Enter)">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="⚡" FontSize="14"/>
-                        <TextBlock Text="Apply" FontSize="12" FontWeight="SemiBold"/>
+                        <TextBlock Text="⚡" FontSize="{StaticResource FontSizeInput}"/>
+                        <TextBlock Text="Apply" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold"/>
                     </StackPanel>
                 </Button>
                 <Button Grid.Column="4" Command="{Binding ClearFiltersCommand}"
                         Classes="secondary-action" Height="32" Padding="16,0"
                         HotKey="Ctrl+Shift+R" ToolTip.Tip="Clear All Filters">
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="🔄" FontSize="13"/>
-                        <TextBlock Text="Clear" FontSize="12"/>
+                        <TextBlock Text="🔄" FontSize="{StaticResource FontSizeMedium}"/>
+                        <TextBlock Text="Clear" FontSize="{StaticResource FontSizeBase}"/>
                     </StackPanel>
                 </Button>
                 <Button Grid.Column="6" Classes="secondary-action" Height="32"
@@ -441,20 +441,20 @@
                         </MenuFlyout>
                     </Button.Flyout>
                     <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock Text="📋" FontSize="13"/>
-                        <TextBlock Text="Copy" FontSize="12"/>
+                        <TextBlock Text="📋" FontSize="{StaticResource FontSizeMedium}"/>
+                        <TextBlock Text="Copy" FontSize="{StaticResource FontSizeBase}"/>
                     </StackPanel>
                 </Button>
             </Grid>
 
             <!-- Active INCLUDE Filter Groups (AND groups) -->
-            <Border Background="#0D1117" BorderBrush="#3B82F6" BorderThickness="2"
+            <Border Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource AccentPrimary}" BorderThickness="2"
                     CornerRadius="6" Padding="12,8" IsVisible="{Binding IncludeFilterGroups.Count}"
                     BoxShadow="0 0 12 #3B82F660">
                 <StackPanel Spacing="8">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="✅" FontSize="11"/>
-                        <TextBlock Text="ACTIVE Filter Groups (OR logic between groups):" FontSize="11" FontWeight="Bold" Foreground="#3FB950"/>
+                        <TextBlock Text="✅" FontSize="{StaticResource FontSizeSmall}"/>
+                        <TextBlock Text="ACTIVE Filter Groups (OR logic between groups):" FontSize="{StaticResource FontSizeSmall}" FontWeight="Bold" Foreground="{DynamicResource SlackSuccess}"/>
                     </StackPanel>
                     <ItemsControl ItemsSource="{Binding IncludeFilterGroups}">
                         <ItemsControl.ItemsPanel>
@@ -464,17 +464,17 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="#1C2128" BorderBrush="#3FB950" BorderThickness="2"
+                                <Border Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource SlackSuccess}" BorderThickness="2"
                                         CornerRadius="8" Padding="10,6" Margin="0,0,8,8"
                                         BoxShadow="0 0 10 #3FB95060">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="🔹 ACTIVE GROUP" FontSize="9" FontWeight="Bold" Foreground="#3FB950" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding DisplayLabel}" FontSize="10" Foreground="#C9D1D9" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Text="🔹 ACTIVE GROUP" FontSize="{StaticResource FontSizeXS}" FontWeight="Bold" Foreground="{DynamicResource SlackSuccess}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding DisplayLabel}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         <Button Command="{Binding RemoveCommand}"
-                                                Background="#0D1117" BorderBrush="#EF4444" BorderThickness="1"
+                                                Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource SlackDanger}" BorderThickness="1"
                                                 Padding="6,2" CornerRadius="4"
                                                 ToolTip.Tip="Remove this group">
-                                            <TextBlock Text="✕" Foreground="#EF4444" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock Text="✕" Foreground="{DynamicResource SlackDanger}" FontSize="{StaticResource FontSizeXS}" FontWeight="Bold"/>
                                         </Button>
                                     </StackPanel>
                                 </Border>
@@ -485,15 +485,15 @@
             </Border>
 
             <!-- Active INCLUDE Individual Chips (OR chips) - With dynamic colors -->
-            <Border Background="#0D1117" BorderBrush="#2EA043" BorderThickness="2"
+            <Border Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource SlackSuccess}" BorderThickness="2"
                     CornerRadius="6" Padding="12,8" IsVisible="{Binding IncludeIndividualChips.Count}"
                     BoxShadow="0 0 12 #2EA04360">
                 <StackPanel Spacing="8">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="✅" FontSize="12"/>
-                        <TextBlock Text="ACTIVE INCLUDE Filters" FontSize="12" FontWeight="Bold" Foreground="#7EE787"/>
-                        <Border Background="#1A3D1A" CornerRadius="3" Padding="4,1">
-                            <TextBlock Text="SHOW matching" FontSize="9" Foreground="#7EE787"/>
+                        <TextBlock Text="✅" FontSize="{StaticResource FontSizeBase}"/>
+                        <TextBlock Text="ACTIVE INCLUDE Filters" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold" Foreground="{DynamicResource SlackSuccess}"/>
+                        <Border Background="{DynamicResource BackgroundDark}" CornerRadius="3" Padding="4,1">
+                            <TextBlock Text="SHOW matching" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource SlackSuccess}"/>
                         </Border>
                     </StackPanel>
                     <ItemsControl ItemsSource="{Binding IncludeIndividualChips}">
@@ -509,13 +509,13 @@
                                         CornerRadius="12" Padding="10,5" Margin="0,0,6,6"
                                         BoxShadow="0 0 8 #2EA04350">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="+" FontSize="12" FontWeight="Bold" Foreground="{Binding ChipTextColor}"/>
-                                        <TextBlock Text="{Binding DisplayLabel}" FontSize="11" Foreground="{Binding ChipTextColor}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="+" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold" Foreground="{Binding ChipTextColor}"/>
+                                        <TextBlock Text="{Binding DisplayLabel}" FontSize="{StaticResource FontSizeSmall}" Foreground="{Binding ChipTextColor}" FontWeight="SemiBold"/>
                                         <Button Command="{Binding RemoveCommand}"
-                                                Background="#21262D" BorderBrush="#484F58" BorderThickness="1"
+                                                Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1"
                                                 Padding="4,2" CornerRadius="8"
                                                 ToolTip.Tip="Remove this filter">
-                                            <TextBlock Text="✕" Foreground="#F85149" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock Text="✕" Foreground="{DynamicResource SlackDanger}" FontSize="{StaticResource FontSizeXS}" FontWeight="Bold"/>
                                         </Button>
                                     </StackPanel>
                                 </Border>
@@ -526,13 +526,13 @@
             </Border>
 
             <!-- Active EXCLUDE Filter Groups (NOT groups) -->
-            <Border Background="#0D1117" BorderBrush="#EF4444" BorderThickness="2"
+            <Border Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource SlackDanger}" BorderThickness="2"
                     CornerRadius="6" Padding="12,8" IsVisible="{Binding ExcludeFilterGroups.Count}"
                     BoxShadow="0 0 12 #EF444460">
                 <StackPanel Spacing="8">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="🚫" FontSize="11"/>
-                        <TextBlock Text="ACTIVE Exclusion Groups (NOT):" FontSize="11" FontWeight="Bold" Foreground="#EF4444"/>
+                        <TextBlock Text="🚫" FontSize="{StaticResource FontSizeSmall}"/>
+                        <TextBlock Text="ACTIVE Exclusion Groups (NOT):" FontSize="{StaticResource FontSizeSmall}" FontWeight="Bold" Foreground="{DynamicResource SlackDanger}"/>
                     </StackPanel>
                     <ItemsControl ItemsSource="{Binding ExcludeFilterGroups}">
                         <ItemsControl.ItemsPanel>
@@ -542,17 +542,17 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Background="#1C2128" BorderBrush="#EF4444" BorderThickness="2"
+                                <Border Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource SlackDanger}" BorderThickness="2"
                                         CornerRadius="8" Padding="10,6" Margin="0,0,8,8"
                                         BoxShadow="0 0 10 #EF444460">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="🔹 ACTIVE NOT GROUP" FontSize="9" FontWeight="Bold" Foreground="#F87171" VerticalAlignment="Center"/>
-                                        <TextBlock Text="{Binding DisplayLabel}" FontSize="10" Foreground="#C9D1D9" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                        <TextBlock Text="🔹 ACTIVE NOT GROUP" FontSize="{StaticResource FontSizeXS}" FontWeight="Bold" Foreground="{DynamicResource SlackDanger}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="{Binding DisplayLabel}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold" VerticalAlignment="Center"/>
                                         <Button Command="{Binding RemoveCommand}"
-                                                Background="#0D1117" BorderBrush="#EF4444" BorderThickness="1"
+                                                Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource SlackDanger}" BorderThickness="1"
                                                 Padding="6,2" CornerRadius="4"
                                                 ToolTip.Tip="Remove this NOT group">
-                                            <TextBlock Text="✕" Foreground="#EF4444" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock Text="✕" Foreground="{DynamicResource SlackDanger}" FontSize="{StaticResource FontSizeXS}" FontWeight="Bold"/>
                                         </Button>
                                     </StackPanel>
                                 </Border>
@@ -563,15 +563,15 @@
             </Border>
 
             <!-- Active EXCLUDE Individual Chips - With dynamic colors -->
-            <Border Background="#0D1117" BorderBrush="#F85149" BorderThickness="2"
+            <Border Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource SlackDanger}" BorderThickness="2"
                     CornerRadius="6" Padding="12,8" IsVisible="{Binding ExcludeIndividualChips.Count}"
                     BoxShadow="0 0 12 #F8514960">
                 <StackPanel Spacing="8">
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="🚫" FontSize="12"/>
-                        <TextBlock Text="ACTIVE EXCLUDE Filters" FontSize="12" FontWeight="Bold" Foreground="#FF7B72"/>
-                        <Border Background="#3D1A1A" CornerRadius="3" Padding="4,1">
-                            <TextBlock Text="HIDE matching" FontSize="9" Foreground="#FF7B72"/>
+                        <TextBlock Text="🚫" FontSize="{StaticResource FontSizeBase}"/>
+                        <TextBlock Text="ACTIVE EXCLUDE Filters" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold" Foreground="{DynamicResource SlackDanger}"/>
+                        <Border Background="{DynamicResource BackgroundDark}" CornerRadius="3" Padding="4,1">
+                            <TextBlock Text="HIDE matching" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource SlackDanger}"/>
                         </Border>
                     </StackPanel>
                     <ItemsControl ItemsSource="{Binding ExcludeIndividualChips}">
@@ -587,13 +587,13 @@
                                         CornerRadius="12" Padding="10,5" Margin="0,0,6,6"
                                         BoxShadow="0 0 8 #F8514950">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="−" FontSize="14" FontWeight="Bold" Foreground="{Binding ChipTextColor}"/>
-                                        <TextBlock Text="{Binding DisplayLabel}" FontSize="11" Foreground="{Binding ChipTextColor}" FontWeight="SemiBold"/>
+                                        <TextBlock Text="−" FontSize="{StaticResource FontSizeInput}" FontWeight="Bold" Foreground="{Binding ChipTextColor}"/>
+                                        <TextBlock Text="{Binding DisplayLabel}" FontSize="{StaticResource FontSizeSmall}" Foreground="{Binding ChipTextColor}" FontWeight="SemiBold"/>
                                         <Button Command="{Binding RemoveCommand}"
-                                                Background="#21262D" BorderBrush="#484F58" BorderThickness="1"
+                                                Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1"
                                                 Padding="4,2" CornerRadius="8"
                                                 ToolTip.Tip="Remove this exclusion">
-                                            <TextBlock Text="✕" Foreground="#F85149" FontSize="10" FontWeight="Bold"/>
+                                            <TextBlock Text="✕" Foreground="{DynamicResource SlackDanger}" FontSize="{StaticResource FontSizeXS}" FontWeight="Bold"/>
                                         </Button>
                                     </StackPanel>
                                 </Border>
@@ -609,110 +609,110 @@
     <UserControl.Styles>
         <!-- Quick Filter Toggle Button Base Style -->
         <Style Selector="ToggleButton.quick-filter">
-            <Setter Property="Background" Value="#1C2128"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundPanel}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="10,4"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
         <Style Selector="ToggleButton.quick-filter:pointerover">
-            <Setter Property="Background" Value="#21262D"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundCard}"/>
         </Style>
 
         <!-- Blue (Network) -->
         <Style Selector="ToggleButton.quick-filter.blue">
-            <Setter Property="BorderBrush" Value="#3B82F6"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentPrimary}"/>
         </Style>
         <Style Selector="ToggleButton.quick-filter.blue:checked">
-            <Setter Property="Background" Value="#1E3A5F"/>
-            <Setter Property="BorderBrush" Value="#3B82F6"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundDark}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentPrimary}"/>
             <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Foreground" Value="#60A5FA"/>
+            <Setter Property="Foreground" Value="{StaticResource SlackInfo}"/>
         </Style>
         <Style Selector="ToggleButton.quick-filter.blue:checked:pointerover">
-            <Setter Property="Background" Value="#234B73"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundPanel}"/>
         </Style>
 
         <!-- Red (Security) -->
         <Style Selector="ToggleButton.quick-filter.red">
-            <Setter Property="BorderBrush" Value="#EF4444"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SlackDanger}"/>
         </Style>
         <Style Selector="ToggleButton.quick-filter.red:checked">
-            <Setter Property="Background" Value="#5F1E1E"/>
-            <Setter Property="BorderBrush" Value="#EF4444"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundDark}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource SlackDanger}"/>
             <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Foreground" Value="#F87171"/>
+            <Setter Property="Foreground" Value="{StaticResource SlackDanger}"/>
         </Style>
         <Style Selector="ToggleButton.quick-filter.red:checked:pointerover">
-            <Setter Property="Background" Value="#732323"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundPanel}"/>
         </Style>
 
         <!-- Orange (Protocol) -->
         <Style Selector="ToggleButton.quick-filter.orange">
-            <Setter Property="BorderBrush" Value="#F59E0B"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SlackWarning}"/>
         </Style>
         <Style Selector="ToggleButton.quick-filter.orange:checked">
-            <Setter Property="Background" Value="#5F4B1E"/>
-            <Setter Property="BorderBrush" Value="#F59E0B"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundDark}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource SlackWarning}"/>
             <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Foreground" Value="#FBBF24"/>
+            <Setter Property="Foreground" Value="{StaticResource SlackWarning}"/>
         </Style>
         <Style Selector="ToggleButton.quick-filter.orange:checked:pointerover">
-            <Setter Property="Background" Value="#735A23"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundPanel}"/>
         </Style>
 
         <!-- Green (Traffic) -->
         <Style Selector="ToggleButton.quick-filter.green">
-            <Setter Property="BorderBrush" Value="#10B981"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SlackSuccess}"/>
         </Style>
         <Style Selector="ToggleButton.quick-filter.green:checked">
-            <Setter Property="Background" Value="#1E5F4B"/>
-            <Setter Property="BorderBrush" Value="#10B981"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundDark}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource SlackSuccess}"/>
             <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Foreground" Value="#34D399"/>
+            <Setter Property="Foreground" Value="{StaticResource SlackSuccess}"/>
         </Style>
         <Style Selector="ToggleButton.quick-filter.green:checked:pointerover">
-            <Setter Property="Background" Value="#23735A"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundPanel}"/>
         </Style>
 
         <!-- Purple (Clean View/Noise Reduction) -->
         <Style Selector="ToggleButton.quick-filter.purple">
-            <Setter Property="BorderBrush" Value="#8B5CF6"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentPurpleBrush}"/>
         </Style>
         <Style Selector="ToggleButton.quick-filter.purple:checked">
-            <Setter Property="Background" Value="#3B1E5F"/>
-            <Setter Property="BorderBrush" Value="#8B5CF6"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundDark}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentPurpleBrush}"/>
             <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Foreground" Value="#A78BFA"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentPurpleBrush}"/>
         </Style>
         <Style Selector="ToggleButton.quick-filter.purple:checked:pointerover">
-            <Setter Property="Background" Value="#4A2373"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundPanel}"/>
         </Style>
 
         <!-- Mode Toggle (Include/Exclude) -->
         <Style Selector="ToggleButton.mode-toggle">
-            <Setter Property="Background" Value="#1E5F4B"/>
-            <Setter Property="BorderBrush" Value="#10B981"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundDark}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SlackSuccess}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="8,3"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Foreground" Value="#34D399"/>
+            <Setter Property="Foreground" Value="{DynamicResource SlackSuccess}"/>
         </Style>
         <Style Selector="ToggleButton.mode-toggle:pointerover">
-            <Setter Property="Background" Value="#23735A"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundPanel}"/>
         </Style>
         <Style Selector="ToggleButton.mode-toggle:checked">
-            <Setter Property="Background" Value="#1E5F4B"/>
-            <Setter Property="BorderBrush" Value="#10B981"/>
-            <Setter Property="Foreground" Value="#34D399"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundDark}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource SlackSuccess}"/>
+            <Setter Property="Foreground" Value="{StaticResource SlackSuccess}"/>
         </Style>
         <Style Selector="ToggleButton.mode-toggle:unchecked">
-            <Setter Property="Background" Value="#5F1E1E"/>
-            <Setter Property="BorderBrush" Value="#EF4444"/>
-            <Setter Property="Foreground" Value="#F87171"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundDark}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource SlackDanger}"/>
+            <Setter Property="Foreground" Value="{StaticResource SlackDanger}"/>
         </Style>
     </UserControl.Styles>
 </UserControl>

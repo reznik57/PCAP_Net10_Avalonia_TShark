@@ -10,7 +10,7 @@
         <StackPanel Spacing="16" Margin="16">
             <!-- Header -->
             <TextBlock Text="Live Statistics"
-                       FontSize="16"
+                       FontSize="{StaticResource FontSizeLarge}"
                        FontWeight="Bold"
                        Foreground="{DynamicResource TextPrimary}"/>
 
@@ -18,11 +18,11 @@
             <Border Classes="card" Padding="12">
                 <StackPanel>
                     <TextBlock Text="SESSION DURATION"
-                               FontSize="10"
+                               FontSize="{StaticResource FontSizeXS}"
                                FontWeight="Medium"
                                Foreground="{DynamicResource TextMuted}"/>
                     <TextBlock Text="{Binding SessionDuration}"
-                               FontSize="20"
+                               FontSize="{StaticResource FontSizeXL}"
                                FontWeight="Bold"
                                Foreground="{DynamicResource AccentCyan}"
                                Margin="0,4,0,0"/>
@@ -33,11 +33,11 @@
             <Border Classes="card" Padding="12">
                 <StackPanel>
                     <TextBlock Text="TOTAL PACKETS"
-                               FontSize="10"
+                               FontSize="{StaticResource FontSizeXS}"
                                FontWeight="Medium"
                                Foreground="{DynamicResource TextMuted}"/>
                     <TextBlock Text="{Binding TotalPacketsFormatted}"
-                               FontSize="20"
+                               FontSize="{StaticResource FontSizeXL}"
                                FontWeight="Bold"
                                Foreground="{DynamicResource AccentBlue}"
                                Margin="0,4,0,0"/>
@@ -48,11 +48,11 @@
             <Border Classes="card" Padding="12">
                 <StackPanel>
                     <TextBlock Text="TOTAL BYTES"
-                               FontSize="10"
+                               FontSize="{StaticResource FontSizeXS}"
                                FontWeight="Medium"
                                Foreground="{DynamicResource TextMuted}"/>
                     <TextBlock Text="{Binding TotalBytesFormatted}"
-                               FontSize="20"
+                               FontSize="{StaticResource FontSizeXL}"
                                FontWeight="Bold"
                                Foreground="{DynamicResource AccentGreen}"
                                Margin="0,4,0,0"/>
@@ -63,11 +63,11 @@
             <Border Classes="card" Padding="12">
                 <StackPanel>
                     <TextBlock Text="PACKET RATE"
-                               FontSize="10"
+                               FontSize="{StaticResource FontSizeXS}"
                                FontWeight="Medium"
                                Foreground="{DynamicResource TextMuted}"/>
                     <TextBlock Text="{Binding PacketRateFormatted}"
-                               FontSize="20"
+                               FontSize="{StaticResource FontSizeXL}"
                                FontWeight="Bold"
                                Foreground="{DynamicResource AccentOrange}"
                                Margin="0,4,0,0"/>
@@ -78,11 +78,11 @@
             <Border Classes="card" Padding="12">
                 <StackPanel>
                     <TextBlock Text="BANDWIDTH"
-                               FontSize="10"
+                               FontSize="{StaticResource FontSizeXS}"
                                FontWeight="Medium"
                                Foreground="{DynamicResource TextMuted}"/>
                     <TextBlock Text="{Binding BandwidthFormatted}"
-                               FontSize="20"
+                               FontSize="{StaticResource FontSizeXL}"
                                FontWeight="Bold"
                                Foreground="{DynamicResource AccentPurple}"
                                Margin="0,4,0,0"/>
@@ -93,17 +93,17 @@
             <Border Classes="card" Padding="12" IsVisible="{Binding PacketsDropped}">
                 <StackPanel>
                     <TextBlock Text="PACKETS DROPPED"
-                               FontSize="10"
+                               FontSize="{StaticResource FontSizeXS}"
                                FontWeight="Medium"
                                Foreground="{DynamicResource TextMuted}"/>
-                    <TextBlock FontSize="20" FontWeight="Bold" Margin="0,4,0,0">
+                    <TextBlock FontSize="{StaticResource FontSizeXL}" FontWeight="Bold" Margin="0,4,0,0">
                         <TextBlock.Foreground>
                             <SolidColorBrush Color="{Binding DropPercentage, Converter={StaticResource DropPercentageToColorConverter}}"/>
                         </TextBlock.Foreground>
                         <Run Text="{Binding PacketsDropped}"/>
-                        <Run Text="(" FontSize="14"/>
-                        <Run Text="{Binding DropPercentage, StringFormat='{}{0:F2}%'}" FontSize="14"/>
-                        <Run Text=")" FontSize="14"/>
+                        <Run Text="(" FontSize="{StaticResource FontSizeInput}"/>
+                        <Run Text="{Binding DropPercentage, StringFormat='{}{0:F2}%'}" FontSize="{StaticResource FontSizeInput}"/>
+                        <Run Text=")" FontSize="{StaticResource FontSizeInput}"/>
                     </TextBlock>
                 </StackPanel>
             </Border>
@@ -112,7 +112,7 @@
             <Border Classes="card" Padding="12">
                 <StackPanel>
                     <TextBlock Text="PACKET RATE OVER TIME"
-                               FontSize="10"
+                               FontSize="{StaticResource FontSizeXS}"
                                FontWeight="Medium"
                                Foreground="{DynamicResource TextMuted}"
                                Margin="0,0,0,8"/>
@@ -131,7 +131,7 @@
             <Border Classes="card" Padding="12">
                 <StackPanel>
                     <TextBlock Text="PROTOCOL DISTRIBUTION"
-                               FontSize="10"
+                               FontSize="{StaticResource FontSizeXS}"
                                FontWeight="Medium"
                                Foreground="{DynamicResource TextMuted}"
                                Margin="0,0,0,8"/>
@@ -144,7 +144,7 @@
 
                     <!-- No Data Message -->
                     <TextBlock Text="Waiting for packets..."
-                               FontSize="12"
+                               FontSize="{StaticResource FontSizeBase}"
                                Foreground="{DynamicResource TextMuted}"
                                HorizontalAlignment="Center"
                                Margin="0,20"
@@ -164,17 +164,17 @@
 
                                     <TextBlock Grid.Column="0"
                                                Text="{Binding Protocol}"
-                                               FontSize="11"
+                                               FontSize="{StaticResource FontSizeSmall}"
                                                Foreground="{DynamicResource TextPrimary}"/>
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding Count, StringFormat='{}{0:N0}'}"
-                                               FontSize="11"
+                                               FontSize="{StaticResource FontSizeSmall}"
                                                FontWeight="Medium"
                                                Foreground="{DynamicResource AccentBlue}"
                                                Margin="8,0"/>
                                     <TextBlock Grid.Column="2"
                                                Text="{Binding Percentage, StringFormat='({0:F1}%)'}"
-                                               FontSize="10"
+                                               FontSize="{StaticResource FontSizeXS}"
                                                Foreground="{DynamicResource TextSecondary}"/>
                                 </Grid>
                             </DataTemplate>
@@ -187,7 +187,7 @@
             <Border Classes="card" Padding="12" IsVisible="{Binding !!TopTalkers.Count}">
                 <StackPanel>
                     <TextBlock Text="TOP TALKERS"
-                               FontSize="10"
+                               FontSize="{StaticResource FontSizeXS}"
                                FontWeight="Medium"
                                Foreground="{DynamicResource TextMuted}"
                                Margin="0,0,0,8"/>
@@ -207,17 +207,17 @@
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Grid.Column="0">
                                             <TextBlock Text="{Binding IpAddress}"
-                                                       FontSize="11"
+                                                       FontSize="{StaticResource FontSizeSmall}"
                                                        FontWeight="Medium"
                                                        FontFamily="Consolas,Courier New,monospace"
                                                        Foreground="{DynamicResource AccentBlue}"/>
                                             <TextBlock Text="{Binding PacketCount, StringFormat='{}{0:N0} packets'}"
-                                                       FontSize="10"
+                                                       FontSize="{StaticResource FontSizeXS}"
                                                        Foreground="{DynamicResource TextSecondary}"/>
                                         </StackPanel>
                                         <TextBlock Grid.Column="1"
                                                    Text="{Binding BytesFormatted}"
-                                                   FontSize="12"
+                                                   FontSize="{StaticResource FontSizeBase}"
                                                    FontWeight="Bold"
                                                    Foreground="{DynamicResource AccentGreen}"
                                                    VerticalAlignment="Center"/>

@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using Avalonia.Collections;
-using Avalonia.Threading;
+using Avalonia.Threading; // Required for DispatcherTimer only
 using CommunityToolkit.Mvvm.ComponentModel;
 using PCAPAnalyzer.Core.Models.Capture;
 
@@ -80,13 +80,21 @@ public partial class PacketListViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// Adds a packet to the buffer (called from background thread)
-    /// Thread-safe with async/await pattern for minimal blocking
+    /// Uses non-blocking TryEnter pattern to avoid deadlocks
     /// </summary>
     public void AddPacket(LivePacketData packet)
     {
         if (_disposed) return;
 
-        _bufferLock.Wait();
+        // Use timeout to avoid deadlock - if we can't acquire lock quickly, skip this packet
+        // This is acceptable for live capture where dropping occasional packets under extreme load
+        // is preferable to deadlocking the application
+        if (!_bufferLock.Wait(TimeSpan.FromMilliseconds(50)))
+        {
+            // Lock contention - skip packet to avoid blocking
+            return;
+        }
+
         try
         {
             _packetBuffer.Add(packet);
@@ -106,10 +114,17 @@ public partial class PacketListViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// Timer tick handler - flushes buffer every 100ms
+    /// Uses timeout to avoid blocking UI thread
     /// </summary>
     private void OnFlushTimerTick(object? sender, EventArgs e)
     {
-        _bufferLock.Wait();
+        // Timer runs on UI thread - use short timeout to avoid blocking UI
+        if (!_bufferLock.Wait(TimeSpan.FromMilliseconds(10)))
+        {
+            // Lock held by AddPacket - will flush on next tick
+            return;
+        }
+
         try
         {
             if (_packetBuffer.Count > 0)
@@ -136,7 +151,7 @@ public partial class PacketListViewModel : ViewModelBase, IDisposable
         _packetBuffer.Clear();
 
         // Update UI on UI thread (single call for entire batch)
-        Dispatcher.UIThread.Post(() =>
+        Dispatcher.Post(() =>
         {
             foreach (var packet in packetsToAdd)
             {
@@ -175,15 +190,23 @@ public partial class PacketListViewModel : ViewModelBase, IDisposable
 
     /// <summary>
     /// Clears all packets from the list
+    /// Uses timeout to avoid blocking - retries if lock not acquired
     /// </summary>
     public void Clear()
     {
-        _bufferLock.Wait();
+        // Clear is a user-initiated action - use longer timeout but still avoid indefinite blocking
+        if (!_bufferLock.Wait(TimeSpan.FromMilliseconds(100)))
+        {
+            // If we can't get the lock, schedule retry on UI thread
+            Dispatcher.Post(Clear);
+            return;
+        }
+
         try
         {
             _packetBuffer.Clear();
 
-            Dispatcher.UIThread.Post(() =>
+            Dispatcher.Post(() =>
             {
                 _packets.Clear();
                 TotalPacketCount = 0;

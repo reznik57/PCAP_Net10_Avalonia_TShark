@@ -1,49 +1,87 @@
+using System;
+using System.IO;
+using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
+using Avalonia.Markup.Xaml;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
+using Avalonia.Rendering;
+using PCAPAnalyzer.UI.Controls;
 using PCAPAnalyzer.UI.ViewModels;
+using PCAPAnalyzer.Core.Utilities;
 
 namespace PCAPAnalyzer.UI.Views
 {
     public partial class GeographicMapView : UserControl
     {
+        private ContinentMapControl? _mapControl;
+
         public GeographicMapView()
         {
             InitializeComponent();
-            
-            // Enable keyboard shortcuts
-            KeyDown += OnKeyDown;
+
+            DataContextChanged += OnDataContextChanged;
+        }
+
+        private void InitializeComponent()
+        {
+            AvaloniaXamlLoader.Load(this);
+            _mapControl = this.FindControl<ContinentMapControl>("MapControl");
         }
         
-        private void OnKeyDown(object? sender, KeyEventArgs e)
+        private void OnDataContextChanged(object? sender, EventArgs e)
         {
-            if (DataContext is not CountryTrafficViewModel vm) return;
-            
-            switch (e.Key)
+            if (DataContext is GeographicMapViewModel viewModel)
             {
-                case Key.Add:
-                case Key.OemPlus:
-                    vm.ZoomInCommand.Execute(null);
-                    break;
-                case Key.Subtract:
-                case Key.OemMinus:
-                    vm.ZoomOutCommand.Execute(null);
-                    break;
-                case Key.R:
-                    if (e.KeyModifiers == KeyModifiers.Control)
-                        vm.ResetViewCommand.Execute(null);
-                    break;
-                case Key.A:
-                    if (e.KeyModifiers == KeyModifiers.Control)
-                        vm.ShowAnimations = !vm.ShowAnimations;
-                    break;
-                case Key.F:
-                    if (e.KeyModifiers == KeyModifiers.Control)
-                        vm.ShowTrafficFlows = !vm.ShowTrafficFlows;
-                    break;
-                case Key.L:
-                    if (e.KeyModifiers == KeyModifiers.Control)
-                        vm.ShowCountryLabels = !vm.ShowCountryLabels;
-                    break;
+                viewModel.ScreenshotRequested += OnScreenshotRequested;
+            }
+        }
+        
+        private async void OnScreenshotRequested(string filePath)
+        {
+            try
+            {
+                if (_mapControl == null) 
+                {
+                    DebugLogger.Log($"[EnhancedMapView] Map control is null, cannot take screenshot");
+                    return;
+                }
+                
+                // Ensure the control has valid bounds
+                if (_mapControl.Bounds.Width <= 0 || _mapControl.Bounds.Height <= 0)
+                {
+                    DebugLogger.Log($"[EnhancedMapView] Map control has invalid bounds: {_mapControl.Bounds}");
+                    return;
+                }
+                
+                // Render the control to a bitmap
+                var pixelSize = new PixelSize((int)_mapControl.Bounds.Width, (int)_mapControl.Bounds.Height);
+                var dpi = new Vector(96, 96);
+                
+                using (var bitmap = new RenderTargetBitmap(pixelSize, dpi))
+                {
+                    _mapControl.Measure(new Size(pixelSize.Width, pixelSize.Height));
+                    _mapControl.Arrange(new Rect(0, 0, pixelSize.Width, pixelSize.Height));
+                    
+                    // Force a render
+                    await Task.Delay(100);
+                    
+                    bitmap.Render(_mapControl);
+                    
+                    // Save to file using stream
+                    using (var stream = File.Create(filePath))
+                    {
+                        bitmap.Save(stream);
+                    }
+                    
+                    DebugLogger.Log($"[EnhancedMapView] Screenshot saved to: {filePath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugLogger.Log($"[EnhancedMapView] Screenshot error: {ex.Message}");
+                DebugLogger.Log($"[EnhancedMapView] Stack trace: {ex.StackTrace}");
             }
         }
     }

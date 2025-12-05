@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.UI.Models;
 using PCAPAnalyzer.UI.ViewModels.Components;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Threats;
 
@@ -24,7 +25,7 @@ public partial class ThreatsStatisticsViewModel : ObservableObject
     [ObservableProperty] private int _lowThreats;
     [ObservableProperty] private double _overallRiskScore;
     [ObservableProperty] private string _riskLevel = "Unknown";
-    [ObservableProperty] private string _riskLevelColor = "#6B7280";
+    [ObservableProperty] private string _riskLevelColor = ThemeColorHelper.GetColorHex("TextMuted", "#6B7280");
 
     // ==================== SORTING ====================
 
@@ -84,27 +85,27 @@ public partial class ThreatsStatisticsViewModel : ObservableObject
         if (OverallRiskScore >= 8)
         {
             RiskLevel = "CRITICAL";
-            RiskLevelColor = "#EF4444";
+            RiskLevelColor = ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444");
         }
         else if (OverallRiskScore >= 6)
         {
             RiskLevel = "HIGH";
-            RiskLevelColor = "#F97316";
+            RiskLevelColor = ThemeColorHelper.GetColorHex("ColorOrange", "#F97316");
         }
         else if (OverallRiskScore >= 4)
         {
             RiskLevel = "MEDIUM";
-            RiskLevelColor = "#F59E0B";
+            RiskLevelColor = ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B");
         }
         else if (OverallRiskScore >= 2)
         {
             RiskLevel = "LOW";
-            RiskLevelColor = "#3B82F6";
+            RiskLevelColor = ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6");
         }
         else
         {
             RiskLevel = "MINIMAL";
-            RiskLevelColor = "#10B981";
+            RiskLevelColor = ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981");
         }
     }
 

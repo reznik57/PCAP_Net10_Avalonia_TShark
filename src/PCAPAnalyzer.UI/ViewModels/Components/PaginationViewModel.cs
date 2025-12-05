@@ -1,123 +1,150 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
 /// <summary>
-/// Generic pagination component for tables. Eliminates duplicate pagination code.
-/// Usage: Create instance for each paginated table, bind to navigation commands.
+/// Reusable pagination component for tabular data.
+/// Eliminates duplicate pagination logic across ViewModels.
 /// </summary>
-public partial class PaginationViewModel<T> : ObservableObject where T : class
+public partial class PaginationViewModel : ObservableObject
 {
-    private readonly Action? _onPageChanged;
-    private List<T> _allItems = new();
+    private readonly Action _onPageChanged;
 
     [ObservableProperty] private int _pageSize = 30;
     [ObservableProperty] private int _currentPage = 1;
     [ObservableProperty] private int _totalPages = 1;
     [ObservableProperty] private int _totalItems;
-    [ObservableProperty] private ObservableCollection<T> _items = new();
 
-    public PaginationViewModel(Action? onPageChanged = null)
+    /// <summary>
+    /// Number of items to skip for current page
+    /// </summary>
+    public int Skip => (CurrentPage - 1) * PageSize;
+
+    /// <summary>
+    /// Whether there is a previous page
+    /// </summary>
+    public bool HasPreviousPage => CurrentPage > 1;
+
+    /// <summary>
+    /// Whether there is a next page
+    /// </summary>
+    public bool HasNextPage => CurrentPage < TotalPages;
+
+    /// <summary>
+    /// Display text for current position (e.g., "Page 1 of 10")
+    /// </summary>
+    public string PageInfo => $"Page {CurrentPage} of {TotalPages}";
+
+    /// <summary>
+    /// Display text for item range (e.g., "1-30 of 150")
+    /// </summary>
+    public string ItemRange
     {
-        _onPageChanged = onPageChanged;
+        get
+        {
+            var start = Skip + 1;
+            var end = Math.Min(Skip + PageSize, TotalItems);
+            return $"{start}-{end} of {TotalItems}";
+        }
+    }
+
+    public PaginationViewModel(Action onPageChanged)
+    {
+        _onPageChanged = onPageChanged ?? throw new ArgumentNullException(nameof(onPageChanged));
     }
 
     /// <summary>
-    /// Sets the source data and applies pagination.
+    /// Updates pagination state based on total items count.
+    /// Recalculates total pages and clamps current page.
     /// </summary>
-    public void SetData(IEnumerable<T> items, Func<T, int, T>? rowNumberSetter = null)
+    public void UpdateFromItemCount(int totalItems)
     {
-        _allItems = items.ToList();
-        TotalItems = _allItems.Count;
-        TotalPages = Math.Max(1, (int)Math.Ceiling((double)TotalItems / PageSize));
+        TotalItems = totalItems;
+        TotalPages = Math.Max(1, (int)Math.Ceiling((double)totalItems / PageSize));
         CurrentPage = Math.Max(1, Math.Min(CurrentPage, TotalPages));
-        ApplyPagination(rowNumberSetter);
+
+        OnPropertyChanged(nameof(Skip));
+        OnPropertyChanged(nameof(HasPreviousPage));
+        OnPropertyChanged(nameof(HasNextPage));
+        OnPropertyChanged(nameof(PageInfo));
+        OnPropertyChanged(nameof(ItemRange));
     }
 
-    /// <summary>
-    /// Applies pagination to current data with optional row numbering.
-    /// </summary>
-    private void ApplyPagination(Func<T, int, T>? rowNumberSetter = null)
-    {
-        var skip = (CurrentPage - 1) * PageSize;
-        var paged = _allItems.Skip(skip).Take(PageSize).ToList();
-
-        // Apply row numbers if setter provided
-        if (rowNumberSetter != null)
-        {
-            for (int i = 0; i < paged.Count; i++)
-            {
-                paged[i] = rowNumberSetter(paged[i], skip + i + 1);
-            }
-        }
-
-        Items.Clear();
-        foreach (var item in paged)
-        {
-            Items.Add(item);
-        }
-
-        _onPageChanged?.Invoke();
-    }
-
-    [RelayCommand]
     public void NextPage()
     {
         if (CurrentPage < TotalPages)
         {
             CurrentPage++;
-            ApplyPagination();
+            NotifyAndCallback();
         }
     }
 
-    [RelayCommand]
     public void PreviousPage()
     {
         if (CurrentPage > 1)
         {
             CurrentPage--;
-            ApplyPagination();
+            NotifyAndCallback();
         }
     }
 
-    [RelayCommand]
     public void FirstPage()
     {
-        CurrentPage = 1;
-        ApplyPagination();
+        if (CurrentPage != 1)
+        {
+            CurrentPage = 1;
+            NotifyAndCallback();
+        }
     }
 
-    [RelayCommand]
     public void LastPage()
     {
-        CurrentPage = TotalPages;
-        ApplyPagination();
+        if (CurrentPage != TotalPages)
+        {
+            CurrentPage = TotalPages;
+            NotifyAndCallback();
+        }
     }
 
-    [RelayCommand]
-    public void JumpForward10()
+    public void JumpForward(int pages = 10)
     {
-        CurrentPage = Math.Min(CurrentPage + 10, TotalPages);
-        ApplyPagination();
+        var newPage = Math.Min(CurrentPage + pages, TotalPages);
+        if (newPage != CurrentPage)
+        {
+            CurrentPage = newPage;
+            NotifyAndCallback();
+        }
     }
 
-    [RelayCommand]
-    public void JumpBackward10()
+    public void JumpBackward(int pages = 10)
     {
-        CurrentPage = Math.Max(CurrentPage - 10, 1);
-        ApplyPagination();
+        var newPage = Math.Max(CurrentPage - pages, 1);
+        if (newPage != CurrentPage)
+        {
+            CurrentPage = newPage;
+            NotifyAndCallback();
+        }
     }
 
     public void SetPageSize(int pageSize)
     {
-        PageSize = pageSize;
-        CurrentPage = 1;
-        TotalPages = Math.Max(1, (int)Math.Ceiling((double)TotalItems / PageSize));
-        ApplyPagination();
+        if (pageSize != PageSize && pageSize > 0)
+        {
+            PageSize = pageSize;
+            CurrentPage = 1; // Reset to first page
+            UpdateFromItemCount(TotalItems);
+            NotifyAndCallback();
+        }
+    }
+
+    private void NotifyAndCallback()
+    {
+        OnPropertyChanged(nameof(Skip));
+        OnPropertyChanged(nameof(HasPreviousPage));
+        OnPropertyChanged(nameof(HasNextPage));
+        OnPropertyChanged(nameof(PageInfo));
+        OnPropertyChanged(nameof(ItemRange));
+        _onPageChanged();
     }
 }

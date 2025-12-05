@@ -84,6 +84,7 @@ namespace PCAPAnalyzer.Core.Orchestration
                 // ========================================================================
                 // PHASE 1: LOAD ALL PACKETS (2-50% overall)
                 // ========================================================================
+                // Note: String pools are reset in TSharkService/ParallelTSharkService.StartAnalysisAsync()
 
                 var allPackets = await LoadAllPacketsAsync(pcapPath, coordinator, cancellationToken);
 
@@ -276,7 +277,10 @@ namespace PCAPAnalyzer.Core.Orchestration
 
             // Finalize OS fingerprinting analysis (signature matching)
             await _osFingerprintService.FinalizeAnalysisAsync();
-            DebugLogger.Log($"[AnalysisOrchestrator] OS fingerprinting complete: {_osFingerprintService.HostCount} hosts detected");
+
+            // Log OS fingerprint parsing stats
+            var packetsWithOsData = allPackets.Count(p => p.OsFingerprintData.HasValue);
+            DebugLogger.Log($"[AnalysisOrchestrator] OS fingerprinting: {packetsWithOsData:N0}/{allPackets.Count:N0} packets had fingerprint data, {_osFingerprintService.HostCount} hosts detected");
 
             DebugLogger.Log($"[AnalysisOrchestrator] Packet loading complete: {allPackets.Count:N0} packets");
 

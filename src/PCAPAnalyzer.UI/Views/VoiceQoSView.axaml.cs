@@ -14,6 +14,7 @@ using SkiaSharp;
 using PCAPAnalyzer.UI.ViewModels;
 using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.Constants;
+using PCAPAnalyzer.UI.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Utilities;
 
@@ -33,22 +34,6 @@ public partial class VoiceQoSView : UserControl
     private ScatterSeries<DateTimePoint>? _highlightScatter;
     private LineSeries<DateTimePoint>? _highlightLine;
     private int _lastHighlightedIndex = -1;
-
-    // Series color mapping (NEVER changes)
-    private static readonly Dictionary<string, string> SeriesColors = new()
-    {
-        { "QoS Packets", "#3FB950" },
-        { "Latency Min", "#58A6FF" },
-        { "Latency P5", "#87CEEB" },
-        { "Latency Avg", "#1F6FEB" },
-        { "Latency P95", "#4682B4" },
-        { "Latency Max", "#0969DA" },
-        { "Jitter Min", "#FFA657" },
-        { "Jitter P5", "#FFFACD" },
-        { "Jitter Avg", "#F85149" },
-        { "Jitter P95", "#FF6347" },
-        { "Jitter Max", "#DA3633" }
-    };
 
     public VoiceQoSView()
     {
@@ -197,10 +182,10 @@ public partial class VoiceQoSView : UserControl
             // Build colored tooltip
             tooltipText.Inlines?.Clear();
 
-            // Time prefix (white)
+            // Time prefix (white) - use theme color
             tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run($"🕐 {timestamp:HH:mm:ss}  •  ")
             {
-                Foreground = new SolidColorBrush(Color.Parse("#F0F6FC"))
+                Foreground = ThemeColorHelper.DefaultTextBrush
             });
 
             // Add each series value with its color
@@ -216,12 +201,13 @@ public partial class VoiceQoSView : UserControl
                     {
                         tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run("  •  ")
                         {
-                            Foreground = new SolidColorBrush(Color.Parse("#F0F6FC"))
+                            Foreground = ThemeColorHelper.SeparatorBrush
                         });
                     }
                     first = false;
 
-                    var colorHex = SeriesColors[seriesName];
+                    // Get color from ThemeColorHelper
+                    var brush = ThemeColorHelper.GetSeriesBrush(seriesName);
                     var emoji = seriesName == "QoS Packets" ? "📊" :
                                seriesName.Contains("Latency", StringComparison.Ordinal) ? "⏱️" : "📡";
 
@@ -229,7 +215,7 @@ public partial class VoiceQoSView : UserControl
 
                     tooltipText.Inlines?.Add(new Avalonia.Controls.Documents.Run(formatString)
                     {
-                        Foreground = new SolidColorBrush(Color.Parse(colorHex)),
+                        Foreground = brush,
                         FontWeight = FontWeight.Bold
                     });
                 }
@@ -366,151 +352,151 @@ public partial class VoiceQoSView : UserControl
         }
     }
 
-    // PAGINATION EVENT HANDLERS - QoS Traffic
+    // PAGINATION EVENT HANDLERS - QoS Traffic (delegate to PaginationViewModel)
     private void QosPageSize30_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.QosTrafficSetPageSize(30);
+            vm.QosTrafficPagination.SetPageSize(30);
     }
 
     private void QosPageSize100_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.QosTrafficSetPageSize(100);
+            vm.QosTrafficPagination.SetPageSize(100);
     }
 
     private void QosFirstPage_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.QosTrafficFirstPage();
+            vm.QosTrafficPagination.FirstPage();
     }
 
     private void QosLastPage_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.QosTrafficLastPage();
+            vm.QosTrafficPagination.LastPage();
     }
 
     private void QosPrevPage_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.QosTrafficPreviousPage();
+            vm.QosTrafficPagination.PreviousPage();
     }
 
     private void QosNextPage_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.QosTrafficNextPage();
+            vm.QosTrafficPagination.NextPage();
     }
 
     private void QosJumpBack10_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.QosTrafficJumpBackward10();
+            vm.QosTrafficPagination.JumpBackward();
     }
 
     private void QosJumpForward10_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.QosTrafficJumpForward10();
+            vm.QosTrafficPagination.JumpForward();
     }
 
-    // PAGINATION EVENT HANDLERS - High Latency
+    // PAGINATION EVENT HANDLERS - High Latency (delegate to PaginationViewModel)
     private void LatencyPageSize30_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.LatencySetPageSize(30);
+            vm.LatencyPagination.SetPageSize(30);
     }
 
     private void LatencyPageSize100_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.LatencySetPageSize(100);
+            vm.LatencyPagination.SetPageSize(100);
     }
 
     private void LatencyFirstPage_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.LatencyFirstPage();
+            vm.LatencyPagination.FirstPage();
     }
 
     private void LatencyLastPage_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.LatencyLastPage();
+            vm.LatencyPagination.LastPage();
     }
 
     private void LatencyPrevPage_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.LatencyPreviousPage();
+            vm.LatencyPagination.PreviousPage();
     }
 
     private void LatencyNextPage_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.LatencyNextPage();
+            vm.LatencyPagination.NextPage();
     }
 
     private void LatencyJumpBack10_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.LatencyJumpBackward10();
+            vm.LatencyPagination.JumpBackward();
     }
 
     private void LatencyJumpForward10_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.LatencyJumpForward10();
+            vm.LatencyPagination.JumpForward();
     }
 
-    // PAGINATION EVENT HANDLERS - High Jitter
+    // PAGINATION EVENT HANDLERS - High Jitter (delegate to PaginationViewModel)
     private void JitterPageSize30_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.JitterSetPageSize(30);
+            vm.JitterPagination.SetPageSize(30);
     }
 
     private void JitterPageSize100_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.JitterSetPageSize(100);
+            vm.JitterPagination.SetPageSize(100);
     }
 
     private void JitterFirstPage_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.JitterFirstPage();
+            vm.JitterPagination.FirstPage();
     }
 
     private void JitterLastPage_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.JitterLastPage();
+            vm.JitterPagination.LastPage();
     }
 
     private void JitterPrevPage_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.JitterPreviousPage();
+            vm.JitterPagination.PreviousPage();
     }
 
     private void JitterNextPage_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.JitterNextPage();
+            vm.JitterPagination.NextPage();
     }
 
     private void JitterJumpBack10_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.JitterJumpBackward10();
+            vm.JitterPagination.JumpBackward();
     }
 
     private void JitterJumpForward10_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is VoiceQoSViewModel vm)
-            vm.JitterJumpForward10();
+            vm.JitterPagination.JumpForward();
     }
 
     /// <summary>

@@ -12,7 +12,7 @@
             <!-- Header -->
             <Grid ColumnDefinitions="*,Auto">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <TextBlock Text="Security Overview" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                    <TextBlock Text="Security Overview" FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                 </StackPanel>
                 <Button Grid.Column="1" Command="{Binding ViewAllAnomaliesCommand}"
                         Classes="link-button" Content="View All"
@@ -25,36 +25,36 @@
                 <Button Grid.Column="0" Command="{Binding ViewBySeverityCommand}" CommandParameter="Critical"
                         Classes="severity-badge critical" HorizontalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="4">
-                        <TextBlock Text="!!" FontSize="12" FontWeight="Bold" Foreground="#F85149"/>
-                        <TextBlock Text="{Binding CriticalCount}" FontWeight="Bold" Foreground="#F85149"/>
-                        <TextBlock Text="Critical" FontSize="10" Foreground="#8B949E"/>
+                        <TextBlock Text="!!" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold" Foreground="{DynamicResource SlackDanger}"/>
+                        <TextBlock Text="{Binding CriticalCount}" FontWeight="Bold" Foreground="{DynamicResource SlackDanger}"/>
+                        <TextBlock Text="Critical" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
                 </Button>
                 <!-- High -->
                 <Button Grid.Column="1" Command="{Binding ViewBySeverityCommand}" CommandParameter="High"
                         Classes="severity-badge high" HorizontalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="4">
-                        <TextBlock Text="!" FontSize="12" FontWeight="Bold" Foreground="#F0883E"/>
-                        <TextBlock Text="{Binding HighCount}" FontWeight="Bold" Foreground="#F0883E"/>
-                        <TextBlock Text="High" FontSize="10" Foreground="#8B949E"/>
+                        <TextBlock Text="!" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold" Foreground="{DynamicResource ThreatHigh}"/>
+                        <TextBlock Text="{Binding HighCount}" FontWeight="Bold" Foreground="{DynamicResource ThreatHigh}"/>
+                        <TextBlock Text="High" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
                 </Button>
                 <!-- Medium -->
                 <Button Grid.Column="2" Command="{Binding ViewBySeverityCommand}" CommandParameter="Medium"
                         Classes="severity-badge medium" HorizontalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="4">
-                        <TextBlock Text="~" FontSize="12" FontWeight="Bold" Foreground="#D29922"/>
-                        <TextBlock Text="{Binding MediumCount}" FontWeight="Bold" Foreground="#D29922"/>
-                        <TextBlock Text="Medium" FontSize="10" Foreground="#8B949E"/>
+                        <TextBlock Text="~" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold" Foreground="{DynamicResource ThreatMedium}"/>
+                        <TextBlock Text="{Binding MediumCount}" FontWeight="Bold" Foreground="{DynamicResource ThreatMedium}"/>
+                        <TextBlock Text="Medium" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
                 </Button>
                 <!-- Low -->
                 <Button Grid.Column="3" Command="{Binding ViewBySeverityCommand}" CommandParameter="Low"
                         Classes="severity-badge low" HorizontalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="4">
-                        <TextBlock Text="-" FontSize="12" FontWeight="Bold" Foreground="#58A6FF"/>
-                        <TextBlock Text="{Binding LowCount}" FontWeight="Bold" Foreground="#58A6FF"/>
-                        <TextBlock Text="Low" FontSize="10" Foreground="#8B949E"/>
+                        <TextBlock Text="-" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold" Foreground="{DynamicResource SlackInfo}"/>
+                        <TextBlock Text="{Binding LowCount}" FontWeight="Bold" Foreground="{DynamicResource SlackInfo}"/>
+                        <TextBlock Text="Low" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
                 </Button>
             </Grid>
@@ -63,15 +63,15 @@
             <ItemsControl ItemsSource="{Binding TopThreats}" IsVisible="{Binding HasAnomalies}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Background="#161B22" CornerRadius="4" Padding="8" Margin="0,2">
+                        <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="4" Padding="8" Margin="0,2">
                             <Grid ColumnDefinitions="Auto,*">
                                 <TextBlock Grid.Column="0" Text="{Binding SeverityIcon}" Margin="0,0,8,0"
                                            Foreground="{Binding SeverityColor}" FontWeight="Bold"/>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold"
-                                               Foreground="#F0F6FC" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Text="{Binding Description}" FontSize="10"
-                                               Foreground="#8B949E" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Title}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Description}" FontSize="{StaticResource FontSizeXS}"
+                                               Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
@@ -81,8 +81,8 @@
 
             <!-- No Anomalies State -->
             <StackPanel IsVisible="{Binding !HasAnomalies}" HorizontalAlignment="Center" Spacing="4">
-                <TextBlock Text="OK" FontSize="24" Foreground="#3FB950" HorizontalAlignment="Center" FontWeight="Bold"/>
-                <TextBlock Text="No anomalies detected" FontSize="12" Foreground="#8B949E"/>
+                <TextBlock Text="OK" FontSize="{StaticResource FontSizeHeading}" Foreground="{DynamicResource SlackSuccess}" HorizontalAlignment="Center" FontWeight="Bold"/>
+                <TextBlock Text="No anomalies detected" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}"/>
             </StackPanel>
         </StackPanel>
     </Border>
@@ -95,17 +95,17 @@
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style Selector="Button.severity-badge:pointerover">
-            <Setter Property="Background" Value="#21262D"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundCard}"/>
         </Style>
         <Style Selector="Button.link-button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Foreground" Value="#58A6FF"/>
+            <Setter Property="Foreground" Value="{StaticResource SlackInfo}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style Selector="Button.link-button:pointerover">
-            <Setter Property="Foreground" Value="#79C0FF"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentCyan}"/>
         </Style>
     </UserControl.Styles>
 </UserControl>

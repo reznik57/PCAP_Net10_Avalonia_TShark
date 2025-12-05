@@ -10,8 +10,8 @@
         <controls:ProtocolLegend ShowCommonOnly="True"/>
     </Design.PreviewWith>
 
-    <Border Background="#0D1117"
-            BorderBrush="#30363D"
+    <Border Background="{DynamicResource PopupBg}"
+            BorderBrush="{DynamicResource PopupBorder}"
             BorderThickness="1"
             CornerRadius="6"
             Padding="16">
@@ -22,17 +22,17 @@
             <StackPanel Spacing="12">
                 <!-- Header -->
                 <TextBlock Text="Protocol Legend"
-                           FontSize="14"
+                           FontSize="{DynamicResource FontSizeInput}"
                            FontWeight="SemiBold"
-                           Foreground="#F0F6FC"
+                           Foreground="{DynamicResource PopupText}"
                            Margin="0,0,0,8"/>
 
                 <!-- Common Protocols Section -->
                 <StackPanel x:Name="CommonProtocolsPanel" Spacing="8">
                     <TextBlock Text="Common Protocols"
-                               FontSize="11"
+                               FontSize="{DynamicResource FontSizeSmall}"
                                FontWeight="Medium"
-                               Foreground="#8B949E"
+                               Foreground="{DynamicResource PopupTextSecondary}"
                                Margin="0,0,0,4"
                                IsVisible="{ReflectionBinding !ShowCommonOnly}"/>
 
@@ -48,8 +48,8 @@
 
                                     <TextBlock Grid.Column="1"
                                                Text="{Binding Description}"
-                                               FontSize="10"
-                                               Foreground="#8B949E"
+                                               FontSize="{DynamicResource FontSizeXS}"
+                                               Foreground="{DynamicResource PopupTextSecondary}"
                                                VerticalAlignment="Center"
                                                Margin="8,0,0,0"
                                                TextTrimming="CharacterEllipsis"/>
@@ -65,13 +65,13 @@
                             IsVisible="{ReflectionBinding !ShowCommonOnly}">
 
                     <Border Height="1"
-                            Background="#30363D"
+                            Background="{DynamicResource PopupBorder}"
                             Margin="0,4"/>
 
                     <TextBlock Text="All Protocols"
-                               FontSize="11"
+                               FontSize="{DynamicResource FontSizeSmall}"
                                FontWeight="Medium"
-                               Foreground="#8B949E"
+                               Foreground="{DynamicResource PopupTextSecondary}"
                                Margin="0,0,0,4"/>
 
                     <ItemsControl x:Name="AllProtocolsList">
@@ -98,13 +98,13 @@
                             IsVisible="{ReflectionBinding ShowByCategory}">
 
                     <Border Height="1"
-                            Background="#30363D"
+                            Background="{DynamicResource PopupBorder}"
                             Margin="0,4"/>
 
                     <TextBlock Text="By Category"
-                               FontSize="11"
+                               FontSize="{DynamicResource FontSizeSmall}"
                                FontWeight="Medium"
-                               Foreground="#8B949E"
+                               Foreground="{DynamicResource PopupTextSecondary}"
                                Margin="0,0,0,4"/>
 
                     <ItemsControl x:Name="CategoryList">
@@ -112,9 +112,9 @@
                             <DataTemplate x:DataType="controls:ProtocolCategoryGroup">
                                 <StackPanel Spacing="4" Margin="0,0,0,8">
                                     <TextBlock Text="{Binding Category}"
-                                               FontSize="10"
+                                               FontSize="{DynamicResource FontSizeXS}"
                                                FontWeight="SemiBold"
-                                               Foreground="#8B949E"/>
+                                               Foreground="{DynamicResource PopupTextSecondary}"/>
 
                                     <ItemsControl ItemsSource="{Binding Protocols}">
                                         <ItemsControl.ItemsPanel>
@@ -139,8 +139,8 @@
 
                 <!-- Footer info -->
                 <TextBlock x:Name="FooterText"
-                           FontSize="9"
-                           Foreground="#6E7681"
+                           FontSize="{DynamicResource FontSizeXS}"
+                           Foreground="{DynamicResource TextMuted}"
                            TextAlignment="Center"
                            Margin="0,8,0,0"/>
             </StackPanel>

@@ -4,144 +4,261 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="using:PCAPAnalyzer.UI.Controls"
              xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
              x:Class="PCAPAnalyzer.UI.Views.GeographicMapView"
-             x:DataType="vm:CountryTrafficViewModel">
+             x:DataType="vm:GeographicMapViewModel">
     
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        
-        <!-- Header -->
-        <Border Grid.Row="0" Background="#0F172A" Padding="15,15,15,15" CornerRadius="8,8,0,0">
-            <Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Background="{DynamicResource BackgroundDark}" Margin="24,24,24,24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            
+            <!-- Map Control with Tab Navigation -->
+            <Border Grid.Row="0" Classes="modern-card" Margin="0,0,0,24">
+                <controls:ContinentMapControl
+                    x:Name="MapControl"
+                    CountryData="{Binding CountryTrafficData}"
+                    ShowAnimations="{Binding AnimateFlows}"
+                    Margin="20,20,20,20"
+                    Height="500"/>
+            </Border>
+            
+            <!-- Country Tables Section -->
+            <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
                 
-                <!-- Title -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10">
-                    <TextBlock Text="🌍" FontSize="24" VerticalAlignment="Center"/>
-                    <StackPanel>
-                        <TextBlock Text="Global IP Traffic Visualization" 
-                                   FontSize="18" FontWeight="Bold" Foreground="White"/>
-                        <TextBlock Text="{Binding CountrySummary}" 
-                                   FontSize="12" Foreground="#94A3B8"/>
-                    </StackPanel>
-                </StackPanel>
-                
-                <!-- Controls -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10">
-                    <!-- Animation Toggle -->
-                    <ToggleButton IsChecked="{Binding ShowAnimations}" 
-                                  Width="120" Height="32"
-                                  Background="#1E293B" Foreground="White">
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <TextBlock Text="🎬" FontSize="14"/>
-                            <TextBlock Text="Animations" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </ToggleButton>
-                    
-                    <!-- Traffic Flows Toggle -->
-                    <ToggleButton IsChecked="{Binding ShowTrafficFlows}" 
-                                  Width="120" Height="32"
-                                  Background="#1E293B" Foreground="White">
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <TextBlock Text="🔀" FontSize="14"/>
-                            <TextBlock Text="Traffic Flows" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </ToggleButton>
-                    
-                    <!-- Labels Toggle -->
-                    <ToggleButton IsChecked="{Binding ShowCountryLabels}" 
-                                  Width="120" Height="32"
-                                  Background="#1E293B" Foreground="White">
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <TextBlock Text="🏷️" FontSize="14"/>
-                            <TextBlock Text="Labels" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </ToggleButton>
-                    
-                    <!-- Reset View -->
-                    <Button Command="{Binding ResetViewCommand}" 
-                            Width="100" Height="32"
-                            Background="#3B82F6" Foreground="White">
-                        <StackPanel Orientation="Horizontal" Spacing="5">
-                            <TextBlock Text="🔄" FontSize="14"/>
-                            <TextBlock Text="Reset" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                </StackPanel>
-            </Grid>
-        </Border>
-        
-        <!-- Map -->
-        <Border Grid.Row="1" Background="#0A0F1B" CornerRadius="0">
-            <controls:GeographicMapControlV2
-                x:Name="WorldMap"
-                CountryData="{Binding CountryTrafficStatistics}"
-                ExcludedCountries="{Binding ExcludedCountries}"
-                ShowAnimations="{Binding ShowAnimations}"
-                ShowTrafficFlows="{Binding ShowTrafficFlows}"
-                ShowCountryLabels="{Binding ShowCountryLabels}"
-                ShowHeatMap="True"
-                ShowProtocolColorCoding="True"/>
-        </Border>
-        
-        <!-- Status Bar -->
-        <Border Grid.Row="2" Background="#0F172A" Padding="10,10,10,10" CornerRadius="0,0,8,8">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                
-                <!-- Statistics -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="20">
-                    <TextBlock Foreground="#94A3B8">
-                        <Run Text="Countries:" FontWeight="Bold" Foreground="#E2E8F0"/>
-                        <Run Text="{Binding UniqueCountries}"/>
-                    </TextBlock>
-                </StackPanel>
-                
-                <TextBlock Grid.Column="1" Foreground="#94A3B8" Margin="20,0,0,0">
-                    <Run Text="International:" FontWeight="Bold" Foreground="#E2E8F0"/>
-                    <Run Text="{Binding InternationalPercentage, StringFormat='{}{0:F1}%'}"/>
-                </TextBlock>
-                
-                <TextBlock Grid.Column="2" Foreground="#94A3B8" Margin="20,0,0,0">
-                    <Run Text="Cross-Border Flows:" FontWeight="Bold" Foreground="#E2E8F0"/>
-                    <Run Text="{Binding CrossBorderFlows}"/>
-                </TextBlock>
-                
-                <!-- High Risk Warning -->
-                <Border Grid.Column="3" Margin="20,0,0,0"
-                        Background="#7F1D1D" CornerRadius="4" Padding="8,2"
-                        IsVisible="{Binding HasHighRiskTraffic}">
-                    <TextBlock Text="{Binding HighRiskWarning}" 
-                               Foreground="#FCA5A5" FontSize="11"/>
+                <!-- Countries by Packets Table -->
+                <Border Grid.Column="0" Classes="modern-card" Margin="0,0,12,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Table Header -->
+                        <Border Grid.Row="0" Classes="table-header">
+                            <Grid Margin="20,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Width="3" Height="20" Background="{DynamicResource AccentPrimary}" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                    <TextBlock FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}Top {0} Countries by Packets">
+                                                <Binding Path="CountryDisplayCount"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                                
+                                <Button Grid.Column="1"
+                                        Command="{Binding ToggleCountryDisplayCommand}"
+                                        Background="{DynamicResource BackgroundPanel}"
+                                        BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                        Padding="8,4">
+                                    <TextBlock Text="{Binding ShowTop100, Converter={StaticResource CountryTableToggleConverter}}"
+                                               FontSize="{StaticResource FontSizeSmall}"
+                                               Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                </Button>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Table Content -->
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding TopCountriesByPackets}" Margin="0,10">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="20,0" Background="#161B2220" CornerRadius="4" Padding="4,2">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="40"/>
+                                                    <ColumnDefinition Width="50"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="120"/>
+                                                    <ColumnDefinition Width="100"/>
+                                                    <ColumnDefinition Width="80"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <!-- Rank -->
+                                                <TextBlock Grid.Column="0" Text="{Binding Rank}"
+                                                          FontSize="{StaticResource FontSizeBase}" FontWeight="Bold"
+                                                          Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+
+                                                <!-- Country Code -->
+                                                <Border Grid.Column="1" Background="{DynamicResource BackgroundCard}" CornerRadius="4"
+                                                       Padding="6,3" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding CountryCode}"
+                                                              FontSize="{StaticResource FontSizeSmall}" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                </Border>
+                                                
+                                                <!-- Country Name and Continent -->
+                                                <StackPanel Grid.Column="2" Orientation="Vertical" VerticalAlignment="Center" Margin="10,0,0,0">
+                                                    <TextBlock Text="{Binding CountryName}"
+                                                              FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                    <TextBlock Text="{Binding Continent}"
+                                                              FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                </StackPanel>
+                                                
+                                                <!-- Percentage Bar -->
+                                                <Grid Grid.Column="3" Margin="10,0">
+                                                    <Border Background="{DynamicResource BackgroundCard}" CornerRadius="3" Height="20">
+                                                        <Grid ClipToBounds="True">
+                                                            <Border Background="{Binding PacketPercentage, Converter={StaticResource PercentageToGradientConverter}}"
+                                                                   CornerRadius="3"
+                                                                   HorizontalAlignment="Left"
+                                                                   Width="{Binding PacketPercentage, Converter={StaticResource PercentageToWidthConverter}}"/>
+                                                            <TextBlock Text="{Binding PacketPercentage, StringFormat='{}{0:F1}%'}"
+                                                                      FontSize="{StaticResource FontSizeXS}"
+                                                                      FontWeight="SemiBold"
+                                                                      Foreground="White"
+                                                                      HorizontalAlignment="Center"
+                                                                      VerticalAlignment="Center"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </Grid>
+                                                
+                                                <!-- Packets -->
+                                                <TextBlock Grid.Column="4" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold"
+                                                          Foreground="{DynamicResource SlackInfo}" VerticalAlignment="Center"
+                                                          HorizontalAlignment="Right">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}{0:N0}">
+                                                            <Binding Path="PacketCount"/>
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                                
+                                                <!-- Detail Button -->
+                                                <Button Grid.Column="5"
+                                                        Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="{DynamicResource BackgroundPanel}"
+                                                        BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                                        Padding="6,3"
+                                                        Margin="5,0,0,0"
+                                                        HorizontalAlignment="Center">
+                                                    <TextBlock Text="Details" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                    </Grid>
                 </Border>
                 
-                <!-- Zoom Controls -->
-                <StackPanel Grid.Column="5" Orientation="Horizontal" Spacing="5">
-                    <TextBlock Text="Zoom:" Foreground="#94A3B8" VerticalAlignment="Center"/>
-                    <Button Content="+" Width="24" Height="24" FontSize="14"
-                            Background="#1E293B" Foreground="White"
-                            Command="{Binding ZoomInCommand}"/>
-                    <Button Content="-" Width="24" Height="24" FontSize="14"
-                            Background="#1E293B" Foreground="White"
-                            Command="{Binding ZoomOutCommand}"/>
-                </StackPanel>
+                <!-- Countries by Bytes Table -->
+                <Border Grid.Column="1" Classes="modern-card" Margin="12,0,0,0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        
+                        <!-- Table Header -->
+                        <Border Grid.Row="0" Classes="table-header">
+                            <Grid Margin="20,0">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Border Width="3" Height="20" Background="{DynamicResource SlackSuccess}" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                    <TextBlock FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}">
+                                        <TextBlock.Text>
+                                            <MultiBinding StringFormat="{}Top {0} Countries by Bytes">
+                                                <Binding Path="CountryDisplayCount"/>
+                                            </MultiBinding>
+                                        </TextBlock.Text>
+                                    </TextBlock>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        
+                        <!-- Table Content -->
+                        <ItemsControl Grid.Row="1" ItemsSource="{Binding TopCountriesByBytes}" Margin="0,10">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Margin="20,0" Background="#161B2220" CornerRadius="4" Padding="4,2">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="40"/>
+                                                    <ColumnDefinition Width="50"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="120"/>
+                                                    <ColumnDefinition Width="100"/>
+                                                    <ColumnDefinition Width="80"/>
+                                                </Grid.ColumnDefinitions>
+                                                
+                                                <!-- Rank -->
+                                                <TextBlock Grid.Column="0" Text="{Binding Rank}"
+                                                          FontSize="{StaticResource FontSizeBase}" FontWeight="Bold"
+                                                          Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+
+                                                <!-- Country Code -->
+                                                <Border Grid.Column="1" Background="{DynamicResource BackgroundCard}" CornerRadius="4"
+                                                       Padding="6,3" HorizontalAlignment="Left">
+                                                    <TextBlock Text="{Binding CountryCode}"
+                                                              FontSize="{StaticResource FontSizeSmall}" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                </Border>
+                                                
+                                                <!-- Country Name and Continent -->
+                                                <StackPanel Grid.Column="2" Orientation="Vertical" VerticalAlignment="Center" Margin="10,0,0,0">
+                                                    <TextBlock Text="{Binding CountryName}"
+                                                              FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                                    <TextBlock Text="{Binding Continent}"
+                                                              FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                </StackPanel>
+                                                
+                                                <!-- Percentage Bar -->
+                                                <Grid Grid.Column="3" Margin="10,0">
+                                                    <Border Background="{DynamicResource BackgroundCard}" CornerRadius="3" Height="20">
+                                                        <Grid ClipToBounds="True">
+                                                            <Border Background="{Binding BytePercentage, Converter={StaticResource PercentageToGradientConverter}}"
+                                                                   CornerRadius="3"
+                                                                   HorizontalAlignment="Left"
+                                                                   Width="{Binding BytePercentage, Converter={StaticResource PercentageToWidthConverter}}"/>
+                                                            <TextBlock Text="{Binding BytePercentage, StringFormat='{}{0:F1}%'}"
+                                                                      FontSize="{StaticResource FontSizeXS}"
+                                                                      FontWeight="SemiBold"
+                                                                      Foreground="White"
+                                                                      HorizontalAlignment="Center"
+                                                                      VerticalAlignment="Center"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </Grid>
+                                                
+                                                <!-- Bytes -->
+                                                <TextBlock Grid.Column="4" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold"
+                                                          Foreground="{DynamicResource SlackSuccess}" VerticalAlignment="Center"
+                                                          HorizontalAlignment="Right">
+                                                    <TextBlock.Text>
+                                                        <Binding Path="ByteCount" Converter="{StaticResource ByteSizeConverter}"/>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                                
+                                                <!-- Detail Button -->
+                                                <Button Grid.Column="5"
+                                                        Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}"
+                                                        CommandParameter="{Binding}"
+                                                        Background="{DynamicResource BackgroundPanel}"
+                                                        BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                                        Padding="6,3"
+                                                        Margin="5,0,0,0"
+                                                        HorizontalAlignment="Center">
+                                                    <TextBlock Text="Details" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                    </Grid>
+                </Border>
             </Grid>
-        </Border>
-    </Grid>
+        </Grid>
+    </ScrollViewer>
 </UserControl>

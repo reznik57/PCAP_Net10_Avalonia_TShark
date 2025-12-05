@@ -9,54 +9,25 @@
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="900"
              x:Class="PCAPAnalyzer.UI.Views.AnomaliesView"
              x:DataType="vm:AnomaliesViewModel"
-             Background="#0D1117">
+             Background="{DynamicResource BackgroundDark}">
 
     <UserControl.Resources>
         <converters:PercentageToWidthConverter x:Key="PercentageToWidthConverter"/>
         <converters:TrafficIntensityGradientConverter x:Key="TrafficIntensityGradientConverter"/>
+        <converters:SimpleProtocolToColorConverter x:Key="ProtocolColorConverter"/>
     </UserControl.Resources>
 
-    <UserControl.Styles>
-        <!-- KPI Card Style -->
-        <Style Selector="Border.kpi-card">
-            <Setter Property="Background" Value="#161B22"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="16"/>
-        </Style>
-
-        <!-- KPI Value -->
-        <Style Selector="TextBlock.kpi-value">
-            <Setter Property="FontSize" Value="24"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontFamily" Value="Consolas, monospace"/>
-        </Style>
-
-        <!-- KPI Label -->
-        <Style Selector="TextBlock.kpi-label">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="#8B949E"/>
-            <Setter Property="Margin" Value="0,4,0,0"/>
-        </Style>
-
-        <!-- Fixed Height Table -->
-        <Style Selector="ScrollViewer.fixed-height-table">
-            <Setter Property="Height" Value="440"/>
-            <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
-            <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
-        </Style>
-    </UserControl.Styles>
+    <!-- Styles now centralized in UnifiedDarkTheme.axaml -->
 
     <Grid>
         <!-- Loading Overlay -->
         <Border IsVisible="{Binding IsLoading}"
-                Background="#CC0D1117"
+                Background="{StaticResource OverlayBlack80}"
                 ZIndex="100">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <ProgressBar IsIndeterminate="True" Width="200"/>
                 <TextBlock Text="{Binding LoadingMessage}"
-                           Foreground="#8B949E"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
                            HorizontalAlignment="Center"
                            Margin="0,12,0,0"/>
             </StackPanel>
@@ -64,16 +35,16 @@
 
         <!-- No Data Message -->
         <Border IsVisible="{Binding !HasData}"
-                Background="#0D1117">
+                Background="{DynamicResource BackgroundDark}">
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                 <TextBlock Text="No Anomalies Detected"
-                           FontSize="18"
+                           FontSize="{StaticResource FontSizeXL}"
                            FontWeight="SemiBold"
-                           Foreground="#8B949E"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
                            HorizontalAlignment="Center"/>
                 <TextBlock Text="Load a PCAP file to analyze for anomalies"
-                           FontSize="13"
-                           Foreground="#6B7280"
+                           FontSize="{StaticResource FontSizeMedium}"
+                           Foreground="{DynamicResource TextMutedBrush}"
                            HorizontalAlignment="Center"
                            Margin="0,8,0,0"/>
             </StackPanel>
@@ -93,7 +64,7 @@
                              Value="{Binding FilterProgress}"
                              Minimum="0" Maximum="100"
                              Height="4"
-                             Foreground="#3B82F6"/>
+                             Foreground="{DynamicResource AccentPrimary}"/>
 
                 <!-- KPI Row -->
                 <Grid ColumnDefinitions="*,*,*,*,*,*">
@@ -102,7 +73,7 @@
                         <StackPanel>
                             <TextBlock Text="{Binding Statistics.TotalAnomalies}"
                                        Classes="kpi-value"
-                                       Foreground="#3B82F6"/>
+                                       Foreground="{DynamicResource AccentPrimary}"/>
                             <TextBlock Text="Total Anomalies" Classes="kpi-label"/>
                         </StackPanel>
                     </Border>
@@ -112,7 +83,7 @@
                         <StackPanel>
                             <TextBlock Text="{Binding Statistics.CriticalCount}"
                                        Classes="kpi-value"
-                                       Foreground="#F85149"/>
+                                       Foreground="{DynamicResource SlackDanger}"/>
                             <TextBlock Text="Critical" Classes="kpi-label"/>
                         </StackPanel>
                     </Border>
@@ -122,7 +93,7 @@
                         <StackPanel>
                             <TextBlock Text="{Binding Statistics.HighCount}"
                                        Classes="kpi-value"
-                                       Foreground="#F59E0B"/>
+                                       Foreground="{DynamicResource SlackWarning}"/>
                             <TextBlock Text="High" Classes="kpi-label"/>
                         </StackPanel>
                     </Border>
@@ -132,7 +103,7 @@
                         <StackPanel>
                             <TextBlock Text="{Binding Statistics.UniqueSourceIPs}"
                                        Classes="kpi-value"
-                                       Foreground="#06B6D4"/>
+                                       Foreground="{DynamicResource SlackInfo}"/>
                             <TextBlock Text="Unique Sources" Classes="kpi-label"/>
                         </StackPanel>
                     </Border>
@@ -142,7 +113,7 @@
                         <StackPanel>
                             <TextBlock Text="{Binding Statistics.UniqueTargetIPs}"
                                        Classes="kpi-value"
-                                       Foreground="#EC4899"/>
+                                       Foreground="{DynamicResource SlackDanger}"/>
                             <TextBlock Text="Unique Targets" Classes="kpi-label"/>
                         </StackPanel>
                     </Border>
@@ -152,7 +123,7 @@
                         <StackPanel>
                             <TextBlock Text="{Binding Statistics.TimeSpanFormatted}"
                                        Classes="kpi-value"
-                                       Foreground="#A855F7"/>
+                                       Foreground="{DynamicResource AccentSecondary}"/>
                             <TextBlock Text="Time Span" Classes="kpi-label"/>
                         </StackPanel>
                     </Border>
@@ -175,18 +146,18 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <Border Width="3" Height="20" Background="#F85149" CornerRadius="1.5" Margin="0,0,12,0"/>
-                                    <TextBlock Text="Anomalies Over Time" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                    <Border Width="3" Height="20" Background="{DynamicResource SlackDanger}" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                    <TextBlock Text="Anomalies Over Time" FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                                    <Button x:Name="AnomalyZoomInButton" Click="OnAnomalyZoomIn" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom In">
-                                        <TextBlock Text="+" FontSize="12" Foreground="#8B949E"/>
+                                    <Button x:Name="AnomalyZoomInButton" Click="OnAnomalyZoomIn" Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom In">
+                                        <TextBlock Text="+" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     </Button>
-                                    <Button x:Name="AnomalyZoomOutButton" Click="OnAnomalyZoomOut" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom Out">
-                                        <TextBlock Text="-" FontSize="12" Foreground="#8B949E"/>
+                                    <Button x:Name="AnomalyZoomOutButton" Click="OnAnomalyZoomOut" Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Zoom Out">
+                                        <TextBlock Text="-" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     </Button>
-                                    <Button x:Name="AnomalyZoomResetButton" Click="OnAnomalyZoomReset" Background="#1C2128" BorderBrush="#30363D" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Reset Zoom">
-                                        <TextBlock Text="Reset" FontSize="12" Foreground="#8B949E"/>
+                                    <Button x:Name="AnomalyZoomResetButton" Click="OnAnomalyZoomReset" Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" Padding="8,4" CornerRadius="4" ToolTip.Tip="Reset Zoom">
+                                        <TextBlock Text="Reset" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                     </Button>
                                 </StackPanel>
                             </Grid>
@@ -195,7 +166,7 @@
                         <!-- Chart -->
                         <lvc:CartesianChart Grid.Row="1"
                                             x:Name="AnomalyTimelineChart"
-                                            Series="{Binding Charts.TimelineSeries}"
+                                            Series="{Binding Charts.TimelineSeriesCollection}"
                                             XAxes="{Binding Charts.TimelineXAxes}"
                                             YAxes="{Binding Charts.TimelineYAxes}"
                                             Height="320"
@@ -204,11 +175,12 @@
                                             TooltipPosition="Hidden"
                                             AnimationsSpeed="00:00:00.5"
                                             PointerMoved="OnAnomalyChartPointerMoved"
-                                            PointerExited="OnAnomalyChartPointerExited"/>
+                                            PointerExited="OnAnomalyChartPointerExited"
+                                            PointerPressed="OnAnomalyChartPointerPressed"/>
 
                         <!-- Tooltip Bar -->
-                        <Border Grid.Row="2" Height="35" Margin="20,0,20,10" Background="#1C2128" CornerRadius="6" BorderBrush="#30363D" BorderThickness="1">
-                            <TextBlock x:Name="AnomalyTooltipText" FontSize="12" FontWeight="Medium" Foreground="#F0F6FC" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,0"/>
+                        <Border Grid.Row="2" Height="35" Margin="20,0,20,10" Background="{DynamicResource BackgroundCard}" CornerRadius="6" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                            <TextBlock x:Name="AnomalyTooltipText" FontSize="{StaticResource FontSizeBase}" FontWeight="Medium" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="10,0"/>
                         </Border>
                     </Grid>
                 </Border>
@@ -226,8 +198,8 @@
                             <Border Grid.Row="0" Classes="table-header-unified">
                                 <Grid Margin="20,0">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Border Width="3" Height="20" Background="#3B82F6" CornerRadius="1.5" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Anomalous Ports" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                        <Border Width="3" Height="20" Background="{DynamicResource AccentPrimary}" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Anomalous Ports" FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -250,9 +222,9 @@
                                                         <ColumnDefinition Width="60"/>
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding Port}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Port}" FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                                     <Border Grid.Column="2" Classes="service-badge">
-                                                        <TextBlock Text="{Binding ServiceName}" FontSize="9" Foreground="#7D8590"/>
+                                                        <TextBlock Text="{Binding ServiceName}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}"/>
                                                     </Border>
                                                     <Grid Grid.Column="3" Margin="8,0">
                                                         <Border Classes="percentage-track">
@@ -265,7 +237,7 @@
                                                         </Border>
                                                     </Grid>
                                                     <TextBlock Grid.Column="4" Text="{Binding AnomalyCount, StringFormat='{}{0:N0}'}"
-                                                               FontSize="12" FontWeight="SemiBold" Foreground="#3B82F6" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                                               FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource AccentPrimary}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                                     <Button Grid.Column="5" Classes="details-btn"
                                                             Command="{Binding $parent[UserControl].DataContext.ShowPortDrillDownCommand}"
                                                             CommandParameter="{Binding}">
@@ -291,8 +263,8 @@
                             <Border Grid.Row="0" Classes="table-header-unified">
                                 <Grid Margin="20,0">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Border Width="3" Height="20" Background="#10B981" CornerRadius="1.5" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Category Distribution" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                        <Border Width="3" Height="20" Background="{DynamicResource SlackSuccess}" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Category Distribution" FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -310,29 +282,36 @@
                                                         <ColumnDefinition Width="30"/>
                                                         <ColumnDefinition Width="100"/>
                                                         <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="80"/>
+                                                        <ColumnDefinition Width="60"/>
+                                                        <ColumnDefinition Width="60"/>
                                                     </Grid.ColumnDefinitions>
                                                     <!-- Category color indicator -->
                                                     <Border Grid.Column="0" Width="4" Height="20" CornerRadius="2"
                                                             Background="{Binding Color}" VerticalAlignment="Center"/>
                                                     <!-- Category name -->
                                                     <TextBlock Grid.Column="1" Text="{Binding Category}"
-                                                               FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" VerticalAlignment="Center"/>
+                                                               FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
                                                     <!-- Percentage bar -->
                                                     <Grid Grid.Column="2" Margin="8,0">
                                                         <Border Classes="percentage-track">
                                                             <Grid>
                                                                 <Border Background="{Binding Color}"
                                                                         CornerRadius="3" HorizontalAlignment="Left"
-                                                                        Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=120}"/>
+                                                                        Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=80}"/>
                                                                 <TextBlock Text="{Binding Percentage, StringFormat='{}{0:F1}%'}" Classes="percentage-text"/>
                                                             </Grid>
                                                         </Border>
                                                     </Grid>
                                                     <!-- Count -->
                                                     <TextBlock Grid.Column="3" Text="{Binding Count, StringFormat='{}{0:N0}'}"
-                                                               FontSize="12" FontWeight="SemiBold" Foreground="#10B981"
+                                                               FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackSuccess}"
                                                                HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                                    <!-- Details Button -->
+                                                    <Button Grid.Column="4" Classes="details-btn"
+                                                            Command="{Binding $parent[UserControl].DataContext.ShowCategoryDrillDownCommand}"
+                                                            CommandParameter="{Binding}">
+                                                        <TextBlock Text="Details"/>
+                                                    </Button>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
@@ -356,8 +335,8 @@
                             <Border Grid.Row="0" Classes="table-header-unified">
                                 <Grid Margin="20,0">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Border Width="3" Height="20" Background="#06B6D4" CornerRadius="1.5" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Top Anomalous Sources" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                        <Border Width="3" Height="20" Background="{DynamicResource SlackInfo}" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Top Anomalous Sources" FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -380,11 +359,11 @@
                                                         <ColumnDefinition Width="60"/>
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding IpAddress}" FontSize="13" FontWeight="SemiBold"
-                                                               Foreground="#F0F6FC" TextTrimming="CharacterEllipsis"
+                                                    <TextBlock Grid.Column="1" Text="{Binding IpAddress}" FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"
                                                                ToolTip.Tip="{Binding IpAddress}" VerticalAlignment="Center"/>
                                                     <Border Grid.Column="2" Classes="service-badge">
-                                                        <TextBlock Text="{Binding Country}" FontSize="9" Foreground="#7D8590"/>
+                                                        <TextBlock Text="{Binding Country}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}"/>
                                                     </Border>
                                                     <Grid Grid.Column="3" Margin="8,0">
                                                         <Border Classes="percentage-track">
@@ -397,7 +376,7 @@
                                                         </Border>
                                                     </Grid>
                                                     <TextBlock Grid.Column="4" Text="{Binding AnomalyCount, StringFormat='{}{0:N0}'}"
-                                                               FontSize="12" FontWeight="SemiBold" Foreground="#06B6D4"
+                                                               FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackInfo}"
                                                                HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                                     <Button Grid.Column="5" Classes="details-btn"
                                                             Command="{Binding $parent[UserControl].DataContext.ShowSourceDrillDownCommand}"
@@ -424,8 +403,8 @@
                             <Border Grid.Row="0" Classes="table-header-unified">
                                 <Grid Margin="20,0">
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                        <Border Width="3" Height="20" Background="#EC4899" CornerRadius="1.5" Margin="0,0,12,0"/>
-                                        <TextBlock Text="Top Anomalous Targets" FontSize="14" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                        <Border Width="3" Height="20" Background="{DynamicResource SlackDanger}" CornerRadius="1.5" Margin="0,0,12,0"/>
+                                        <TextBlock Text="Top Anomalous Targets" FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -448,11 +427,11 @@
                                                         <ColumnDefinition Width="60"/>
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Grid.Column="0" Text="{Binding Rank}" Classes="rank-number"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding IpAddress}" FontSize="13" FontWeight="SemiBold"
-                                                               Foreground="#F0F6FC" TextTrimming="CharacterEllipsis"
+                                                    <TextBlock Grid.Column="1" Text="{Binding IpAddress}" FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"
                                                                ToolTip.Tip="{Binding IpAddress}" VerticalAlignment="Center"/>
                                                     <Border Grid.Column="2" Classes="service-badge">
-                                                        <TextBlock Text="{Binding Country}" FontSize="9" Foreground="#7D8590"/>
+                                                        <TextBlock Text="{Binding Country}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}"/>
                                                     </Border>
                                                     <Grid Grid.Column="3" Margin="8,0">
                                                         <Border Classes="percentage-track">
@@ -465,7 +444,7 @@
                                                         </Border>
                                                     </Grid>
                                                     <TextBlock Grid.Column="4" Text="{Binding AnomalyCount, StringFormat='{}{0:N0}'}"
-                                                               FontSize="12" FontWeight="SemiBold" Foreground="#EC4899"
+                                                               FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackDanger}"
                                                                HorizontalAlignment="Right" VerticalAlignment="Center"/>
                                                     <Button Grid.Column="5" Classes="details-btn"
                                                             Command="{Binding $parent[UserControl].DataContext.ShowTargetDrillDownCommand}"
@@ -482,15 +461,307 @@
                     </Border>
                 </Grid>
 
+                <!-- Anomaly Packet Analysis Table -->
+                <Border Classes="modern-card-unified" Margin="0,24,0,0">
+                    <Grid RowDefinitions="Auto,Auto,Auto,*">
+                        <!-- Header -->
+                        <Border Grid.Row="0" Classes="table-header-unified">
+                            <Grid Margin="20,0" ColumnDefinitions="*,Auto">
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Spacing="12">
+                                    <Border Width="3" Height="20" Background="{DynamicResource AccentSecondary}" CornerRadius="1.5"/>
+                                    <TextBlock Text="Anomaly Packet Analysis" FontSize="{StaticResource FontSizeInput}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                    <Border Classes="badge-unified">
+                                        <TextBlock Text="{Binding PacketTable.FilteredPacketCount, StringFormat='{}{0:N0}'}" Foreground="{DynamicResource AccentSecondary}"/>
+                                    </Border>
+                                    <!-- Filter Badge -->
+                                    <Border Background="{DynamicResource BorderSubtleBrush}" CornerRadius="6" Padding="8,4"
+                                            IsVisible="{Binding PacketTable.IsFilterActive}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{Binding PacketTable.FilterDescription}"
+                                                       FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource SlackWarning}"/>
+                                            <Button Content="✕" FontSize="{StaticResource FontSizeXS}" Padding="4,0" MinWidth="20" Height="18"
+                                                    Background="Transparent" Foreground="{DynamicResource TextSecondaryBrush}"
+                                                    Command="{Binding PacketTable.ClearFilterCommand}"
+                                                    ToolTip.Tip="Clear filter"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                                <Button Grid.Column="1" Content="Show All" Classes="secondary-action"
+                                        FontSize="{StaticResource FontSizeSmall}" Padding="12,6"
+                                        Command="{Binding PacketTable.ClearFilterCommand}"
+                                        IsVisible="{Binding PacketTable.IsFilterActive}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Pagination Controls -->
+                        <Border Grid.Row="1" Background="{DynamicResource BackgroundDark}" Padding="20,8">
+                            <Grid ColumnDefinitions="*,Auto,*">
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
+                                    <TextBlock VerticalAlignment="Center" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}">
+                                        <Run Text="Page "/><Run Text="{Binding PacketTable.CurrentPage}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><Run Text=" of "/><Run Text="{Binding PacketTable.TotalPages}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                        <Run Text=" (30 per page)" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    </TextBlock>
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
+                                    <Button Content="⏮ First" FontSize="{StaticResource FontSizeSmall}" Padding="8,4" MinWidth="55" Classes="secondary-action"
+                                            Command="{Binding PacketTable.GoToFirstPageCommand}"/>
+                                    <Button Content="◀ Prev" FontSize="{StaticResource FontSizeSmall}" Padding="8,4" MinWidth="55" Classes="secondary-action"
+                                            Command="{Binding PacketTable.GoToPreviousPageCommand}"/>
+                                    <Button Content="Next ▶" FontSize="{StaticResource FontSizeSmall}" Padding="8,4" MinWidth="55" Classes="secondary-action"
+                                            Command="{Binding PacketTable.GoToNextPageCommand}"/>
+                                    <Button Content="Last ⏭" FontSize="{StaticResource FontSizeSmall}" Padding="8,4" MinWidth="55" Classes="secondary-action"
+                                            Command="{Binding PacketTable.GoToLastPageCommand}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <!-- Column Headers -->
+                        <Border Grid.Row="2" Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Padding="20,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="80"/>   <!-- Frame # -->
+                                    <ColumnDefinition Width="90"/>   <!-- Time -->
+                                    <ColumnDefinition Width="130"/>  <!-- Source IP -->
+                                    <ColumnDefinition Width="60"/>   <!-- Src Port -->
+                                    <ColumnDefinition Width="130"/>  <!-- Dest IP -->
+                                    <ColumnDefinition Width="60"/>   <!-- Dst Port -->
+                                    <ColumnDefinition Width="70"/>   <!-- Protocol -->
+                                    <ColumnDefinition Width="60"/>   <!-- Size -->
+                                    <ColumnDefinition Width="*"/>    <!-- Anomaly Type -->
+                                    <ColumnDefinition Width="80"/>   <!-- Severity -->
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="FRAME #" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="1" Text="TIME" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="2" Text="SOURCE IP" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="3" Text="SRC PORT" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="4" Text="DEST IP" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="5" Text="DST PORT" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="6" Text="PROTOCOL" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="7" Text="SIZE" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Grid.Column="8" Text="ANOMALY" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource SlackWarning}"/>
+                                <TextBlock Grid.Column="9" Text="SEVERITY" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource SlackWarning}"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- Packet Rows -->
+                        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" MaxHeight="400">
+                            <ItemsControl ItemsSource="{Binding PacketTable.Packets}" Margin="0,4,0,8">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Classes="ranked-table-row" Cursor="Hand"
+                                                PointerPressed="AnomalyPacketRow_PointerPressed">
+                                            <Grid ColumnDefinitions="4,*">
+                                                <!-- Severity Color Bar -->
+                                                <Border Grid.Column="0" Background="{Binding SeverityColor}"
+                                                        CornerRadius="2,0,0,2" Margin="0,2"/>
+
+                                                <!-- Data Columns -->
+                                                <Grid Grid.Column="1" Margin="8,0,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="76"/>   <!-- Frame # -->
+                                                        <ColumnDefinition Width="90"/>   <!-- Time -->
+                                                        <ColumnDefinition Width="130"/>  <!-- Source IP -->
+                                                        <ColumnDefinition Width="60"/>   <!-- Src Port -->
+                                                        <ColumnDefinition Width="130"/>  <!-- Dest IP -->
+                                                        <ColumnDefinition Width="60"/>   <!-- Dst Port -->
+                                                        <ColumnDefinition Width="70"/>   <!-- Protocol -->
+                                                        <ColumnDefinition Width="60"/>   <!-- Size -->
+                                                        <ColumnDefinition Width="*"/>    <!-- Anomaly Type -->
+                                                        <ColumnDefinition Width="80"/>   <!-- Severity -->
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <TextBlock Grid.Column="0" Text="{Binding FrameNumber, StringFormat='{}{0:N0}'}"
+                                                               FontSize="{StaticResource FontSizeSmall}" FontWeight="Medium" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}"
+                                                               FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding SourceIP}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                                                               ToolTip.Tip="{Binding SourceIP}"/>
+                                                    <TextBlock Grid.Column="3" Text="{Binding SourcePort}" FontSize="{StaticResource FontSizeSmall}"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="4" Text="{Binding DestinationIP}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                                                               ToolTip.Tip="{Binding DestinationIP}"/>
+                                                    <TextBlock Grid.Column="5" Text="{Binding DestinationPort}" FontSize="{StaticResource FontSizeSmall}"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="6" Text="{Binding Protocol}" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold"
+                                                               Foreground="{Binding Protocol, Converter={StaticResource ProtocolColorConverter}}"
+                                                               VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="7" Text="{Binding Length, StringFormat='{}{0:N0}'}"
+                                                               FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="8" Text="{Binding AnomalyDisplay}" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource SlackWarning}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                                                               ToolTip.Tip="{Binding AnomalyTooltip}"/>
+                                                    <StackPanel Grid.Column="9" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                                        <Ellipse Width="8" Height="8" Fill="{Binding SeverityColor}"/>
+                                                        <TextBlock Text="{Binding Severity}" FontSize="{StaticResource FontSizeXS}" Foreground="{Binding SeverityColor}"/>
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
             </StackPanel>
         </ScrollViewer>
 
+        <!-- Time-Point Details Popup (click on chart) -->
+        <Border IsVisible="{Binding DrillDown.IsTimePointPopupOpen}"
+                Background="{StaticResource OverlayBlack50}"
+                ZIndex="60">
+            <Border Background="{DynamicResource BackgroundPanel}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    MaxWidth="550"
+                    MaxHeight="500"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Padding="24">
+                <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
+                    <!-- Header -->
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <StackPanel>
+                            <TextBlock Text="{Binding DrillDown.TimePointTimestamp, StringFormat='Time Point: {0:HH:mm:ss}'}"
+                                       FontSize="{StaticResource FontSizeXL}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{StaticResource FontSizeBase}" Margin="0,4,0,0">
+                                <TextBlock.Text>
+                                    <MultiBinding StringFormat="{}{0:N0} anomalies in ±30s window">
+                                        <Binding Path="DrillDown.TimePointTotalAnomalies"/>
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
+                        </StackPanel>
+                        <Button Grid.Column="1"
+                                Content="×"
+                                Width="32" Height="32"
+                                Background="Transparent"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
+                                FontSize="{StaticResource FontSizeXL}"
+                                Command="{Binding DrillDown.CloseTimePointPopupCommand}"/>
+                    </Grid>
+
+                    <!-- Top Stats Grid -->
+                    <Grid Grid.Row="1" ColumnDefinitions="*,*,*" Margin="0,20,0,0">
+                        <!-- Top Source -->
+                        <Border Grid.Column="0" Background="{DynamicResource BackgroundCard}" CornerRadius="8" Padding="12" Margin="0,0,6,0">
+                            <StackPanel>
+                                <TextBlock Text="Top Source" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding DrillDown.TimePointTopSource}"
+                                           FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold" Foreground="{DynamicResource SlackInfo}"
+                                           TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding DrillDown.TimePointTopSource}"
+                                           Margin="0,4,0,0"/>
+                                <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{StaticResource FontSizeSmall}" Margin="0,2,0,0">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0:N0} anomalies">
+                                            <Binding Path="DrillDown.TimePointTopSourceCount"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Top Destination -->
+                        <Border Grid.Column="1" Background="{DynamicResource BackgroundCard}" CornerRadius="8" Padding="12" Margin="6,0,6,0">
+                            <StackPanel>
+                                <TextBlock Text="Top Destination" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding DrillDown.TimePointTopDestination}"
+                                           FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold" Foreground="{DynamicResource SlackDanger}"
+                                           TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding DrillDown.TimePointTopDestination}"
+                                           Margin="0,4,0,0"/>
+                                <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{StaticResource FontSizeSmall}" Margin="0,2,0,0">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0:N0} anomalies">
+                                            <Binding Path="DrillDown.TimePointTopDestinationCount"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Top Port -->
+                        <Border Grid.Column="2" Background="{DynamicResource BackgroundCard}" CornerRadius="8" Padding="12" Margin="6,0,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Top Port" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding DrillDown.TimePointTopPort}"
+                                           FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold" Foreground="{DynamicResource AccentPrimary}"
+                                           Margin="0,4,0,0"/>
+                                <TextBlock Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{StaticResource FontSizeSmall}" Margin="0,2,0,0">
+                                    <TextBlock.Text>
+                                        <MultiBinding StringFormat="{}{0:N0} anomalies">
+                                            <Binding Path="DrillDown.TimePointTopPortCount"/>
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+
+                    <!-- Category Distribution -->
+                    <TextBlock Grid.Row="2" Text="Category Distribution" FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,16,0,8"/>
+
+                    <ItemsControl Grid.Row="3" ItemsSource="{Binding DrillDown.TimePointCategories}" Margin="0,0,0,12">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><StackPanel/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,4" ColumnDefinitions="Auto,100,*,60">
+                                    <Border Grid.Column="0" Width="4" Height="16" CornerRadius="2"
+                                            Background="{Binding Color}" Margin="0,0,8,0"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding Category}"
+                                               FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+                                    <Border Grid.Column="2" Height="8" CornerRadius="4" Background="{DynamicResource BorderSubtleBrush}" Margin="8,0">
+                                        <Border Background="{Binding Color}" CornerRadius="4" HorizontalAlignment="Left"
+                                                Width="{Binding Percentage, Converter={StaticResource PercentageToWidthConverter}, ConverterParameter=150}"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="3" Text="{Binding Count, StringFormat='{}{0:N0}'}"
+                                               FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Top Anomalies Preview -->
+                    <Grid Grid.Row="4" RowDefinitions="Auto,*">
+                        <TextBlock Grid.Row="0" Text="Top Anomalies" FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" Margin="0,0,0,8"/>
+                        <ScrollViewer Grid.Row="1" MaxHeight="120">
+                            <ItemsControl ItemsSource="{Binding DrillDown.TimePointTopAnomalies}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Padding="4,6">
+                                            <Grid ColumnDefinitions="70,*">
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding DetectedAt, StringFormat=\{0:HH:mm:ss\}}"
+                                                           FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="Consolas, monospace"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Type}"
+                                                           FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}"
+                                                           TextTrimming="CharacterEllipsis"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Border>
+
         <!-- Drill-Down Popup Overlay -->
         <Border IsVisible="{Binding DrillDown.IsDetailPopupOpen}"
-                Background="#80000000"
+                Background="{StaticResource OverlayBlack50}"
                 ZIndex="50">
-            <Border Background="#161B22"
-                    BorderBrush="#30363D"
+            <Border Background="{DynamicResource BackgroundPanel}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}"
                     BorderThickness="1"
                     CornerRadius="12"
                     MaxWidth="700"
@@ -503,19 +774,19 @@
                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
                         <StackPanel>
                             <TextBlock Text="{Binding DrillDown.DetailPopupTitle}"
-                                       FontSize="18"
+                                       FontSize="{StaticResource FontSizeXL}"
                                        FontWeight="SemiBold"
-                                       Foreground="#F0F6FC"/>
+                                       Foreground="{DynamicResource TextPrimaryBrush}"/>
                             <TextBlock Text="{Binding DrillDown.DetailPopupSubtitle}"
-                                       FontSize="12"
-                                       Foreground="#8B949E"
+                                       FontSize="{StaticResource FontSizeBase}"
+                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                        Margin="0,4,0,0"/>
                         </StackPanel>
                         <Button Grid.Column="1"
                                 Content="X"
                                 Width="32" Height="32"
                                 Background="Transparent"
-                                Foreground="#8B949E"
+                                Foreground="{DynamicResource TextSecondaryBrush}"
                                 Command="{Binding DrillDown.CloseDetailPopupCommand}"/>
                     </Grid>
 
@@ -523,62 +794,62 @@
                     <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*" Margin="0,16,0,0">
                         <StackPanel Grid.Column="0" HorizontalAlignment="Center">
                             <TextBlock Text="{Binding DrillDown.DetailCriticalCount}"
-                                       FontSize="20"
+                                       FontSize="{StaticResource FontSizeXL}"
                                        FontWeight="SemiBold"
-                                       Foreground="#F85149"
+                                       Foreground="{DynamicResource SlackDanger}"
                                        HorizontalAlignment="Center"/>
-                            <TextBlock Text="Critical" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Critical" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
                         </StackPanel>
                         <StackPanel Grid.Column="1" HorizontalAlignment="Center">
                             <TextBlock Text="{Binding DrillDown.DetailHighCount}"
-                                       FontSize="20"
+                                       FontSize="{StaticResource FontSizeXL}"
                                        FontWeight="SemiBold"
-                                       Foreground="#F59E0B"
+                                       Foreground="{DynamicResource SlackWarning}"
                                        HorizontalAlignment="Center"/>
-                            <TextBlock Text="High" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Center"/>
+                            <TextBlock Text="High" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
                         </StackPanel>
                         <StackPanel Grid.Column="2" HorizontalAlignment="Center">
                             <TextBlock Text="{Binding DrillDown.DetailMediumCount}"
-                                       FontSize="20"
+                                       FontSize="{StaticResource FontSizeXL}"
                                        FontWeight="SemiBold"
-                                       Foreground="#FCD34D"
+                                       Foreground="{DynamicResource SlackWarning}"
                                        HorizontalAlignment="Center"/>
-                            <TextBlock Text="Medium" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Medium" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
                         </StackPanel>
                         <StackPanel Grid.Column="3" HorizontalAlignment="Center">
                             <TextBlock Text="{Binding DrillDown.DetailLowCount}"
-                                       FontSize="20"
+                                       FontSize="{StaticResource FontSizeXL}"
                                        FontWeight="SemiBold"
-                                       Foreground="#3B82F6"
+                                       Foreground="{DynamicResource AccentPrimary}"
                                        HorizontalAlignment="Center"/>
-                            <TextBlock Text="Low" FontSize="11" Foreground="#8B949E" HorizontalAlignment="Center"/>
+                            <TextBlock Text="Low" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
                         </StackPanel>
                     </Grid>
 
-                    <Separator Grid.Row="2" Margin="0,16" Background="#30363D"/>
+                    <Separator Grid.Row="2" Margin="0,16" Background="{DynamicResource BorderSubtleBrush}"/>
 
                     <!-- Anomaly List -->
                     <ScrollViewer Grid.Row="3" MaxHeight="300">
                         <ItemsControl ItemsSource="{Binding DrillDown.DetailAnomalies}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="#30363D"
+                                    <Border BorderBrush="{DynamicResource BorderSubtleBrush}"
                                             BorderThickness="0,0,0,1"
                                             Padding="8,10">
                                         <Grid ColumnDefinitions="80,*,Auto">
                                             <TextBlock Grid.Column="0"
                                                        Text="{Binding DetectedAt, StringFormat=\{0:HH:mm:ss\}}"
                                                        FontFamily="Consolas, monospace"
-                                                       FontSize="11"
-                                                       Foreground="#8B949E"
+                                                       FontSize="{StaticResource FontSizeSmall}"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                                        VerticalAlignment="Center"/>
                                             <StackPanel Grid.Column="1">
                                                 <TextBlock Text="{Binding Type}"
                                                            FontWeight="SemiBold"
-                                                           Foreground="#F0F6FC"/>
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
                                                 <TextBlock Text="{Binding Description}"
-                                                           FontSize="11"
-                                                           Foreground="#8B949E"
+                                                           FontSize="{StaticResource FontSizeSmall}"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
                                                            TextTrimming="CharacterEllipsis"
                                                            MaxWidth="400"/>
                                             </StackPanel>
@@ -592,7 +863,7 @@
                                                     </MultiBinding>
                                                 </Border.Background>
                                                 <TextBlock Text="{Binding Severity}"
-                                                           FontSize="10"
+                                                           FontSize="{StaticResource FontSizeXS}"
                                                            Foreground="White"/>
                                             </Border>
                                         </Grid>
@@ -610,10 +881,10 @@
                                 Spacing="8">
                         <Button Content="&lt; Previous"
                                 Command="{Binding DrillDown.PreviousDetailPageCommand}"
-                                Background="#21262D"
-                                Foreground="#F0F6FC"/>
+                                Background="{DynamicResource BorderSubtleBrush}"
+                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                         <TextBlock VerticalAlignment="Center"
-                                   Foreground="#8B949E">
+                                   Foreground="{DynamicResource TextSecondaryBrush}">
                             <TextBlock.Text>
                                 <MultiBinding StringFormat="{}Page {0} of {1}">
                                     <Binding Path="DrillDown.DetailCurrentPage"/>
@@ -623,8 +894,8 @@
                         </TextBlock>
                         <Button Content="Next &gt;"
                                 Command="{Binding DrillDown.NextDetailPageCommand}"
-                                Background="#21262D"
-                                Foreground="#F0F6FC"/>
+                                Background="{DynamicResource BorderSubtleBrush}"
+                                Foreground="{DynamicResource TextPrimaryBrush}"/>
                     </StackPanel>
                 </Grid>
             </Border>

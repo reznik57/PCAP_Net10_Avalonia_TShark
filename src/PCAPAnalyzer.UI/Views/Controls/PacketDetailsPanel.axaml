@@ -15,10 +15,10 @@
             <Border Grid.Row="0" Classes="table-header-unified">
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                        <Border Classes="accent-bar" Background="#8B5CF6"/>
+                        <Border Classes="accent-bar" Background="{DynamicResource AccentSecondary}"/>
                         <TextBlock Text="Packet Details" Classes="section-title-unified" Margin="0"/>
                         <Border Classes="badge-unified" IsVisible="{Binding HasPacket}">
-                            <TextBlock Text="{Binding CurrentPacket.FrameNumber, StringFormat='Frame #{0:N0}'}" Foreground="#8B5CF6"/>
+                            <TextBlock Text="{Binding CurrentPacket.FrameNumber, StringFormat='Frame #{0:N0}'}" Foreground="{DynamicResource AccentSecondary}"/>
                         </Border>
                     </StackPanel>
                 </Grid>
@@ -27,19 +27,19 @@
             <!-- Tab Content -->
             <TabControl Grid.Row="1" Background="Transparent" Padding="0">
 
-                <!-- Tab 1: Packet Analysis (merged Protocol Details + Deep Dive) -->
+                <!-- Tab 1: Packet Analysis (merged Protocol Details + Deep Dive) - SLACK STYLE -->
                 <TabItem Header="Packet Analysis">
-                    <Border Background="#0D1117" Padding="16">
+                    <Border Background="{DynamicResource BackgroundDark}" Padding="16">
                         <Grid>
                             <!-- Empty state when no packet selected -->
                             <StackPanel IsVisible="{Binding !HasPacket}"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         Spacing="12">
-                                <TextBlock Text="📦" FontSize="48" HorizontalAlignment="Center" Opacity="0.3"/>
+                                <TextBlock Text="📦" FontSize="{StaticResource FontSizeDisplay}" HorizontalAlignment="Center" Opacity="0.3"/>
                                 <TextBlock Text="{Binding EmptyStateMessage}"
-                                           FontSize="14"
-                                           Foreground="#6E7681"
+                                           FontSize="{StaticResource FontSizeInput}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            HorizontalAlignment="Center"/>
                             </StackPanel>
 
@@ -49,88 +49,88 @@
                                           HorizontalScrollBarVisibility="Disabled">
                                 <StackPanel Spacing="12" MaxWidth="900">
 
-                                    <!-- SECTION 1: Quick Summary (Instant from PacketInfo) -->
-                                    <Border Background="#161B22" CornerRadius="8" Padding="16">
+                                    <!-- SECTION 1: Quick Summary (Instant from PacketInfo) - SLACK STYLE -->
+                                    <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="12" Padding="16" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                         <StackPanel Spacing="10">
                                             <TextBlock Text="Quick Summary"
-                                                       FontSize="13"
+                                                       FontSize="{StaticResource FontSizeMedium}"
                                                        FontWeight="SemiBold"
-                                                       Foreground="#8B5CF6"
+                                                       Foreground="{DynamicResource AccentPrimary}"
                                                        Margin="0,0,0,4"/>
 
                                             <!-- Connection Flow -->
-                                            <Border Background="#0D1117" CornerRadius="6" Padding="12,10">
+                                            <Border Background="{DynamicResource BackgroundDark}" CornerRadius="8" Padding="12,10" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                                                     <TextBlock Text="{Binding CurrentPacket.SourceIP}"
                                                                FontFamily="Consolas, monospace"
-                                                               FontSize="13"
-                                                               Foreground="#22C55E"
+                                                               FontSize="{StaticResource FontSizeMedium}"
+                                                               Foreground="{DynamicResource SlackSuccess}"
                                                                FontWeight="SemiBold"/>
-                                                    <TextBlock Text=":" Foreground="#6E7681" FontSize="13"/>
+                                                    <TextBlock Text=":" Foreground="{DynamicResource TextMutedBrush}" FontSize="{StaticResource FontSizeMedium}"/>
                                                     <TextBlock Text="{Binding CurrentPacket.SourcePort}"
                                                                FontFamily="Consolas, monospace"
-                                                               FontSize="13"
-                                                               Foreground="#22C55E"/>
-                                                    <TextBlock Text="→" Foreground="#8B5CF6" FontSize="16" FontWeight="Bold" Margin="8,0"/>
+                                                               FontSize="{StaticResource FontSizeMedium}"
+                                                               Foreground="{DynamicResource SlackSuccess}"/>
+                                                    <TextBlock Text="→" Foreground="{DynamicResource AccentPrimary}" FontSize="{StaticResource FontSizeLarge}" FontWeight="Bold" Margin="8,0"/>
                                                     <TextBlock Text="{Binding CurrentPacket.DestinationIP}"
                                                                FontFamily="Consolas, monospace"
-                                                               FontSize="13"
-                                                               Foreground="#3B82F6"
+                                                               FontSize="{StaticResource FontSizeMedium}"
+                                                               Foreground="{DynamicResource SlackInfo}"
                                                                FontWeight="SemiBold"/>
-                                                    <TextBlock Text=":" Foreground="#6E7681" FontSize="13"/>
+                                                    <TextBlock Text=":" Foreground="{DynamicResource TextMutedBrush}" FontSize="{StaticResource FontSizeMedium}"/>
                                                     <TextBlock Text="{Binding CurrentPacket.DestinationPort}"
                                                                FontFamily="Consolas, monospace"
-                                                               FontSize="13"
-                                                               Foreground="#3B82F6"/>
+                                                               FontSize="{StaticResource FontSizeMedium}"
+                                                               Foreground="{DynamicResource SlackInfo}"/>
                                                 </StackPanel>
                                             </Border>
 
                                             <!-- Key Metrics Grid -->
                                             <Grid ColumnDefinitions="*,*,*,*" RowDefinitions="Auto">
                                                 <!-- Protocol -->
-                                                <Border Grid.Column="0" Background="#1C2128" CornerRadius="4" Padding="10,8" Margin="0,0,4,0">
+                                                <Border Grid.Column="0" Background="{DynamicResource BackgroundCard}" CornerRadius="8" Padding="10,8" Margin="0,0,4,0" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                                     <StackPanel HorizontalAlignment="Center">
-                                                        <TextBlock Text="Protocol" FontSize="10" Foreground="#6E7681" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="Protocol" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
                                                         <TextBlock Text="{Binding CurrentPacket.Protocol}"
-                                                                   FontSize="14"
+                                                                   FontSize="{StaticResource FontSizeInput}"
                                                                    FontWeight="Bold"
-                                                                   Foreground="#F0F6FC"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
                                                                    HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
 
                                                 <!-- L7 Protocol -->
-                                                <Border Grid.Column="1" Background="#1C2128" CornerRadius="4" Padding="10,8" Margin="2,0">
+                                                <Border Grid.Column="1" Background="{DynamicResource BackgroundCard}" CornerRadius="8" Padding="10,8" Margin="2,0" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                                     <StackPanel HorizontalAlignment="Center">
-                                                        <TextBlock Text="Service" FontSize="10" Foreground="#6E7681" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="Service" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
                                                         <TextBlock Text="{Binding CurrentPacket.L7Protocol, TargetNullValue='--'}"
-                                                                   FontSize="14"
+                                                                   FontSize="{StaticResource FontSizeInput}"
                                                                    FontWeight="Bold"
-                                                                   Foreground="#A78BFA"
+                                                                   Foreground="{DynamicResource AccentPurpleBrush}"
                                                                    HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
 
                                                 <!-- Size -->
-                                                <Border Grid.Column="2" Background="#1C2128" CornerRadius="4" Padding="10,8" Margin="2,0">
+                                                <Border Grid.Column="2" Background="{DynamicResource BackgroundCard}" CornerRadius="8" Padding="10,8" Margin="2,0" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                                     <StackPanel HorizontalAlignment="Center">
-                                                        <TextBlock Text="Size" FontSize="10" Foreground="#6E7681" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="Size" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
                                                         <TextBlock Text="{Binding CurrentPacket.Length, StringFormat='{}{0} B'}"
-                                                                   FontSize="14"
+                                                                   FontSize="{StaticResource FontSizeInput}"
                                                                    FontWeight="Bold"
-                                                                   Foreground="#F0F6FC"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
                                                                    HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
 
                                                 <!-- Frame -->
-                                                <Border Grid.Column="3" Background="#1C2128" CornerRadius="4" Padding="10,8" Margin="4,0,0,0">
+                                                <Border Grid.Column="3" Background="{DynamicResource BackgroundCard}" CornerRadius="8" Padding="10,8" Margin="4,0,0,0" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                                     <StackPanel HorizontalAlignment="Center">
-                                                        <TextBlock Text="Frame" FontSize="10" Foreground="#6E7681" HorizontalAlignment="Center"/>
+                                                        <TextBlock Text="Frame" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
                                                         <TextBlock Text="{Binding CurrentPacket.FrameNumber, StringFormat='#{0:N0}'}"
-                                                                   FontSize="14"
+                                                                   FontSize="{StaticResource FontSizeInput}"
                                                                    FontWeight="Bold"
-                                                                   Foreground="#58A6FF"
+                                                                   Foreground="{DynamicResource AccentPrimary}"
                                                                    HorizontalAlignment="Center"/>
                                                     </StackPanel>
                                                 </Border>
@@ -138,18 +138,18 @@
 
                                             <!-- Timestamp and Info -->
                                             <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto" Margin="0,4,0,0">
-                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Timestamp:" FontSize="11" Foreground="#6E7681"/>
+                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Timestamp:" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}"/>
                                                 <TextBlock Grid.Row="0" Grid.Column="1"
                                                            Text="{Binding CurrentPacket.Timestamp, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss.ffffff}'}"
-                                                           FontSize="11"
+                                                           FontSize="{StaticResource FontSizeSmall}"
                                                            FontFamily="Consolas, monospace"
-                                                           Foreground="#C9D1D9"/>
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
 
-                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Info:" FontSize="11" Foreground="#6E7681" Margin="0,4,0,0"/>
+                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Info:" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" Margin="0,4,0,0"/>
                                                 <TextBlock Grid.Row="1" Grid.Column="1"
                                                            Text="{Binding CurrentPacket.Info, TargetNullValue='--'}"
-                                                           FontSize="11"
-                                                           Foreground="#8B949E"
+                                                           FontSize="{StaticResource FontSizeSmall}"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
                                                            TextWrapping="Wrap"
                                                            Margin="0,4,0,0"/>
                                             </Grid>
@@ -158,21 +158,21 @@
 
                                     <!-- SECTION 2: Cleartext Credentials (CRITICAL - shown prominently if detected) -->
                                     <Border IsVisible="{Binding HasCleartextCredentials}"
-                                            Background="#7F1D1D"
+                                            Background="{StaticResource SecurityCriticalBg}"
                                             CornerRadius="8"
                                             Padding="16"
-                                            BorderBrush="#EF4444"
+                                            BorderBrush="{StaticResource ThreatCritical}"
                                             BorderThickness="2">
                                         <StackPanel Spacing="12">
                                             <!-- Warning Header -->
                                             <StackPanel Orientation="Horizontal" Spacing="12">
-                                                <TextBlock Text="⚠️" FontSize="24"/>
+                                                <TextBlock Text="⚠️" FontSize="{StaticResource FontSizeHeading}"/>
                                                 <StackPanel VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding CleartextSeverityText}"
-                                                               FontSize="16"
+                                                               FontSize="{StaticResource FontSizeLarge}"
                                                                FontWeight="Bold"
                                                                Foreground="{Binding CleartextSeverityColor}"/>
-                                                    <TextBlock FontSize="11" Foreground="#FCA5A5">
+                                                    <TextBlock FontSize="{StaticResource FontSizeSmall}" Foreground="{StaticResource SecurityCriticalTextLight}">
                                                         <TextBlock.Text>
                                                             <MultiBinding StringFormat="{}Detected {0} credential(s) in cleartext">
                                                                 <Binding Path="TotalCredentialsCount"/>
@@ -195,15 +195,15 @@
                                                             <StackPanel Spacing="8">
                                                                 <!-- Content Header -->
                                                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                    <TextBlock Text="{Binding SeverityIcon}" FontSize="14"/>
+                                                                    <TextBlock Text="{Binding SeverityIcon}" FontSize="{StaticResource FontSizeInput}"/>
                                                                     <TextBlock Text="{Binding Protocol}"
-                                                                               FontSize="13"
+                                                                               FontSize="{StaticResource FontSizeMedium}"
                                                                                FontWeight="Bold"
-                                                                               Foreground="#F0F6FC"/>
-                                                                    <TextBlock Text="-" Foreground="#6E7681" FontSize="13"/>
+                                                                               Foreground="{DynamicResource PopupTextBrush}"/>
+                                                                    <TextBlock Text="-" Foreground="{DynamicResource PopupTextSecondaryBrush}" FontSize="{StaticResource FontSizeMedium}"/>
                                                                     <TextBlock Text="{Binding Description}"
-                                                                               FontSize="12"
-                                                                               Foreground="#C9D1D9"/>
+                                                                               FontSize="{StaticResource FontSizeBase}"
+                                                                               Foreground="{DynamicResource PopupTextBrush}"/>
                                                                 </StackPanel>
 
                                                                 <!-- Credentials List -->
@@ -211,24 +211,24 @@
                                                                               IsVisible="{Binding HasCredentials}">
                                                                     <ItemsControl.ItemTemplate>
                                                                         <DataTemplate DataType="vm:CleartextCredentialViewModel">
-                                                                            <Border Background="#1C1C1C"
+                                                                            <Border Background="{DynamicResource PopupBgBrush}"
                                                                                     CornerRadius="4"
                                                                                     Padding="10,6"
                                                                                     Margin="0,2">
                                                                                 <Grid ColumnDefinitions="20,100,*">
                                                                                     <TextBlock Grid.Column="0"
                                                                                                Text="{Binding Icon}"
-                                                                                               FontSize="12"/>
+                                                                                               FontSize="{StaticResource FontSizeBase}"/>
                                                                                     <TextBlock Grid.Column="1"
                                                                                                Text="{Binding FieldName}"
                                                                                                FontFamily="Consolas, monospace"
-                                                                                               FontSize="11"
+                                                                                               FontSize="{StaticResource FontSizeSmall}"
                                                                                                FontWeight="SemiBold"
                                                                                                Foreground="{Binding FieldColor}"/>
                                                                                     <TextBlock Grid.Column="2"
                                                                                                Text="{Binding Value}"
                                                                                                FontFamily="Consolas, monospace"
-                                                                                               FontSize="11"
+                                                                                               FontSize="{StaticResource FontSizeSmall}"
                                                                                                Foreground="{Binding ValueColor}"
                                                                                                TextWrapping="Wrap"/>
                                                                                 </Grid>
@@ -239,14 +239,14 @@
 
                                                                 <!-- Raw Content Preview -->
                                                                 <Border IsVisible="{Binding RawContent.Length}"
-                                                                        Background="#0D1117"
+                                                                        Background="{DynamicResource PopupBgBrush}"
                                                                         CornerRadius="4"
                                                                         Padding="8"
                                                                         Margin="0,4,0,0">
                                                                     <TextBlock Text="{Binding RawContent}"
                                                                                FontFamily="Consolas, monospace"
-                                                                               FontSize="10"
-                                                                               Foreground="#8B949E"
+                                                                               FontSize="{StaticResource FontSizeXS}"
+                                                                               Foreground="{DynamicResource PopupTextSecondaryBrush}"
                                                                                TextWrapping="Wrap"
                                                                                MaxLines="5"/>
                                                                 </Border>
@@ -257,31 +257,31 @@
                                             </ItemsControl>
 
                                             <!-- Security Warning -->
-                                            <Border Background="#450A0A" CornerRadius="4" Padding="10,8">
+                                            <Border Background="{StaticResource SecurityCriticalBgDark}" CornerRadius="4" Padding="10,8">
                                                 <TextBlock Text="🔐 Security Alert: These credentials were transmitted in cleartext and may have been intercepted. Consider rotating any exposed passwords or tokens."
-                                                           FontSize="11"
-                                                           Foreground="#FECACA"
+                                                           FontSize="{StaticResource FontSizeSmall}"
+                                                           Foreground="{StaticResource SecurityCriticalText}"
                                                            TextWrapping="Wrap"/>
                                             </Border>
                                         </StackPanel>
                                     </Border>
 
-                                    <!-- SECTION 3: Protocol Deep Dive (TShark Details) -->
-                                    <Border Background="#161B22" CornerRadius="8" Padding="16">
+                                    <!-- SECTION 3: Protocol Deep Dive (TShark Details) - SLACK STYLE -->
+                                    <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="12" Padding="16" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                         <StackPanel Spacing="12">
 
                                             <!-- Header with Load Button -->
                                             <Grid ColumnDefinitions="*,Auto">
                                                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-                                                    <TextBlock Text="🔬" FontSize="16"/>
+                                                    <TextBlock Text="🔬" FontSize="{StaticResource FontSizeLarge}"/>
                                                     <TextBlock Text="Protocol Layers"
-                                                               FontSize="13"
+                                                               FontSize="{StaticResource FontSizeMedium}"
                                                                FontWeight="SemiBold"
-                                                               Foreground="#F0F6FC"
+                                                               Foreground="{DynamicResource TextPrimaryBrush}"
                                                                VerticalAlignment="Center"/>
                                                     <TextBlock Text="(TShark dissection)"
-                                                               FontSize="11"
-                                                               Foreground="#6E7681"
+                                                               FontSize="{StaticResource FontSizeSmall}"
+                                                               Foreground="{DynamicResource TextMutedBrush}"
                                                                VerticalAlignment="Center"/>
                                                 </StackPanel>
 
@@ -290,12 +290,12 @@
                                                         Command="{Binding LoadDeepDiveCommand}"
                                                         IsEnabled="{Binding !DeepDiveLoading}"
                                                         IsVisible="{Binding !DeepDiveAvailable}"
-                                                        Background="#238636"
+                                                        Background="{DynamicResource AccentPrimary}"
                                                         Foreground="White"
-                                                        FontSize="11"
+                                                        FontSize="{StaticResource FontSizeSmall}"
                                                         FontWeight="SemiBold"
                                                         Padding="12,6"
-                                                        CornerRadius="4">
+                                                        CornerRadius="6">
                                                     <StackPanel Orientation="Horizontal" Spacing="6">
                                                         <TextBlock Text="⏳" IsVisible="{Binding DeepDiveLoading}"/>
                                                         <TextBlock Text="Load Details" IsVisible="{Binding !DeepDiveLoading}"/>
@@ -306,21 +306,23 @@
                                                 <!-- Loaded indicator -->
                                                 <Border Grid.Column="1"
                                                         IsVisible="{Binding DeepDiveAvailable}"
-                                                        Background="#22C55E"
-                                                        CornerRadius="4"
+                                                        Background="{DynamicResource SlackSuccess}"
+                                                        CornerRadius="6"
                                                         Padding="8,4">
-                                                    <TextBlock Text="✓ Loaded" FontSize="10" Foreground="White" FontWeight="SemiBold"/>
+                                                    <TextBlock Text="✓ Loaded" FontSize="{StaticResource FontSizeXS}" Foreground="White" FontWeight="SemiBold"/>
                                                 </Border>
                                             </Grid>
 
                                             <!-- Not loaded placeholder -->
                                             <Border IsVisible="{Binding !DeepDiveAvailable}"
-                                                    Background="#0D1117"
-                                                    CornerRadius="6"
-                                                    Padding="16">
+                                                    Background="{DynamicResource BackgroundDark}"
+                                                    CornerRadius="8"
+                                                    Padding="16"
+                                                    BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                                    BorderThickness="1">
                                                 <TextBlock Text="Click 'Load Details' to extract full protocol dissection using TShark.&#x0a;This provides accurate field values, payload content, and credential detection."
-                                                           FontSize="11"
-                                                           Foreground="#6E7681"
+                                                           FontSize="{StaticResource FontSizeSmall}"
+                                                           Foreground="{DynamicResource TextMutedBrush}"
                                                            TextWrapping="Wrap"
                                                            TextAlignment="Center"
                                                            LineHeight="16"/>
@@ -328,16 +330,18 @@
 
                                             <!-- Protocol Summary (when loaded) -->
                                             <Border IsVisible="{Binding DeepDiveAvailable}"
-                                                    Background="#0D1117"
-                                                    CornerRadius="6"
-                                                    Padding="12">
+                                                    Background="{DynamicResource BackgroundDark}"
+                                                    CornerRadius="8"
+                                                    Padding="12"
+                                                    BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                                    BorderThickness="1">
                                                 <StackPanel Spacing="8">
                                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                                        <TextBlock Text="{Binding DeepDiveIcon}" FontSize="20"/>
+                                                        <TextBlock Text="{Binding DeepDiveIcon}" FontSize="{StaticResource FontSizeXL}"/>
                                                         <TextBlock Text="{Binding DeepDiveProtocol}"
-                                                                   FontSize="14"
+                                                                   FontSize="{StaticResource FontSizeInput}"
                                                                    FontWeight="Bold"
-                                                                   Foreground="#F0F6FC"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
                                                                    VerticalAlignment="Center"/>
                                                     </StackPanel>
 
@@ -349,13 +353,13 @@
                                                                 <Grid ColumnDefinitions="120,*" Margin="0,2">
                                                                     <TextBlock Grid.Column="0"
                                                                                Text="{Binding Key, StringFormat='{}{0}:'}"
-                                                                               FontSize="11"
+                                                                               FontSize="{StaticResource FontSizeSmall}"
                                                                                FontWeight="SemiBold"
-                                                                               Foreground="#8B5CF6"/>
+                                                                               Foreground="{DynamicResource AccentPrimary}"/>
                                                                     <TextBlock Grid.Column="1"
                                                                                Text="{Binding Value}"
-                                                                               FontSize="11"
-                                                                               Foreground="#C9D1D9"
+                                                                               FontSize="{StaticResource FontSizeSmall}"
+                                                                               Foreground="{DynamicResource TextSecondaryBrush}"
                                                                                TextWrapping="Wrap"/>
                                                                 </Grid>
                                                             </DataTemplate>
@@ -369,16 +373,16 @@
                                                           IsVisible="{Binding DeepDiveAvailable}">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate DataType="vm:ProtocolLayerViewModel">
-                                                        <Border Background="#0D1117" CornerRadius="6" Padding="12,10" Margin="0,4">
+                                                        <Border Background="{DynamicResource BackgroundDark}" CornerRadius="8" Padding="12,10" Margin="0,4" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                                             <StackPanel Spacing="6">
                                                                 <!-- Layer header -->
                                                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                                                    <TextBlock Text="▸" FontSize="12" Foreground="#8B5CF6" VerticalAlignment="Center"
+                                                                    <TextBlock Text="▸" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource AccentPrimary}" VerticalAlignment="Center"
                                                                                IsVisible="{Binding HasFields}"/>
                                                                     <TextBlock Text="{Binding Name}"
                                                                                FontFamily="Consolas, Courier New, monospace"
-                                                                               FontSize="12"
-                                                                               Foreground="#F0F6FC"
+                                                                               FontSize="{StaticResource FontSizeBase}"
+                                                                               Foreground="{DynamicResource TextPrimaryBrush}"
                                                                                FontWeight="SemiBold"/>
                                                                 </StackPanel>
 
@@ -394,11 +398,11 @@
                                                                                 <StackPanel Orientation="Horizontal" Spacing="4">
                                                                                     <TextBlock Text="{Binding Name, StringFormat='{}{0}:'}"
                                                                                                FontFamily="Consolas, Courier New, monospace"
-                                                                                               FontSize="10"
+                                                                                               FontSize="{StaticResource FontSizeXS}"
                                                                                                Foreground="{Binding NameColor}"/>
                                                                                     <TextBlock Text="{Binding Value}"
                                                                                                FontFamily="Consolas, Courier New, monospace"
-                                                                                               FontSize="10"
+                                                                                               FontSize="{StaticResource FontSizeXS}"
                                                                                                Foreground="{Binding ValueColor}"
                                                                                                TextWrapping="Wrap"/>
                                                                                 </StackPanel>
@@ -420,19 +424,19 @@
                     </Border>
                 </TabItem>
 
-                <!-- Tab 2: Stream Context (renamed from Stream Info) -->
+                <!-- Tab 2: Stream Context (renamed from Stream Info) - SLACK STYLE -->
                 <TabItem Header="Stream Context">
-                    <Border Background="#0D1117" Padding="16">
+                    <Border Background="{DynamicResource BackgroundDark}" Padding="16">
                         <Grid>
                             <!-- Empty state when no packet selected -->
                             <StackPanel IsVisible="{Binding !HasPacket}"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         Spacing="12">
-                                <TextBlock Text="🌊" FontSize="48" HorizontalAlignment="Center" Opacity="0.3"/>
+                                <TextBlock Text="🌊" FontSize="{StaticResource FontSizeDisplay}" HorizontalAlignment="Center" Opacity="0.3"/>
                                 <TextBlock Text="{Binding EmptyStateMessage}"
-                                           FontSize="14"
-                                           Foreground="#6E7681"
+                                           FontSize="{StaticResource FontSizeInput}"
+                                           Foreground="{DynamicResource TextMutedBrush}"
                                            HorizontalAlignment="Center"/>
                             </StackPanel>
 
@@ -442,118 +446,118 @@
                                           HorizontalScrollBarVisibility="Disabled">
                                 <StackPanel Spacing="16" MaxWidth="800">
 
-                                    <!-- Stream ID with Filter Button -->
-                                    <Border Classes="modern-card-unified" Padding="16" Background="#161B22">
+                                    <!-- Stream ID with Filter Button - SLACK STYLE -->
+                                    <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="12" Padding="16" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                         <Grid RowDefinitions="Auto" ColumnDefinitions="180,*,Auto">
                                             <TextBlock Grid.Column="0"
                                                        Text="TCP/UDP Stream:"
-                                                       FontSize="12"
+                                                       FontSize="{StaticResource FontSizeBase}"
                                                        FontWeight="SemiBold"
-                                                       Foreground="#8B949E"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                                        VerticalAlignment="Center"/>
                                             <TextBlock Grid.Column="1"
                                                        Text="{Binding FlowStreamId}"
-                                                       FontSize="12"
+                                                       FontSize="{StaticResource FontSizeBase}"
                                                        FontWeight="SemiBold"
-                                                       Foreground="#58A6FF"
+                                                       Foreground="{DynamicResource AccentPrimary}"
                                                        VerticalAlignment="Center"/>
                                             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
                                                 <Button Content="🔍 Search"
                                                         Command="{Binding SearchByStreamCommand}"
                                                         IsVisible="{Binding CanFilterByStream}"
-                                                        Background="#22C55E"
+                                                        Background="{DynamicResource SlackSuccess}"
                                                         Foreground="White"
-                                                        FontSize="11"
+                                                        FontSize="{StaticResource FontSizeSmall}"
                                                         FontWeight="SemiBold"
                                                         Padding="12,6"
-                                                        CornerRadius="4"
+                                                        CornerRadius="6"
                                                         ToolTip.Tip="Highlight all packets from this stream (keeps all packets visible)"/>
                                                 <Button Content="🔒 Filter"
                                                         Command="{Binding FilterByStreamCommand}"
                                                         IsVisible="{Binding CanFilterByStream}"
-                                                        Background="#8B5CF6"
+                                                        Background="{DynamicResource AccentPrimary}"
                                                         Foreground="White"
-                                                        FontSize="11"
+                                                        FontSize="{StaticResource FontSizeSmall}"
                                                         FontWeight="SemiBold"
                                                         Padding="12,6"
-                                                        CornerRadius="4"
+                                                        CornerRadius="6"
                                                         ToolTip.Tip="Show ONLY packets from this stream (hides other packets)"/>
                                             </StackPanel>
                                         </Grid>
                                     </Border>
 
                                     <!-- Conversation -->
-                                    <Border Classes="modern-card-unified" Padding="16" Background="#161B22">
+                                    <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="12" Padding="16" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                         <Grid RowDefinitions="Auto" ColumnDefinitions="180,*">
                                             <TextBlock Grid.Row="0" Grid.Column="0"
                                                        Text="Conversation:"
-                                                       FontSize="12"
+                                                       FontSize="{StaticResource FontSizeBase}"
                                                        FontWeight="SemiBold"
-                                                       Foreground="#8B949E"/>
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"/>
                                             <TextBlock Grid.Row="0" Grid.Column="1"
                                                        Text="{Binding FlowConversation}"
-                                                       FontSize="12"
+                                                       FontSize="{StaticResource FontSizeBase}"
                                                        FontFamily="Consolas, Courier New, monospace"
-                                                       Foreground="#C9D1D9"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                                        TextWrapping="Wrap"/>
                                         </Grid>
                                     </Border>
 
                                     <!-- Stream Navigation -->
-                                    <Border Classes="modern-card-unified" Padding="16" Background="#161B22">
+                                    <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="12" Padding="16" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                         <StackPanel Spacing="12">
                                             <TextBlock Text="🧭 Stream Navigation"
-                                                       FontSize="13"
+                                                       FontSize="{StaticResource FontSizeMedium}"
                                                        FontWeight="SemiBold"
-                                                       Foreground="#F0F6FC"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                                        Margin="0,0,0,8"/>
 
                                             <Grid RowDefinitions="Auto" ColumnDefinitions="180,*">
                                                 <TextBlock Grid.Row="0" Grid.Column="0"
                                                            Text="Packets in Stream:"
-                                                           FontSize="12"
-                                                           Foreground="#8B949E"/>
+                                                           FontSize="{StaticResource FontSizeBase}"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
                                                 <TextBlock Grid.Row="0" Grid.Column="1"
                                                            Text="{Binding FlowPacketCount}"
-                                                           FontSize="12"
-                                                           Foreground="#C9D1D9"/>
+                                                           FontSize="{StaticResource FontSizeBase}"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
                                             </Grid>
 
                                             <!-- Navigation Buttons -->
                                             <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,8,0,0">
                                                 <Button Command="{Binding NavigateToPreviousInStreamCommand}"
                                                         IsEnabled="{Binding CanNavigatePrevious}"
-                                                        Background="#1C2128"
-                                                        Foreground="#C9D1D9"
-                                                        BorderBrush="#30363D"
+                                                        Background="{DynamicResource BackgroundCard}"
+                                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                                        BorderBrush="{DynamicResource BorderSubtleBrush}"
                                                         BorderThickness="1"
                                                         Padding="12,8"
-                                                        CornerRadius="4">
+                                                        CornerRadius="6">
                                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                                        <TextBlock Text="◀" FontSize="12"/>
-                                                        <TextBlock Text="Previous" FontSize="11"/>
+                                                        <TextBlock Text="◀" FontSize="{StaticResource FontSizeBase}"/>
+                                                        <TextBlock Text="Previous" FontSize="{StaticResource FontSizeSmall}"/>
                                                         <TextBlock Text="{Binding PreviousPacketInStream, StringFormat='#{0}'}"
-                                                                   FontSize="11"
-                                                                   Foreground="#8B5CF6"
+                                                                   FontSize="{StaticResource FontSizeSmall}"
+                                                                   Foreground="{DynamicResource AccentPrimary}"
                                                                    IsVisible="{Binding CanNavigatePrevious}"/>
                                                     </StackPanel>
                                                 </Button>
 
                                                 <Button Command="{Binding NavigateToNextInStreamCommand}"
                                                         IsEnabled="{Binding CanNavigateNext}"
-                                                        Background="#1C2128"
-                                                        Foreground="#C9D1D9"
-                                                        BorderBrush="#30363D"
+                                                        Background="{DynamicResource BackgroundCard}"
+                                                        Foreground="{DynamicResource TextSecondaryBrush}"
+                                                        BorderBrush="{DynamicResource BorderSubtleBrush}"
                                                         BorderThickness="1"
                                                         Padding="12,8"
-                                                        CornerRadius="4">
+                                                        CornerRadius="6">
                                                     <StackPanel Orientation="Horizontal" Spacing="6">
-                                                        <TextBlock Text="Next" FontSize="11"/>
+                                                        <TextBlock Text="Next" FontSize="{StaticResource FontSizeSmall}"/>
                                                         <TextBlock Text="{Binding NextPacketInStream, StringFormat='#{0}'}"
-                                                                   FontSize="11"
-                                                                   Foreground="#8B5CF6"
+                                                                   FontSize="{StaticResource FontSizeSmall}"
+                                                                   Foreground="{DynamicResource AccentPrimary}"
                                                                    IsVisible="{Binding CanNavigateNext}"/>
-                                                        <TextBlock Text="▶" FontSize="12"/>
+                                                        <TextBlock Text="▶" FontSize="{StaticResource FontSizeBase}"/>
                                                     </StackPanel>
                                                 </Button>
                                             </StackPanel>
@@ -561,36 +565,36 @@
                                     </Border>
 
                                     <!-- Stream Statistics -->
-                                    <Border Classes="modern-card-unified" Padding="16" Background="#161B22">
+                                    <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="12" Padding="16" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                         <StackPanel Spacing="8">
                                             <TextBlock Text="📊 Stream Statistics"
-                                                       FontSize="13"
+                                                       FontSize="{StaticResource FontSizeMedium}"
                                                        FontWeight="SemiBold"
-                                                       Foreground="#F0F6FC"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                                        Margin="0,0,0,8"/>
 
                                             <TextBlock Text="{Binding FlowStatistics}"
-                                                       FontSize="11"
+                                                       FontSize="{StaticResource FontSizeSmall}"
                                                        FontFamily="Consolas, monospace"
-                                                       Foreground="#8B949E"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
                                                        TextWrapping="Wrap"
                                                        LineHeight="16"/>
                                         </StackPanel>
                                     </Border>
 
                                     <!-- Security Analysis -->
-                                    <Border Classes="modern-card-unified" Padding="16" Background="#161B22">
+                                    <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="12" Padding="16" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                         <StackPanel Spacing="12">
                                             <StackPanel Orientation="Horizontal" Spacing="8">
                                                 <TextBlock Text="🔒 Security Analysis"
-                                                           FontSize="13"
+                                                           FontSize="{StaticResource FontSizeMedium}"
                                                            FontWeight="SemiBold"
-                                                           Foreground="#F0F6FC"/>
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
                                                 <Border Background="{Binding SecurityRiskColor}"
-                                                        CornerRadius="4"
+                                                        CornerRadius="6"
                                                         Padding="8,2">
                                                     <TextBlock Text="{Binding SecurityRiskLevel}"
-                                                               FontSize="11"
+                                                               FontSize="{StaticResource FontSizeSmall}"
                                                                FontWeight="SemiBold"
                                                                Foreground="White"/>
                                                 </Border>
@@ -600,44 +604,44 @@
                                             <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8"
                                                   IsVisible="{Binding HasEnhancedSecurityAnalysis}">
                                                 <!-- Risk Score -->
-                                                <Border Grid.Row="0" Grid.Column="0" Background="#0D1117" CornerRadius="6" Padding="10">
+                                                <Border Grid.Row="0" Grid.Column="0" Background="{DynamicResource BackgroundDark}" CornerRadius="8" Padding="10" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                                     <StackPanel Spacing="4">
-                                                        <TextBlock Text="RISK SCORE" FontSize="10" FontWeight="SemiBold" Foreground="#6E7681"/>
+                                                        <TextBlock Text="RISK SCORE" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
                                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                                            <TextBlock Text="{Binding StreamRiskScoreDisplay}" FontSize="18" FontWeight="Bold" Foreground="{Binding SecurityRiskColor}"/>
-                                                            <TextBlock Text="/100" FontSize="11" Foreground="#6E7681" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
+                                                            <TextBlock Text="{Binding StreamRiskScoreDisplay}" FontSize="{StaticResource FontSizeXL}" FontWeight="Bold" Foreground="{Binding SecurityRiskColor}"/>
+                                                            <TextBlock Text="/100" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Bottom" Margin="0,0,0,2"/>
                                                         </StackPanel>
                                                     </StackPanel>
                                                 </Border>
 
                                                 <!-- Encryption Status -->
-                                                <Border Grid.Row="0" Grid.Column="1" Background="#0D1117" CornerRadius="6" Padding="10">
+                                                <Border Grid.Row="0" Grid.Column="1" Background="{DynamicResource BackgroundDark}" CornerRadius="8" Padding="10" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                                     <StackPanel Spacing="4">
-                                                        <TextBlock Text="ENCRYPTION" FontSize="10" FontWeight="SemiBold" Foreground="#6E7681"/>
-                                                        <TextBlock Text="{Binding EncryptionStatus}" FontSize="12" FontWeight="SemiBold" Foreground="{Binding EncryptionStatusColor}"/>
-                                                        <TextBlock Text="{Binding EncryptionProtocol}" FontSize="10" Foreground="#8B949E"
+                                                        <TextBlock Text="ENCRYPTION" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                                        <TextBlock Text="{Binding EncryptionStatus}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{Binding EncryptionStatusColor}"/>
+                                                        <TextBlock Text="{Binding EncryptionProtocol}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"
                                                                    IsVisible="{Binding EncryptionProtocol.Length}"/>
                                                     </StackPanel>
                                                 </Border>
 
                                                 <!-- Beaconing Detection -->
-                                                <Border Grid.Row="1" Grid.Column="0" Background="#0D1117" CornerRadius="6" Padding="10">
+                                                <Border Grid.Row="1" Grid.Column="0" Background="{DynamicResource BackgroundDark}" CornerRadius="8" Padding="10" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                                     <StackPanel Spacing="4">
-                                                        <TextBlock Text="BEACONING" FontSize="10" FontWeight="SemiBold" Foreground="#6E7681"/>
+                                                        <TextBlock Text="BEACONING" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
                                                         <StackPanel Orientation="Horizontal" Spacing="4">
-                                                            <TextBlock Text="{Binding BeaconingInterval}" FontSize="12" FontWeight="SemiBold" Foreground="{Binding BeaconingColor}"/>
-                                                            <TextBlock Text="{Binding BeaconingConfidence}" FontSize="10" Foreground="#8B949E" VerticalAlignment="Bottom"
+                                                            <TextBlock Text="{Binding BeaconingInterval}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{Binding BeaconingColor}"/>
+                                                            <TextBlock Text="{Binding BeaconingConfidence}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Bottom"
                                                                        IsVisible="{Binding BeaconingDetected}"/>
                                                         </StackPanel>
                                                     </StackPanel>
                                                 </Border>
 
                                                 <!-- Data Transfer Ratio -->
-                                                <Border Grid.Row="1" Grid.Column="1" Background="#0D1117" CornerRadius="6" Padding="10">
+                                                <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource BackgroundDark}" CornerRadius="8" Padding="10" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                                     <StackPanel Spacing="4">
-                                                        <TextBlock Text="UPLOAD/DOWNLOAD" FontSize="10" FontWeight="SemiBold" Foreground="#6E7681"/>
-                                                        <TextBlock Text="{Binding UploadDownloadRatio}" FontSize="12" FontWeight="SemiBold" Foreground="{Binding ExfiltrationColor}"/>
-                                                        <TextBlock Text="⚠ Exfiltration indicator" FontSize="10" Foreground="#FFA726"
+                                                        <TextBlock Text="UPLOAD/DOWNLOAD" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                                        <TextBlock Text="{Binding UploadDownloadRatio}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{Binding ExfiltrationColor}"/>
+                                                        <TextBlock Text="⚠ Exfiltration indicator" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource SlackWarning}"
                                                                    IsVisible="{Binding DataExfiltrationIndicator}"/>
                                                     </StackPanel>
                                                 </Border>
@@ -645,17 +649,17 @@
 
                                             <!-- Port and Location Info -->
                                             <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="180,*">
-                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Source Port:" FontSize="11" Foreground="#6E7681"/>
-                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SourcePortSecurity}" FontSize="11" Foreground="#C9D1D9"/>
+                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Source Port:" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}"/>
+                                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding SourcePortSecurity}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
 
-                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Destination Port:" FontSize="11" Foreground="#6E7681" Margin="0,6,0,0"/>
-                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DestinationPortSecurity}" FontSize="11" Foreground="#C9D1D9" Margin="0,6,0,0"/>
+                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Destination Port:" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" Margin="0,6,0,0"/>
+                                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DestinationPortSecurity}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
 
-                                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Source Location:" FontSize="11" Foreground="#6E7681" Margin="0,6,0,0"/>
-                                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SourceGeoInfo}" FontSize="11" Foreground="#C9D1D9" Margin="0,6,0,0"/>
+                                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Source Location:" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" Margin="0,6,0,0"/>
+                                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SourceGeoInfo}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
 
-                                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Destination Location:" FontSize="11" Foreground="#6E7681" Margin="0,6,0,0"/>
-                                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding DestinationGeoInfo}" FontSize="11" Foreground="#C9D1D9" Margin="0,6,0,0"/>
+                                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Destination Location:" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" Margin="0,6,0,0"/>
+                                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding DestinationGeoInfo}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
                                             </Grid>
 
                                             <!-- Security Warnings -->
@@ -664,15 +668,15 @@
                                                           Margin="0,8,0,0">
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate>
-                                                        <Border Background="#1C1917"
-                                                                BorderBrush="#78350F"
+                                                        <Border Background="{StaticResource SecurityWarningBg}"
+                                                                BorderBrush="{StaticResource SecurityWarningBorder}"
                                                                 BorderThickness="1"
-                                                                CornerRadius="4"
+                                                                CornerRadius="6"
                                                                 Padding="8,4"
                                                                 Margin="0,2">
                                                             <TextBlock Text="{Binding}"
-                                                                       FontSize="11"
-                                                                       Foreground="#FCD34D"
+                                                                       FontSize="{StaticResource FontSizeSmall}"
+                                                                       Foreground="{DynamicResource SlackWarning}"
                                                                        TextWrapping="Wrap"/>
                                                         </Border>
                                                     </DataTemplate>
@@ -682,32 +686,32 @@
                                     </Border>
 
                                     <!-- Traffic Direction -->
-                                    <Border Classes="modern-card-unified" Padding="16" Background="#161B22">
+                                    <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="12" Padding="16" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
                                         <StackPanel Spacing="12">
                                             <TextBlock Text="↔️ Traffic Direction"
-                                                       FontSize="13"
+                                                       FontSize="{StaticResource FontSizeMedium}"
                                                        FontWeight="SemiBold"
-                                                       Foreground="#F0F6FC"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
                                                        Margin="0,0,0,8"/>
 
                                             <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="180,*">
-                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Client (Initiator):" FontSize="11" Foreground="#6E7681"/>
+                                                <TextBlock Grid.Row="0" Grid.Column="0" Text="Client (Initiator):" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}"/>
                                                 <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ClientTraffic}"
-                                                           FontSize="11" FontFamily="Consolas, monospace" Foreground="#22C55E"/>
+                                                           FontSize="{StaticResource FontSizeSmall}" FontFamily="Consolas, monospace" Foreground="{DynamicResource SlackSuccess}"/>
 
-                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Server (Responder):" FontSize="11" Foreground="#6E7681" Margin="0,6,0,0"/>
+                                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Server (Responder):" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" Margin="0,6,0,0"/>
                                                 <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ServerTraffic}"
-                                                           FontSize="11" FontFamily="Consolas, monospace" Foreground="#3B82F6" Margin="0,6,0,0"/>
+                                                           FontSize="{StaticResource FontSizeSmall}" FontFamily="Consolas, monospace" Foreground="{DynamicResource SlackInfo}" Margin="0,6,0,0"/>
 
-                                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Dominant Direction:" FontSize="11" Foreground="#6E7681" Margin="0,6,0,0"/>
-                                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding TrafficDirection}" FontSize="11" Foreground="#C9D1D9" Margin="0,6,0,0"/>
+                                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Dominant Direction:" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" Margin="0,6,0,0"/>
+                                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding TrafficDirection}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
 
-                                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Stream Position:" FontSize="11" Foreground="#6E7681" Margin="0,6,0,0"/>
+                                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Stream Position:" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" Margin="0,6,0,0"/>
                                                 <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding StreamPosition}"
-                                                           FontSize="11" FontWeight="SemiBold" Foreground="#8B5CF6" Margin="0,6,0,0"/>
+                                                           FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource AccentPrimary}" Margin="0,6,0,0"/>
 
-                                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Connection Age:" FontSize="11" Foreground="#6E7681" Margin="0,6,0,0"/>
-                                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ConnectionAge}" FontSize="11" Foreground="#C9D1D9" Margin="0,6,0,0"/>
+                                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Connection Age:" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" Margin="0,6,0,0"/>
+                                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ConnectionAge}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,6,0,0"/>
                                             </Grid>
                                         </StackPanel>
                                     </Border>

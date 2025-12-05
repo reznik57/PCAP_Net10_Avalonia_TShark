@@ -7,6 +7,7 @@ using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Data;
 using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.UI.Controls.Maps.Data;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.Controls.Maps.Interaction
 {
@@ -144,6 +145,33 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Interaction
 
             // Highlight if hovered
             var isHovered = hoveredCountryCode == countryCode;
+            var isHighRisk = stats.IsHighRisk;
+
+            // Draw THREAT glow for high-risk countries (pulsing red)
+            if (isHighRisk && showAnimations)
+            {
+                // Pulsing red glow for threats - stronger and more visible
+                var threatPulse = (Math.Sin(animationPhase * 2) + 1) / 2; // 0 to 1
+                var threatGlowAlpha = (byte)(120 + threatPulse * 100); // 120-220 alpha
+                var threatGlowSize = radius + 10 + threatPulse * 8; // Pulsing size
+
+                // Outer threat glow (red) - use ThemeColorHelper
+                var highRiskColor = ThemeColorHelper.MapHighRiskColor;
+                var threatGlowBrush = new SolidColorBrush(Color.FromArgb(threatGlowAlpha, highRiskColor.R, highRiskColor.G, highRiskColor.B));
+                context.DrawEllipse(threatGlowBrush, null, center, threatGlowSize, threatGlowSize);
+
+                // Inner threat ring (brighter red)
+                var innerThreatAlpha = (byte)(80 + threatPulse * 60);
+                var innerThreatBrush = new SolidColorBrush(Color.FromArgb(innerThreatAlpha, 255, 100, 100));
+                context.DrawEllipse(innerThreatBrush, null, center, radius + 4, radius + 4);
+            }
+            else if (isHighRisk)
+            {
+                // Static red glow when animations disabled
+                var highRiskColor = ThemeColorHelper.MapHighRiskColor;
+                var threatGlowBrush = new SolidColorBrush(Color.FromArgb(150, highRiskColor.R, highRiskColor.G, highRiskColor.B));
+                context.DrawEllipse(threatGlowBrush, null, center, radius + 10, radius + 10);
+            }
 
             // Draw glow for hovered country - use blended color for glow
             if (isHovered)
@@ -179,9 +207,24 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Interaction
             }
             context.DrawGeometry(new SolidColorBrush(byteColor), null, rightSemiGeometry);
 
-            // Draw border around entire circle
-            var borderColor = isHovered ? Color.FromRgb(255, 255, 255) : Color.FromRgb(220, 220, 220);
-            var borderThickness = isHovered ? 3.0 : 2.0;
+            // Draw border around entire circle - red for high-risk, white for hovered, default otherwise
+            Color borderColor;
+            double borderThickness;
+            if (isHighRisk)
+            {
+                borderColor = ThemeColorHelper.MapHighRiskColor;
+                borderThickness = 3.0;
+            }
+            else if (isHovered)
+            {
+                borderColor = Colors.White;
+                borderThickness = 3.0;
+            }
+            else
+            {
+                borderColor = ThemeColorHelper.MapBorderColor;
+                borderThickness = 2.0;
+            }
             var borderPen = new Pen(new SolidColorBrush(borderColor), borderThickness);
             context.DrawEllipse(null, borderPen, center, radius, radius);
 
@@ -213,7 +256,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Interaction
         }
 
         /// <summary>
-        /// Renders tooltip for hovered country
+        /// Renders enhanced tooltip for hovered country with protocols, ports, and threats
         /// </summary>
         public void RenderCountryTooltip(DrawingContext context, Rect bounds, string? hoveredCountryCode)
         {
@@ -223,59 +266,79 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Interaction
             // Use country code with flag emoji and full name for display
             var countryFlag = CountryGeographicData.GetCountryFlag(hoveredCountryCode);
             var countryFullName = CountryNameHelper.GetDisplayName(hoveredCountryCode, hoveredCountryCode);
-            var countryDisplay = $"{countryFlag} {countryFullName}";
+            var countryDisplay = $"{countryFlag} {countryFullName} ({hoveredCountryCode})";
             var stats = iconInfo.Stats;
 
-            // Format tooltip text
-            var tooltipLines = new[]
+            // Build enhanced tooltip lines
+            var tooltipLines = new List<(string text, bool isBold, Color? color)>
             {
-                countryDisplay,
-                $"Packets: {iconInfo.PacketPercentage:F1}% ({stats.TotalPackets:N0} packets)",
-                $"Bytes: {iconInfo.BytePercentage:F1}% ({FormatBytes(stats.TotalBytes)})",
-                $"Unique IPs: {stats.UniqueIPs.Count}"
+                (countryDisplay, true, null),
+                ("━━━━━━━━━━━━━━━━━━━━━", false, Color.FromRgb(100, 100, 100)),
+                ($"📦 {stats.TotalPackets:N0} packets ({iconInfo.PacketPercentage:F1}%)", false, null),
+                ($"💾 {FormatBytes(stats.TotalBytes)} ({iconInfo.BytePercentage:F1}%)", false, null),
+                ($"🌐 {stats.UniqueIPs.Count} unique IPs", false, null)
             };
 
-            // Calculate tooltip size
-            var tooltipTexts = tooltipLines.Select(line => new FormattedText(
-                line,
-                System.Globalization.CultureInfo.CurrentCulture,
-                FlowDirection.LeftToRight,
-                new Typeface("Segoe UI", FontStyle.Normal, FontWeight.Normal),
-                12,
-                Brushes.White)).ToList();
+            // Add protocol breakdown if available
+            if (stats.ProtocolBreakdown?.Count > 0)
+            {
+                var totalBytes = stats.ProtocolBreakdown.Values.Sum();
+                if (totalBytes > 0)
+                {
+                    var topProtocols = stats.ProtocolBreakdown
+                        .OrderByDescending(p => p.Value)
+                        .Take(3)
+                        .Select(p => $"{p.Key}: {(p.Value * 100.0 / totalBytes):F0}%");
+                    tooltipLines.Add(($"🔒 {string.Join(" | ", topProtocols)}", false, Color.FromRgb(147, 197, 253)));
+                }
+            }
 
-            var maxWidth = tooltipTexts.Max(t => t.Width);
-            var totalHeight = tooltipTexts.Sum(t => t.Height) + (tooltipLines.Length - 1) * 4 + 16; // padding
+            // Add threat warning if high risk
+            if (stats.IsHighRisk)
+            {
+                var threatCount = stats.AssociatedThreats?.Count ?? 0;
+                var threatText = threatCount > 0 ? $"⚠️ {threatCount} threats detected!" : "⚠️ High-risk country!";
+                tooltipLines.Add((threatText, true, ThemeColorHelper.MapHighRiskColor));
+            }
+
+            // Calculate tooltip dimensions
+            var formattedTexts = new List<(FormattedText text, Color? color)>();
+            double maxWidth = 0;
+            double totalHeight = 0;
+
+            foreach (var (text, isBold, color) in tooltipLines)
+            {
+                var formatted = new FormattedText(
+                    text,
+                    System.Globalization.CultureInfo.CurrentCulture,
+                    FlowDirection.LeftToRight,
+                    new Typeface("Segoe UI", FontStyle.Normal, isBold ? FontWeight.Bold : FontWeight.Normal),
+                    isBold ? 13 : 11,
+                    new SolidColorBrush(color ?? Colors.White));
+
+                formattedTexts.Add((formatted, color));
+                maxWidth = Math.Max(maxWidth, formatted.Width);
+                totalHeight += formatted.Height + 3;
+            }
+            totalHeight += 12; // Padding
 
             // Position tooltip near icon but avoid edges
-            var tooltipX = Math.Clamp(iconInfo.Center.X + iconInfo.Radius + 15, 10, bounds.Width - maxWidth - 20);
+            var tooltipX = Math.Clamp(iconInfo.Center.X + iconInfo.Radius + 15, 10, bounds.Width - maxWidth - 25);
             var tooltipY = Math.Clamp(iconInfo.Center.Y - totalHeight / 2, 10, bounds.Height - totalHeight - 10);
 
-            // Draw tooltip background
-            var tooltipRect = new Rect(tooltipX - 8, tooltipY - 8, maxWidth + 16, totalHeight);
-            var bgBrush = new SolidColorBrush(Color.FromArgb(240, 30, 35, 42)); // Semi-transparent dark
-            var borderBrush = new SolidColorBrush(Color.FromRgb(100, 100, 100));
-            context.DrawRectangle(bgBrush, new Pen(borderBrush, 1), tooltipRect, 6, 6);
+            // Draw tooltip background with border
+            var tooltipRect = new Rect(tooltipX - 10, tooltipY - 8, maxWidth + 20, totalHeight);
+            var bgBrush = new SolidColorBrush(Color.FromArgb(245, 22, 27, 34)); // Dark background
+            var borderColor = stats.IsHighRisk ? ThemeColorHelper.MapHighRiskColor : ThemeColorHelper.MapBorderColor;
+            var borderPen = new Pen(new SolidColorBrush(borderColor), stats.IsHighRisk ? 2 : 1);
+            context.DrawRectangle(bgBrush, borderPen, tooltipRect, 8, 8);
 
             // Draw tooltip text lines
             var currentY = tooltipY;
-            for (int i = 0; i < tooltipTexts.Count; i++)
+            foreach (var (formatted, _) in formattedTexts)
             {
-                var text = tooltipTexts[i];
-                // Bold first line (country name)
-                if (i == 0)
-                {
-                    text = new FormattedText(
-                        tooltipLines[i],
-                        System.Globalization.CultureInfo.CurrentCulture,
-                        FlowDirection.LeftToRight,
-                        new Typeface("Segoe UI", FontStyle.Normal, FontWeight.Bold),
-                        13,
-                        Brushes.White);
-                }
-
-                context.DrawText(text, new Point(tooltipX, currentY));
-                currentY += text.Height + 4;
+                context.DrawText(formatted, new Point(tooltipX, currentY));
+                currentY += formatted.Height + 3;
             }
         }
 

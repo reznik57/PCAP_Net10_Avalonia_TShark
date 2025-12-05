@@ -35,7 +35,7 @@
                     VerticalAlignment="Center">
                 <TextBlock Text="{Binding ZoomLevel, StringFormat='{}{0:F0}%'}"
                            Foreground="{DynamicResource TextPrimary}"
-                           FontSize="12"
+                           FontSize="{StaticResource FontSizeBase}"
                            FontWeight="Medium"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"/>

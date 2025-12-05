@@ -7,7 +7,8 @@ using Avalonia.Interactivity;
 namespace PCAPAnalyzer.UI.Views.Base
 {
     /// <summary>
-    /// Base class for all detail windows with common functionality
+    /// Base class for all detail windows with common functionality.
+    /// Handles disposal of IDisposable DataContext when window closes.
     /// </summary>
     public abstract class BaseDetailWindow : Window
     {
@@ -20,6 +21,18 @@ namespace PCAPAnalyzer.UI.Views.Base
         private void InitializeHandlers()
         {
             KeyDown += OnKeyDown;
+            Closed += OnWindowClosed;
+        }
+
+        /// <summary>
+        /// Dispose DataContext if it implements IDisposable when window closes
+        /// </summary>
+        private void OnWindowClosed(object? sender, EventArgs e)
+        {
+            if (DataContext is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
         }
 
         protected override void OnOpened(EventArgs e)

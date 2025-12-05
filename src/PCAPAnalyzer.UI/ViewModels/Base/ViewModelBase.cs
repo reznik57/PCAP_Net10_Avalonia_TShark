@@ -1,7 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
+using PCAPAnalyzer.UI.Services;
 
 namespace PCAPAnalyzer.UI.ViewModels.Base
 {
@@ -12,17 +13,25 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
     public abstract class ViewModelBase : ObservableObject
     {
         /// <summary>
+        /// Gets the dispatcher service for UI thread marshalling.
+        /// Lazily initialized from DI container.
+        /// </summary>
+        protected IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+            ?? throw new InvalidOperationException("IDispatcherService not registered");
+        private IDispatcherService? _dispatcher;
+
+        /// <summary>
         /// Execute an action on the UI thread
         /// </summary>
         protected void RunOnUIThread(Action action)
         {
-            if (Dispatcher.UIThread.CheckAccess())
+            if (Dispatcher.CheckAccess())
             {
                 action();
             }
             else
             {
-                Dispatcher.UIThread.Post(action);
+                Dispatcher.Post(action);
             }
         }
 
@@ -31,13 +40,13 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
         /// </summary>
         protected void InvokeOnUIThread(Action action)
         {
-            if (Dispatcher.UIThread.CheckAccess())
+            if (Dispatcher.CheckAccess())
             {
                 action();
             }
             else
             {
-                Dispatcher.UIThread.Post(action);
+                Dispatcher.Post(action);
             }
         }
 
@@ -46,13 +55,13 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
         /// </summary>
         protected async Task InvokeOnUIThreadAsync(Action action)
         {
-            if (Dispatcher.UIThread.CheckAccess())
+            if (Dispatcher.CheckAccess())
             {
                 action();
             }
             else
             {
-                await Dispatcher.UIThread.InvokeAsync(action);
+                await Dispatcher.InvokeAsync(action);
             }
         }
     }

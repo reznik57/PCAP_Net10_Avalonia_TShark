@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.UI.Interfaces;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Utilities;
 using PCAPAnalyzer.UI.ViewModels.Components;
 
 // Alias to avoid conflict with legacy PCAPAnalyzer.UI.ViewModels.RelayCommand
@@ -137,32 +138,32 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
         // ==================== COMPUTED UI PROPERTIES FOR MODE COLORS ====================
         // These provide dynamic colors for the Quick Filters border based on include/exclude mode
 
-        /// <summary>Border color: Green (#10B981) for INCLUDE, Red (#EF4444) for EXCLUDE</summary>
-        public string QuickFilterBorderColor => QuickFilterIsIncludeMode ? "#10B981" : "#EF4444";
+        /// <summary>Border color: Green for INCLUDE, Red for EXCLUDE</summary>
+        public string QuickFilterBorderColor => ThemeColorHelper.GetQuickFilterBorderColorHex(QuickFilterIsIncludeMode);
 
-        /// <summary>Background color: Dark blue-green (#0D1620) for INCLUDE, Dark red (#1A0D0D) for EXCLUDE</summary>
-        public string QuickFilterBackgroundColor => QuickFilterIsIncludeMode ? "#0D1620" : "#1A0D0D";
+        /// <summary>Background color: Dark blue-green for INCLUDE, Dark red for EXCLUDE</summary>
+        public string QuickFilterBackgroundColor => ThemeColorHelper.GetQuickFilterBackgroundColorHex(QuickFilterIsIncludeMode);
 
         /// <summary>Glow/shadow color: Green glow for INCLUDE, Red glow for EXCLUDE</summary>
-        public string QuickFilterGlowColor => QuickFilterIsIncludeMode ? "#10B98140" : "#EF444440";
+        public string QuickFilterGlowColor => ThemeColorHelper.GetQuickFilterGlowColorHex(QuickFilterIsIncludeMode);
 
         /// <summary>Mode label text: "INCLUDE MODE" or "EXCLUDE MODE"</summary>
         public string QuickFilterModeLabel => QuickFilterIsIncludeMode ? "INCLUDE MODE" : "EXCLUDE MODE";
 
-        /// <summary>Mode label text color: Green (#7EE787) for INCLUDE, Red (#FF7B72) for EXCLUDE</summary>
-        public string QuickFilterModeLabelColor => QuickFilterIsIncludeMode ? "#7EE787" : "#FF7B72";
+        /// <summary>Mode label text color: Green for INCLUDE, Red for EXCLUDE</summary>
+        public string QuickFilterModeLabelColor => ThemeColorHelper.GetQuickFilterLabelTextColorHex(QuickFilterIsIncludeMode);
 
-        /// <summary>Mode label background: Dark green (#1A3D1A) for INCLUDE, Dark red (#3D1A1A) for EXCLUDE</summary>
-        public string QuickFilterModeLabelBackground => QuickFilterIsIncludeMode ? "#1A3D1A" : "#3D1A1A";
+        /// <summary>Mode label background: Dark green for INCLUDE, Dark red for EXCLUDE</summary>
+        public string QuickFilterModeLabelBackground => ThemeColorHelper.GetQuickFilterLabelBgColorHex(QuickFilterIsIncludeMode);
 
-        /// <summary>Mode label border: Green (#2EA043) for INCLUDE, Red (#F85149) for EXCLUDE</summary>
-        public string QuickFilterModeLabelBorder => QuickFilterIsIncludeMode ? "#2EA043" : "#F85149";
+        /// <summary>Mode label border: Green for INCLUDE, Red for EXCLUDE</summary>
+        public string QuickFilterModeLabelBorder => ThemeColorHelper.GetQuickFilterLabelBorderColorHex(QuickFilterIsIncludeMode);
 
-        /// <summary>Mode icon: ✅ for INCLUDE, 🚫 for EXCLUDE</summary>
-        public string QuickFilterModeIcon => QuickFilterIsIncludeMode ? "✅" : "🚫";
+        /// <summary>Mode icon: checkmark for INCLUDE, prohibited for EXCLUDE</summary>
+        public string QuickFilterModeIcon => QuickFilterIsIncludeMode ? "\u2705" : "\U0001F6AB";
 
-        /// <summary>Title color: Green (#10B981) for INCLUDE, Red (#EF4444) for EXCLUDE</summary>
-        public string QuickFilterTitleColor => QuickFilterIsIncludeMode ? "#10B981" : "#EF4444";
+        /// <summary>Title color: Green for INCLUDE, Red for EXCLUDE</summary>
+        public string QuickFilterTitleColor => ThemeColorHelper.GetQuickFilterBorderColorHex(QuickFilterIsIncludeMode);
 
         // ==================== FILTER INPUT PROPERTIES ====================
 

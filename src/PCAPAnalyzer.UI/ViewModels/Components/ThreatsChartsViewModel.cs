@@ -11,6 +11,7 @@ using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
+using PCAPAnalyzer.UI.Utilities;
 using SkiaSharp;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
@@ -49,13 +50,14 @@ public partial class ThreatsChartsViewModel : ObservableObject
     [ObservableProperty] private double _peakThreatRate;
     [ObservableProperty] private double _averageThreatRate;
 
-    // Severity colors
-    private static readonly Dictionary<string, SKColor> SeverityColors = new()
+    // Severity colors - resolved at runtime for theme support
+    private static Dictionary<string, SKColor>? _severityColorsCache;
+    private static Dictionary<string, SKColor> SeverityColors => _severityColorsCache ??= new()
     {
-        { "Critical", SKColor.Parse("#EF4444") }, // Red
-        { "High", SKColor.Parse("#F59E0B") },     // Orange
-        { "Medium", SKColor.Parse("#3B82F6") },   // Blue
-        { "Low", SKColor.Parse("#10B981") }       // Green
+        { "Critical", SKColor.Parse(ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444")) }, // Red
+        { "High", SKColor.Parse(ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B")) },     // Orange
+        { "Medium", SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6")) },   // Blue
+        { "Low", SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981")) }       // Green
     };
 
     public ThreatsChartsViewModel() : this(new InsecurePortDetector())
@@ -348,8 +350,8 @@ public partial class ThreatsChartsViewModel : ObservableObject
                 MinLimit = minTime.Ticks,
                 MaxLimit = maxTime.Ticks,
                 TextSize = 10,
-                LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
-                SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#21262D"))
+                LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
+                SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D")))
             }
         };
 
@@ -360,8 +362,8 @@ public partial class ThreatsChartsViewModel : ObservableObject
                 Name = "Threats/Second",
                 Labeler = value => $"{value:F2}/s",
                 TextSize = 10,
-                LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
-                SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#21262D")),
+                LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
+                SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D"))),
                 MinLimit = 0
             }
         };
@@ -499,8 +501,18 @@ public partial class ThreatsChartsViewModel : ObservableObject
         var bucketSize = GetBucketSize(timeRange);
         var newSeries = new ObservableCollection<ISeries>();
 
-        var colors = new[] { "#EF4444", "#F59E0B", "#3B82F6", "#10B981", "#8B5CF6",
-                            "#06B6D4", "#EC4899", "#F97316", "#84CC16", "#6366F1" };
+        var colors = new[] {
+            ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"),
+            ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
+            ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
+            ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
+            ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6"),
+            ThemeColorHelper.GetColorHex("AccentCyan", "#06B6D4"),
+            ThemeColorHelper.GetColorHex("AccentPink", "#EC4899"),
+            ThemeColorHelper.GetColorHex("ColorOrange", "#F97316"),
+            ThemeColorHelper.GetColorHex("ColorLime", "#84CC16"),
+            ThemeColorHelper.GetColorHex("AccentIndigo", "#6366F1")
+        };
 
         for (int i = 0; i < portThreats.Count && i < colors.Length; i++)
         {
@@ -584,8 +596,8 @@ public partial class ThreatsChartsViewModel : ObservableObject
                 MinLimit = minTime.Ticks,
                 MaxLimit = maxTime.Ticks,
                 TextSize = 10,
-                LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
-                SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#21262D"))
+                LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
+                SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D")))
             }
         };
 
@@ -596,8 +608,8 @@ public partial class ThreatsChartsViewModel : ObservableObject
                 Name = ShowThreatPortActivityAsThroughput ? "Occurrences/Second" : "Threats/Second",
                 Labeler = value => $"{value:F2}/s",
                 TextSize = 10,
-                LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
-                SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#21262D")),
+                LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
+                SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D"))),
                 MinLimit = 0
             }
         };

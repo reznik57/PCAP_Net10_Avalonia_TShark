@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -14,9 +15,11 @@ using ReactiveUI;
 
 namespace PCAPAnalyzer.UI.ViewModels
 {
-    public class PortDetailsViewModel : ReactiveObject
+    public class PortDetailsViewModel : ReactiveObject, IDisposable
     {
         private readonly TopPortViewModel _portInfo;
+        private readonly CompositeDisposable _disposables = new();
+        private bool _disposed;
         private string _filterText = "";
         private string _selectedDirection = "All";
         private ObservableCollection<PortPacketDetail> _allPackets = new();
@@ -41,10 +44,11 @@ namespace PCAPAnalyzer.UI.ViewModels
             // Initialize filter lists
             Directions = new ObservableCollection<string> { "All", "Source", "Destination" };
             
-            // Set up filtering
+            // Set up filtering (subscribe and track for disposal)
             this.WhenAnyValue(x => x.FilterText, x => x.SelectedDirection)
                 .Throttle(TimeSpan.FromMilliseconds(300))
-                .Subscribe(_ => ApplyFilter());
+                .Subscribe(_ => ApplyFilter())
+                .DisposeWith(_disposables);
             
             // Initialize commands
             ExportCommand = ReactiveCommand.CreateFromTask(ExportData);
@@ -157,6 +161,13 @@ namespace PCAPAnalyzer.UI.ViewModels
         {
             // Export functionality
             await Task.Delay(100); // Placeholder
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _disposables.Dispose();
         }
     }
 

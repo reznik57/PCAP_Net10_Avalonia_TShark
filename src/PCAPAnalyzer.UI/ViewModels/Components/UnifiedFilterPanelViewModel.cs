@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -34,12 +35,33 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
     /// </summary>
     [ObservableProperty] private double _filterProgress;
 
+    /// <summary>
+    /// Controls whether the filter panel is expanded or collapsed.
+    /// Collapsed state shows only summary chips and Apply/Clear buttons.
+    /// </summary>
+    [ObservableProperty] private bool _isExpanded = false;
+
+    /// <summary>
+    /// Chevron icon for expand/collapse toggle.
+    /// </summary>
+    public string ExpandCollapseIcon => IsExpanded ? "▲" : "▼";
+
     public bool IsIncludeMode => _currentMode == FilterChipMode.Include;
     public bool IsExcludeMode => _currentMode == FilterChipMode.Exclude;
 
-    // Mode-dependent colors for panel tinting
-    public string PanelBackground => IsIncludeMode ? "#0A1A14" : "#1A0A0A";
-    public string PanelBorder => IsIncludeMode ? "#2EA043" : "#F85149";
+    /// <summary>
+    /// Returns true if any filters are active (for showing indicator in collapsed state).
+    /// </summary>
+    public bool HasActiveFilters => Summary.HasIncludeFilters || Summary.HasExcludeFilters;
+
+    /// <summary>
+    /// Count of active filter chips for badge display.
+    /// </summary>
+    public int ActiveFilterCount => Summary.IncludeChips.Count + Summary.ExcludeChips.Count;
+
+    // Slack-style colors (no mode-dependent tinting)
+    public string PanelBackground => ThemeColorHelper.GetColorHex("BackgroundLevel1", "#222529");
+    public string PanelBorder => ThemeColorHelper.GetColorHex("BorderSubtle", "#3F4248");
 
     // Tab filter indicators
     public bool GeneralHasIncludeFilters => _filterState.IncludeGroups.Any(g =>
@@ -81,6 +103,13 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void ToggleExpanded()
+    {
+        IsExpanded = !IsExpanded;
+        OnPropertyChanged(nameof(ExpandCollapseIcon));
+    }
+
+    [RelayCommand]
     private void SetIncludeMode()
     {
         _currentMode = FilterChipMode.Include;
@@ -108,6 +137,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
     {
         OnPropertyChanged(nameof(IsIncludeMode));
         OnPropertyChanged(nameof(IsExcludeMode));
+        // Panel colors are now static in Slack style, but keep for compatibility
         OnPropertyChanged(nameof(PanelBackground));
         OnPropertyChanged(nameof(PanelBorder));
     }

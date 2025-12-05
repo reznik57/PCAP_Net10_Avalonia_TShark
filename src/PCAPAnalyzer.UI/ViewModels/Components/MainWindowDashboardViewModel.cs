@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Threading;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
@@ -21,6 +21,10 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 /// </summary>
 public class MainWindowDashboardViewModel : IDisposable
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     private readonly IStatisticsService _statisticsService;
     private readonly IGeoIPService _geoIpService;
     private readonly SemaphoreSlim _dashboardUpdateGate = new(1, 1);
@@ -113,7 +117,7 @@ public class MainWindowDashboardViewModel : IDisposable
             var step5Start = DateTime.Now;
             DebugLogger.Log($"[{step5Start:HH:mm:ss.fff}] [UpdateDashboardAsync] STEP 5: Updating DashboardViewModel...");
             analysis.ReportTabProgress(analysis.GetDashboardStageKey(), 75, "Updating dashboard...");
-            await Dispatcher.UIThread.InvokeAsync(async () =>
+            await Dispatcher.InvokeAsync(async () =>
             {
                 if (dashboardViewModel != null)
                 {

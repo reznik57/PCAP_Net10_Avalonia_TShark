@@ -1,7 +1,8 @@
 using System;
-using Avalonia.Threading;
+using Avalonia.Threading; // Required for DispatcherTimer only
 using CommunityToolkit.Mvvm.ComponentModel;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -68,16 +69,9 @@ public partial class AnalysisProgressStage : ObservableObject
     };
 
     /// <summary>
-    /// Gets the color for the current stage state
+    /// Gets the color for the current stage state - uses ThemeColorHelper
     /// </summary>
-    public string StateColor => State switch
-    {
-        AnalysisStageState.Pending => "#8B949E",     // Gray
-        AnalysisStageState.Active => "#58A6FF",      // Blue
-        AnalysisStageState.Completed => "#238636",   // Green
-        AnalysisStageState.Error => "#DA3633",       // Red
-        _ => "#8B949E"
-    };
+    public string StateColor => ThemeColorHelper.GetStageColorHex(State.ToString());
 
     partial void OnStateChanged(AnalysisStageState value)
     {
@@ -206,6 +200,6 @@ public partial class AnalysisProgressStage : ObservableObject
         _lastLoggedSecond = -1;
         ElapsedTime = string.Empty;
 
-        DebugLogger.Log($"[TIMING] [{Name}] 🔄 RESET TIMING - Previous: {previousElapsedTime ?? "(none)"}, HadStartTime: {hadStartTime}");
+        DebugLogger.Log($"[TIMING] [{Name}] RESET - Previous: {previousElapsedTime ?? "(none)"}, HadStartTime: {hadStartTime}");
     }
 }

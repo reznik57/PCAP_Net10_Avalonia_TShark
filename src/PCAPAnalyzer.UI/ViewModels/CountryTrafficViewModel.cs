@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -27,8 +29,11 @@ namespace PCAPAnalyzer.UI.ViewModels;
 /// Coordinates 6 specialized component ViewModels using composition pattern.
 /// Reduced from 1,675 lines to ~350 lines through component-based architecture.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling",
+    Justification = "Orchestrator ViewModel coordinates 6 component VMs - high coupling is inherent to composition pattern")]
 public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulationTarget, IDisposable
 {
+    private readonly IDispatcherService _dispatcher;
     private readonly IGeoIPService _geoIPService;
     private readonly ITabFilterService? _filterService;
     private readonly FilterCopyService? _filterCopyService;
@@ -37,6 +42,10 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     private IReadOnlyList<PacketInfo>? _allPackets;
     private bool _disposed;
 
+    // Filter debouncing (300ms throttle to prevent update spam during rapid filter changes)
+    private readonly Subject<bool> _filterTrigger = new();
+    private IDisposable? _filterSubscription;
+
     // Component ViewModels (Composition)
     public CountryDataViewModel DataManager { get; }
     public CountryStatisticsViewModel Statistics { get; }
@@ -44,6 +53,11 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     public CountryFilterViewModel Filter { get; }
     public CountryTableViewModel Tables { get; }
     public CountryUIStateViewModel UIState { get; }
+
+    /// <summary>
+    /// Drill-down popup for country/flow details (same pattern as Dashboard)
+    /// </summary>
+    public DrillDownPopupViewModel DrillDown { get; }
 
     // Top countries list (for legacy compatibility)
     [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<CountryItemViewModel> _topCountries = new();
@@ -84,8 +98,19 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
 
     /// <summary>
     /// IFilterableTab implementation - applies common and tab-specific filters
+    /// Uses 300ms debouncing to prevent update spam during rapid filter changes.
     /// </summary>
     public new void ApplyFilters()
+    {
+        // Trigger debounced filter update
+        _filterTrigger.OnNext(true);
+    }
+
+    /// <summary>
+    /// Actually applies filters after debounce period.
+    /// Called by the debounced subscription.
+    /// </summary>
+    private void ApplyFiltersInternal()
     {
         // Reapply filters by triggering a statistics update
         if (_currentStatistics != null)
@@ -125,6 +150,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     // Constructors
     public CountryTrafficViewModel()
         : this(
+            App.Services?.GetService<IDispatcherService>() ?? throw new InvalidOperationException("IDispatcherService not registered"),
             App.Services?.GetService<IGeoIPService>() ?? throw new InvalidOperationException("GeoIPService not registered in DI container"),
             new TabFilterService("Country Traffic", new FilterServiceCore()),
             App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService(),
@@ -132,9 +158,10 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     {
     }
 
-    public CountryTrafficViewModel(IGeoIPService geoIPService, ITabFilterService? filterService, ISmartFilterBuilder? filterBuilder = null, GlobalFilterState? globalFilterState = null)
+    public CountryTrafficViewModel(IDispatcherService dispatcher, IGeoIPService geoIPService, ITabFilterService? filterService, ISmartFilterBuilder? filterBuilder = null, GlobalFilterState? globalFilterState = null)
         : base(filterBuilder ?? new SmartFilterBuilderService())
     {
+        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _geoIPService = geoIPService;
         _filterService = filterService;
         _filterCopyService = App.Services?.GetService<FilterCopyService>();
@@ -147,12 +174,21 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         Filter = new CountryFilterViewModel();
         Tables = new CountryTableViewModel();
         UIState = new CountryUIStateViewModel();
+        DrillDown = new DrillDownPopupViewModel(NavigateToPacketAnalysis, geoIPService);
+
+        // Wire up timeline data provider for sparklines
+        Tables.TimelineBucketProvider = DataManager.GetCountryTimelineBuckets;
 
         // Subscribe to component events
         Filter.SortModeChanged += OnFilterSortModeChanged;
         Filter.ExcludedCountriesChanged += OnExcludedCountriesChanged;
         Filter.DisplayCountChanged += OnDisplayCountChanged;
         UIState.ContinentChanged += OnContinentChanged;
+
+        // Forward PropertyChanged from component VMs to this VM for delegated properties
+        // This is critical for XAML bindings to update when component data changes
+        Statistics.PropertyChanged += OnStatisticsPropertyChanged;
+        Visualization.PropertyChanged += OnVisualizationPropertyChanged;
 
         // GeoIP service is initialized via DI (ServiceConfiguration.cs) - no duplicate init needed
 
@@ -174,7 +210,13 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         // Register with FilterCopyService
         _filterCopyService?.RegisterTab(TabName, this);
 
-        DebugLogger.Log("[CountryTrafficViewModel] Initialized with component-based architecture and filter support");
+        // Set up filter debouncing (300ms throttle)
+        _filterSubscription = _filterTrigger
+            .Throttle(TimeSpan.FromMilliseconds(300))
+            .ObserveOn(ReactiveUI.RxApp.MainThreadScheduler)
+            .Subscribe(_ => ApplyFiltersInternal());
+
+        DebugLogger.Log("[CountryTrafficViewModel] Initialized with component-based architecture, filter support, and 300ms debouncing");
     }
 
     /// <summary>
@@ -193,9 +235,9 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     public async Task UpdateStatistics(NetworkStatistics statistics)
     {
         // Ensure we're on the UI thread
-        if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+        if (!_dispatcher.CheckAccess())
         {
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () => await UpdateStatistics(statistics));
+            await _dispatcher.InvokeAsync(async () => await UpdateStatistics(statistics));
             return;
         }
 
@@ -360,18 +402,11 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     }
 
     /// <summary>
-    /// Shows detailed information for a country
+    /// Shows detailed information for a country using inline drill-down popup (Dashboard style)
     /// </summary>
     [RelayCommand]
-    private async Task ShowCountryDetails(object? parameter)
+    private void ShowCountryDetails(object? parameter)
     {
-        // Ensure we're on the UI thread
-        if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
-        {
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () => await ShowCountryDetails(parameter));
-            return;
-        }
-
         if (parameter is not CountryTableItem countryItem)
             return;
 
@@ -380,102 +415,92 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         // Get packets for this country from DataManager
         var countryPackets = DataManager.GetCountryPackets(countryItem.CountryCode, countryItem.Context) ?? new List<PacketInfo>();
 
-        // Get incoming/outgoing values from statistics
-        long incomingPackets = 0;
-        long outgoingPackets = 0;
-
-        if (_currentStatistics?.CountryStatistics?.TryGetValue(countryItem.CountryCode, out var countryStats) == true)
+        if (countryPackets.Count == 0)
         {
-            switch (countryItem.Context)
-            {
-                case CountryTableContext.SourcePackets:
-                case CountryTableContext.SourceBytes:
-                    incomingPackets = 0;
-                    outgoingPackets = countryStats.OutgoingPackets;
-                    break;
-                case CountryTableContext.DestinationPackets:
-                case CountryTableContext.DestinationBytes:
-                    incomingPackets = countryStats.IncomingPackets;
-                    outgoingPackets = 0;
-                    break;
-                default:
-                    incomingPackets = countryStats.IncomingPackets;
-                    outgoingPackets = countryStats.OutgoingPackets;
-                    break;
-            }
-
-            DebugLogger.Log($"[CountryTrafficViewModel] ShowCountryDetails - {countryItem.CountryName}: Incoming={incomingPackets:N0}, Outgoing={outgoingPackets:N0}");
-        }
-
-        // Create and show the details window
-        var viewModel = new CountryDetailsViewModel(countryItem, countryPackets, incomingPackets, outgoingPackets);
-        var window = new Views.CountryDetailsWindow
-        {
-            DataContext = viewModel
-        };
-
-        // Show as dialog
-        if (Avalonia.Application.Current?.ApplicationLifetime is
-            Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
-            desktop.MainWindow != null)
-        {
-            await window.ShowDialog(desktop.MainWindow);
-        }
-    }
-
-    /// <summary>
-    /// Shows detailed information for an active flow
-    /// </summary>
-    [RelayCommand]
-    private async Task ShowFlowDetails(object? parameter)
-    {
-        // Ensure we're on the UI thread
-        if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
-        {
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () => await ShowFlowDetails(parameter));
+            DebugLogger.Log($"[CountryTrafficViewModel] No packets found for {countryItem.CountryCode}");
             return;
         }
 
+        // Use ShowForCountry which doesn't re-filter packets (they're already filtered by country)
+        DrillDown.ShowForCountry(
+            $"{countryItem.CountryName} ({countryItem.CountryCode})",
+            countryPackets,
+            countryItem.TotalPackets,
+            countryItem.TotalBytes);
+    }
+
+    /// <summary>
+    /// Maps normalized UI country codes back to DataManager dictionary keys.
+    /// CountryTableViewModel.NormalizeCountryCode converts INT->PRIV, but DataManager uses "Internal".
+    /// </summary>
+    private static string MapNormalizedCodeToDataKey(string normalizedCode)
+    {
+        return normalizedCode switch
+        {
+            "PRIV" => "Internal",  // NormalizeCountryCode: INT/PRIVATE/LOCAL/LAN -> PRIV
+            "IP6" => "IP6_LINK",   // NormalizeCountryCode: ??/XX -> IP6, but DataManager uses IP6_LINK
+            _ => normalizedCode
+        };
+    }
+
+    /// <summary>
+    /// Navigation callback for DrillDown popup - navigates to Packet Analysis with filter
+    /// </summary>
+    private void NavigateToPacketAnalysis(string filterType, string filterValue)
+    {
+        DebugLogger.Log($"[CountryTrafficViewModel] NavigateToPacketAnalysis: {filterType}={filterValue}");
+
+        // Apply filter via GlobalFilterState
+        if (_globalFilterState != null)
+        {
+            switch (filterType.ToLowerInvariant())
+            {
+                case "ip":
+                    _globalFilterState.IncludeFilters.IPs.Clear();
+                    _globalFilterState.AddIncludeIP(filterValue);
+                    break;
+                case "port":
+                    _globalFilterState.IncludeFilters.Ports.Clear();
+                    _globalFilterState.AddIncludePort(filterValue);
+                    break;
+                case "country":
+                    _globalFilterState.IncludeFilters.Countries.Clear();
+                    _globalFilterState.AddIncludeCountry(filterValue);
+                    break;
+            }
+        }
+
+        // Navigate to Packet Analysis tab (index 1)
+        // This requires wiring up navigation - for now just close the drill-down
+        DrillDown.IsVisible = false;
+    }
+
+    /// <summary>
+    /// Shows detailed information for an active flow using inline drill-down popup
+    /// </summary>
+    [RelayCommand]
+    private void ShowFlowDetails(object? parameter)
+    {
         if (parameter is not ActiveFlowViewModel flow)
             return;
 
         DebugLogger.Log($"[CountryTrafficViewModel] ShowFlowDetails for {flow.SourceCountry} -> {flow.DestinationCountry}");
 
-        // Resolve friendly names
-        var sourceName = CountryNameHelper.GetDisplayName(flow.SourceCountryCode, flow.SourceCountry);
-        var destinationName = CountryNameHelper.GetDisplayName(flow.DestinationCountryCode, flow.DestinationCountry);
-
-        // Create a country item for the flow
-        var countryItem = new CountryTableItem
-        {
-            CountryCode = flow.SourceCountryCode,
-            CountryName = sourceName,
-            TotalPackets = flow.PacketCount,
-            TotalBytes = flow.ByteCount,
-            PacketPercentage = flow.FlowIntensity,
-            BytePercentage = flow.ByteIntensity,
-            Continent = flow.SourceContinent,
-            Rank = 1,
-            Context = CountryTableContext.CrossBorderFlow
-        };
-
         // Get packets for this flow
         var flowPackets = GetFlowPackets(flow) ?? new List<PacketInfo>();
 
-        // Create and show the details window
-        var viewModel = new CountryDetailsViewModel(countryItem, flowPackets, 0, flow.PacketCount);
-        var window = new Views.CountryDetailsWindow
+        if (flowPackets.Count == 0)
         {
-            DataContext = viewModel
-        };
-
-        // Show as dialog
-        if (Avalonia.Application.Current?.ApplicationLifetime is
-            Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
-            desktop.MainWindow != null)
-        {
-            await window.ShowDialog(desktop.MainWindow);
+            DebugLogger.Log($"[CountryTrafficViewModel] No packets found for flow");
+            return;
         }
+
+        // Use ShowForCountry which doesn't re-filter packets (they're already filtered by flow)
+        DrillDown.ShowForCountry(
+            $"{flow.SourceCountry} ({flow.SourceCountryCode}) → {flow.DestinationCountry} ({flow.DestinationCountryCode})",
+            flowPackets,
+            flow.PacketCount,
+            flow.ByteCount);
     }
 
     /// <summary>
@@ -487,8 +512,15 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         if (allPackets == null)
             return null;
 
-        var outgoingIndices = DataManager.GetCountryOutgoingIndices(flow.SourceCountryCode);
-        var incomingIndices = DataManager.GetCountryIncomingIndices(flow.DestinationCountryCode);
+        // Map normalized UI codes back to DataManager keys
+        // NormalizeCountryCode converts INT->PRIV, but DataManager uses "Internal"
+        var sourceKey = MapNormalizedCodeToDataKey(flow.SourceCountryCode);
+        var destKey = MapNormalizedCodeToDataKey(flow.DestinationCountryCode);
+
+        DebugLogger.Log($"[CountryTrafficViewModel] GetFlowPackets: {flow.SourceCountryCode}->{sourceKey}, {flow.DestinationCountryCode}->{destKey}");
+
+        var outgoingIndices = DataManager.GetCountryOutgoingIndices(sourceKey);
+        var incomingIndices = DataManager.GetCountryIncomingIndices(destKey);
 
         if (outgoingIndices == null || incomingIndices == null)
             return null;
@@ -526,6 +558,9 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         }
     }
 
+    // NOTE: ExportSummary, ExportToCsvAsync, ExportToJsonAsync, ExportToMarkdownAsync
+    // moved to CountryTrafficViewModel.Export.cs
+
     // Event handlers for component coordination
 
     private void OnFilterSortModeChanged(object? sender, EventArgs e)
@@ -555,6 +590,34 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         OnPropertyChanged(nameof(SelectedContinent));
     }
 
+    /// <summary>
+    /// Forwards property changes from Statistics component to parent VM.
+    /// Critical for XAML bindings to delegated properties like CountryTrafficStatistics.
+    /// </summary>
+    private void OnStatisticsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // Forward all Statistics property changes - these are delegated to parent VM
+        if (e.PropertyName != null)
+        {
+            OnPropertyChanged(e.PropertyName);
+            DebugLogger.Log($"[CountryTrafficViewModel] Forwarding Statistics.{e.PropertyName} PropertyChanged");
+        }
+    }
+
+    /// <summary>
+    /// Forwards property changes from Visualization component to parent VM.
+    /// Critical for XAML bindings to delegated properties like CountryMapData.
+    /// </summary>
+    private void OnVisualizationPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // Forward all Visualization property changes - these are delegated to parent VM
+        if (e.PropertyName != null)
+        {
+            OnPropertyChanged(e.PropertyName);
+            DebugLogger.Log($"[CountryTrafficViewModel] Forwarding Visualization.{e.PropertyName} PropertyChanged");
+        }
+    }
+
     private void OnFilterServiceChanged(object? sender, FilterChangedEventArgs e)
     {
         DebugLogger.Log($"[CountryTrafficViewModel] Filter service changed - waiting for statistics update");
@@ -569,7 +632,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         // Re-apply filters when global filter state changes (e.g., country/region from UnifiedFilterPanel)
         if (_currentStatistics?.CountryStatistics != null && _currentStatistics.CountryStatistics.Count > 0)
         {
-            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+            _dispatcher.InvokeAsync(() =>
             {
                 UpdateTopCountriesList();
                 DebugLogger.Log($"[CountryTrafficViewModel] Country list updated after global filter change");
@@ -712,6 +775,9 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         get => UIState.ShowCountryLabels;
         set => UIState.ShowCountryLabels = value;
     }
+
+    // Hide countries without traffic on detailed map
+    [ObservableProperty] private bool _hideCountriesWithoutTraffic;
     public int SelectedContinentTab
     {
         get => UIState.SelectedContinentTab;
@@ -748,13 +814,124 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         }
     }
 
+    /// <summary>
+    /// Handles country click on map - filters packets to show only traffic for that country.
+    /// </summary>
+    public void OnCountryClicked(string countryCode)
+    {
+        DebugLogger.Log($"[CountryTrafficViewModel] OnCountryClicked: {countryCode}");
+
+        if (string.IsNullOrEmpty(countryCode))
+            return;
+
+        // Get country name for display
+        var countryName = CountryNameHelper.GetDisplayName(countryCode, countryCode);
+
+        // Apply country filter via GlobalFilterState for cross-tab consistency
+        if (_globalFilterState != null)
+        {
+            // Clear existing countries and add this one
+            _globalFilterState.IncludeFilters.Countries.Clear();
+            _globalFilterState.AddIncludeCountry(countryCode);
+            DebugLogger.Log($"[CountryTrafficViewModel] Applied country filter via GlobalFilterState: {countryCode}");
+        }
+
+        // Also update local filter for immediate visual feedback
+        CountryFilter = countryCode;
+
+        DebugLogger.Log($"[CountryTrafficViewModel] Filtering to country: {countryName} ({countryCode})");
+    }
+
+    /// <summary>
+    /// Action property for AXAML binding - handles country icon clicks on map
+    /// </summary>
+    public Action<string> OnCountryClickedAction => OnCountryClicked;
+
+    /// <summary>
+    /// Handles country click on detailed world map - shows DrillDown popup with country packets.
+    /// </summary>
+    public void OnDetailedMapCountryClicked(string countryCode)
+    {
+        DebugLogger.Log($"[CountryTrafficViewModel] OnDetailedMapCountryClicked: {countryCode}");
+
+        if (string.IsNullOrEmpty(countryCode))
+            return;
+
+        // Map UI display codes to data dictionary keys
+        // UI uses "INT"/"IP6" for display, data uses "Internal"/"IP6_LINK"
+        var (dataKey, displayName) = countryCode switch
+        {
+            "INT" => ("Internal", "Internal Traffic"),
+            "IP6" => ("IP6_LINK", "IPv6 Traffic"),
+            _ => (countryCode, CountryNameHelper.GetDisplayName(countryCode, countryCode))
+        };
+
+        // Debug: show what keys are in the dictionary
+        var dictKeys = CountryTrafficStatistics?.Keys.ToList() ?? new List<string>();
+        DebugLogger.Log($"[CountryTrafficViewModel] Dictionary has {dictKeys.Count} keys: {string.Join(", ", dictKeys.Take(20))}");
+        DebugLogger.Log($"[CountryTrafficViewModel] Mapping: UI code '{countryCode}' -> data key '{dataKey}'");
+
+        // Get country name and packets
+        var countryName = displayName;
+
+        // Try to get statistics for this country
+        var stats = CountryTrafficStatistics?.GetValueOrDefault(dataKey);
+        if (stats == null)
+        {
+            DebugLogger.Log($"[CountryTrafficViewModel] No statistics found for {dataKey} (tried exact match)");
+            // Try case-insensitive lookup
+            var key = dictKeys.FirstOrDefault(k => k.Equals(dataKey, StringComparison.OrdinalIgnoreCase));
+            if (key != null)
+            {
+                DebugLogger.Log($"[CountryTrafficViewModel] Found case-insensitive match: {key}");
+                stats = CountryTrafficStatistics![key];
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        // Get packets for this country from DataManager (use dataKey for lookup)
+        var countryPackets = DataManager.GetCountryPacketIndices(dataKey);
+        var allPackets = DataManager.GetAllPackets();
+
+        if (countryPackets == null || allPackets == null || countryPackets.Count == 0)
+        {
+            DebugLogger.Log($"[CountryTrafficViewModel] No packets found for {dataKey}");
+            return;
+        }
+
+        // Build packet list from indices
+        var packets = new List<PacketInfo>(countryPackets.Count);
+        foreach (var index in countryPackets)
+        {
+            if (index < allPackets.Count)
+                packets.Add(allPackets[index]);
+        }
+
+        DebugLogger.Log($"[CountryTrafficViewModel] Showing DrillDown for {countryName} ({countryCode}) with {packets.Count} packets");
+
+        // Show DrillDown popup with country data (use ShowForCountry to avoid re-filtering by IP)
+        DrillDown.ShowForCountry(
+            $"{countryName} ({countryCode})",
+            packets,
+            stats.TotalPackets,
+            stats.TotalBytes);
+    }
+
+    /// <summary>
+    /// Action property for AXAML binding - handles country clicks on detailed world map
+    /// </summary>
+    public Action<string> OnDetailedMapCountryClickedAction => OnDetailedMapCountryClicked;
+
     // ==================== ITabPopulationTarget IMPLEMENTATION ====================
 
     /// <inheritdoc />
     public async Task PopulateFromCacheAsync(AnalysisResult result)
     {
         DebugLogger.Log($"[CountryTrafficViewModel.PopulateFromCacheAsync] Populating from cache with {result.AllPackets.Count:N0} packets");
-        _allPackets = result.AllPackets;
+        SetPackets(result.AllPackets);  // Must use SetPackets to populate DataManager
         await UpdateStatistics(result.Statistics);
     }
 
@@ -768,6 +945,10 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     {
         if (_disposed) return;
         _disposed = true;
+
+        // Dispose filter debouncing subscription
+        _filterSubscription?.Dispose();
+        _filterTrigger.Dispose();
 
         // Unsubscribe from GlobalFilterState to prevent memory leaks
         if (_globalFilterState != null)
@@ -797,7 +978,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
             UIState.ContinentChanged -= OnContinentChanged;
         }
 
-        DebugLogger.Log("[CountryTrafficViewModel] Disposed - cleaned up event handlers");
+        DebugLogger.Log("[CountryTrafficViewModel] Disposed - cleaned up event handlers and filter debouncing");
     }
 }
 
@@ -835,9 +1016,21 @@ public class ActiveFlowViewModel : ObservableObject
     public string SourceContinent { get; set; } = "";
     public string DestinationContinent { get; set; } = "";
 
+    /// <summary>
+    /// Indicates if this flow has traffic in both directions (bidirectional).
+    /// When true, display ↔ instead of →
+    /// </summary>
+    public bool IsBidirectional { get; set; }
+
     public string BytesFormatted => NumberFormatter.FormatBytes(ByteCount);
     public string PacketsFormatted => $"{PacketCount:N0}";
     public string SourceCountryDisplayCode => CountryNameHelper.GetDisplayCode(SourceCountryCode);
     public string DestinationCountryDisplayCode => CountryNameHelper.GetDisplayCode(DestinationCountryCode);
-    public string FlowDirection => $"{SourceCountryDisplayCode} -> {DestinationCountryDisplayCode}";
+
+    /// <summary>
+    /// Arrow symbol based on flow direction: ↔ for bidirectional, → for unidirectional
+    /// </summary>
+    public string FlowArrow => IsBidirectional ? "↔" : "→";
+
+    public string FlowDirection => $"{SourceCountryDisplayCode} {FlowArrow} {DestinationCountryDisplayCode}";
 }

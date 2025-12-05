@@ -36,6 +36,49 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Rendering
         }
 
         /// <summary>
+        /// Renders ocean background with subtle gradient for depth effect
+        /// </summary>
+        private void RenderOceanBackground(DrawingContext context, Rect bounds, double scale, double offsetX, double offsetY)
+        {
+            // Calculate the map area
+            var mapRect = new Rect(offsetX, offsetY, 800 * scale, 400 * scale);
+
+            // Create ocean gradient - dark blue with subtle depth variation
+            var oceanGradient = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+                GradientStops = new GradientStops
+                {
+                    new GradientStop(Color.FromRgb(15, 23, 42), 0),      // Slate-900
+                    new GradientStop(Color.FromRgb(23, 37, 58), 0.3),    // Darker blue
+                    new GradientStop(Color.FromRgb(30, 41, 59), 0.7),    // Slate-800
+                    new GradientStop(Color.FromRgb(15, 23, 42), 1)       // Back to dark
+                }
+            };
+
+            // Draw ocean background with rounded corners
+            context.DrawRectangle(oceanGradient, null, mapRect, 12, 12);
+
+            // Add subtle grid lines for depth (latitude/longitude effect)
+            var gridPen = new Pen(new SolidColorBrush(Color.FromArgb(25, 100, 120, 140)), 0.5);
+
+            // Horizontal lines (latitude)
+            for (int i = 1; i < 4; i++)
+            {
+                var y = offsetY + (100 * i * scale);
+                context.DrawLine(gridPen, new Point(offsetX, y), new Point(offsetX + 800 * scale, y));
+            }
+
+            // Vertical lines (longitude)
+            for (int i = 1; i < 8; i++)
+            {
+                var x = offsetX + (100 * i * scale);
+                context.DrawLine(gridPen, new Point(x, offsetY), new Point(x, offsetY + 400 * scale));
+            }
+        }
+
+        /// <summary>
         /// Renders continents with recognizable geographic silhouettes
         /// </summary>
         public void RenderContinentShapes(DrawingContext context, Rect bounds,
@@ -52,6 +95,9 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Rendering
             // Center the map
             var offsetX = (mapWidth - 800 * scale) / 2;
             var offsetY = (mapHeight - 400 * scale) / 2;
+
+            // Render ocean background with subtle gradient
+            RenderOceanBackground(context, bounds, scale, offsetX, offsetY);
 
             // Render each continent
             RenderContinent(context, "NA", ContinentGeometry.GetNorthAmericaGeometry(), scale, offsetX, offsetY,
@@ -115,14 +161,26 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Rendering
             // Apply transform for positioning and scaling
             using (context.PushTransform(Matrix.CreateScale(scale, scale) * Matrix.CreateTranslation(offsetX, offsetY)))
             {
-                // Draw continent shape
+                // Draw drop shadow for depth effect
+                var shadowOffset = Matrix.CreateTranslation(3, 3);
+                using (context.PushTransform(shadowOffset))
+                {
+                    var shadowBrush = new SolidColorBrush(Color.FromArgb(60, 0, 0, 0));
+                    context.DrawGeometry(shadowBrush, null, geometry);
+                }
+
+                // Draw continent shape with gradient fill
                 context.DrawGeometry(gradientBrush, pen, geometry);
+
+                // Add inner highlight for 3D effect (top-left edge)
+                var highlightPen = new Pen(new SolidColorBrush(Color.FromArgb(40, 255, 255, 255)), 1);
+                context.DrawGeometry(null, highlightPen, geometry);
 
                 // Add glow effect for high traffic
                 if (trafficValue > 0.5)
                 {
                     var glowColor = Color.FromArgb((byte)(80 * trafficValue), fillColor.R, fillColor.G, fillColor.B);
-                    var glowPen = new Pen(new SolidColorBrush(glowColor), 3);
+                    var glowPen = new Pen(new SolidColorBrush(glowColor), 4);
                     context.DrawGeometry(null, glowPen, geometry);
                 }
             }

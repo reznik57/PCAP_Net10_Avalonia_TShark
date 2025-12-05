@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.Controls.Maps.Data
 {
@@ -43,35 +44,36 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
         /// </summary>
         public static Color GetTrafficBorderColor(double trafficValue)
         {
+            // Use ThemeColorHelper for consistent color scheme
             if (trafficValue < 0.01)
             {
                 // < 1% - Cyan (very low)
-                return Color.FromRgb(34, 211, 238); // #22D3EE
+                return ThemeColorHelper.GetColor("MapTrafficCyan", "#22D3EE");
             }
             else if (trafficValue < 0.05)
             {
                 // 1-5% - Blue
-                return Color.FromRgb(59, 130, 246); // #3B82F6
+                return ThemeColorHelper.GetColor("MapTrafficLow", "#3B82F6");
             }
             else if (trafficValue < 0.10)
             {
                 // 5-10% - Green
-                return Color.FromRgb(34, 197, 94); // #22C55E
+                return ThemeColorHelper.GetColor("ColorSuccess", "#22C55E");
             }
             else if (trafficValue < 0.20)
             {
                 // 10-20% - Yellow
-                return Color.FromRgb(234, 179, 8); // #EAB308
+                return ThemeColorHelper.GetColor("MapTrafficMediumYellow", "#EAB308");
             }
             else if (trafficValue < 0.50)
             {
                 // 20-50% - Orange
-                return Color.FromRgb(249, 115, 22); // #F97316
+                return ThemeColorHelper.GetColor("MapTrafficMedium", "#F97316");
             }
             else
             {
                 // >= 50% - Red (very high)
-                return Color.FromRgb(239, 68, 68); // #EF4444
+                return ThemeColorHelper.GetColor("MapTrafficHigh", "#EF4444");
             }
         }
 
@@ -81,35 +83,36 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
         /// </summary>
         public static Color GetCountryHeatMapColor(double percentage)
         {
+            // Use ThemeColorHelper for consistent color scheme
             if (percentage < 0.001)
             {
                 // < 0.1% - Grey (very low/negligible)
-                return Color.FromRgb(107, 114, 128); // #6B7280
+                return ThemeColorHelper.GetColor("ChartGray", "#6B7280");
             }
             else if (percentage < 0.01)
             {
                 // 0.1-1% - Cyan (low)
-                return Color.FromRgb(34, 211, 238); // #22D3EE
+                return ThemeColorHelper.GetColor("MapTrafficCyan", "#22D3EE");
             }
             else if (percentage < 0.03)
             {
                 // 1-3% - Blue
-                return Color.FromRgb(59, 130, 246); // #3B82F6
+                return ThemeColorHelper.GetColor("MapTrafficLow", "#3B82F6");
             }
             else if (percentage < 0.05)
             {
                 // 3-5% - Green
-                return Color.FromRgb(34, 197, 94); // #22C55E
+                return ThemeColorHelper.GetColor("ColorSuccess", "#22C55E");
             }
             else if (percentage < 0.10)
             {
                 // 5-10% - Yellow
-                return Color.FromRgb(234, 179, 8); // #EAB308
+                return ThemeColorHelper.GetColor("MapTrafficMediumYellow", "#EAB308");
             }
             else
             {
                 // >= 10% - Red (high traffic)
-                return Color.FromRgb(239, 68, 68); // #EF4444
+                return ThemeColorHelper.GetColor("MapTrafficHigh", "#EF4444");
             }
         }
 

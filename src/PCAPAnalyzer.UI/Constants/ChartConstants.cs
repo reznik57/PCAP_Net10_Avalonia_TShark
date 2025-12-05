@@ -1,3 +1,5 @@
+using PCAPAnalyzer.UI.Utilities;
+
 namespace PCAPAnalyzer.UI.Constants;
 
 /// <summary>
@@ -34,10 +36,10 @@ public static class ChartConstants
     // ==================== HIGHLIGHT COLORS ====================
 
     /// <summary>Fill color for highlight dot (gold)</summary>
-    public const string HighlightFillColor = "#FFD700";
+    public static string HighlightFillColor => ThemeColorHelper.HighlightYellowHex;
 
     /// <summary>Stroke color for highlight dot (orange)</summary>
-    public const string HighlightStrokeColor = "#FFA500";
+    public static string HighlightStrokeColor => ThemeColorHelper.HighlightOrangeHex;
 
     // ==================== CHART LAYOUT ====================
 
@@ -57,32 +59,20 @@ public static class ChartConstants
 
     // ==================== PORT CHART COLORS ====================
 
-    /// <summary>Color palette for top 10 ports (matches DashboardViewModel)</summary>
-    public static readonly string[] PortColorPalette =
-    [
-        "#3B82F6", // Blue
-        "#10B981", // Green
-        "#F59E0B", // Amber
-        "#EF4444", // Red
-        "#8B5CF6", // Purple
-        "#EC4899", // Pink
-        "#06B6D4", // Cyan
-        "#84CC16", // Lime
-        "#F97316", // Orange
-        "#6366F1"  // Indigo
-    ];
+    /// <summary>Color palette for top 10 ports (resolved from theme)</summary>
+    public static string[] PortColorPalette => ThemeColorHelper.GetChartColorPalette();
 
     // ==================== TRAFFIC CHART COLORS ====================
 
     /// <summary>Throughput series color (blue)</summary>
-    public const string ThroughputColor = "#3B82F6";
+    public static string ThroughputColor => ThemeColorHelper.ChartThroughputColorHex;
 
     /// <summary>Packets series color (green)</summary>
-    public const string PacketsColor = "#10B981";
+    public static string PacketsColor => ThemeColorHelper.ChartPacketsColorHex;
 
     /// <summary>Anomalies series color (amber)</summary>
-    public const string AnomaliesColor = "#F59E0B";
+    public static string AnomaliesColor => ThemeColorHelper.ChartAnomaliesColorHex;
 
     /// <summary>Threats series color (red)</summary>
-    public const string ThreatsColor = "#EF4444";
+    public static string ThreatsColor => ThemeColorHelper.ChartThreatsColorHex;
 }

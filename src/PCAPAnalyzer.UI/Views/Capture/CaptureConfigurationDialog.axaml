@@ -20,11 +20,11 @@
         <!-- Header -->
         <StackPanel Grid.Row="0" Margin="0,0,0,20">
             <TextBlock Text="Live Packet Capture Configuration"
-                       FontSize="18"
+                       FontSize="{StaticResource FontSizeXL}"
                        FontWeight="Bold"
                        Foreground="{DynamicResource TextPrimary}"/>
             <TextBlock Text="Configure network interface, filters, and capture settings"
-                       FontSize="12"
+                       FontSize="{StaticResource FontSizeBase}"
                        Foreground="{DynamicResource TextSecondary}"
                        Margin="0,4,0,0"/>
         </StackPanel>
@@ -37,7 +37,7 @@
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="12">
                         <TextBlock Text="Network Interface"
-                                   FontSize="13"
+                                   FontSize="{StaticResource FontSizeMedium}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimary}"/>
 
@@ -51,7 +51,7 @@
                                         <TextBlock Text="{Binding Name}"
                                                    FontWeight="Medium"/>
                                         <TextBlock Text="{Binding Description}"
-                                                   FontSize="10"
+                                                   FontSize="{StaticResource FontSizeXS}"
                                                    Foreground="{DynamicResource TextMuted}"/>
                                     </StackPanel>
                                 </DataTemplate>
@@ -59,12 +59,12 @@
                         </ComboBox>
 
                         <TextBlock Text="{Binding TsharkVersion, StringFormat='TShark version: {0}'}"
-                                   FontSize="10"
+                                   FontSize="{StaticResource FontSizeXS}"
                                    Foreground="{DynamicResource TextSecondary}"
                                    IsVisible="{Binding IsTSharkAvailable}"/>
 
                         <TextBlock Text="{Binding ErrorMessage}"
-                                   FontSize="11"
+                                   FontSize="{StaticResource FontSizeSmall}"
                                    Foreground="{DynamicResource AccentRed}"
                                    IsVisible="{Binding !!ErrorMessage}"
                                    TextWrapping="Wrap"/>
@@ -75,7 +75,7 @@
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="12">
                         <TextBlock Text="Capture Filter (BPF Syntax)"
-                                   FontSize="13"
+                                   FontSize="{StaticResource FontSizeMedium}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimary}"/>
 
@@ -84,11 +84,11 @@
                                  FontFamily="Consolas,Courier New,monospace"/>
 
                         <TextBlock Text="{Binding FilterValidationMessage}"
-                                   FontSize="11"
+                                   FontSize="{StaticResource FontSizeSmall}"
                                    Foreground="{Binding IsFilterValid, Converter={StaticResource BoolToSuccessErrorBrushConverter}}"/>
 
                         <TextBlock Text="Common Filters:"
-                                   FontSize="11"
+                                   FontSize="{StaticResource FontSizeSmall}"
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource TextMuted}"/>
 
@@ -103,7 +103,7 @@
                                     <Button Content="{Binding}"
                                             Command="{Binding $parent[ItemsControl].((vm:CaptureConfigurationViewModel)DataContext).ApplyFilterTemplateCommand}"
                                             CommandParameter="{Binding}"
-                                            FontSize="10"
+                                            FontSize="{StaticResource FontSizeXS}"
                                             FontFamily="Consolas,Courier New,monospace"
                                             Margin="0,0,4,4"/>
                                 </DataTemplate>
@@ -116,7 +116,7 @@
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="12">
                         <TextBlock Text="Basic Settings"
-                                   FontSize="13"
+                                   FontSize="{StaticResource FontSizeMedium}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimary}"/>
 
@@ -154,7 +154,7 @@
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="12">
                         <TextBlock Text="File Management"
-                                   FontSize="13"
+                                   FontSize="{StaticResource FontSizeMedium}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimary}"/>
 
@@ -193,7 +193,7 @@
                                            Increment="10"/>
                             <TextBlock Grid.Column="2"
                                        Text="(0 = unlimited)"
-                                       FontSize="10"
+                                       FontSize="{StaticResource FontSizeXS}"
                                        Foreground="{DynamicResource TextMuted}"
                                        VerticalAlignment="Center"
                                        Margin="8,0,0,0"/>
@@ -217,7 +217,7 @@
                 <Border Classes="card" Padding="16">
                     <StackPanel Spacing="12">
                         <TextBlock Text="Capture Limits (Optional)"
-                                   FontSize="13"
+                                   FontSize="{StaticResource FontSizeMedium}"
                                    FontWeight="SemiBold"
                                    Foreground="{DynamicResource TextPrimary}"/>
 
@@ -233,7 +233,7 @@
                                            Increment="60"/>
                             <TextBlock Grid.Column="2"
                                        Text="(0 = unlimited)"
-                                       FontSize="10"
+                                       FontSize="{StaticResource FontSizeXS}"
                                        Foreground="{DynamicResource TextMuted}"
                                        VerticalAlignment="Center"
                                        Margin="8,0,0,0"/>
@@ -251,7 +251,7 @@
                                            Increment="1000"/>
                             <TextBlock Grid.Column="2"
                                        Text="(0 = unlimited)"
-                                       FontSize="10"
+                                       FontSize="{StaticResource FontSizeXS}"
                                        Foreground="{DynamicResource TextMuted}"
                                        VerticalAlignment="Center"
                                        Margin="8,0,0,0"/>

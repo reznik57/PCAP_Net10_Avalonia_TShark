@@ -3,7 +3,9 @@ using System.Linq;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.UI.Constants;
+using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.Core.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
@@ -15,6 +17,10 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 /// </summary>
 public partial class FileSelectionControlViewModel : ObservableObject, IDisposable
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     private readonly FileAnalysisViewModel _fileAnalysisViewModel;
     private System.Timers.Timer? _countdownTimer;
 
@@ -298,7 +304,7 @@ public partial class FileSelectionControlViewModel : ObservableObject, IDisposab
     private void OnCountdownTick(object? sender, System.Timers.ElapsedEventArgs e)
     {
         // Must update UI on UI thread
-        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        Dispatcher.Post(() =>
         {
             CountdownSeconds--;
 

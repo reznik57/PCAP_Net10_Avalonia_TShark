@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.Converters
 {
@@ -15,36 +16,14 @@ namespace PCAPAnalyzer.UI.Converters
                 var brush = new LinearGradientBrush();
                 brush.StartPoint = new Avalonia.RelativePoint(0, 0, Avalonia.RelativeUnit.Relative);
                 brush.EndPoint = new Avalonia.RelativePoint(1, 0, Avalonia.RelativeUnit.Relative);
-                
-                // Color groups based on percentage ranges
-                if (percentage >= 10.0)
-                {
-                    // Hot red/orange gradient for 10%+
-                    brush.GradientStops.Add(new GradientStop(Color.FromRgb(248, 81, 73), 0));
-                    brush.GradientStops.Add(new GradientStop(Color.FromRgb(240, 136, 62), 1));
-                }
-                else if (percentage >= 1.0)
-                {
-                    // Warm orange/green gradient for 1-9.9%
-                    brush.GradientStops.Add(new GradientStop(Color.FromRgb(240, 136, 62), 0));
-                    brush.GradientStops.Add(new GradientStop(Color.FromRgb(63, 185, 80), 1));
-                }
-                else if (percentage >= 0.1)
-                {
-                    // Cool blue gradient for 0.1-0.9%
-                    brush.GradientStops.Add(new GradientStop(Color.FromRgb(88, 166, 255), 0));
-                    brush.GradientStops.Add(new GradientStop(Color.FromRgb(121, 192, 255), 1));
-                }
-                else
-                {
-                    // Gray for 0%
-                    brush.GradientStops.Add(new GradientStop(Color.FromRgb(72, 79, 88), 0));
-                    brush.GradientStops.Add(new GradientStop(Color.FromRgb(72, 79, 88), 1));
-                }
-                
+
+                var (startColor, endColor) = ThemeColorHelper.GetPercentageGradientColors(percentage);
+                brush.GradientStops.Add(new GradientStop(startColor, 0));
+                brush.GradientStops.Add(new GradientStop(endColor, 1));
+
                 return brush;
             }
-            return new SolidColorBrush(Color.FromRgb(72, 79, 88));
+            return new SolidColorBrush(ThemeColorHelper.PercentageTrackColor);
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -113,30 +92,10 @@ namespace PCAPAnalyzer.UI.Converters
             if (value is double percentage)
             {
                 var isStart = parameter?.ToString() == "Start";
-                
-                // Color groups based on percentage ranges
-                if (percentage >= 10.0)
-                {
-                    // Hot red/orange for 10%+
-                    return isStart ? Color.FromRgb(248, 81, 73) : Color.FromRgb(240, 136, 62);
-                }
-                else if (percentage >= 1.0)
-                {
-                    // Warm orange/yellow for 1-9.9%
-                    return isStart ? Color.FromRgb(240, 136, 62) : Color.FromRgb(63, 185, 80);
-                }
-                else if (percentage >= 0.1)
-                {
-                    // Cool blue for 0.1-0.9%
-                    return isStart ? Color.FromRgb(88, 166, 255) : Color.FromRgb(121, 192, 255);
-                }
-                else
-                {
-                    // Gray for 0%
-                    return Color.FromRgb(72, 79, 88);
-                }
+                var (startColor, endColor) = ThemeColorHelper.GetPercentageGradientColors(percentage);
+                return isStart ? startColor : endColor;
             }
-            return Color.FromRgb(72, 79, 88);
+            return ThemeColorHelper.PercentageTrackColor;
         }
 
         public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

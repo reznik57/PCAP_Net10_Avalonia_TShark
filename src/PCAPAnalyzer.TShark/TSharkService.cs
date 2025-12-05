@@ -119,7 +119,10 @@ public sealed class TSharkService : ITSharkService
         {
             // Create a fresh channel for each analysis
             CreateNewChannel();
-            
+
+            // Reset string pools for new analysis (memory optimization)
+            TSharkParserOptimized.ResetPools();
+
             _cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             _isAnalyzing = true;
             ResetStatistics();
@@ -278,6 +281,10 @@ public sealed class TSharkService : ITSharkService
             _packetChannel.Writer.TryComplete();
             _isAnalyzing = false;
             _logger.LogInformation("TShark analysis completed. Total packets processed: {Count}", _statistics.TotalPackets);
+
+            // Log pool statistics for memory optimization verification
+            var (ipCount, protoCount) = TSharkParserOptimized.GetPoolStats();
+            _logger.LogInformation("📊 String pools: {IpCount} unique IPs, {ProtoCount} unique protocols interned", ipCount, protoCount);
         }
     }
 

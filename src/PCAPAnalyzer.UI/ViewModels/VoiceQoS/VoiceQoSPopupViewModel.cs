@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Services;
 
 namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS;
 
@@ -17,6 +18,10 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS;
 /// </summary>
 public partial class VoiceQoSPopupViewModel : ObservableObject
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     private readonly object _collectionLock = new();
 
     // Dialog state
@@ -32,7 +37,7 @@ public partial class VoiceQoSPopupViewModel : ObservableObject
     {
         if (item == null) return;
 
-        Dispatcher.UIThread.InvokeAsync(() =>
+        Dispatcher.InvokeAsync(() =>
         {
             lock (_collectionLock)
             {
@@ -57,7 +62,7 @@ public partial class VoiceQoSPopupViewModel : ObservableObject
     {
         if (item == null) return;
 
-        Dispatcher.UIThread.InvokeAsync(() =>
+        Dispatcher.InvokeAsync(() =>
         {
             lock (_collectionLock)
             {
@@ -82,7 +87,7 @@ public partial class VoiceQoSPopupViewModel : ObservableObject
     {
         if (item == null) return;
 
-        Dispatcher.UIThread.InvokeAsync(() =>
+        Dispatcher.InvokeAsync(() =>
         {
             lock (_collectionLock)
             {
@@ -109,7 +114,7 @@ public partial class VoiceQoSPopupViewModel : ObservableObject
     {
         if (item == null) return;
 
-        Dispatcher.UIThread.InvokeAsync(() =>
+        Dispatcher.InvokeAsync(() =>
         {
             lock (_collectionLock)
             {

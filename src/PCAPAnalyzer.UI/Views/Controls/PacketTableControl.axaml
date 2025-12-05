@@ -28,10 +28,10 @@
             <Border Grid.Row="0" Classes="table-header-unified">
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-                        <Border Classes="accent-bar" Background="#3B82F6"/>
+                        <Border Classes="accent-bar" Background="{DynamicResource AccentPrimary}"/>
                         <TextBlock Text="Packet Analysis" Classes="section-title-unified" Margin="0"/>
                         <Border Classes="badge-unified">
-                            <TextBlock Text="{Binding TotalFilteredPackets, StringFormat='{}{0:N0}'}" Foreground="#3B82F6"/>
+                            <TextBlock Text="{Binding TotalFilteredPackets, StringFormat='{}{0:N0}'}" Foreground="{DynamicResource AccentPrimary}"/>
                         </Border>
                     </StackPanel>
                 </Grid>
@@ -43,52 +43,52 @@
                     <!-- Left side: Empty spacer -->
                     <Border Grid.Column="0"/>
 
-                    <!-- Center: Page info + Go To navigation -->
+                    <!-- Center: Page info + Go To navigation - SLACK STYLE -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                        <TextBlock VerticalAlignment="Center" FontSize="12" Foreground="{DynamicResource TextSecondary}">
-                            <Run Text="Page"/><Run Text="{Binding CurrentPage}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/><Run Text="of"/><Run Text="{Binding TotalPages}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimary}"/>
-                            <Run Text="(30 per page)" FontSize="10" Foreground="{DynamicResource TextMuted}"/>
+                        <TextBlock VerticalAlignment="Center" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}">
+                            <Run Text="Page "/><Run Text="{Binding CurrentPage}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><Run Text=" of "/><Run Text="{Binding TotalPages}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <Run Text=" (30 per page)" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}"/>
                         </TextBlock>
 
                         <!-- Go To Packet input -->
-                        <Border Background="#161B22" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="8,4">
+                        <Border Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="8" Padding="8,4">
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBlock Text="Frame:" FontSize="11" Foreground="#8B5CF6" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                <TextBox Width="80" Height="26" FontSize="11"
+                                <TextBlock Text="Frame:" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource AccentPrimary}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                <TextBox Width="80" Height="26" FontSize="{StaticResource FontSizeSmall}"
                                          Text="{Binding UIState.GoToPacketText}"
                                          Watermark="#"
-                                         Background="#0D1117" BorderBrush="#8B5CF6" BorderThickness="1" Foreground="#C9D1D9"
+                                         Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource AccentPrimary}" BorderThickness="1" Foreground="{DynamicResource TextPrimaryBrush}"
                                          VerticalContentAlignment="Center" Padding="6,0"
                                          KeyDown="GoToPacketTextBox_KeyDown"/>
                                 <Button Content="Go" Command="{Binding UIState.GoToPacketCommand}"
-                                        FontSize="11" Padding="8,4" MinWidth="35" Classes="secondary-action"
-                                        Background="#8B5CF6" Foreground="White"
+                                        FontSize="{StaticResource FontSizeSmall}" Padding="8,4" MinWidth="35"
+                                        Background="{DynamicResource AccentPrimary}" Foreground="White" CornerRadius="6"
                                         ToolTip.Tip="Jump to specific packet by frame number"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Search Stream input -->
-                        <Border Background="#161B22" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="8,4">
+                        <Border Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="8" Padding="8,4">
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBlock Text="Stream:" FontSize="11" Foreground="#22C55E" VerticalAlignment="Center" FontWeight="SemiBold"/>
-                                <TextBox Width="140" Height="26" FontSize="11"
+                                <TextBlock Text="Stream:" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource SlackSuccess}" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                                <TextBox Width="140" Height="26" FontSize="{StaticResource FontSizeSmall}"
                                          Text="{Binding UIState.SearchStreamText}"
                                          Watermark="IP or IP:Port"
-                                         Background="#0D1117" BorderBrush="#22C55E" BorderThickness="1" Foreground="#C9D1D9"
+                                         Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource SlackSuccess}" BorderThickness="1" Foreground="{DynamicResource TextPrimaryBrush}"
                                          VerticalContentAlignment="Center" Padding="6,0"
                                          KeyDown="SearchStreamTextBox_KeyDown"
                                          ToolTip.Tip="Search: 192.168.1.1 or 192.168.1.1:443 or 10.0.0.1:80-192.168.1.1:443"/>
                                 <Button Content="🔍" Command="{Binding UIState.SearchStreamCommand}"
-                                        FontSize="11" Padding="8,4" MinWidth="30"
-                                        Background="#22C55E" Foreground="White"
+                                        FontSize="{StaticResource FontSizeSmall}" Padding="8,4" MinWidth="30"
+                                        Background="{DynamicResource SlackSuccess}" Foreground="White" CornerRadius="6"
                                         ToolTip.Tip="Search for packets in stream"/>
                                 <Button Content="✕" Command="{Binding UIState.ClearStreamSearchCommand}"
-                                        FontSize="11" Padding="8,4" MinWidth="30"
+                                        FontSize="{StaticResource FontSizeSmall}" Padding="8,4" MinWidth="30"
                                         IsVisible="{Binding PacketManager.HasStreamFilter}"
-                                        Background="#EF4444" Foreground="White"
+                                        Background="{DynamicResource SlackDanger}" Foreground="White" CornerRadius="6"
                                         ToolTip.Tip="Clear stream filter"/>
                                 <TextBlock Text="{Binding UIState.StreamSearchStatus}"
-                                           FontSize="10" Foreground="#22C55E" VerticalAlignment="Center"
+                                           FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource SlackSuccess}" VerticalAlignment="Center"
                                            IsVisible="{Binding PacketManager.HasStreamFilter}"/>
                             </StackPanel>
                         </Border>
@@ -96,16 +96,16 @@
 
                     <!-- Right: Navigation buttons -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Right">
-                        <Button Content="⏮ First" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Command="{Binding GoToFirstPageCommand}" ToolTip.Tip="Go to first page"/>
-                        <Button Content="◀ Prev" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Command="{Binding GoToPreviousPageCommand}" ToolTip.Tip="Previous page"/>
-                        <Button Content="Next ▶" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Command="{Binding GoToNextPageCommand}" ToolTip.Tip="Next page"/>
-                        <Button Content="Last ⏭" FontSize="11" Padding="8,4" MinWidth="55" Classes="secondary-action" Command="{Binding GoToLastPageCommand}" ToolTip.Tip="Go to last page"/>
+                        <Button Content="⏮ First" FontSize="{StaticResource FontSizeSmall}" Padding="8,4" MinWidth="55" Classes="secondary-action" Command="{Binding GoToFirstPageCommand}" ToolTip.Tip="Go to first page"/>
+                        <Button Content="◀ Prev" FontSize="{StaticResource FontSizeSmall}" Padding="8,4" MinWidth="55" Classes="secondary-action" Command="{Binding GoToPreviousPageCommand}" ToolTip.Tip="Previous page"/>
+                        <Button Content="Next ▶" FontSize="{StaticResource FontSizeSmall}" Padding="8,4" MinWidth="55" Classes="secondary-action" Command="{Binding GoToNextPageCommand}" ToolTip.Tip="Next page"/>
+                        <Button Content="Last ⏭" FontSize="{StaticResource FontSizeSmall}" Padding="8,4" MinWidth="55" Classes="secondary-action" Command="{Binding GoToLastPageCommand}" ToolTip.Tip="Go to last page"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- Column Headers -->
-            <Border Grid.Row="2" Background="#0D1117" BorderBrush="#21262D" BorderThickness="0,0,0,1" Padding="20,8,20,8">
+            <!-- Column Headers - SLACK STYLE -->
+            <Border Grid.Row="2" Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Padding="20,8,20,8">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="110"/>  <!-- Frame Number -->
@@ -121,17 +121,17 @@
                         <ColumnDefinition Width="*"/>    <!-- Info -->
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0" Text="FRAME #" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="1" Text="TIME" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="2" Text="DELTA" FontSize="10" FontWeight="SemiBold" Foreground="#22C55E" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="Time since first packet in filter"/>
-                    <TextBlock Grid.Column="3" Text="SOURCE IP" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="4" Text="SRC PORT" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="5" Text="DESTINATION IP" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="6" Text="DST PORT" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="7" Text="L4 PROTO" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="8" Text="SERVICE" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="Service detected via L7 protocol or port number (hover for details)"/>
-                    <TextBlock Grid.Column="9" Text="SIZE" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <TextBlock Grid.Column="10" Text="INFO" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="0" Text="FRAME #" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="1" Text="TIME" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="DELTA" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource SlackSuccess}" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="Time since first packet in filter"/>
+                    <TextBlock Grid.Column="3" Text="SOURCE IP" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="4" Text="SRC PORT" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="5" Text="DESTINATION IP" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="6" Text="DST PORT" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="7" Text="L4 PROTO" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="8" Text="SERVICE" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="Service detected via L7 protocol or port number (hover for details)"/>
+                    <TextBlock Grid.Column="9" Text="SIZE" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="10" Text="INFO" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                 </Grid>
             </Border>
 
@@ -187,7 +187,7 @@
                                         </Grid.ColumnDefinitions>
 
                                         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                                            <TextBlock Text="⭐" FontSize="10" Foreground="#FCD34D">
+                                            <TextBlock Text="⭐" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource SlackWarning}">
                                                 <TextBlock.IsVisible>
                                                     <MultiBinding Converter="{StaticResource BookmarkVisibilityConverter}">
                                                         <Binding Path="FrameNumber"/>
@@ -195,11 +195,11 @@
                                                     </MultiBinding>
                                                 </TextBlock.IsVisible>
                                             </TextBlock>
-                                            <TextBlock Text="{Binding FrameNumber, StringFormat='{}{0:N0}'}" FontSize="11" FontWeight="Medium" Foreground="#8B949E"/>
+                                            <TextBlock Text="{Binding FrameNumber, StringFormat='{}{0:N0}'}" FontSize="{StaticResource FontSizeSmall}" FontWeight="Medium" Foreground="{DynamicResource TextMutedBrush}"/>
                                         </StackPanel>
-                                        <TextBlock Grid.Column="1" Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}" FontSize="12" Foreground="#C9D1D9" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding Timestamp, StringFormat='{}{0:HH:mm:ss.fff}'}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                                         <!-- Delta Time Column (relative to first packet in dataset) -->
-                                        <TextBlock Grid.Column="2" FontSize="11" Foreground="#22C55E" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                        <TextBlock Grid.Column="2" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource SlackSuccess}" HorizontalAlignment="Left" VerticalAlignment="Center">
                                             <TextBlock.Text>
                                                 <MultiBinding Converter="{StaticResource TimeDeltaConverter}">
                                                     <Binding Path="Timestamp"/>
@@ -207,26 +207,26 @@
                                                 </MultiBinding>
                                             </TextBlock.Text>
                                         </TextBlock>
-                                        <TextBlock Grid.Column="3" Text="{Binding SourceIP}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="{Binding SourceIP}"/>
-                                        <TextBlock Grid.Column="4" Text="{Binding SourcePort}" FontSize="12" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="5" Text="{Binding DestinationIP}" FontSize="13" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="{Binding DestinationIP}"/>
-                                        <TextBlock Grid.Column="6" Text="{Binding DestinationPort}" FontSize="12" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="3" Text="{Binding SourceIP}" FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="{Binding SourceIP}"/>
+                                        <TextBlock Grid.Column="4" Text="{Binding SourcePort}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="5" Text="{Binding DestinationIP}" FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="{Binding DestinationIP}"/>
+                                        <TextBlock Grid.Column="6" Text="{Binding DestinationPort}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                                         <!-- Protocol column with color -->
-                                        <TextBlock Grid.Column="7" Text="{Binding Protocol}" FontSize="11" FontWeight="SemiBold"
+                                        <TextBlock Grid.Column="7" Text="{Binding Protocol}" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold"
                                                    Foreground="{Binding Protocol, Converter={StaticResource ProtocolColorConverter}}"
                                                    HorizontalAlignment="Left" VerticalAlignment="Center"/>
                                         <!-- L7/Service column - uses PortDatabase for service name when L7 not detected -->
                                         <TextBlock Grid.Column="8"
                                                    Text="{Binding ., Converter={StaticResource PortToServiceConverter}}"
-                                                   FontSize="11"
+                                                   FontSize="{StaticResource FontSizeSmall}"
                                                    Foreground="{Binding ., Converter={StaticResource PortRiskColorConverter}}"
                                                    FontWeight="SemiBold"
                                                    TextTrimming="CharacterEllipsis"
                                                    HorizontalAlignment="Left"
                                                    VerticalAlignment="Center"
                                                    ToolTip.Tip="{Binding ., Converter={StaticResource PortTooltipConverter}}"/>
-                                        <TextBlock Grid.Column="9" Text="{Binding Length, StringFormat='{}{0:N0}'}" FontSize="12" Foreground="#8B949E" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="10" Text="{Binding Info}" FontSize="11" Foreground="#C9D1D9" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="{Binding Info}"/>
+                                        <TextBlock Grid.Column="9" Text="{Binding Length, StringFormat='{}{0:N0}'}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                        <TextBlock Grid.Column="10" Text="{Binding Info}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" VerticalAlignment="Center" ToolTip.Tip="{Binding Info}"/>
                                     </Grid>
                                 </Grid>
                             </Border>
@@ -237,9 +237,9 @@
         </Grid>
     </Border>
 
-    <!-- Grid Splitter for resizing (drag to resize packet table vs details) -->
+    <!-- Grid Splitter for resizing (drag to resize packet table vs details) - SLACK STYLE -->
     <GridSplitter Grid.Row="1"
-                  Background="#8B5CF6"
+                  Background="{DynamicResource AccentPrimary}"
                   HorizontalAlignment="Stretch"
                   VerticalAlignment="Stretch"
                   ResizeDirection="Rows"
@@ -248,11 +248,11 @@
         <!-- Visual grip indicator -->
         <GridSplitter.Template>
             <ControlTemplate>
-                <Border Background="#30363D" CornerRadius="2">
+                <Border Background="{DynamicResource BorderSubtleBrush}" CornerRadius="4">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="3">
-                        <Ellipse Width="4" Height="4" Fill="#8B949E"/>
-                        <Ellipse Width="4" Height="4" Fill="#8B949E"/>
-                        <Ellipse Width="4" Height="4" Fill="#8B949E"/>
+                        <Ellipse Width="4" Height="4" Fill="{DynamicResource TextMutedBrush}"/>
+                        <Ellipse Width="4" Height="4" Fill="{DynamicResource TextMutedBrush}"/>
+                        <Ellipse Width="4" Height="4" Fill="{DynamicResource TextMutedBrush}"/>
                     </StackPanel>
                 </Border>
             </ControlTemplate>

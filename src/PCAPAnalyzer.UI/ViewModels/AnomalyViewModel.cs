@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels;
 
@@ -197,10 +198,77 @@ public partial class AnomalyViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void ExportToCsv()
+    private async Task ExportToCsv()
     {
-        // TODO: Implement CSV export
-        DebugLogger.Log("[AnomalyViewModel] Export to CSV requested");
+        if (!FilteredAnomalies.Any())
+        {
+            DebugLogger.Log("[AnomalyViewModel] No anomalies to export");
+            return;
+        }
+
+        try
+        {
+            if (Avalonia.Application.Current?.ApplicationLifetime is not
+                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop ||
+                desktop.MainWindow == null)
+            {
+                return;
+            }
+
+            var topLevel = desktop.MainWindow;
+            var saveDialog = new Avalonia.Platform.Storage.FilePickerSaveOptions
+            {
+                Title = "Export Anomalies to CSV",
+                DefaultExtension = "csv",
+                SuggestedFileName = $"Anomalies_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+                FileTypeChoices = new[]
+                {
+                    new Avalonia.Platform.Storage.FilePickerFileType("CSV Files") { Patterns = new[] { "*.csv" } }
+                }
+            };
+
+            var file = await topLevel.StorageProvider.SaveFilePickerAsync(saveDialog);
+            if (file == null) return;
+
+            await using var stream = await file.OpenWriteAsync();
+            await using var writer = new System.IO.StreamWriter(stream);
+
+            // Write header
+            await writer.WriteLineAsync("Type,Severity,Category,Source IP,Source Port,Destination IP,Destination Port,Detected At,Description");
+
+            // Write data
+            foreach (var item in FilteredAnomalies)
+            {
+                var line = string.Join(",",
+                    EscapeCsv(item.Type),
+                    item.Severity.ToString(),
+                    item.Category.ToString(),
+                    EscapeCsv(item.SourceIP),
+                    item.SourcePort,
+                    EscapeCsv(item.DestinationIP),
+                    item.DestinationPort,
+                    item.DetectedAt.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                    EscapeCsv(item.Description)
+                );
+                await writer.WriteLineAsync(line);
+            }
+
+            DebugLogger.Log($"[AnomalyViewModel] Exported {FilteredAnomalies.Count} anomalies to CSV");
+        }
+        catch (Exception ex)
+        {
+            DebugLogger.Log($"[AnomalyViewModel] CSV export failed: {ex.Message}");
+        }
+    }
+
+    private static string EscapeCsv(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return "";
+        if (value.Contains(',', StringComparison.Ordinal) ||
+            value.Contains('"', StringComparison.Ordinal) ||
+            value.Contains('\n', StringComparison.Ordinal))
+            return $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
+        return value;
     }
 }
 
@@ -235,14 +303,7 @@ public class AnomalyDisplayItem
         _ => "\U000026AA"                          // White circle
     };
 
-    public string SeverityColor => Severity switch
-    {
-        AnomalySeverity.Critical => "#F85149",
-        AnomalySeverity.High => "#F0883E",
-        AnomalySeverity.Medium => "#D29922",
-        AnomalySeverity.Low => "#58A6FF",
-        _ => "#8B949E"
-    };
+    public string SeverityColor => ThemeColorHelper.GetAnomalySeverityColorHex(Severity.ToString());
 
     public string CategoryIcon => Category switch
     {

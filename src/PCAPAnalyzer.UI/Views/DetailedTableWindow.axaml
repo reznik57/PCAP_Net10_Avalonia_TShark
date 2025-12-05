@@ -29,10 +29,10 @@
                 
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="{Binding Title}" 
-                               FontSize="24" FontWeight="Bold" 
+                               FontSize="{StaticResource FontSizeHeading}" FontWeight="Bold" 
                                Foreground="{DynamicResource TextPrimary}"/>
                     <TextBlock Text="{Binding StatusMessage}" 
-                               FontSize="14" 
+                               FontSize="{StaticResource FontSizeInput}" 
                                Foreground="{DynamicResource TextSecondary}"
                                Margin="0,5,0,0"/>
                 </StackPanel>

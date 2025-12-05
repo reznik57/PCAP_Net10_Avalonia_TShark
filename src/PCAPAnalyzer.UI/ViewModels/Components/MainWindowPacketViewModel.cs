@@ -4,13 +4,14 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Collections;
 using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.UI.Collections;
+using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.Core.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
@@ -21,6 +22,10 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 /// </summary>
 public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposable
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     // Packet stores
     private readonly IPacketStore _duckPacketStore = new DuckDbPacketStore();
     private readonly IPacketStore _memoryPacketStore = new InMemoryPacketStore();
@@ -334,22 +339,6 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
             }
         }
 
-        // Pre-load hex data for displayed packets in background (non-blocking)
-        // This makes hex dump instant when user clicks "Load Hex Dump"
-        if (displayedFrameNumbers.Count > 0)
-        {
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await PacketDetails.PreloadHexDataForFramesAsync(displayedFrameNumbers);
-                }
-                catch (Exception ex)
-                {
-                    DebugLogger.Log($"[PacketVM] Hex preload error: {ex.Message}");
-                }
-            });
-        }
     }
 
     /// <summary>
@@ -507,7 +496,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
                 packetList = _recentPacketsBuffer.ToArray().ToList();
             }
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await Dispatcher.InvokeAsync(() =>
             {
                 _allPackets = packetList;
                 FilterPackets();

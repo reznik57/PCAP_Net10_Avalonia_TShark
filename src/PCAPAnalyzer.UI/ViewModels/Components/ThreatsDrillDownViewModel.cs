@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -21,7 +22,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
     // Header information
     [ObservableProperty] private string _threatName = "";
     [ObservableProperty] private string _severity = "";
-    [ObservableProperty] private string _severityColor = "#6B7280";
+    [ObservableProperty] private string _severityColor = ThemeColorHelper.GetColorHex("TextMuted", "#6B7280");
     [ObservableProperty] private string _category = "";
     [ObservableProperty] private int _port;
     [ObservableProperty] private string _protocol = "";
@@ -554,7 +555,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
             .Select((m, i) => new MitigationItem
             {
                 Priority = i < 2 ? "High" : (i < 4 ? "Medium" : "Low"),
-                PriorityColor = i < 2 ? "#EF4444" : (i < 4 ? "#F59E0B" : "#10B981"),
+                PriorityColor = i < 2 ? ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444") : (i < 4 ? ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B") : ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981")),
                 Description = m
             })
             .ToList();
@@ -564,12 +565,12 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
 
     private static string GetSeverityColor(ThreatSeverity severity) => severity switch
     {
-        ThreatSeverity.Critical => "#EF4444",
-        ThreatSeverity.High => "#F97316",
-        ThreatSeverity.Medium => "#F59E0B",
-        ThreatSeverity.Low => "#3B82F6",
-        ThreatSeverity.Info => "#6B7280",
-        _ => "#6B7280"
+        ThreatSeverity.Critical => ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"),
+        ThreatSeverity.High => ThemeColorHelper.GetColorHex("ColorOrange", "#F97316"),
+        ThreatSeverity.Medium => ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
+        ThreatSeverity.Low => ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
+        ThreatSeverity.Info => ThemeColorHelper.GetColorHex("TextMuted", "#6B7280"),
+        _ => ThemeColorHelper.GetColorHex("TextMuted", "#6B7280")
     };
 
     private string GenerateMiniTimelineSvg(List<DateTime> times, ThreatSeverity severity)
@@ -655,7 +656,7 @@ public class RelatedThreatItem
 {
     public string ThreatName { get; set; } = "";
     public string Severity { get; set; } = "";
-    public string SeverityColor { get; set; } = "#6B7280";
+    public string SeverityColor { get; set; } = ThemeColorHelper.GetColorHex("TextMuted", "#6B7280");
     public int Port { get; set; }
 }
 

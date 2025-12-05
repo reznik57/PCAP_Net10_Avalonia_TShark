@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Models;
-using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Constants;
+using PCAPAnalyzer.UI.Services;
 
 namespace PCAPAnalyzer.UI.ViewModels;
 
@@ -16,6 +18,10 @@ namespace PCAPAnalyzer.UI.ViewModels;
 /// </summary>
 public partial class TopTalkersViewModel : ObservableObject
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     private readonly ICsvExportService? _csvExportService;
     private readonly IFileDialogService? _fileDialogService;
 
@@ -26,8 +32,8 @@ public partial class TopTalkersViewModel : ObservableObject
 
     // ==================== VIEW MODE ====================
 
-    [ObservableProperty] private string _selectedView = "Combined";
-    [ObservableProperty] private string _selectedMetric = "Packets";
+    [ObservableProperty] private string _selectedView = ViewModes.Combined;
+    [ObservableProperty] private string _selectedMetric = MetricTypes.Packets;
     [ObservableProperty] private int _topN = 20;
 
     public ObservableCollection<string> ViewOptions { get; } = new()
@@ -91,9 +97,9 @@ public partial class TopTalkersViewModel : ObservableObject
     /// </summary>
     public async Task UpdateData(NetworkStatistics statistics, List<PacketInfo>? packets = null)
     {
-        if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+        if (!Dispatcher.CheckAccess())
         {
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () => await UpdateData(statistics, packets));
+            await Dispatcher.InvokeAsync(async () => await UpdateData(statistics, packets));
             return;
         }
 
@@ -156,8 +162,8 @@ public partial class TopTalkersViewModel : ObservableObject
         };
 
         // Calculate percentage of total
-        var topTalkersTraffic = talkers.Sum(t => SelectedMetric == "Bytes" ? t.ByteCount : t.PacketCount);
-        var totalTraffic = SelectedMetric == "Bytes" ? _currentStatistics.TotalBytes : _currentStatistics.TotalPackets;
+        var topTalkersTraffic = talkers.Sum(t => SelectedMetric == MetricTypes.Bytes ? t.ByteCount : t.PacketCount);
+        var totalTraffic = SelectedMetric == MetricTypes.Bytes ? _currentStatistics.TotalBytes : _currentStatistics.TotalPackets;
         TopTalkersPercentage = totalTraffic > 0 ? (double)topTalkersTraffic / totalTraffic * 100 : 0;
 
         // Assign ranks
@@ -241,7 +247,7 @@ public partial class TopTalkersViewModel : ObservableObject
             CountryCode = s.CountryCode,
             IsInternal = s.IsInternal,
             IsHighRisk = s.IsHighRisk,
-            Direction = "Source"
+            Direction = ViewModes.Source
         }).ToList();
     }
 
@@ -261,7 +267,7 @@ public partial class TopTalkersViewModel : ObservableObject
             CountryCode = d.CountryCode,
             IsInternal = d.IsInternal,
             IsHighRisk = d.IsHighRisk,
-            Direction = "Destination"
+            Direction = ViewModes.Destination
         }).ToList();
     }
 
@@ -277,7 +283,7 @@ public partial class TopTalkersViewModel : ObservableObject
         }
 
         var conversations = statistics.TopConversations
-            .OrderByDescending(c => SelectedMetric == "Bytes" ? c.ByteCount : c.PacketCount)
+            .OrderByDescending(c => SelectedMetric == MetricTypes.Bytes ? c.ByteCount : c.PacketCount)
             .Take(TopN)
             .Select((c, index) => new ConversationDetailViewModel
             {

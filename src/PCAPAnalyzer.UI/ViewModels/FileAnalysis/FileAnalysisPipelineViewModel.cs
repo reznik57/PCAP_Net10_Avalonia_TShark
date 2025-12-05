@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Orchestration;
 using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.ViewModels.Components;
 
 namespace PCAPAnalyzer.UI.ViewModels.FileAnalysis;
@@ -26,6 +27,10 @@ namespace PCAPAnalyzer.UI.ViewModels.FileAnalysis;
 /// </summary>
 public partial class FileAnalysisPipelineViewModel : ObservableObject
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     private readonly ITSharkService _tsharkService;
     private readonly IStatisticsService _statisticsService;
     private ProgressCoordinator? _analysisCoordinator;
@@ -179,7 +184,7 @@ public partial class FileAnalysisPipelineViewModel : ObservableObject
     {
         _analysisCoordinator?.ReportFinalizing(0, "Preparing results...");
 
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        await Dispatcher.InvokeAsync(() =>
         {
             // Calculate actual min/max timestamps (don't assume packet order)
             var captureDuration = TimeSpan.Zero;

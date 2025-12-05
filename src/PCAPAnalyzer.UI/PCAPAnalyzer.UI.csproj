@@ -36,6 +36,7 @@
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
     </PackageReference>
     <PackageReference Include="LiveChartsCore.SkiaSharpView.Avalonia" Version="2.0.0-rc6.1" />
+    <PackageReference Include="NetTopologySuite.IO.ShapeFile" Version="2.0.0" />
     <PackageReference Include="QuestPDF" Version="2025.7.4" />
   </ItemGroup>
 
@@ -50,6 +51,13 @@
 
   <ItemGroup>
     <Content Include="config\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Natural Earth shapefile data for world map -->
+  <ItemGroup>
+    <Content Include="Assets\maps\ne_110m_admin_0_countries.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

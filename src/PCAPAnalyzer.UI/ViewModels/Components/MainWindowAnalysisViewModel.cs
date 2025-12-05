@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Threading;
+using Avalonia.Threading; // Required for DispatcherTimer only
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.Core.Interfaces;
@@ -16,6 +16,7 @@ using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.TShark;
 using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Services;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -26,6 +27,7 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
 {
     // Services
+    private readonly IDispatcherService _dispatcher;
     private readonly ITSharkService _tsharkService;
     private readonly PcapInspectionService _pcapInspectionService = new();
     private readonly StreamingStatisticsAggregator _statisticsAggregator = new();
@@ -124,8 +126,9 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
     public event EventHandler<(long packets, long bytes, NetworkStatistics? stats)>? PacketBatchProcessed;
     public event EventHandler<string>? StatusChanged;
 
-    public MainWindowAnalysisViewModel(ITSharkService tsharkService)
+    public MainWindowAnalysisViewModel(IDispatcherService dispatcher, ITSharkService tsharkService)
     {
+        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _tsharkService = tsharkService ?? throw new ArgumentNullException(nameof(tsharkService));
 
         InitializeAnalysisStages();
@@ -194,7 +197,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
                 var detail = $"Scanning capture: {p.PacketCount:N0} packets • {NumberFormatter.FormatBytes(p.BytesRead)} read • {NumberFormatter.FormatBytes((long)p.BytesPerSecond)} /s";
                 SetStage(StageCountingKey, AnalysisStageState.Active, detail, p.PercentComplete, ensureUiThread: false);
 
-                Dispatcher.UIThread.Post(() =>
+                _dispatcher.Post(() =>
                 {
                     ProgressMessage = detail;
                     IsProgressIndeterminate = false;
@@ -421,7 +424,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
                         }
 
                         // Update UI properties on UI thread (can be delayed if UI busy)
-                        await Dispatcher.UIThread.InvokeAsync(() =>
+                        await _dispatcher.InvokeAsync(() =>
                         {
                             // Update all three statistics together every 0.5s
                             PacketCount = processedCount;
@@ -502,7 +505,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
             }
 
             // Final update
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await _dispatcher.InvokeAsync(() =>
             {
                 PacketCount = _finalStatistics?.TotalPackets ?? processedCount;
                 ThreatsDetected = finalThreats;
@@ -533,7 +536,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             StopElapsedTimer();
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await _dispatcher.InvokeAsync(() =>
             {
                 StatusChanged?.Invoke(this, $"Error processing packets: {ex.Message}");
             });
@@ -546,7 +549,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
         {
             _analysisComplete = true;
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await _dispatcher.InvokeAsync(() =>
             {
                 IsAnalyzing = false;
                 // Note: Don't set progress to 100% here - let tab stages manage progress through ReportTabProgress
@@ -740,7 +743,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
 
     private void ResetOverallProgress()
     {
-        Dispatcher.UIThread.Post(() =>
+        _dispatcher.Post(() =>
         {
             AnalysisProgress = 0;
             ProgressPercentage = 0;
@@ -757,7 +760,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
     public void UpdateOverallProgress(double percent, bool allowDecrease = false)
     {
         var clamped = Math.Clamp(percent, 0, 100);
-        Dispatcher.UIThread.Post(() =>
+        _dispatcher.Post(() =>
         {
             if (!allowDecrease && clamped <= AnalysisProgress)
             {
@@ -773,7 +776,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
     private void UpdateInitializationStage(string detail, double percent)
     {
         SetStage(StageInitializingKey, AnalysisStageState.Active, detail, percent, ensureUiThread: false);
-        Dispatcher.UIThread.Post(() => ProgressMessage = detail);
+        _dispatcher.Post(() => ProgressMessage = detail);
         // Initialization: 1% of total (1-2%)
         var mapped = 1 + Math.Clamp(percent, 0, 100) * 0.01;
         UpdateOverallProgress(mapped);
@@ -813,7 +816,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
 
         SetStage(StageFinalizingKey, AnalysisStageState.Active, detail, clamped, ensureUiThread: false);
 
-        Dispatcher.UIThread.Post(() =>
+        _dispatcher.Post(() =>
         {
             ProgressMessage = detail;
             FinalizingProgressPercent = clamped;
@@ -868,9 +871,9 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
             }
         }
 
-        if (ensureUiThread && !Dispatcher.UIThread.CheckAccess())
+        if (ensureUiThread && !_dispatcher.CheckAccess())
         {
-            Dispatcher.UIThread.Post(Apply);
+            _dispatcher.Post(Apply);
         }
         else
         {
@@ -918,7 +921,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
 
         UpdateOverallProgress(overallProgress);
 
-        Dispatcher.UIThread.Post(() =>
+        _dispatcher.Post(() =>
         {
             ProgressMessage = message;
         });
@@ -937,7 +940,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
             IsTabAnalysisActive = false;
 
             // Stop elapsed timer NOW - all analysis stages complete
-            Dispatcher.UIThread.Post(() => StopElapsedTimer());
+            _dispatcher.Post(() => StopElapsedTimer());
         }
     }
 
@@ -1070,7 +1073,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
             return;
         }
 
-        Dispatcher.UIThread.Post(() =>
+        _dispatcher.Post(() =>
         {
             RealtimePacketsAnalyzed = analysisProgress.PacketsAnalyzed;
             RealtimeTotalPackets = analysisProgress.TotalPackets;

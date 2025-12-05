@@ -9,7 +9,7 @@
         Title="{Binding WindowTitle}"
         WindowState="Maximized"
         WindowStartupLocation="CenterOwner"
-        Background="#0D1117">
+        Background="{DynamicResource BackgroundDark}">
     
     <Grid Margin="20,20,20,20">
         <Grid.RowDefinitions>
@@ -19,38 +19,38 @@
         </Grid.RowDefinitions>
         
         <!-- Header -->
-        <Border Grid.Row="0" Background="#161B22" CornerRadius="8" Padding="20,20,20,20" Margin="0,0,0,20">
+        <Border Grid.Row="0" Background="{DynamicResource BackgroundPanel}" CornerRadius="8" Padding="20,20,20,20" Margin="0,0,0,20">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                
+
                 <!-- IP Badge -->
-                <Border Grid.Column="0" Background="#21262D" CornerRadius="4" Padding="12,8" Margin="0,0,15,0">
-                    <TextBlock Text="{Binding IPType}" FontSize="14" FontWeight="Bold" Foreground="#F0F6FC"/>
+                <Border Grid.Column="0" Background="{DynamicResource BackgroundElevated}" CornerRadius="4" Padding="12,8" Margin="0,0,15,0">
+                    <TextBlock Text="{Binding IPType}" FontSize="{StaticResource FontSizeInput}" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                 </Border>
-                
+
                 <!-- IP Info -->
                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                    <TextBlock Text="{Binding IPAddress}" FontSize="24" FontWeight="Bold" Foreground="#F0F6FC"/>
+                    <TextBlock Text="{Binding IPAddress}" FontSize="{StaticResource FontSizeHeading}" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                     <StackPanel Orientation="Horizontal" Spacing="20" Margin="0,5,0,0">
-                        <TextBlock FontSize="14" Foreground="#8B949E">
+                        <TextBlock FontSize="{StaticResource FontSizeInput}" Foreground="{DynamicResource TextSecondaryBrush}">
                             <TextBlock.Text>
                                 <MultiBinding StringFormat="{}Packets: {0:N0}">
                                     <Binding Path="TotalPackets"/>
                                 </MultiBinding>
                             </TextBlock.Text>
                         </TextBlock>
-                        <TextBlock FontSize="14" Foreground="#8B949E">
+                        <TextBlock FontSize="{StaticResource FontSizeInput}" Foreground="{DynamicResource TextSecondaryBrush}">
                             <TextBlock.Text>
                                 <MultiBinding StringFormat="{}Bytes: {0}">
                                     <Binding Path="FormattedBytes"/>
                                 </MultiBinding>
                             </TextBlock.Text>
                         </TextBlock>
-                        <TextBlock FontSize="14" Foreground="#8B949E">
+                        <TextBlock FontSize="{StaticResource FontSizeInput}" Foreground="{DynamicResource TextSecondaryBrush}">
                             <TextBlock.Text>
                                 <MultiBinding StringFormat="{}Unique Connections: {0:N0}">
                                     <Binding Path="UniqueConnections"/>
@@ -59,28 +59,28 @@
                         </TextBlock>
                     </StackPanel>
                 </StackPanel>
-                
+
                 <!-- Close Button -->
-                <Button Grid.Column="2" 
+                <Button Grid.Column="2"
                         Click="OnCloseClick"
-                        Background="#21262D"
-                        BorderBrush="#30363D"
+                        Background="{DynamicResource BackgroundElevated}"
+                        BorderBrush="{DynamicResource BorderStrongBrush}"
                         Padding="12,8">
-                    <TextBlock Text="Close" FontSize="12" Foreground="#F0F6FC"/>
+                    <TextBlock Text="Close" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                 </Button>
             </Grid>
         </Border>
         
         <!-- Main Content -->
-        <Border Grid.Row="1" Background="#161B22" CornerRadius="8" Padding="10,10,10,10">
+        <Border Grid.Row="1" Background="{DynamicResource BackgroundPanel}" CornerRadius="8" Padding="10,10,10,10">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                
+
                 <!-- Filter Bar -->
-                <Border Grid.Row="0" Background="#21262D" CornerRadius="4" Padding="10,10,10,10" Margin="0,0,0,10">
+                <Border Grid.Row="0" Background="{DynamicResource BackgroundCard}" CornerRadius="4" Padding="10,10,10,10" Margin="0,0,0,10">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -88,49 +88,49 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        
-                        <TextBox Grid.Column="0" 
+
+                        <TextBox Grid.Column="0"
                                  Text="{Binding FilterText}"
                                  Watermark="Filter by Port, Protocol, IP..."
-                                 Background="#0D1117"
-                                 BorderBrush="#30363D"
-                                 Foreground="#F0F6FC"
+                                 Background="{DynamicResource BackgroundDark}"
+                                 BorderBrush="{DynamicResource BackgroundElevated}"
+                                 Foreground="{DynamicResource TextPrimaryBrush}"
                                  Padding="8,5"
                                  Margin="0,0,10,0"/>
-                        
-                        <ComboBox Grid.Column="1" 
+
+                        <ComboBox Grid.Column="1"
                                   SelectedItem="{Binding SelectedProtocol}"
                                   ItemsSource="{Binding Protocols}"
-                                  Background="#0D1117"
-                                  BorderBrush="#30363D"
-                                  Foreground="#F0F6FC"
+                                  Background="{DynamicResource BackgroundDark}"
+                                  BorderBrush="{DynamicResource BackgroundElevated}"
+                                  Foreground="{DynamicResource TextPrimaryBrush}"
                                   Width="120"
                                   Margin="0,0,10,0"/>
-                        
-                        <ComboBox Grid.Column="2" 
+
+                        <ComboBox Grid.Column="2"
                                   SelectedItem="{Binding SelectedDirection}"
                                   ItemsSource="{Binding Directions}"
-                                  Background="#0D1117"
-                                  BorderBrush="#30363D"
-                                  Foreground="#F0F6FC"
+                                  Background="{DynamicResource BackgroundDark}"
+                                  BorderBrush="{DynamicResource BackgroundElevated}"
+                                  Foreground="{DynamicResource TextPrimaryBrush}"
                                   Width="120"
                                   Margin="0,0,10,0"/>
-                        
-                        <Button Grid.Column="3" 
+
+                        <Button Grid.Column="3"
                                 Command="{Binding ExportCommand}"
-                                Background="#3FB950"
+                                Background="{DynamicResource SlackSuccess}"
                                 BorderThickness="0"
                                 Padding="12,5">
-                            <TextBlock Text="Export" FontSize="12" Foreground="White" FontWeight="SemiBold"/>
+                            <TextBlock Text="Export" FontSize="{StaticResource FontSizeBase}" Foreground="White" FontWeight="SemiBold"/>
                         </Button>
                     </Grid>
                 </Border>
-                
+
                 <!-- Data Grid -->
-                <DataGrid Grid.Row="1" 
+                <DataGrid Grid.Row="1"
                           ItemsSource="{Binding FilteredPackets}"
-                          Background="#0D1117"
-                          BorderBrush="#30363D"
+                          Background="{DynamicResource BackgroundDark}"
+                          BorderBrush="{DynamicResource BackgroundElevated}"
                           BorderThickness="1"
                           GridLinesVisibility="Horizontal"
                           HeadersVisibility="Column"
@@ -138,28 +138,28 @@
                           CanUserResizeColumns="True"
                           CanUserSortColumns="True"
                           AutoGenerateColumns="False">
-                    
+
                     <DataGrid.Styles>
                         <Style Selector="DataGridRow">
-                            <Setter Property="Background" Value="#0D1117"/>
+                            <Setter Property="Background" Value="{StaticResource BackgroundDark}"/>
                             <Setter Property="Height" Value="32"/>
                         </Style>
                         <Style Selector="DataGridRow:pointerover">
-                            <Setter Property="Background" Value="#161B22"/>
+                            <Setter Property="Background" Value="{StaticResource BackgroundPanel}"/>
                         </Style>
                         <Style Selector="DataGridRow:selected">
-                            <Setter Property="Background" Value="#21262D"/>
+                            <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
                         </Style>
                         <Style Selector="DataGridColumnHeader">
-                            <Setter Property="Background" Value="#21262D"/>
-                            <Setter Property="Foreground" Value="#F0F6FC"/>
+                            <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
                             <Setter Property="Height" Value="36"/>
-                            <Setter Property="SeparatorBrush" Value="#30363D"/>
+                            <Setter Property="SeparatorBrush" Value="{StaticResource BorderStrongBrush}"/>
                         </Style>
                         <Style Selector="DataGridCell">
                             <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="Foreground" Value="#E6EDF3"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
                             <Setter Property="FontSize" Value="12"/>
                         </Style>
                     </DataGrid.Styles>
@@ -198,9 +198,9 @@
         </Border>
         
         <!-- Status Bar -->
-        <Border Grid.Row="2" Background="#161B22" CornerRadius="8" Padding="15,10" Margin="0,20,0,0">
+        <Border Grid.Row="2" Background="{DynamicResource BackgroundPanel}" CornerRadius="8" Padding="15,10" Margin="0,20,0,0">
             <Grid>
-                <TextBlock HorizontalAlignment="Left" FontSize="12" Foreground="#8B949E">
+                <TextBlock HorizontalAlignment="Left" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}">
                     <TextBlock.Text>
                         <MultiBinding StringFormat="{}Showing {0} of {1} packets">
                             <Binding Path="FilteredCount"/>
@@ -208,16 +208,16 @@
                         </MultiBinding>
                     </TextBlock.Text>
                 </TextBlock>
-                
+
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="20">
-                    <TextBlock FontSize="12" Foreground="#8B949E">
+                    <TextBlock FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}">
                         <TextBlock.Text>
                             <MultiBinding StringFormat="{}Incoming: {0:N0}">
                                 <Binding Path="IncomingPackets"/>
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
-                    <TextBlock FontSize="12" Foreground="#8B949E">
+                    <TextBlock FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}">
                         <TextBlock.Text>
                             <MultiBinding StringFormat="{}Outgoing: {0:N0}">
                                 <Binding Path="OutgoingPackets"/>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LiveChartsCore;
@@ -8,6 +9,7 @@ using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Utilities;
 using SkiaSharp;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
@@ -17,26 +19,31 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 /// </summary>
 public partial class AnomaliesChartsViewModel : ObservableObject
 {
-    // Severity colors
-    private static readonly SKColor CriticalColor = SKColor.Parse("#F85149");
-    private static readonly SKColor HighColor = SKColor.Parse("#F59E0B");
-    private static readonly SKColor MediumColor = SKColor.Parse("#FCD34D");
-    private static readonly SKColor LowColor = SKColor.Parse("#3B82F6");
+    // Severity colors - resolved from theme
+    private static SKColor CriticalColor => SKColor.Parse(ThemeColorHelper.GetAnomalySeverityColorHex("critical"));
+    private static SKColor HighColor => SKColor.Parse(ThemeColorHelper.GetAnomalySeverityColorHex("high"));
+    private static SKColor MediumColor => SKColor.Parse(ThemeColorHelper.GetAnomalySeverityColorHex("medium"));
+    private static SKColor LowColor => SKColor.Parse(ThemeColorHelper.GetAnomalySeverityColorHex("low"));
 
-    // Category colors
-    private static readonly Dictionary<AnomalyCategory, SKColor> CategoryColors = new()
+    // Category colors - resolved from theme
+    private static SKColor GetCategoryColor(AnomalyCategory category) => category switch
     {
-        { AnomalyCategory.Network, SKColor.Parse("#3B82F6") },
-        { AnomalyCategory.TCP, SKColor.Parse("#10B981") },
-        { AnomalyCategory.Application, SKColor.Parse("#F59E0B") },
-        { AnomalyCategory.VoIP, SKColor.Parse("#8B5CF6") },
-        { AnomalyCategory.IoT, SKColor.Parse("#06B6D4") },
-        { AnomalyCategory.Security, SKColor.Parse("#F85149") },
-        { AnomalyCategory.Malformed, SKColor.Parse("#EC4899") }
+        AnomalyCategory.Network => SKColor.Parse(ThemeColorHelper.GetChartColorHex(0)),    // Blue
+        AnomalyCategory.TCP => SKColor.Parse(ThemeColorHelper.GetChartColorHex(1)),        // Green
+        AnomalyCategory.Application => SKColor.Parse(ThemeColorHelper.GetChartColorHex(2)), // Amber
+        AnomalyCategory.VoIP => SKColor.Parse(ThemeColorHelper.GetChartColorHex(4)),       // Purple
+        AnomalyCategory.IoT => SKColor.Parse(ThemeColorHelper.GetChartColorHex(6)),        // Cyan
+        AnomalyCategory.Security => SKColor.Parse(ThemeColorHelper.GetChartColorHex(3)),   // Red
+        AnomalyCategory.Malformed => SKColor.Parse(ThemeColorHelper.GetChartColorHex(5)),  // Pink
+        _ => SKColor.Parse(ThemeColorHelper.ChartGrayHex)
     };
 
-    // Timeline chart
-    public ISeries[] TimelineSeries { get; private set; } = Array.Empty<ISeries>();
+    // Timeline chart - ObservableCollection for dynamic highlight series
+    public ObservableCollection<ISeries> TimelineSeriesCollection { get; } = new();
+
+    // Legacy property for binding compatibility (returns the collection as array)
+    public ISeries[] TimelineSeries => TimelineSeriesCollection.ToArray();
+
     public Axis[] TimelineXAxes { get; private set; } = Array.Empty<Axis>();
     public Axis[] TimelineYAxes { get; private set; } = Array.Empty<Axis>();
 
@@ -59,13 +66,15 @@ public partial class AnomaliesChartsViewModel : ObservableObject
 
     private void InitializeAxes()
     {
+        var axisLabelColor = SKColor.Parse(ThemeColorHelper.ChartGrayHex);
+
         TimelineXAxes = new Axis[]
         {
             new Axis
             {
                 Name = "Time",
-                NamePaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
-                LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
+                NamePaint = new SolidColorPaint(axisLabelColor),
+                LabelsPaint = new SolidColorPaint(axisLabelColor),
                 Labeler = value => SafeFromTicks(value),
                 TextSize = 11
             }
@@ -76,8 +85,8 @@ public partial class AnomaliesChartsViewModel : ObservableObject
             new Axis
             {
                 Name = "Anomalies/min",
-                NamePaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
-                LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
+                NamePaint = new SolidColorPaint(axisLabelColor),
+                LabelsPaint = new SolidColorPaint(axisLabelColor),
                 MinLimit = 0,
                 TextSize = 11
             }
@@ -87,7 +96,7 @@ public partial class AnomaliesChartsViewModel : ObservableObject
         {
             new Axis
             {
-                LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
+                LabelsPaint = new SolidColorPaint(axisLabelColor),
                 TextSize = 11
             }
         };
@@ -97,7 +106,7 @@ public partial class AnomaliesChartsViewModel : ObservableObject
             new Axis
             {
                 Labels = Array.Empty<string>(),
-                LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
+                LabelsPaint = new SolidColorPaint(axisLabelColor),
                 TextSize = 11
             }
         };
@@ -132,9 +141,15 @@ public partial class AnomaliesChartsViewModel : ObservableObject
 
     public void UpdateTimeline(List<AnomalyTimePoint> timePoints)
     {
+        // Clear existing series (preserve highlight series if present)
+        var highlightSeries = TimelineSeriesCollection
+            .Where(s => s.Name is "Highlight" or "VerticalLine")
+            .ToList();
+
+        TimelineSeriesCollection.Clear();
+
         if (timePoints.Count == 0)
         {
-            TimelineSeries = Array.Empty<ISeries>();
             OnPropertyChanged(nameof(TimelineSeries));
             return;
         }
@@ -152,45 +167,49 @@ public partial class AnomaliesChartsViewModel : ObservableObject
             lowValues.Add(new DateTimePoint(point.Timestamp, point.LowCount));
         }
 
-        TimelineSeries = new ISeries[]
+        // Add data series
+        TimelineSeriesCollection.Add(new LineSeries<DateTimePoint>
         {
-            new LineSeries<DateTimePoint>
-            {
-                Name = "Critical",
-                Values = criticalValues,
-                Stroke = new SolidColorPaint(CriticalColor, 2),
-                Fill = null,
-                GeometrySize = 0,
-                LineSmoothness = 0.3
-            },
-            new LineSeries<DateTimePoint>
-            {
-                Name = "High",
-                Values = highValues,
-                Stroke = new SolidColorPaint(HighColor, 2),
-                Fill = null,
-                GeometrySize = 0,
-                LineSmoothness = 0.3
-            },
-            new LineSeries<DateTimePoint>
-            {
-                Name = "Medium",
-                Values = mediumValues,
-                Stroke = new SolidColorPaint(MediumColor, 2),
-                Fill = null,
-                GeometrySize = 0,
-                LineSmoothness = 0.3
-            },
-            new LineSeries<DateTimePoint>
-            {
-                Name = "Low",
-                Values = lowValues,
-                Stroke = new SolidColorPaint(LowColor, 2),
-                Fill = null,
-                GeometrySize = 0,
-                LineSmoothness = 0.3
-            }
-        };
+            Name = "Critical",
+            Values = criticalValues,
+            Stroke = new SolidColorPaint(CriticalColor, 2),
+            Fill = null,
+            GeometrySize = 0,
+            LineSmoothness = 0.3
+        });
+
+        TimelineSeriesCollection.Add(new LineSeries<DateTimePoint>
+        {
+            Name = "High",
+            Values = highValues,
+            Stroke = new SolidColorPaint(HighColor, 2),
+            Fill = null,
+            GeometrySize = 0,
+            LineSmoothness = 0.3
+        });
+
+        TimelineSeriesCollection.Add(new LineSeries<DateTimePoint>
+        {
+            Name = "Medium",
+            Values = mediumValues,
+            Stroke = new SolidColorPaint(MediumColor, 2),
+            Fill = null,
+            GeometrySize = 0,
+            LineSmoothness = 0.3
+        });
+
+        TimelineSeriesCollection.Add(new LineSeries<DateTimePoint>
+        {
+            Name = "Low",
+            Values = lowValues,
+            Stroke = new SolidColorPaint(LowColor, 2),
+            Fill = null,
+            GeometrySize = 0,
+            LineSmoothness = 0.3
+        });
+
+        // Re-add highlight series (they'll be recreated by the view if needed)
+        // We don't restore them here to avoid stale state
 
         OnPropertyChanged(nameof(TimelineSeries));
     }
@@ -201,7 +220,7 @@ public partial class AnomaliesChartsViewModel : ObservableObject
 
         foreach (var cat in categories.Where(c => c.Count > 0))
         {
-            var color = CategoryColors.GetValueOrDefault(cat.Category, SKColor.Parse("#8B949E"));
+            var color = GetCategoryColor(cat.Category);
 
             series.Add(new PieSeries<int>
             {
@@ -239,9 +258,9 @@ public partial class AnomaliesChartsViewModel : ObservableObject
             new RowSeries<int>
             {
                 Values = portList.Select(p => p.AnomalyCount).ToArray(),
-                Fill = new SolidColorPaint(SKColor.Parse("#3B82F6")),
+                Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetChartColorHex(0))),
                 Stroke = null,
-                DataLabelsPaint = new SolidColorPaint(SKColor.Parse("#F0F6FC")),
+                DataLabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("PopupText", "#F0F6FC"))),
                 DataLabelsSize = 11,
                 DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.End
             }
@@ -269,7 +288,7 @@ public partial class AnomaliesChartsViewModel : ObservableObject
 
     public void Clear()
     {
-        TimelineSeries = Array.Empty<ISeries>();
+        TimelineSeriesCollection.Clear();
         CategorySeries = Array.Empty<ISeries>();
         PortsSeries = Array.Empty<ISeries>();
         ResetZoom();

@@ -48,6 +48,35 @@ public partial class DrillDownPopupViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Show popup for a country with pre-filtered packets.
+    /// Unlike ShowForIP, this does NOT re-filter packets - they should already be filtered by country.
+    /// </summary>
+    public void ShowForCountry(string countryDisplay, IEnumerable<PacketInfo> countryPackets, long preCalculatedPacketCount, long preCalculatedByteCount)
+    {
+        Title = $"IP: {countryDisplay}";
+        EntityType = DrillDownEntityType.IP; // Reuse IP type for country
+        _currentFilterKey = "country";
+        _currentFilterValue = countryDisplay;
+
+        var packets = countryPackets.ToList();
+
+        ShowSamplingWarning = false;
+
+        // Use pre-calculated stats for consistency
+        TotalPackets = (int)preCalculatedPacketCount;
+        TotalBytes = preCalculatedByteCount;
+        TotalBytesFormatted = FormatBytes(TotalBytes);
+        CalculateTimeStats(packets);
+
+        // Calculate breakdowns from already-filtered packets
+        CalculatePortBreakdownForCountry(packets);
+        CalculateConnectedEndpointsForCountry(packets);
+        CalculateTopConversations(packets);
+
+        IsVisible = true;
+    }
+
+    /// <summary>
     /// Show popup for an IP address with pre-calculated stats from Dashboard for consistency.
     /// </summary>
     public void ShowForIP(string ip, IEnumerable<PacketInfo> allPackets, long preCalculatedPacketCount, long preCalculatedByteCount)
@@ -595,6 +624,85 @@ public partial class DrillDownPopupViewModel : ObservableObject
             .ToList();
 
         TopConversations = new ObservableCollection<ConversationBreakdownItem>(conversations);
+    }
+
+    /// <summary>
+    /// Calculate port breakdown for country packets (aggregates all ports, not filtered by center IP).
+    /// </summary>
+    private void CalculatePortBreakdownForCountry(List<PacketInfo> packets)
+    {
+        var portStats = new Dictionary<int, (int Count, long Bytes)>();
+
+        foreach (var p in packets)
+        {
+            // Aggregate both source and destination ports
+            if (p.SourcePort > 0)
+            {
+                var existing = portStats.GetValueOrDefault(p.SourcePort);
+                portStats[p.SourcePort] = (existing.Count + 1, existing.Bytes + p.Length);
+            }
+            if (p.DestinationPort > 0 && p.DestinationPort != p.SourcePort)
+            {
+                var existing = portStats.GetValueOrDefault(p.DestinationPort);
+                portStats[p.DestinationPort] = (existing.Count + 1, existing.Bytes + p.Length);
+            }
+        }
+
+        var ports = portStats
+            .Select(kv => new PortBreakdownItem
+            {
+                Port = kv.Key,
+                ServiceName = GetServiceName(kv.Key),
+                PacketCount = kv.Value.Count,
+                Bytes = kv.Value.Bytes,
+                Percentage = packets.Count > 0 ? (kv.Value.Count * 100.0 / packets.Count) : 0
+            })
+            .OrderByDescending(x => x.PacketCount)
+            .Take(5)
+            .ToList();
+
+        TopPorts = new ObservableCollection<PortBreakdownItem>(ports);
+    }
+
+    /// <summary>
+    /// Calculate connected endpoints for country packets (aggregates all IPs).
+    /// </summary>
+    private void CalculateConnectedEndpointsForCountry(List<PacketInfo> packets)
+    {
+        var endpointStats = new Dictionary<string, (int Count, long Bytes)>();
+
+        foreach (var p in packets)
+        {
+            // Aggregate both source and destination IPs
+            if (!string.IsNullOrEmpty(p.SourceIP))
+            {
+                if (endpointStats.TryGetValue(p.SourceIP, out var stats))
+                    endpointStats[p.SourceIP] = (stats.Count + 1, stats.Bytes + p.Length);
+                else
+                    endpointStats[p.SourceIP] = (1, p.Length);
+            }
+            if (!string.IsNullOrEmpty(p.DestinationIP) && p.DestinationIP != p.SourceIP)
+            {
+                if (endpointStats.TryGetValue(p.DestinationIP, out var stats))
+                    endpointStats[p.DestinationIP] = (stats.Count + 1, stats.Bytes + p.Length);
+                else
+                    endpointStats[p.DestinationIP] = (1, p.Length);
+            }
+        }
+
+        var endpoints = endpointStats
+            .OrderByDescending(kv => kv.Value.Count)
+            .Take(5)
+            .Select(kv => new EndpointBreakdownItem
+            {
+                IP = kv.Key,
+                PacketCount = kv.Value.Count,
+                Bytes = kv.Value.Bytes,
+                Percentage = packets.Count > 0 ? (kv.Value.Count * 100.0 / packets.Count) : 0
+            })
+            .ToList();
+
+        ConnectedEndpoints = new ObservableCollection<EndpointBreakdownItem>(endpoints);
     }
 
     // Use shared NumberFormatter.FormatBytes() for consistency with Dashboard

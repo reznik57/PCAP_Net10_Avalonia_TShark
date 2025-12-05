@@ -7,8 +7,8 @@
 
     <UserControl.Styles>
         <Style Selector="Border.recent-file-item">
-            <Setter Property="Background" Value="#161B22" />
-            <Setter Property="BorderBrush" Value="#30363D" />
+            <Setter Property="Background" Value="{StaticResource BackgroundPanel}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BackgroundElevated}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="6" />
             <Setter Property="Padding" Value="12,8" />
@@ -17,19 +17,19 @@
         </Style>
 
         <Style Selector="Border.recent-file-item:pointerover">
-            <Setter Property="Background" Value="#1C2128" />
-            <Setter Property="BorderBrush" Value="#58A6FF" />
+            <Setter Property="Background" Value="{StaticResource BackgroundCard}" />
+            <Setter Property="BorderBrush" Value="{StaticResource SlackInfo}" />
         </Style>
 
         <Style Selector="TextBlock.file-name">
             <Setter Property="FontSize" Value="14" />
             <Setter Property="FontWeight" Value="Medium" />
-            <Setter Property="Foreground" Value="#F0F6FC" />
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
         </Style>
 
         <Style Selector="TextBlock.file-detail">
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="#8B949E" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
         </Style>
 
         <Style Selector="TextBlock.pinned-badge">
@@ -38,8 +38,8 @@
         </Style>
     </UserControl.Styles>
 
-    <Border Background="#0D1117"
-            BorderBrush="#30363D"
+    <Border Background="{DynamicResource BackgroundDark}"
+            BorderBrush="{DynamicResource BackgroundElevated}"
             BorderThickness="1"
             CornerRadius="8"
             Padding="16">
@@ -50,9 +50,9 @@
             <StackPanel Grid.Row="0" Spacing="8" Margin="0,0,0,16">
                 <Grid ColumnDefinitions="*,Auto">
                     <TextBlock Text="📂 Recent Files"
-                               FontSize="16"
+                               FontSize="{StaticResource FontSizeLarge}"
                                FontWeight="Bold"
-                               Foreground="#F0F6FC" />
+                               Foreground="{DynamicResource TextPrimaryBrush}" />
 
                     <Button Grid.Column="1"
                             Command="{Binding ClearAllFilesCommand}"
@@ -62,14 +62,14 @@
                             Padding="8,4"
                             ToolTip.Tip="Clear all recent files">
                         <TextBlock Text="🗑️ Clear All"
-                                   FontSize="12"
-                                   Foreground="#8B949E" />
+                                   FontSize="{StaticResource FontSizeBase}"
+                                   Foreground="{DynamicResource TextSecondaryBrush}" />
                     </Button>
                 </Grid>
 
                 <TextBlock Text="Click a file to open it quickly"
-                           FontSize="12"
-                           Foreground="#8B949E" />
+                           FontSize="{StaticResource FontSizeBase}"
+                           Foreground="{DynamicResource TextSecondaryBrush}" />
             </StackPanel>
 
             <!-- Recent Files List -->
@@ -155,30 +155,30 @@
                         VerticalAlignment="Center"
                         IsVisible="{Binding !HasRecentFiles}">
                 <TextBlock Text="📂"
-                           FontSize="48"
+                           FontSize="{StaticResource FontSizeDisplay}"
                            HorizontalAlignment="Center"
                            Opacity="0.5" />
                 <TextBlock Text="No recent files"
-                           FontSize="14"
-                           Foreground="#8B949E"
+                           FontSize="{StaticResource FontSizeInput}"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
                            HorizontalAlignment="Center" />
                 <TextBlock Text="Open a PCAP file to get started"
-                           FontSize="12"
-                           Foreground="#8B949E"
+                           FontSize="{StaticResource FontSizeBase}"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
                            HorizontalAlignment="Center" />
             </StackPanel>
 
             <!-- Footer Hint -->
             <Border Grid.Row="2"
-                    Background="#161B22"
-                    BorderBrush="#30363D"
+                    Background="{DynamicResource BackgroundPanel}"
+                    BorderBrush="{DynamicResource BackgroundElevated}"
                     BorderThickness="0,1,0,0"
                     Padding="0,12,0,0"
                     Margin="0,12,0,0"
                     IsVisible="{Binding HasRecentFiles}">
                 <TextBlock Text="💡 Tip: Right-click to pin favorites or remove files"
-                           FontSize="11"
-                           Foreground="#6E7681"
+                           FontSize="{StaticResource FontSizeSmall}"
+                           Foreground="{DynamicResource TextMutedBrush}"
                            FontStyle="Italic" />
             </Border>
         </Grid>

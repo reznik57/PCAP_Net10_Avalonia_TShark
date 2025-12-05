@@ -45,7 +45,7 @@
                 <!-- Title -->
                 <TextBlock Grid.Column="1"
                            Text="{Binding Title}"
-                           FontSize="14"
+                           FontSize="{StaticResource FontSizeInput}"
                            FontWeight="SemiBold"
                            Foreground="White"
                            Opacity="0.9"
@@ -61,7 +61,7 @@
                           Width="12" Height="12"
                           Stretch="Uniform"/>
                     <TextBlock Text="{Binding TrendValue}"
-                               FontSize="11"
+                               FontSize="{StaticResource FontSizeSmall}"
                                FontWeight="Medium"
                                Foreground="{Binding TrendColor}"/>
                 </StackPanel>
@@ -83,7 +83,7 @@
                 
                 <TextBlock Grid.Column="1"
                            Text="{Binding Unit}"
-                           FontSize="16"
+                           FontSize="{StaticResource FontSizeLarge}"
                            Foreground="White"
                            Opacity="0.7"
                            VerticalAlignment="Bottom"
@@ -100,7 +100,7 @@
                 <!-- Description -->
                 <TextBlock Grid.Column="0"
                            Text="{Binding Description}"
-                           FontSize="12"
+                           FontSize="{StaticResource FontSizeBase}"
                            Foreground="White"
                            Opacity="0.7"/>
                 

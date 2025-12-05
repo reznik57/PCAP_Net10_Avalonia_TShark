@@ -7,7 +7,7 @@
     <!-- Title and Controls -->
     <Border Grid.Row="0" Background="#2D3748" Padding="10">
       <Grid ColumnDefinitions="*,Auto">
-        <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="16" FontWeight="Bold"
+        <TextBlock Grid.Column="0" Text="{Binding Title}" FontSize="{StaticResource FontSizeLarge}" FontWeight="Bold"
                    Foreground="White" VerticalAlignment="Center" />
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
           <TextBlock Text="Color Scheme:" Foreground="White" VerticalAlignment="Center" />
@@ -57,7 +57,7 @@
                            Foreground="{Binding TextColor}"
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
-                           FontSize="10" />
+                           FontSize="{StaticResource FontSizeXS}" />
               </Border>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
@@ -83,14 +83,14 @@
         <Border Grid.Row="1" Grid.Column="0" Background="#2D3748"
                 Padding="10" CornerRadius="4" Margin="0,10,10,0">
           <StackPanel Spacing="5">
-            <TextBlock Text="Intensity" Foreground="White" FontSize="10" />
+            <TextBlock Text="Intensity" Foreground="White" FontSize="{StaticResource FontSizeXS}" />
             <ItemsControl ItemsSource="{Binding LegendItems}">
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
                   <StackPanel Orientation="Horizontal" Spacing="5">
                     <Border Width="20" Height="15" Background="{Binding Color}"
                             CornerRadius="2" />
-                    <TextBlock Text="{Binding Label}" Foreground="White" FontSize="9" />
+                    <TextBlock Text="{Binding Label}" Foreground="White" FontSize="{StaticResource FontSizeXS}" />
                   </StackPanel>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>

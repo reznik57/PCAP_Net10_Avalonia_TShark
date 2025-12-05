@@ -3,57 +3,59 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+             xmlns:ctrl="using:PCAPAnalyzer.UI.Views.Controls"
              mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
              x:Class="PCAPAnalyzer.UI.Views.CompareView"
              x:DataType="vm:CompareViewModel"
-             Background="#0D1117">
+             Background="{DynamicResource BackgroundDark}">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,*">
+    <!-- Styles centralized in UnifiedDarkTheme.axaml -->
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*">
         <!-- Row 0: Header with File Selection -->
-        <Border Grid.Row="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,0,1" Padding="24,16">
+        <Border Grid.Row="0" Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Padding="24,16">
             <Grid ColumnDefinitions="*,Auto">
                 <!-- Title and File Selection -->
                 <StackPanel Grid.Column="0" Spacing="16">
                     <StackPanel Orientation="Horizontal" Spacing="12">
-                        <TextBlock Text="&#x1F50D;" FontSize="24"/>
+                        <TextBlock Text="&#x1F50D;" FontSize="{StaticResource FontSizeHeading}"/>
                         <StackPanel>
-                            <TextBlock Text="PCAP File Comparison" FontSize="18" FontWeight="SemiBold" Foreground="#F0F6FC"/>
-                            <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="#8B949E"/>
+                            <TextBlock Text="PCAP File Comparison" FontSize="{StaticResource FontSizeXL}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            <TextBlock Text="{Binding StatusMessage}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                         </StackPanel>
                     </StackPanel>
 
                     <!-- File Selection Row -->
                     <Grid ColumnDefinitions="*,24,*,24,Auto">
                         <!-- File A -->
-                        <Border Grid.Column="0" Background="#0D1117" BorderBrush="#F85149" BorderThickness="2" CornerRadius="6" Padding="12">
+                        <Border Grid.Column="0" Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource SlackDanger}" BorderThickness="2" CornerRadius="6" Padding="12">
                             <Grid ColumnDefinitions="Auto,*">
-                                <Border Grid.Column="0" Background="#F85149" CornerRadius="4" Padding="8,4" Margin="0,0,12,0">
-                                    <TextBlock Text="A" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                <Border Grid.Column="0" Background="{DynamicResource SlackDanger}" CornerRadius="4" Padding="8,4" Margin="0,0,12,0">
+                                    <TextBlock Text="A" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold" Foreground="White"/>
                                 </Border>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="File A (Current)" FontSize="10" Foreground="#8B949E"/>
-                                    <TextBlock Text="{Binding FileAName}" FontSize="13" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="File A (Current)" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding FileAName}" FontSize="{StaticResource FontSizeMedium}" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                             </Grid>
                         </Border>
 
                         <!-- VS Separator -->
-                        <TextBlock Grid.Column="1" Text="vs" FontSize="14" FontWeight="Bold" Foreground="#8B949E"
+                        <TextBlock Grid.Column="1" Text="vs" FontSize="{StaticResource FontSizeInput}" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"
                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
 
                         <!-- File B -->
-                        <Border Grid.Column="2" Background="#0D1117" BorderBrush="#3FB950" BorderThickness="2" CornerRadius="6" Padding="12">
+                        <Border Grid.Column="2" Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource SlackSuccess}" BorderThickness="2" CornerRadius="6" Padding="12">
                             <Grid ColumnDefinitions="Auto,*,Auto">
-                                <Border Grid.Column="0" Background="#3FB950" CornerRadius="4" Padding="8,4" Margin="0,0,12,0">
-                                    <TextBlock Text="B" FontSize="12" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                <Border Grid.Column="0" Background="{DynamicResource SlackSuccess}" CornerRadius="4" Padding="8,4" Margin="0,0,12,0">
+                                    <TextBlock Text="B" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold" Foreground="White"/>
                                 </Border>
                                 <StackPanel Grid.Column="1">
-                                    <TextBlock Text="File B (Compare)" FontSize="10" Foreground="#8B949E"/>
-                                    <TextBlock Text="{Binding FileBName}" FontSize="13" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="File B (Compare)" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding FileBName}" FontSize="{StaticResource FontSizeMedium}" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
                                 </StackPanel>
                                 <Button Grid.Column="2" Command="{Binding BrowseFileBCommand}"
-                                        Background="#21262D" BorderBrush="#30363D" Padding="8,4" CornerRadius="4" Margin="8,0,0,0">
-                                    <TextBlock Text="Browse..." FontSize="11" Foreground="#8B949E"/>
+                                        Background="{DynamicResource BackgroundElevated}" BorderBrush="{DynamicResource BorderStrongBrush}" Padding="8,4" CornerRadius="4" Margin="8,0,0,0">
+                                    <TextBlock Text="Browse..." FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                 </Button>
                             </Grid>
                         </Border>
@@ -61,25 +63,25 @@
                         <!-- Compare Button -->
                         <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="8">
                             <Button Command="{Binding CompareCommand}"
-                                    Background="#238636" BorderBrush="#2EA043" Padding="16,10" CornerRadius="6"
+                                    Background="{DynamicResource AccentPrimary}" BorderBrush="{StaticResource ColorPrimaryHover}" Padding="16,10" CornerRadius="6"
                                     IsVisible="{Binding !IsComparing}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="&#x2699;" FontSize="14"/>
-                                    <TextBlock Text="Compare" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="&#x2699;" FontSize="{StaticResource FontSizeInput}"/>
+                                    <TextBlock Text="Compare" FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold" Foreground="White"/>
                                 </StackPanel>
                             </Button>
                             <Button Command="{Binding CancelComparisonCommand}"
-                                    Background="#DA3633" BorderBrush="#F85149" Padding="16,10" CornerRadius="6"
+                                    Background="{DynamicResource SlackDanger}" BorderBrush="{StaticResource ColorDangerHover}" Padding="16,10" CornerRadius="6"
                                     IsVisible="{Binding IsComparing}">
                                 <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <TextBlock Text="&#x2716;" FontSize="14"/>
-                                    <TextBlock Text="Cancel" FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="&#x2716;" FontSize="{StaticResource FontSizeInput}"/>
+                                    <TextBlock Text="Cancel" FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold" Foreground="White"/>
                                 </StackPanel>
                             </Button>
                             <Button Command="{Binding ClearResultsCommand}"
-                                    Background="#21262D" BorderBrush="#30363D" Padding="12,10" CornerRadius="6"
+                                    Background="{DynamicResource BackgroundElevated}" BorderBrush="{DynamicResource BorderStrongBrush}" Padding="12,10" CornerRadius="6"
                                     IsVisible="{Binding HasResults}">
-                                <TextBlock Text="Clear" FontSize="12" Foreground="#8B949E"/>
+                                <TextBlock Text="Clear" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </Button>
                         </StackPanel>
                     </Grid>
@@ -88,105 +90,110 @@
         </Border>
 
         <!-- Row 1: Progress Bar (visible during comparison) -->
-        <Border Grid.Row="1" Background="#161B22" Padding="24,8" IsVisible="{Binding IsComparing}">
+        <Border Grid.Row="1" Background="{DynamicResource BackgroundPanel}" Padding="24,8" IsVisible="{Binding IsComparing}">
             <ProgressBar Value="{Binding ComparisonProgress}" Minimum="0" Maximum="100" Height="6"
-                         Background="#21262D" Foreground="#58A6FF"/>
+                         Background="{DynamicResource BackgroundElevated}" Foreground="{DynamicResource AccentPrimary}"/>
         </Border>
 
-        <!-- Row 2: Statistics Panel -->
-        <Border Grid.Row="2" Background="#0D1117" BorderBrush="#30363D" BorderThickness="0,0,0,1" Padding="24,16"
+        <!-- Row 2: UnifiedFilterPanelControl (Dashboard pattern) -->
+        <Border Grid.Row="2" Padding="24,10,24,0">
+            <ctrl:UnifiedFilterPanelControl Margin="0,0,0,10" />
+        </Border>
+
+        <!-- Row 3: Statistics Panel -->
+        <Border Grid.Row="3" Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Padding="24,16"
                 IsVisible="{Binding HasResults}">
             <Grid ColumnDefinitions="*,*,*,*,*,*">
                 <!-- File A Stats -->
                 <StackPanel Grid.Column="0" HorizontalAlignment="Center">
-                    <TextBlock Text="File A" FontSize="11" Foreground="#F85149" FontWeight="Bold"/>
-                    <TextBlock Text="{Binding TotalFileA, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="Bold" Foreground="#F0F6FC"/>
-                    <TextBlock Text="packets" FontSize="11" Foreground="#8B949E"/>
+                    <TextBlock Text="File A" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource SlackDanger}" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding TotalFileA, StringFormat='{}{0:N0}'}" FontSize="{StaticResource FontSizeHeading}" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock Text="packets" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </StackPanel>
 
                 <!-- File B Stats -->
                 <StackPanel Grid.Column="1" HorizontalAlignment="Center">
-                    <TextBlock Text="File B" FontSize="11" Foreground="#3FB950" FontWeight="Bold"/>
-                    <TextBlock Text="{Binding TotalFileB, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="Bold" Foreground="#F0F6FC"/>
-                    <TextBlock Text="packets" FontSize="11" Foreground="#8B949E"/>
+                    <TextBlock Text="File B" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource SlackSuccess}" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding TotalFileB, StringFormat='{}{0:N0}'}" FontSize="{StaticResource FontSizeHeading}" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock Text="packets" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </StackPanel>
 
                 <!-- Common -->
                 <StackPanel Grid.Column="2" HorizontalAlignment="Center">
-                    <TextBlock Text="Common" FontSize="11" Foreground="#8B949E" FontWeight="Bold"/>
-                    <TextBlock Text="{Binding CommonCount, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="Bold" Foreground="#58A6FF"/>
-                    <TextBlock Text="matches" FontSize="11" Foreground="#8B949E"/>
+                    <TextBlock Text="Common" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding CommonCount, StringFormat='{}{0:N0}'}" FontSize="{StaticResource FontSizeHeading}" FontWeight="Bold" Foreground="{DynamicResource AccentPrimary}"/>
+                    <TextBlock Text="matches" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </StackPanel>
 
                 <!-- Unique to A -->
                 <StackPanel Grid.Column="3" HorizontalAlignment="Center">
-                    <TextBlock Text="Unique to A" FontSize="11" Foreground="#F85149" FontWeight="Bold"/>
-                    <TextBlock Text="{Binding UniqueToA, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="Bold" Foreground="#F85149"/>
-                    <TextBlock Text="packets" FontSize="11" Foreground="#8B949E"/>
+                    <TextBlock Text="Unique to A" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource SlackDanger}" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding UniqueToA, StringFormat='{}{0:N0}'}" FontSize="{StaticResource FontSizeHeading}" FontWeight="Bold" Foreground="{DynamicResource SlackDanger}"/>
+                    <TextBlock Text="packets" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </StackPanel>
 
                 <!-- Unique to B -->
                 <StackPanel Grid.Column="4" HorizontalAlignment="Center">
-                    <TextBlock Text="Unique to B" FontSize="11" Foreground="#3FB950" FontWeight="Bold"/>
-                    <TextBlock Text="{Binding UniqueToB, StringFormat='{}{0:N0}'}" FontSize="24" FontWeight="Bold" Foreground="#3FB950"/>
-                    <TextBlock Text="packets" FontSize="11" Foreground="#8B949E"/>
+                    <TextBlock Text="Unique to B" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource SlackSuccess}" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding UniqueToB, StringFormat='{}{0:N0}'}" FontSize="{StaticResource FontSizeHeading}" FontWeight="Bold" Foreground="{DynamicResource SlackSuccess}"/>
+                    <TextBlock Text="packets" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </StackPanel>
 
                 <!-- Match Percentage -->
                 <StackPanel Grid.Column="5" HorizontalAlignment="Center">
-                    <TextBlock Text="Match Rate" FontSize="11" Foreground="#8B949E" FontWeight="Bold"/>
-                    <TextBlock Text="{Binding MatchPercentage}" FontSize="24" FontWeight="Bold" Foreground="#A371F7"/>
-                    <TextBlock Text="similarity" FontSize="11" Foreground="#8B949E"/>
+                    <TextBlock Text="Match Rate" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="Bold"/>
+                    <TextBlock Text="{Binding MatchPercentage}" FontSize="{StaticResource FontSizeHeading}" FontWeight="Bold" Foreground="{DynamicResource AccentSecondary}"/>
+                    <TextBlock Text="similarity" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Row 3: Main Content (Filter Bar + Table) -->
-        <Grid Grid.Row="3" RowDefinitions="Auto,*" IsVisible="{Binding HasResults}">
+        <!-- Row 4: Main Content (Filter Bar + Table) -->
+        <Grid Grid.Row="4" RowDefinitions="Auto,*" IsVisible="{Binding HasResults}">
             <!-- Filter Bar -->
-            <Border Grid.Row="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,0,1" Padding="24,12">
+            <Border Grid.Row="0" Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1" Padding="24,12">
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <!-- Filter Buttons -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
-                        <TextBlock Text="Filter:" FontSize="12" Foreground="#8B949E" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Filter:" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0"/>
 
                         <RadioButton GroupName="SourceFilter" IsChecked="{Binding CurrentFilter, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:PacketSourceFilter.All}}"
                                      Command="{Binding FilterAllCommand}">
-                            <Border Background="#21262D" BorderBrush="#30363D" BorderThickness="1" CornerRadius="4" Padding="12,6">
-                                <TextBlock Text="All" FontSize="12" Foreground="#F0F6FC"/>
+                            <Border Background="{DynamicResource BackgroundElevated}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="4" Padding="12,6">
+                                <TextBlock Text="All" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                             </Border>
                         </RadioButton>
 
                         <RadioButton GroupName="SourceFilter" IsChecked="{Binding CurrentFilter, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:PacketSourceFilter.FileAOnly}}"
                                      Command="{Binding FilterFileAOnlyCommand}">
-                            <Border Background="#1A0D0D" BorderBrush="#F85149" BorderThickness="1" CornerRadius="4" Padding="12,6">
+                            <Border Background="{StaticResource DangerTint}" BorderBrush="{DynamicResource SlackDanger}" BorderThickness="1" CornerRadius="4" Padding="12,6">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Border Background="#F85149" CornerRadius="2" Padding="4,1">
-                                        <TextBlock Text="A" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                    <Border Background="{DynamicResource SlackDanger}" CornerRadius="2" Padding="4,1">
+                                        <TextBlock Text="A" FontSize="{StaticResource FontSizeXS}" FontWeight="Bold" Foreground="White"/>
                                     </Border>
-                                    <TextBlock Text="Only File A" FontSize="12" Foreground="#F85149"/>
+                                    <TextBlock Text="Only File A" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource SlackDanger}"/>
                                 </StackPanel>
                             </Border>
                         </RadioButton>
 
                         <RadioButton GroupName="SourceFilter" IsChecked="{Binding CurrentFilter, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:PacketSourceFilter.FileBOnly}}"
                                      Command="{Binding FilterFileBOnlyCommand}">
-                            <Border Background="#0D1A0D" BorderBrush="#3FB950" BorderThickness="1" CornerRadius="4" Padding="12,6">
+                            <Border Background="{StaticResource SuccessTint}" BorderBrush="{DynamicResource SlackSuccess}" BorderThickness="1" CornerRadius="4" Padding="12,6">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <Border Background="#3FB950" CornerRadius="2" Padding="4,1">
-                                        <TextBlock Text="B" FontSize="10" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                    <Border Background="{DynamicResource SlackSuccess}" CornerRadius="2" Padding="4,1">
+                                        <TextBlock Text="B" FontSize="{StaticResource FontSizeXS}" FontWeight="Bold" Foreground="White"/>
                                     </Border>
-                                    <TextBlock Text="Only File B" FontSize="12" Foreground="#3FB950"/>
+                                    <TextBlock Text="Only File B" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource SlackSuccess}"/>
                                 </StackPanel>
                             </Border>
                         </RadioButton>
 
                         <RadioButton GroupName="SourceFilter" IsChecked="{Binding CurrentFilter, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:PacketSourceFilter.Common}}"
                                      Command="{Binding FilterCommonCommand}">
-                            <Border Background="#21262D" BorderBrush="#58A6FF" BorderThickness="1" CornerRadius="4" Padding="12,6">
+                            <Border Background="{DynamicResource BackgroundElevated}" BorderBrush="{DynamicResource AccentPrimary}" BorderThickness="1" CornerRadius="4" Padding="12,6">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <TextBlock Text="=" FontSize="12" FontWeight="Bold" Foreground="#58A6FF"/>
-                                    <TextBlock Text="Common" FontSize="12" Foreground="#58A6FF"/>
+                                    <TextBlock Text="=" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold" Foreground="{DynamicResource AccentPrimary}"/>
+                                    <TextBlock Text="Common" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource AccentPrimary}"/>
                                 </StackPanel>
                             </Border>
                         </RadioButton>
@@ -194,7 +201,7 @@
 
                     <!-- Search Box -->
                     <TextBox Grid.Column="2" Text="{Binding SearchText}" Watermark="Search packets..."
-                             Background="#0D1117" BorderBrush="#30363D" Foreground="#F0F6FC"
+                             Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource BorderSubtleBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
                              Width="250" Padding="12,8"/>
                 </Grid>
             </Border>
@@ -202,10 +209,10 @@
             <!-- Packet Table -->
             <DataGrid Grid.Row="1" ItemsSource="{Binding DisplayedPackets}"
                       AutoGenerateColumns="False" IsReadOnly="True"
-                      Background="#0D1117" Foreground="#F0F6FC"
+                      Background="{DynamicResource BackgroundDark}" Foreground="{DynamicResource TextPrimaryBrush}"
                       GridLinesVisibility="Horizontal"
                       HeadersVisibility="Column"
-                      RowBackground="#0D1117">
+                      RowBackground="{DynamicResource BackgroundDark}">
                 <DataGrid.Columns>
                     <!-- Source Indicator -->
                     <DataGridTemplateColumn Header="" Width="50">
@@ -213,7 +220,7 @@
                             <DataTemplate DataType="vm:ComparedPacketViewModel">
                                 <Border Background="{Binding SourceColor}" CornerRadius="4" Padding="8,4"
                                         HorizontalAlignment="Center" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding SourceIndicator}" FontSize="11" FontWeight="Bold" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="{Binding SourceIndicator}" FontSize="{StaticResource FontSizeSmall}" FontWeight="Bold" Foreground="White"/>
                                 </Border>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
@@ -232,12 +239,12 @@
         </Grid>
 
         <!-- Empty State (no results yet) -->
-        <StackPanel Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16"
+        <StackPanel Grid.Row="4" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16"
                     IsVisible="{Binding !HasResults}">
             <TextBlock Text="&#x1F50D;" FontSize="64" HorizontalAlignment="Center" Opacity="0.3"/>
-            <TextBlock Text="Select two PCAP files to compare" FontSize="16" Foreground="#8B949E" HorizontalAlignment="Center"/>
-            <TextBlock Text="File A is automatically set from the current analysis." FontSize="12" Foreground="#6E7681" HorizontalAlignment="Center"/>
-            <TextBlock Text="Click 'Browse...' to select File B, then click 'Compare'." FontSize="12" Foreground="#6E7681" HorizontalAlignment="Center"/>
+            <TextBlock Text="Select two PCAP files to compare" FontSize="{StaticResource FontSizeLarge}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center"/>
+            <TextBlock Text="File A is automatically set from the current analysis." FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
+            <TextBlock Text="Click 'Browse...' to select File B, then click 'Compare'." FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
         </StackPanel>
     </Grid>
 </UserControl>

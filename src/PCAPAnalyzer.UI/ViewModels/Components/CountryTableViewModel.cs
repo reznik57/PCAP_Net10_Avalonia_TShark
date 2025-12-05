@@ -18,6 +18,13 @@ public partial class CountryTableViewModel : ObservableObject
 {
     private NetworkStatistics? _currentStatistics;
 
+    /// <summary>
+    /// Callback to get timeline buckets for a country.
+    /// Set by parent ViewModel to enable timeline sparklines.
+    /// Parameters: (countryCode, context) -> timeline bucket values
+    /// </summary>
+    public Func<string, CountryTableContext, IReadOnlyList<double>?>? TimelineBucketProvider { get; set; }
+
     // Country tables
     [ObservableProperty] private ObservableCollection<CountryTableItem> _countriesByPackets = new();
     [ObservableProperty] private ObservableCollection<CountryTableItem> _countriesByBytes = new();
@@ -185,6 +192,15 @@ public partial class CountryTableViewModel : ObservableObject
             .OrderByDescending(x => x.Flow.PacketCount)
             .ToList();
 
+        // Build a set of all flow pairs to detect bidirectional flows
+        // Key format: "SOURCE->DEST" - if both A->B and B->A exist, the flow is bidirectional
+        var allFlowPairs = new HashSet<string>(
+            normalizedFlows.Select(x => $"{x.SourceCode}->{x.DestinationCode}"));
+
+        // Helper to check if reverse flow exists
+        bool IsBidirectionalFlow(string source, string dest) =>
+            allFlowPairs.Contains($"{dest}->{source}");
+
         DebugLogger.Log($"[CountryTableViewModel] Filtered to {normalizedFlows.Count} international flows with valid country codes");
 
         var topFlows = normalizedFlows.Take(50).ToList();
@@ -210,7 +226,8 @@ public partial class CountryTableViewModel : ObservableObject
                 FlowIntensity = totalCrossBorderPackets > 0 ? (x.Flow.PacketCount * 100.0 / totalCrossBorderPackets) : 0,
                 ByteIntensity = totalCrossBorderBytes > 0 ? (x.Flow.ByteCount * 100.0 / totalCrossBorderBytes) : 0,
                 SourceContinent = GetContinentForCountry(x.SourceCode),
-                DestinationContinent = GetContinentForCountry(x.DestinationCode)
+                DestinationContinent = GetContinentForCountry(x.DestinationCode),
+                IsBidirectional = IsBidirectionalFlow(x.SourceCode, x.DestinationCode)
             })
             .ToList();
 
@@ -374,13 +391,26 @@ public partial class CountryTableViewModel : ObservableObject
             })
             .ToList();
 
+        // Populate timeline data if provider is available
+        if (TimelineBucketProvider != null)
+        {
+            foreach (var item in sourceByPackets)
+                item.TimelineBuckets = TimelineBucketProvider(item.CountryCode, item.Context);
+            foreach (var item in sourceByBytes)
+                item.TimelineBuckets = TimelineBucketProvider(item.CountryCode, item.Context);
+            foreach (var item in destinationByPackets)
+                item.TimelineBuckets = TimelineBucketProvider(item.CountryCode, item.Context);
+            foreach (var item in destinationByBytes)
+                item.TimelineBuckets = TimelineBucketProvider(item.CountryCode, item.Context);
+        }
+
         // Update collections
         TopSourceCountriesByPackets = new ObservableCollection<CountryTableItem>(sourceByPackets);
         TopSourceCountriesByBytes = new ObservableCollection<CountryTableItem>(sourceByBytes);
         TopDestinationCountriesByPackets = new ObservableCollection<CountryTableItem>(destinationByPackets);
         TopDestinationCountriesByBytes = new ObservableCollection<CountryTableItem>(destinationByBytes);
 
-        DebugLogger.Log($"[CountryTableViewModel] Updated source/destination tables");
+        DebugLogger.Log($"[CountryTableViewModel] Updated source/destination tables with timeline data");
     }
 
     /// <summary>
@@ -420,7 +450,8 @@ public partial class CountryTableViewModel : ObservableObject
             FlowIntensity = flow.FlowIntensity,
             ByteIntensity = flow.ByteIntensity,
             SourceContinent = flow.SourceContinent,
-            DestinationContinent = flow.DestinationContinent
+            DestinationContinent = flow.DestinationContinent,
+            IsBidirectional = flow.IsBidirectional
         };
     }
 
@@ -465,50 +496,11 @@ public partial class CountryTableViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Performance optimization: Static continent mapping
-    /// </summary>
-    private static readonly Dictionary<string, string> ContinentMap = new()
-    {
-        // Europe
-        ["GB"] = "Europe", ["IE"] = "Europe", ["FR"] = "Europe", ["DE"] = "Europe",
-        ["IT"] = "Europe", ["ES"] = "Europe", ["PT"] = "Europe", ["NL"] = "Europe",
-        ["BE"] = "Europe", ["LU"] = "Europe", ["CH"] = "Europe", ["AT"] = "Europe",
-        ["PL"] = "Europe", ["CZ"] = "Europe", ["SK"] = "Europe", ["HU"] = "Europe",
-        ["RO"] = "Europe", ["BG"] = "Europe", ["GR"] = "Europe", ["HR"] = "Europe",
-        ["SI"] = "Europe", ["DK"] = "Europe", ["SE"] = "Europe", ["NO"] = "Europe",
-        ["FI"] = "Europe", ["EE"] = "Europe", ["LV"] = "Europe", ["LT"] = "Europe",
-        ["RU"] = "Europe", ["UA"] = "Europe", ["BY"] = "Europe", ["MD"] = "Europe",
-
-        // North America
-        ["US"] = "N. America", ["CA"] = "N. America", ["MX"] = "N. America",
-
-        // Asia
-        ["CN"] = "Asia", ["JP"] = "Asia", ["KR"] = "Asia", ["IN"] = "Asia",
-        ["SG"] = "Asia", ["MY"] = "Asia", ["TH"] = "Asia", ["VN"] = "Asia",
-
-        // Oceania
-        ["AU"] = "Oceania", ["NZ"] = "Oceania",
-
-        // South America
-        ["BR"] = "S. America", ["AR"] = "S. America", ["CL"] = "S. America",
-
-        // Africa
-        ["ZA"] = "Africa", ["EG"] = "Africa", ["NG"] = "Africa",
-
-        // Special buckets
-        ["PRIV"] = "Internal", ["PRV"] = "Internal", ["INT"] = "Internal", ["IP6"] = "IPv6"
-    };
-
-    /// <summary>
-    /// Gets continent for country code
+    /// Gets continent display name for country code.
+    /// Uses centralized ContinentData mapping.
     /// </summary>
     private static string GetContinentForCountry(string countryCode)
-    {
-        if (string.IsNullOrEmpty(countryCode))
-            return "Unknown";
-
-        return ContinentMap.TryGetValue(countryCode.ToUpper(), out var continent) ? continent : "Unknown";
-    }
+        => ContinentData.GetContinentDisplayName(countryCode);
 
     /// <summary>
     /// Checks if a country code represents an IPv6 address type

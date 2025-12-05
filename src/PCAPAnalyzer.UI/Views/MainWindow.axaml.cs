@@ -11,6 +11,7 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using SkiaSharp;
 using PCAPAnalyzer.Core.Monitoring;
+using PCAPAnalyzer.UI.Utilities;
 using PCAPAnalyzer.UI.ViewModels;
 using PCAPAnalyzer.UI.Services;
 
@@ -39,9 +40,7 @@ public partial class MainWindow : Window
             DataContext = viewModel;
             DebugLogger.Log("[MainWindow] ViewModel provided and set as DataContext");
 
-            // Setup drag & drop handlers
-            SetupDragDropHandlers();
-
+            // NOTE: Drag & drop is now handled by FileManagerView
             // Setup keyboard shortcut handlers (DEFERRED - API alignment needed)
             // SetupKeyboardShortcuts();
         }
@@ -247,7 +246,7 @@ public partial class MainWindow : Window
                 DebugLogger.Log($"[MainWindow] File selected: {filePath}");
 
                 // Update status
-                viewModel.UIState.UpdateStatus($"File loaded: {Path.GetFileName(filePath)}", "#4CAF50");
+                viewModel.UIState.UpdateStatus($"File loaded: {Path.GetFileName(filePath)}", ThemeColorHelper.GetColorHex("ColorSuccess", "#4CAF50"));
             }
         }
         catch (Exception ex)
@@ -255,7 +254,7 @@ public partial class MainWindow : Window
             DebugLogger.Log($"[MainWindow] Browse error: {ex.Message}");
             if (DataContext is MainWindowViewModel vm)
             {
-                vm.UIState.UpdateStatus($"Error selecting file: {ex.Message}", "#FF5252");
+                vm.UIState.UpdateStatus($"Error selecting file: {ex.Message}", ThemeColorHelper.GetColorHex("ColorDanger", "#FF5252"));
             }
         }
     }
@@ -280,30 +279,6 @@ public partial class MainWindow : Window
         }
     }
     
-    private void SetupDragDropHandlers()
-    {
-        try
-        {
-            var dragDropArea = this.FindControl<Border>("DragDropArea");
-            if (dragDropArea != null)
-            {
-                dragDropArea.AddHandler(DragDrop.DragEnterEvent, OnDragEnter);
-                dragDropArea.AddHandler(DragDrop.DragLeaveEvent, OnDragLeave);
-                dragDropArea.AddHandler(DragDrop.DragOverEvent, OnDragOver);
-                dragDropArea.AddHandler(DragDrop.DropEvent, OnDrop);
-                dragDropArea.PointerPressed += OnDragDropAreaClick;
-                DebugLogger.Log("[MainWindow] Drag & drop handlers setup complete");
-            }
-            else
-            {
-                DebugLogger.Log("[MainWindow] Warning: DragDropArea not found");
-            }
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[MainWindow] Error setting up drag & drop: {ex.Message}");
-        }
-    }
 
     // DEFERRED: Keyboard shortcuts - API alignment needed
     /*
@@ -342,98 +317,7 @@ public partial class MainWindow : Window
         }
     }
     */
-    
-    private void OnDragEnter(object? sender, DragEventArgs e)
-    {
-        var files = e.DataTransfer.TryGetFiles();
-        if (files != null && files.Any())
-        {
-            var file = files.First();
-            if (file.Name.EndsWith(".pcap", StringComparison.OrdinalIgnoreCase) ||
-                file.Name.EndsWith(".pcapng", StringComparison.OrdinalIgnoreCase))
-            {
-                e.DragEffects = DragDropEffects.Copy;
-                if (sender is Border border)
-                {
-                    border.Classes.Add("drag-over");
-                }
-                return;
-            }
-        }
-        e.DragEffects = DragDropEffects.None;
-    }
-    
-    private void OnDragLeave(object? sender, DragEventArgs e)
-    {
-        if (sender is Border border)
-        {
-            border.Classes.Remove("drag-over");
-        }
-    }
-    
-    private void OnDragOver(object? sender, DragEventArgs e)
-    {
-        var files = e.DataTransfer.TryGetFiles();
-        if (files != null && files.Any())
-        {
-            var file = files.First();
-            if (file.Name.EndsWith(".pcap", StringComparison.OrdinalIgnoreCase) ||
-                file.Name.EndsWith(".pcapng", StringComparison.OrdinalIgnoreCase))
-            {
-                e.DragEffects = DragDropEffects.Copy;
-                return;
-            }
-        }
-        e.DragEffects = DragDropEffects.None;
-    }
-    
-    private async void OnDrop(object? sender, DragEventArgs e)
-    {
-        try
-        {
-            if (sender is Border border)
-            {
-                border.Classes.Remove("drag-over");
-            }
-            
-            var files = e.DataTransfer.TryGetFiles();
-            if (files != null && files.Any())
-            {
-                var file = files.First();
-                if (file.Name.EndsWith(".pcap", StringComparison.OrdinalIgnoreCase) ||
-                    file.Name.EndsWith(".pcapng", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (DataContext is MainWindowViewModel viewModel)
-                    {
-                        var path = file.Path?.LocalPath ?? file.Name;
-                        DebugLogger.Log($"[MainWindow] File dropped: {path}");
-                        await viewModel.LoadCaptureAsync(path);
-                        e.Handled = true;
-                    }
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[MainWindow] Error in OnDrop: {ex.Message}");
-        }
-    }
-    
-    private async void OnDragDropAreaClick(object? sender, PointerPressedEventArgs e)
-    {
-        try
-        {
-            if (DataContext is MainWindowViewModel viewModel)
-            {
-                await viewModel.FileManager.OpenFileCommand.ExecuteAsync(null);
-            }
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[MainWindow] Error in OnDragDropAreaClick: {ex.Message}");
-        }
-    }
-    
+
     public async Task<bool> TakeScreenshotAsync()
     {
         try
@@ -519,17 +403,17 @@ public partial class MainWindow : Window
     private string GetTabName(int tabIndex)
     {
         // ✅ FIX: Tab index mapping matches actual MainWindow.axaml tab order
-        // Current tab order: FileManager(0), PacketAnalysis(1), Dashboard(2), Threats(3), Anomalies(4), HostInventory(5), VoiceQoS(6), CountryTraffic(7), Compare(8), Reports(9)
+        // Current tab order: FileManager(0), PacketAnalysis(1), Dashboard(2), CountryTraffic(3), VoiceQoS(4), Threats(5), Anomalies(6), HostInventory(7), Compare(8), Reports(9)
         return tabIndex switch
         {
             0 => "FileManager",       // 📂 File Manager
             1 => "PacketAnalysis",    // 📦 Packet Analysis
             2 => "Dashboard",         // 📊 Dashboard
-            3 => "Threats",           // 🛡️ Security Threats
-            4 => "Anomalies",         // 🔬 Anomalies
-            5 => "HostInventory",     // 🖥️ Host Inventory
-            6 => "VoiceQoS",          // 📞 Voice / QoS
-            7 => "CountryTraffic",    // 🌍 Country Traffic
+            3 => "CountryTraffic",    // 🌍 Country Traffic
+            4 => "VoiceQoS",          // 📞 Voice / QoS
+            5 => "Threats",           // 🛡️ Security Threats
+            6 => "Anomalies",         // 🔬 Anomalies
+            7 => "HostInventory",     // 🖥️ Host Inventory
             8 => "Compare",           // 🔍 Compare
             9 => "Reports",           // 📈 Reports
             _ => "Tab"

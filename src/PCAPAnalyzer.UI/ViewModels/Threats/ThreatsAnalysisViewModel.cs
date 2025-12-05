@@ -3,8 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.Core.Interfaces;
@@ -19,6 +19,10 @@ namespace PCAPAnalyzer.UI.ViewModels.Threats;
 /// </summary>
 public partial class ThreatsAnalysisViewModel : ObservableObject
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     private readonly IInsecurePortDetector _insecurePortDetector;
     private readonly IUnifiedAnomalyDetectionService _anomalyService;
     private readonly PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService? _cacheService;
@@ -96,7 +100,7 @@ public partial class ThreatsAnalysisViewModel : ObservableObject
 
         Metrics = _insecurePortDetector.CalculateSecurityMetrics(AllThreats);
 
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        await Dispatcher.InvokeAsync(() =>
             AnalysisCompleted?.Invoke(AllThreats, Metrics));
 
         DebugLogger.Log($"[ThreatsAnalysisViewModel] SetFromCache complete - {AllThreats.Count:N0} threats");
@@ -131,7 +135,7 @@ public partial class ThreatsAnalysisViewModel : ObservableObject
             _lastFilterState = isFilterActive;
             _isAnalyzing = false;
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await Dispatcher.InvokeAsync(() =>
                 AnalysisCompleted?.Invoke(AllThreats, Metrics));
 
             DebugLogger.Log($"[ThreatsAnalysisViewModel] LOADED FROM CACHE - {AllThreats.Count:N0} threats");
@@ -256,7 +260,7 @@ public partial class ThreatsAnalysisViewModel : ObservableObject
         _lastFilterState = isFilterActive;
         _isAnalyzing = false;
 
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        await Dispatcher.InvokeAsync(() =>
             AnalysisCompleted?.Invoke(AllThreats, Metrics));
 
         TrySaveToCache();

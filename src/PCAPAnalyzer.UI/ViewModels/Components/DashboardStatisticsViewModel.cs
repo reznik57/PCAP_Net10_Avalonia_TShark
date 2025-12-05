@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.UI.ViewModels;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -255,7 +256,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
         {
             // Basic counts
             TotalPackets = statistics.TotalPackets;
-            TotalBytesFormatted = NumberFormatter.FormatBytes(statistics.TotalBytes);
+            TotalBytesFormatted = Core.Utilities.NumberFormatter.FormatBytes(statistics.TotalBytes);
             UniqueIPs = statistics.AllUniqueIPs?.Count ?? 0;
             UniqueProtocols = statistics.ProtocolStats.Count;
 
@@ -320,7 +321,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
         {
             ShowFilteredStats = true;
             FilteredTotalPackets = statistics.TotalPackets;
-            FilteredTotalBytesFormatted = NumberFormatter.FormatBytes(statistics.TotalBytes);
+            FilteredTotalBytesFormatted = Core.Utilities.NumberFormatter.FormatBytes(statistics.TotalBytes);
             FilteredUniqueIPs = statistics.AllUniqueIPs?.Count ?? 0;
             FilteredProtocolCount = statistics.ProtocolStats.Count;
             FilteredDifferentPorts = statistics.UniquePortCount;  // Use total unique port count, not just top N
@@ -591,7 +592,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
             Address = address,
             PacketCount = packetCount,
             ByteCount = byteCount,
-            BytesFormatted = NumberFormatter.FormatBytes(byteCount),
+            BytesFormatted = Core.Utilities.NumberFormatter.FormatBytes(byteCount),
             Percentage = percentage,
             Type = PCAPAnalyzer.Core.Services.NetworkFilterHelper.IsIPv4(address) ? "IPv4" :
                    PCAPAnalyzer.Core.Services.NetworkFilterHelper.IsIPv6(address) ? "IPv6" : "Unknown",
@@ -622,7 +623,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
                     DestinationDisplay = $"{conv.DestinationAddress}:{conv.DestinationPort}",
                     DurationFormatted = FormatDuration(conv.Duration),
                     Percentage = statistics.TotalPackets > 0 ? (double)conv.PacketCount / statistics.TotalPackets * 100 : 0,
-                    BytesFormatted = NumberFormatter.FormatBytes(conv.ByteCount)
+                    BytesFormatted = Core.Utilities.NumberFormatter.FormatBytes(conv.ByteCount)
                 });
             }
         }
@@ -647,7 +648,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
                     DestinationDisplay = $"{conv.DestinationAddress}:{conv.DestinationPort}",
                     DurationFormatted = FormatDuration(conv.Duration),
                     Percentage = (double)conv.ByteCount / statistics.TotalBytes * 100,
-                    BytesFormatted = NumberFormatter.FormatBytes(conv.ByteCount)
+                    BytesFormatted = Core.Utilities.NumberFormatter.FormatBytes(conv.ByteCount)
                 });
             }
         }
@@ -719,7 +720,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
                     ServiceName = port.Service ?? "Unknown",
                     Percentage = port.Percentage,
                     PacketCountFormatted = port.PacketCount.ToString("N0"),
-                    ByteCountFormatted = NumberFormatter.FormatBytes(port.ByteCount)
+                    ByteCountFormatted = Core.Utilities.NumberFormatter.FormatBytes(port.ByteCount)
                 };
                 TopPorts.Add(portVM);
                 TopPortsByPacketsDisplay.Add(portVM);
@@ -741,7 +742,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
                     ServiceName = port.Service ?? "Unknown",
                     Percentage = (port.ByteCount * 100.0) / totalBytes,  // % of TOTAL bytes
                     PacketCountFormatted = port.PacketCount.ToString("N0"),
-                    ByteCountFormatted = NumberFormatter.FormatBytes(port.ByteCount)
+                    ByteCountFormatted = Core.Utilities.NumberFormatter.FormatBytes(port.ByteCount)
                 };
                 TopPortsByBytesDisplay.Add(portVM);
             }
@@ -778,18 +779,18 @@ public partial class DashboardStatisticsViewModel : ObservableObject
 
     private string GenerateAnalysisSummary(NetworkStatistics statistics)
     {
-        return $"Analyzed {statistics.TotalPackets:N0} packets ({NumberFormatter.FormatBytes(statistics.TotalBytes)}) across {statistics.ProtocolStats.Count} protocols";
+        return $"Analyzed {statistics.TotalPackets:N0} packets ({Core.Utilities.NumberFormatter.FormatBytes(statistics.TotalBytes)}) across {statistics.ProtocolStats.Count} protocols";
     }
 
     private string GetSeverityColor(ThreatSeverity severity)
     {
         return severity switch
         {
-            ThreatSeverity.Critical => "#DC2626",
-            ThreatSeverity.High => "#F59E0B",
-            ThreatSeverity.Medium => "#FCD34D",
-            ThreatSeverity.Low => "#10B981",
-            _ => "#6B7280"
+            ThreatSeverity.Critical => ThemeColorHelper.GetColorHex("ColorDanger", "#DC2626"),
+            ThreatSeverity.High => ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
+            ThreatSeverity.Medium => ThemeColorHelper.GetColorHex("AccentYellow", "#FCD34D"),
+            ThreatSeverity.Low => ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
+            _ => ThemeColorHelper.GetColorHex("TextMuted", "#6B7280")
         };
     }
 }

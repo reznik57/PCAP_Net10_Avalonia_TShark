@@ -5,15 +5,15 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="60"
              x:Class="PCAPAnalyzer.UI.Views.Controls.QuickFilterControl">
 
-    <Border Background="#0D1620" BorderBrush="#10B981" BorderThickness="1"
+    <Border Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource SlackSuccess}" BorderThickness="1"
             CornerRadius="6" Padding="12,8">
         <Grid RowDefinitions="Auto,8,Auto">
             <!-- Header -->
             <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
-                <TextBlock Text="⚡ QUICK FILTERS" FontSize="11" FontWeight="Bold" Foreground="#10B981" VerticalAlignment="Center"/>
-                <Border Background="#1C2128" BorderBrush="#10B981" BorderThickness="1"
+                <TextBlock Text="⚡ QUICK FILTERS" FontSize="{StaticResource FontSizeSmall}" FontWeight="Bold" Foreground="{DynamicResource SlackSuccess}" VerticalAlignment="Center"/>
+                <Border Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource SlackSuccess}" BorderThickness="1"
                         CornerRadius="3" Padding="4,1" VerticalAlignment="Center">
-                    <TextBlock Text="Click to toggle • Multiple = OR" FontSize="8" Foreground="#34D399"/>
+                    <TextBlock Text="Click to toggle • Multiple = OR" FontSize="8" Foreground="{StaticResource FilterSuccessText}"/>
                 </Border>
             </StackPanel>
 
@@ -22,52 +22,52 @@
                 <!-- Core Network Filters -->
                 <ToggleButton IsChecked="{Binding Rfc1918Toggle}" Classes="qf blue" Margin="0,0,4,4"
                               ToolTip.Tip="Private IPs (10.x, 172.16-31.x, 192.168.x)">
-                    <TextBlock Text="RFC1918" FontSize="10"/>
+                    <TextBlock Text="RFC1918" FontSize="{StaticResource FontSizeXS}"/>
                 </ToggleButton>
                 <ToggleButton IsChecked="{Binding PublicIpToggle}" Classes="qf blue" Margin="0,0,4,4"
                               ToolTip.Tip="Public/Internet-routable IPs">
-                    <TextBlock Text="Public" FontSize="10"/>
+                    <TextBlock Text="Public" FontSize="{StaticResource FontSizeXS}"/>
                 </ToggleButton>
                 <ToggleButton IsChecked="{Binding PrivateToPublicToggle}" Classes="qf green" Margin="0,0,4,4"
                               ToolTip.Tip="Egress: Private → Public (outbound to internet)">
-                    <TextBlock Text="Egress" FontSize="10"/>
+                    <TextBlock Text="Egress" FontSize="{StaticResource FontSizeXS}"/>
                 </ToggleButton>
                 <ToggleButton IsChecked="{Binding PublicToPrivateToggle}" Classes="qf green" Margin="0,0,4,4"
                               ToolTip.Tip="Ingress: Public → Private (inbound from internet)">
-                    <TextBlock Text="Ingress" FontSize="10"/>
+                    <TextBlock Text="Ingress" FontSize="{StaticResource FontSizeXS}"/>
                 </ToggleButton>
                 <ToggleButton IsChecked="{Binding InsecureToggle}" Classes="qf red" Margin="0,0,4,4"
                               ToolTip.Tip="Insecure protocols (HTTP, FTP, Telnet, TLS 1.0/1.1)">
-                    <TextBlock Text="Insecure" FontSize="10"/>
+                    <TextBlock Text="Insecure" FontSize="{StaticResource FontSizeXS}"/>
                 </ToggleButton>
                 <ToggleButton IsChecked="{Binding IPv4Toggle}" Classes="qf blue" Margin="0,0,4,4"
                               ToolTip.Tip="IPv4 traffic only">
-                    <TextBlock Text="IPv4" FontSize="10"/>
+                    <TextBlock Text="IPv4" FontSize="{StaticResource FontSizeXS}"/>
                 </ToggleButton>
                 <ToggleButton IsChecked="{Binding IPv6Toggle}" Classes="qf blue" Margin="0,0,4,4"
                               ToolTip.Tip="IPv6 traffic only">
-                    <TextBlock Text="IPv6" FontSize="10"/>
+                    <TextBlock Text="IPv6" FontSize="{StaticResource FontSizeXS}"/>
                 </ToggleButton>
 
                 <!-- Separator -->
-                <Border Width="1" Height="20" Background="#30363D" Margin="4,0,8,4" VerticalAlignment="Center"/>
+                <Border Width="1" Height="20" Background="{DynamicResource BackgroundElevated}" Margin="4,0,8,4" VerticalAlignment="Center"/>
 
                 <!-- Security Filters -->
                 <ToggleButton IsChecked="{Binding AnomaliesToggle}" Classes="qf red" Margin="0,0,4,4"
                               ToolTip.Tip="All detected anomalies">
-                    <TextBlock Text="Anomalies" FontSize="10"/>
+                    <TextBlock Text="Anomalies" FontSize="{StaticResource FontSizeXS}"/>
                 </ToggleButton>
                 <ToggleButton IsChecked="{Binding SuspiciousToggle}" Classes="qf red" Margin="0,0,4,4"
                               ToolTip.Tip="High-severity suspicious activity">
-                    <TextBlock Text="Suspicious" FontSize="10"/>
+                    <TextBlock Text="Suspicious" FontSize="{StaticResource FontSizeXS}"/>
                 </ToggleButton>
                 <ToggleButton IsChecked="{Binding TcpIssuesToggle}" Classes="qf orange" Margin="0,0,4,4"
                               ToolTip.Tip="TCP retransmissions, out-of-order packets">
-                    <TextBlock Text="TCP Issues" FontSize="10"/>
+                    <TextBlock Text="TCP Issues" FontSize="{StaticResource FontSizeXS}"/>
                 </ToggleButton>
                 <ToggleButton IsChecked="{Binding JumboFramesToggle}" Classes="qf orange" Margin="0,0,4,4"
                               ToolTip.Tip="Large packets (>1500 bytes)">
-                    <TextBlock Text="Large Pkts" FontSize="10"/>
+                    <TextBlock Text="Large Pkts" FontSize="{StaticResource FontSizeXS}"/>
                 </ToggleButton>
             </WrapPanel>
         </Grid>
@@ -76,61 +76,61 @@
     <UserControl.Styles>
         <!-- Quick Filter Toggle Base -->
         <Style Selector="ToggleButton.qf">
-            <Setter Property="Background" Value="#1C2128"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundPanel}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="3"/>
             <Setter Property="Padding" Value="6,2"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="MinHeight" Value="22"/>
         </Style>
         <Style Selector="ToggleButton.qf:pointerover">
-            <Setter Property="Background" Value="#21262D"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundCard}"/>
         </Style>
 
         <!-- Blue -->
         <Style Selector="ToggleButton.qf.blue">
-            <Setter Property="BorderBrush" Value="#3B82F6"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentPrimary}"/>
         </Style>
         <Style Selector="ToggleButton.qf.blue:checked">
-            <Setter Property="Background" Value="#1E3A5F"/>
-            <Setter Property="BorderBrush" Value="#3B82F6"/>
+            <Setter Property="Background" Value="{StaticResource FilterIncludeBg}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentPrimary}"/>
             <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Foreground" Value="#60A5FA"/>
+            <Setter Property="Foreground" Value="{StaticResource FilterIncludeText}"/>
         </Style>
 
         <!-- Red -->
         <Style Selector="ToggleButton.qf.red">
-            <Setter Property="BorderBrush" Value="#EF4444"/>
+            <Setter Property="BorderBrush" Value="{StaticResource SlackDanger}"/>
         </Style>
         <Style Selector="ToggleButton.qf.red:checked">
-            <Setter Property="Background" Value="#5F1E1E"/>
-            <Setter Property="BorderBrush" Value="#EF4444"/>
+            <Setter Property="Background" Value="{StaticResource FilterExcludeBg}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource SlackDanger}"/>
             <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Foreground" Value="#F87171"/>
+            <Setter Property="Foreground" Value="{StaticResource FilterExcludeText}"/>
         </Style>
 
         <!-- Orange -->
         <Style Selector="ToggleButton.qf.orange">
-            <Setter Property="BorderBrush" Value="#F59E0B"/>
+            <Setter Property="BorderBrush" Value="{StaticResource SlackWarning}"/>
         </Style>
         <Style Selector="ToggleButton.qf.orange:checked">
-            <Setter Property="Background" Value="#5F4B1E"/>
-            <Setter Property="BorderBrush" Value="#F59E0B"/>
+            <Setter Property="Background" Value="{StaticResource FilterWarningBg}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource SlackWarning}"/>
             <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Foreground" Value="#FBBF24"/>
+            <Setter Property="Foreground" Value="{StaticResource FilterWarningText}"/>
         </Style>
 
         <!-- Green -->
         <Style Selector="ToggleButton.qf.green">
-            <Setter Property="BorderBrush" Value="#10B981"/>
+            <Setter Property="BorderBrush" Value="{StaticResource SlackSuccess}"/>
         </Style>
         <Style Selector="ToggleButton.qf.green:checked">
-            <Setter Property="Background" Value="#1E5F4B"/>
-            <Setter Property="BorderBrush" Value="#10B981"/>
+            <Setter Property="Background" Value="{StaticResource FilterSuccessBg}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource SlackSuccess}"/>
             <Setter Property="BorderThickness" Value="2"/>
-            <Setter Property="Foreground" Value="#34D399"/>
+            <Setter Property="Foreground" Value="{StaticResource FilterSuccessText}"/>
         </Style>
     </UserControl.Styles>
 </UserControl>

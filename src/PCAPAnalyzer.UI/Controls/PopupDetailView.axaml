@@ -2,7 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="PCAPAnalyzer.UI.Controls.PopupDetailView"
              x:CompileBindings="False">
-    
+
     <Grid>
         <!-- Dark Overlay -->
         <Border Classes="modal-overlay"
@@ -15,28 +15,28 @@
                 </Transitions>
             </Border.Transitions>
         </Border>
-        
+
         <!-- Popup Content - Fullscreen Mode -->
         <Border IsVisible="{Binding IsPopupVisible}"
                 ZIndex="1001"
-                Background="#1A1A24"
+                Background="{DynamicResource PopupBgSecondary}"
                 BorderThickness="0">
             <Border.Transitions>
                 <Transitions>
                     <DoubleTransition Property="Opacity" Duration="0:0:0.3"/>
                 </Transitions>
             </Border.Transitions>
-                
+
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    
+
                     <!-- Header -->
                     <Border Grid.Row="0"
-                            Background="#0F0F18"
+                            Background="{DynamicResource PopupBg}"
                             CornerRadius="16,16,0,0"
                             Padding="24,16">
                         <Grid>
@@ -44,19 +44,19 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            
+
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="{Binding PopupTitle}"
-                                           FontSize="20"
+                                           FontSize="{DynamicResource FontSizeXL}"
                                            FontWeight="Bold"
-                                           Foreground="#00D4FF"/>
+                                           Foreground="{DynamicResource AccentCyan}"/>
                                 <TextBlock Text="{Binding PopupSubtitle}"
-                                           FontSize="13"
-                                           Foreground="#B8D4E8"
+                                           FontSize="{DynamicResource FontSizeMedium}"
+                                           Foreground="{DynamicResource TextSecondary}"
                                            Margin="0,4,0,0"
                                            IsVisible="{Binding PopupSubtitle, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                             </StackPanel>
-                            
+
                             <!-- Close Button -->
                             <Button Grid.Column="1"
                                     Command="{Binding ClosePopupCommand}"
@@ -66,14 +66,14 @@
                                     BorderThickness="0"
                                     Cursor="Hand">
                                 <Path Data="M 18 6 L 6 18 M 6 6 L 18 18"
-                                      Stroke="#B8D4E8"
+                                      Stroke="{DynamicResource TextSecondary}"
                                       StrokeThickness="2"
                                       Width="16"
                                       Height="16"/>
                             </Button>
                         </Grid>
                     </Border>
-                    
+
                     <!-- Content Area -->
                     <ScrollViewer Grid.Row="1"
                                   VerticalScrollBarVisibility="Auto"
@@ -81,45 +81,45 @@
                                   Padding="24,24,24,24">
                         <ContentControl Content="{Binding PopupContent}"/>
                     </ScrollViewer>
-                    
+
                     <!-- Footer with Actions -->
                     <Border Grid.Row="2"
-                            Background="#0F0F18"
+                            Background="{DynamicResource PopupBg}"
                             CornerRadius="0,0,16,16"
                             Padding="24,16"
                             IsVisible="{Binding HasPopupActions}">
                         <StackPanel Orientation="Horizontal"
                                     HorizontalAlignment="Right"
                                     Spacing="12">
-                            
+
                             <!-- Export Button -->
                             <Button Command="{Binding ExportPopupDataCommand}"
                                     IsVisible="{Binding CanExportPopupData}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <Path Data="M 14 2 L 14 8 L 20 8 M 14 2 L 20 8 L 20 22 L 4 22 L 4 2 Z M 12 12 L 12 18 M 9 15 L 12 18 L 15 15"
-                                          Fill="#FFFFFF"
+                                          Fill="{DynamicResource PopupText}"
                                           Width="16"
                                           Height="16"/>
-                                    <TextBlock Text="Export" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Export" Foreground="{DynamicResource PopupText}"/>
                                 </StackPanel>
                             </Button>
-                            
+
                             <!-- Refresh Button -->
                             <Button Command="{Binding RefreshPopupDataCommand}"
                                     IsVisible="{Binding CanRefreshPopupData}">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <Path Data="M 17.65 6.35 C 16.2 4.9 14.21 4 12 4 C 7.58 4 4 7.58 4 12 C 4 16.42 7.58 20 12 20 C 15.73 20 18.84 17.45 19.73 14 L 17.65 14 C 16.83 16.33 14.61 18 12 18 C 8.69 18 6 15.31 6 12 C 6 8.69 8.69 6 12 6 C 13.66 6 15.14 6.69 16.22 7.78 L 13 11 L 20 11 L 20 4 L 17.65 6.35 Z"
-                                          Fill="#FFFFFF"
+                                          Fill="{DynamicResource PopupText}"
                                           Width="16"
                                           Height="16"/>
-                                    <TextBlock Text="Refresh" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="Refresh" Foreground="{DynamicResource PopupText}"/>
                                 </StackPanel>
                             </Button>
-                            
+
                             <!-- Close Button -->
                             <Button Command="{Binding ClosePopupCommand}"
                                     Classes="primary">
-                                <TextBlock Text="Close" Foreground="#000000" FontWeight="Medium"/>
+                                <TextBlock Text="Close" Foreground="{DynamicResource TextInverse}" FontWeight="Medium"/>
                             </Button>
                         </StackPanel>
                     </Border>

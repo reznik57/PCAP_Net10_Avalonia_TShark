@@ -7,37 +7,38 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="500"
              x:Class="PCAPAnalyzer.UI.Controls.ChartDataPopup"
              x:DataType="models:ChartPopupViewModel">
-    
+
     <UserControl.Resources>
         <converters:StringEqualsConverter x:Key="StringEqualsConverter"/>
     </UserControl.Resources>
-    
+
     <UserControl.Styles>
         <Style Selector="Border.popup-container">
-            <Setter Property="Background" Value="#1C2128"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource PopupBgSecondary}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource PopupBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="BoxShadow" Value="0 8 32 0 #00000080"/>
         </Style>
-        
+
         <Style Selector="RadioButton.data-type-selector">
             <Setter Property="Margin" Value="4,0"/>
             <Setter Property="Padding" Value="8,4"/>
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Foreground" Value="{DynamicResource PopupTextSecondary}"/>
         </Style>
-        
+
         <Style Selector="RadioButton.data-type-selector:checked">
-            <Setter Property="Background" Value="#1F6FEB20"/>
-            <Setter Property="Foreground" Value="#58A6FF"/>
+            <Setter Property="Background" Value="{DynamicResource ColorPrimaryTintLight}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PopupLink}"/>
         </Style>
-        
+
         <Style Selector="Border.data-item">
-            <Setter Property="Background" Value="#161B2220"/>
+            <Setter Property="Background" Value="{DynamicResource PopupBgSecondary}"/>
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Opacity" Value="0.9"/>
         </Style>
     </UserControl.Styles>
     
@@ -45,46 +46,46 @@
         <Grid RowDefinitions="Auto,Auto,Auto,*">
             
             <!-- Header -->
-            <Border Grid.Row="0" Background="#161B22" CornerRadius="8,8,0,0" Padding="16,12">
+            <Border Grid.Row="0" Background="{DynamicResource PopupBgSecondary}" CornerRadius="8,8,0,0" Padding="16,12">
                 <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="Chart Data Details" FontSize="14" FontWeight="Bold" Foreground="#F0F6FC"/>
-                        <TextBlock Text="{Binding TimeWindowDisplay}" FontSize="11" Foreground="#8B949E" Margin="0,2,0,0"/>
+                        <TextBlock Text="Chart Data Details" FontSize="{DynamicResource FontSizeInput}" FontWeight="Bold" Foreground="{DynamicResource PopupText}"/>
+                        <TextBlock Text="{Binding TimeWindowDisplay}" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource PopupTextSecondary}" Margin="0,2,0,0"/>
                     </StackPanel>
-                    <Button Grid.Column="1" 
-                            Background="Transparent" 
+                    <Button Grid.Column="1"
+                            Background="Transparent"
                             BorderThickness="0"
                             Cursor="Hand"
                             Command="{Binding CloseCommand}">
-                        <TextBlock Text="✕" FontSize="16" Foreground="#8B949E"/>
+                        <TextBlock Text="✕" FontSize="{DynamicResource FontSizeLarge}" Foreground="{DynamicResource PopupTextSecondary}"/>
                     </Button>
                 </Grid>
             </Border>
-            
+
             <!-- Summary Stats -->
-            <Border Grid.Row="1" Background="#0D111720" Padding="16,8" BorderBrush="#30363D" BorderThickness="0,1,0,1">
+            <Border Grid.Row="1" Background="{DynamicResource PopupBg}" Padding="16,8" BorderBrush="{DynamicResource PopupBorder}" BorderThickness="0,1,0,1">
                 <Grid ColumnDefinitions="*,*">
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="Traffic Volume" FontSize="11" Foreground="#8B949E"/>
-                        <TextBlock Text="{Binding TrafficSummary}" FontSize="12" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                        <TextBlock Text="Traffic Volume" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource PopupTextSecondary}"/>
+                        <TextBlock Text="{Binding TrafficSummary}" FontSize="{DynamicResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource PopupText}"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1">
-                        <TextBlock Text="Rate" FontSize="11" Foreground="#8B949E"/>
+                        <TextBlock Text="Rate" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource PopupTextSecondary}"/>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding PointData.PacketsPerSecond, StringFormat='{}{0:F0} pkt/s'}" 
-                                     FontSize="12" FontWeight="SemiBold" Foreground="#F0F6FC"/>
-                            <TextBlock Text=" / " FontSize="11" Foreground="#484F58" Margin="4,0"/>
-                            <TextBlock Text="{Binding PointData.BytesPerSecond, StringFormat='{}{0:F2} KB/s'}" 
-                                     FontSize="12" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                            <TextBlock Text="{Binding PointData.PacketsPerSecond, StringFormat='{}{0:F0} pkt/s'}"
+                                     FontSize="{DynamicResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource PopupText}"/>
+                            <TextBlock Text=" / " FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextMuted}" Margin="4,0"/>
+                            <TextBlock Text="{Binding PointData.BytesPerSecond, StringFormat='{}{0:F2} KB/s'}"
+                                     FontSize="{DynamicResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource PopupText}"/>
                         </StackPanel>
                     </StackPanel>
                 </Grid>
             </Border>
-            
+
             <!-- Data Type Selector -->
             <Border Grid.Row="2" Padding="16,12,16,8">
                 <StackPanel>
-                    <TextBlock Text="Select Data Type:" FontSize="11" Foreground="#8B949E" Margin="0,0,0,8"/>
+                    <TextBlock Text="Select Data Type:" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource PopupTextSecondary}" Margin="0,0,0,8"/>
                     <ItemsControl ItemsSource="{Binding DataTypes}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -116,7 +117,7 @@
                         
                         <!-- Template for when Ports is selected -->
                         <DataTemplate DataType="models:ChartPopupViewModel">
-                            <ItemsControl ItemsSource="{Binding DisplayItems}" 
+                            <ItemsControl ItemsSource="{Binding DisplayItems}"
                                         IsVisible="{Binding SelectedDataType, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Ports}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate DataType="models:PortActivityData">
@@ -127,33 +128,33 @@
                                                     <StackPanel Grid.Column="0">
                                                         <StackPanel Orientation="Horizontal">
                                                             <TextBlock Text="{Binding Port}"
-                                                                     FontSize="13"
+                                                                     FontSize="{DynamicResource FontSizeMedium}"
                                                                      FontWeight="SemiBold"
-                                                                     Foreground="#F0F6FC"/>
+                                                                     Foreground="{DynamicResource PopupText}"/>
                                                             <TextBlock Text="/"
-                                                                     FontSize="11"
-                                                                     Foreground="#484F58"
+                                                                     FontSize="{DynamicResource FontSizeSmall}"
+                                                                     Foreground="{DynamicResource TextMuted}"
                                                                      Margin="2,0"/>
                                                             <TextBlock Text="{Binding Protocol}"
-                                                                     FontSize="11"
-                                                                     Foreground="#8B949E"/>
+                                                                     FontSize="{DynamicResource FontSizeSmall}"
+                                                                     Foreground="{DynamicResource PopupTextSecondary}"/>
                                                         </StackPanel>
                                                         <TextBlock Text="{Binding ServiceName}"
-                                                                 FontSize="10"
-                                                                 Foreground="#484F58"/>
+                                                                 FontSize="{DynamicResource FontSizeXS}"
+                                                                 Foreground="{DynamicResource TextMuted}"/>
                                                     </StackPanel>
 
                                                     <!-- Percentage bar -->
-                                                    <Border Grid.Column="1" Height="8" Background="#21262D" CornerRadius="4" Margin="8,0">
-                                                        <Border Background="#58A6FF" CornerRadius="4" HorizontalAlignment="Left"
+                                                    <Border Grid.Column="1" Height="8" Background="{DynamicResource PopupBgTertiary}" CornerRadius="4" Margin="8,0">
+                                                        <Border Background="{DynamicResource PopupLink}" CornerRadius="4" HorizontalAlignment="Left"
                                                                 Width="{Binding Percentage}"/>
                                                     </Border>
 
                                                     <!-- Percentage value -->
                                                     <TextBlock Grid.Column="2"
                                                              Text="{Binding Percentage, StringFormat='{}{0:F1}%'}"
-                                                             FontSize="11"
-                                                             Foreground="#8B949E"
+                                                             FontSize="{DynamicResource FontSizeSmall}"
+                                                             Foreground="{DynamicResource PopupTextSecondary}"
                                                              HorizontalAlignment="Right"/>
                                                 </Grid>
 
@@ -161,11 +162,11 @@
                                                 <Grid ColumnDefinitions="*,Auto">
                                                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                                                         <TextBlock Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}"
-                                                                 FontSize="10"
-                                                                 Foreground="#8B949E"/>
+                                                                 FontSize="{DynamicResource FontSizeXS}"
+                                                                 Foreground="{DynamicResource PopupTextSecondary}"/>
                                                         <TextBlock Text="{Binding DisplayBytes}"
-                                                                 FontSize="10"
-                                                                 Foreground="#8B949E"/>
+                                                                 FontSize="{DynamicResource FontSizeXS}"
+                                                                 Foreground="{DynamicResource PopupTextSecondary}"/>
                                                     </StackPanel>
                                                 </Grid>
                                             </StackPanel>
@@ -187,31 +188,31 @@
                                                 <Grid ColumnDefinitions="160,*,60">
                                                     <StackPanel Grid.Column="0">
                                                         <TextBlock Text="{Binding Address}"
-                                                                 FontSize="13"
+                                                                 FontSize="{DynamicResource FontSizeMedium}"
                                                                  FontWeight="SemiBold"
-                                                                 Foreground="#F0F6FC"/>
+                                                                 Foreground="{DynamicResource PopupText}"/>
                                                         <StackPanel Orientation="Horizontal">
                                                             <TextBlock Text="{Binding Country}"
-                                                                     FontSize="10"
-                                                                     Foreground="#8B949E"/>
+                                                                     FontSize="{DynamicResource FontSizeXS}"
+                                                                     Foreground="{DynamicResource PopupTextSecondary}"/>
                                                             <TextBlock Text="{Binding City, StringFormat=' - {0}'}"
-                                                                     FontSize="10"
-                                                                     Foreground="#484F58"
+                                                                     FontSize="{DynamicResource FontSizeXS}"
+                                                                     Foreground="{DynamicResource TextMuted}"
                                                                      IsVisible="{Binding City, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                                         </StackPanel>
                                                     </StackPanel>
 
                                                     <!-- Percentage bar -->
-                                                    <Border Grid.Column="1" Height="8" Background="#21262D" CornerRadius="4" Margin="8,0">
-                                                        <Border Background="#3FB950" CornerRadius="4" HorizontalAlignment="Left"
+                                                    <Border Grid.Column="1" Height="8" Background="{DynamicResource PopupBgTertiary}" CornerRadius="4" Margin="8,0">
+                                                        <Border Background="{DynamicResource PopupSuccess}" CornerRadius="4" HorizontalAlignment="Left"
                                                                 Width="{Binding Percentage}"/>
                                                     </Border>
 
                                                     <!-- Percentage value -->
                                                     <TextBlock Grid.Column="2"
                                                              Text="{Binding Percentage, StringFormat='{}{0:F1}%'}"
-                                                             FontSize="11"
-                                                             Foreground="#8B949E"
+                                                             FontSize="{DynamicResource FontSizeSmall}"
+                                                             Foreground="{DynamicResource PopupTextSecondary}"
                                                              HorizontalAlignment="Right"/>
                                                 </Grid>
 
@@ -219,11 +220,11 @@
                                                 <Grid ColumnDefinitions="*,Auto">
                                                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                                                         <TextBlock Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}"
-                                                                 FontSize="10"
-                                                                 Foreground="#8B949E"/>
+                                                                 FontSize="{DynamicResource FontSizeXS}"
+                                                                 Foreground="{DynamicResource PopupTextSecondary}"/>
                                                         <TextBlock Text="{Binding DisplayBytes}"
-                                                                 FontSize="10"
-                                                                 Foreground="#8B949E"/>
+                                                                 FontSize="{DynamicResource FontSizeXS}"
+                                                                 Foreground="{DynamicResource PopupTextSecondary}"/>
                                                     </StackPanel>
                                                 </Grid>
                                             </StackPanel>
@@ -245,31 +246,31 @@
                                                 <Grid ColumnDefinitions="160,*,60">
                                                     <StackPanel Grid.Column="0">
                                                         <TextBlock Text="{Binding Address}"
-                                                                 FontSize="13"
+                                                                 FontSize="{DynamicResource FontSizeMedium}"
                                                                  FontWeight="SemiBold"
-                                                                 Foreground="#F0F6FC"/>
+                                                                 Foreground="{DynamicResource PopupText}"/>
                                                         <StackPanel Orientation="Horizontal">
                                                             <TextBlock Text="{Binding Country}"
-                                                                     FontSize="10"
-                                                                     Foreground="#8B949E"/>
+                                                                     FontSize="{DynamicResource FontSizeXS}"
+                                                                     Foreground="{DynamicResource PopupTextSecondary}"/>
                                                             <TextBlock Text="{Binding City, StringFormat=' - {0}'}"
-                                                                     FontSize="10"
-                                                                     Foreground="#484F58"
+                                                                     FontSize="{DynamicResource FontSizeXS}"
+                                                                     Foreground="{DynamicResource TextMuted}"
                                                                      IsVisible="{Binding City, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
                                                         </StackPanel>
                                                     </StackPanel>
 
                                                     <!-- Percentage bar -->
-                                                    <Border Grid.Column="1" Height="8" Background="#21262D" CornerRadius="4" Margin="8,0">
-                                                        <Border Background="#3FB950" CornerRadius="4" HorizontalAlignment="Left"
+                                                    <Border Grid.Column="1" Height="8" Background="{DynamicResource PopupBgTertiary}" CornerRadius="4" Margin="8,0">
+                                                        <Border Background="{DynamicResource PopupSuccess}" CornerRadius="4" HorizontalAlignment="Left"
                                                                 Width="{Binding Percentage}"/>
                                                     </Border>
 
                                                     <!-- Percentage value -->
                                                     <TextBlock Grid.Column="2"
                                                              Text="{Binding Percentage, StringFormat='{}{0:F1}%'}"
-                                                             FontSize="11"
-                                                             Foreground="#8B949E"
+                                                             FontSize="{DynamicResource FontSizeSmall}"
+                                                             Foreground="{DynamicResource PopupTextSecondary}"
                                                              HorizontalAlignment="Right"/>
                                                 </Grid>
 
@@ -277,11 +278,11 @@
                                                 <Grid ColumnDefinitions="*,Auto">
                                                     <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                                                         <TextBlock Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}"
-                                                                 FontSize="10"
-                                                                 Foreground="#8B949E"/>
+                                                                 FontSize="{DynamicResource FontSizeXS}"
+                                                                 Foreground="{DynamicResource PopupTextSecondary}"/>
                                                         <TextBlock Text="{Binding DisplayBytes}"
-                                                                 FontSize="10"
-                                                                 Foreground="#8B949E"/>
+                                                                 FontSize="{DynamicResource FontSizeXS}"
+                                                                 Foreground="{DynamicResource PopupTextSecondary}"/>
                                                     </StackPanel>
                                                 </Grid>
                                             </StackPanel>

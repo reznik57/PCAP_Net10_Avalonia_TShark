@@ -8,21 +8,21 @@
              x:DataType="vm:ThreatsDrillDownViewModel"
              IsVisible="{Binding IsVisible}">
 
-    <Border Background="#0D1117" BorderBrush="#30363D" BorderThickness="1"
+    <Border Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource BackgroundElevated}" BorderThickness="1"
             CornerRadius="8" Padding="0" MinWidth="650" MaxWidth="800" MaxHeight="700">
         <Grid RowDefinitions="Auto,*,Auto">
             <!-- Header -->
-            <Border Grid.Row="0" Background="#161B22" CornerRadius="8,8,0,0" Padding="16">
+            <Border Grid.Row="0" Background="{DynamicResource BackgroundPanel}" CornerRadius="8,8,0,0" Padding="16">
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <!-- Severity Badge -->
                     <Border Grid.Column="0" Background="{Binding SeverityColor}" CornerRadius="4" Padding="8,4" VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Severity}" FontSize="11" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock Text="{Binding Severity}" FontSize="{StaticResource FontSizeSmall}" FontWeight="Bold" Foreground="White"/>
                     </Border>
 
                     <!-- Title -->
                     <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                        <TextBlock Text="{Binding ThreatName}" FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC" TextTrimming="CharacterEllipsis"/>
-                        <TextBlock Text="{Binding Category}" FontSize="11" Foreground="#8B949E"/>
+                        <TextBlock Text="{Binding ThreatName}" FontSize="{StaticResource FontSizeLarge}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding Category}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </StackPanel>
 
                     <!-- Close Button -->
@@ -36,35 +36,35 @@
                 <TabItem Header="📊 Timeline">
                     <ScrollViewer Padding="16">
                         <StackPanel Spacing="16">
-                            <TextBlock Text="THREAT TIMELINE" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
+                            <TextBlock Text="THREAT TIMELINE" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
 
                             <!-- Threat Info Summary -->
-                            <Border Background="#161B22" CornerRadius="4" Padding="12">
+                            <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="4" Padding="12">
                                 <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto">
                                     <StackPanel Grid.Row="0" Grid.Column="0">
-                                        <TextBlock Text="First Detected" FontSize="10" Foreground="#8B949E"/>
-                                        <TextBlock Text="{Binding FirstSeen, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" FontSize="12" Foreground="#F0F6FC"/>
+                                        <TextBlock Text="First Detected" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding FirstSeen, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Center">
-                                        <TextBlock Text="Last Detected" FontSize="10" Foreground="#8B949E"/>
-                                        <TextBlock Text="{Binding LastSeen, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" FontSize="12" Foreground="#F0F6FC"/>
+                                        <TextBlock Text="Last Detected" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding LastSeen, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="0" Grid.Column="2" HorizontalAlignment="Right">
-                                        <TextBlock Text="Occurrences" FontSize="10" Foreground="#8B949E"/>
-                                        <TextBlock Text="{Binding OccurrenceCount, StringFormat='{}{0:N0}'}" FontSize="12" Foreground="#F0F6FC" FontWeight="SemiBold"/>
+                                        <TextBlock Text="Occurrences" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding OccurrenceCount, StringFormat='{}{0:N0}'}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold"/>
                                     </StackPanel>
                                     <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="0,12,0,0">
-                                        <TextBlock Text="Affected IPs" FontSize="10" Foreground="#8B949E"/>
-                                        <TextBlock Text="{Binding AffectedIPCount, StringFormat='{}{0:N0} unique IP addresses'}" FontSize="12" Foreground="#58A6FF"/>
+                                        <TextBlock Text="Affected IPs" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        <TextBlock Text="{Binding AffectedIPCount, StringFormat='{}{0:N0} unique IP addresses'}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource SlackInfo}"/>
                                     </StackPanel>
                                 </Grid>
                             </Border>
 
                             <!-- Description -->
-                            <Border Background="#161B22" CornerRadius="4" Padding="12">
+                            <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="4" Padding="12">
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="DESCRIPTION" FontSize="10" FontWeight="SemiBold" Foreground="#8B949E"/>
-                                    <TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="12" Foreground="#F0F6FC"/>
+                                    <TextBlock Text="DESCRIPTION" FontSize="{StaticResource FontSizeXS}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                    <TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -76,12 +76,12 @@
                     <Grid RowDefinitions="Auto,*,Auto" Margin="16">
                         <!-- Header -->
                         <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
-                            <TextBlock Text="EVIDENCE PACKETS" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                            <TextBlock Text="{Binding TotalEvidencePackets, StringFormat='({0:N0} total)'}" FontSize="11" Foreground="#6E7681"/>
+                            <TextBlock Text="EVIDENCE PACKETS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            <TextBlock Text="{Binding TotalEvidencePackets, StringFormat='({0:N0} total)'}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}"/>
                         </StackPanel>
 
                         <!-- Packet List -->
-                        <Border Grid.Row="1" Background="#161B22" CornerRadius="4">
+                        <Border Grid.Row="1" Background="{DynamicResource BackgroundPanel}" CornerRadius="4">
                             <DataGrid ItemsSource="{Binding EvidencePackets}"
                                       AutoGenerateColumns="False"
                                       CanUserReorderColumns="True"
@@ -103,8 +103,8 @@
                         <!-- Pagination -->
                         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8" Margin="0,12,0,0">
                             <Button Command="{Binding PreviousEvidencePageCommand}" Content="◀ Prev" Classes="page-btn"/>
-                            <TextBlock Text="{Binding EvidencePacketsPage, StringFormat='Page {0}'}" Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding EvidencePacketsTotalPages, StringFormat='of {0}'}" Foreground="#8B949E" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding EvidencePacketsPage, StringFormat='Page {0}'}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{StaticResource FontSizeBase}" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding EvidencePacketsTotalPages, StringFormat='of {0}'}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{StaticResource FontSizeBase}" VerticalAlignment="Center"/>
                             <Button Command="{Binding NextEvidencePageCommand}" Content="Next ▶" Classes="page-btn"/>
                         </StackPanel>
                     </Grid>
@@ -115,29 +115,29 @@
                     <ScrollViewer Padding="16">
                         <StackPanel Spacing="16">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="RELATED THREATS" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E"/>
-                                <TextBlock Text="{Binding TotalRelatedThreats, StringFormat='({0:N0} found)'}" FontSize="11" Foreground="#6E7681"/>
+                                <TextBlock Text="RELATED THREATS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                <TextBlock Text="{Binding TotalRelatedThreats, StringFormat='({0:N0} found)'}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}"/>
                             </StackPanel>
 
                             <ItemsControl ItemsSource="{Binding RelatedThreatGroups}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="#161B22" CornerRadius="4" Padding="12" Margin="0,0,0,8">
+                                        <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="4" Padding="12" Margin="0,0,0,8">
                                             <StackPanel Spacing="8">
                                                 <!-- Group Header -->
                                                 <Grid ColumnDefinitions="Auto,*,Auto">
-                                                    <Border Grid.Column="0" Background="#21262D" CornerRadius="4" Padding="6,2">
-                                                        <TextBlock Text="{Binding GroupType}" FontSize="10" Foreground="#8B949E"/>
+                                                    <Border Grid.Column="0" Background="{DynamicResource BackgroundCard}" CornerRadius="4" Padding="6,2">
+                                                        <TextBlock Text="{Binding GroupType}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                                     </Border>
-                                                    <TextBlock Grid.Column="1" Text="{Binding GroupValue}" FontSize="12" Foreground="#58A6FF" Margin="8,0" VerticalAlignment="Center"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding ThreatCount, StringFormat='{}{0} threat(s)'}" FontSize="11" Foreground="#6E7681"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding GroupValue}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource SlackInfo}" Margin="8,0" VerticalAlignment="Center"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding ThreatCount, StringFormat='{}{0} threat(s)'}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}"/>
                                                 </Grid>
 
                                                 <!-- Threat Names -->
                                                 <ItemsControl ItemsSource="{Binding ThreatNames}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate>
-                                                            <TextBlock Text="{Binding}" FontSize="11" Foreground="#F0F6FC" Margin="12,2,0,0"/>
+                                                            <TextBlock Text="{Binding}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="12,2,0,0"/>
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
@@ -153,24 +153,24 @@
                 <!-- Tab 4: IOCs -->
                 <TabItem Header="🎯 IOCs">
                     <Grid RowDefinitions="Auto,*,Auto" Margin="16">
-                        <TextBlock Grid.Row="0" Text="INDICATORS OF COMPROMISE" FontSize="11" FontWeight="SemiBold" Foreground="#8B949E" Margin="0,0,0,12"/>
+                        <TextBlock Grid.Row="0" Text="INDICATORS OF COMPROMISE" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,12"/>
 
                         <ScrollViewer Grid.Row="1">
                             <ItemsControl ItemsSource="{Binding NetworkIOCs}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Background="#161B22" CornerRadius="4" Padding="12" Margin="0,0,0,8">
+                                        <Border Background="{DynamicResource BackgroundPanel}" CornerRadius="4" Padding="12" Margin="0,0,0,8">
                                             <Grid ColumnDefinitions="Auto,*,Auto">
                                                 <!-- Type Badge -->
-                                                <Border Grid.Column="0" Background="#21262D" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding Type}" FontSize="10" Foreground="#8B949E"/>
+                                                <Border Grid.Column="0" Background="{DynamicResource BackgroundCard}" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Type}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                                                 </Border>
 
                                                 <!-- Value -->
-                                                <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="12" Foreground="#F0F6FC" Margin="8,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextPrimaryBrush}" Margin="8,0" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 
                                                 <!-- Context -->
-                                                <TextBlock Grid.Column="2" Text="{Binding Context}" FontSize="10" Foreground="#6E7681" VerticalAlignment="Center"/>
+                                                <TextBlock Grid.Column="2" Text="{Binding Context}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>
@@ -189,12 +189,12 @@
                         <StackPanel Spacing="16">
                             <!-- Vulnerabilities -->
                             <StackPanel Spacing="8" IsVisible="{Binding Vulnerabilities.Count}">
-                                <TextBlock Text="VULNERABILITIES" FontSize="11" FontWeight="SemiBold" Foreground="#F85149"/>
+                                <TextBlock Text="VULNERABILITIES" FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource SlackDanger}"/>
                                 <ItemsControl ItemsSource="{Binding Vulnerabilities}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="#3D2020" CornerRadius="4" Padding="8" Margin="0,0,0,4">
-                                                <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="12" Foreground="#F8D7DA"/>
+                                            <Border Background="{DynamicResource AlertDangerBg}" CornerRadius="4" Padding="8" Margin="0,0,0,4">
+                                                <TextBlock Text="{Binding}" TextWrapping="Wrap" FontSize="{DynamicResource FontSizeBase}" Foreground="{DynamicResource AlertDangerText}"/>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -203,21 +203,21 @@
 
                             <!-- Mitigations -->
                             <StackPanel Spacing="8">
-                                <TextBlock Text="RECOMMENDED MITIGATIONS" FontSize="11" FontWeight="SemiBold" Foreground="#3FB950"/>
+                                <TextBlock Text="RECOMMENDED MITIGATIONS" FontSize="{DynamicResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource SlackSuccess}"/>
                                 <ItemsControl ItemsSource="{Binding Mitigations}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="#1B3D2B" CornerRadius="4" Padding="12" Margin="0,0,0,8">
+                                            <Border Background="{DynamicResource AlertSuccessBg}" CornerRadius="4" Padding="12" Margin="0,0,0,8">
                                                 <Grid ColumnDefinitions="Auto,*">
                                                     <!-- Priority Badge -->
                                                     <Border Grid.Column="0" Background="{Binding PriorityColor}" CornerRadius="4" Padding="6,2" VerticalAlignment="Top">
-                                                        <TextBlock Text="{Binding Priority}" FontSize="9" FontWeight="Bold" Foreground="White"/>
+                                                        <TextBlock Text="{Binding Priority}" FontSize="{DynamicResource FontSizeXS}" FontWeight="Bold" Foreground="White"/>
                                                     </Border>
 
                                                     <!-- Mitigation Details -->
                                                     <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                                                        <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" Foreground="#D4EDDA"/>
-                                                        <TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="11" Foreground="#A3CFB8" Margin="0,4,0,0"/>
+                                                        <TextBlock Text="{Binding Title}" FontSize="{DynamicResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource AlertSuccessText}"/>
+                                                        <TextBlock Text="{Binding Description}" TextWrapping="Wrap" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource AlertSuccessTextMuted}" Margin="0,4,0,0"/>
                                                     </StackPanel>
                                                 </Grid>
                                             </Border>
@@ -231,7 +231,7 @@
             </TabControl>
 
             <!-- Footer Actions -->
-            <Border Grid.Row="2" Background="#161B22" CornerRadius="0,0,8,8" Padding="16">
+            <Border Grid.Row="2" Background="{DynamicResource BackgroundPanel}" CornerRadius="0,0,8,8" Padding="16">
                 <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                     <Button Command="{Binding CopyReportCommand}" Classes="action-btn" Content="📋 Copy Report"/>
                     <Button Command="{Binding ViewInPacketAnalysisCommand}" Classes="action-btn primary" Content="📦 View in Packet Analysis"/>
@@ -244,46 +244,46 @@
         <Style Selector="Button.close-btn">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
             <Setter Property="FontSize" Value="16"/>
             <Setter Property="Padding" Value="4"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style Selector="Button.close-btn:pointerover">
-            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         </Style>
         <Style Selector="Button.page-btn">
-            <Setter Property="Background" Value="#21262D"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundCard}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BackgroundElevated}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="Padding" Value="8,4"/>
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style Selector="Button.page-btn:pointerover">
-            <Setter Property="Background" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundElevated}"/>
         </Style>
         <Style Selector="Button.action-btn">
-            <Setter Property="Background" Value="#21262D"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundCard}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BackgroundElevated}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Cursor" Value="Hand"/>
         </Style>
         <Style Selector="Button.action-btn:pointerover">
-            <Setter Property="Background" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundElevated}"/>
         </Style>
         <Style Selector="Button.action-btn.primary">
-            <Setter Property="Background" Value="#238636"/>
-            <Setter Property="BorderBrush" Value="#2EA043"/>
+            <Setter Property="Background" Value="{DynamicResource SlackSuccess}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SlackSuccess}"/>
         </Style>
         <Style Selector="Button.action-btn.primary:pointerover">
-            <Setter Property="Background" Value="#2EA043"/>
+            <Setter Property="Background" Value="{DynamicResource SlackSuccess}"/>
         </Style>
         <Style Selector="TabItem">
             <Setter Property="FontSize" Value="12"/>
@@ -291,12 +291,12 @@
         </Style>
         <Style Selector="DataGrid">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="BorderThickness" Value="0"/>
         </Style>
         <Style Selector="DataGridColumnHeader">
-            <Setter Property="Background" Value="#21262D"/>
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundCard}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="Padding" Value="8,6"/>
         </Style>

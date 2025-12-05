@@ -20,15 +20,21 @@ namespace PCAPAnalyzer.Core.Services.Statistics
         {
             try
             {
+                var totalPackets = packets.Count;
                 var protocolGroups = packets
                     .GroupBy(p => p.Protocol)
-                    .Select(g => new ProtocolStatistics
+                    .Select(g =>
                     {
-                        Protocol = g.Key.ToString(),
-                        PacketCount = g.Count(),
-                        ByteCount = g.Sum(static p => (long)p.Length),
-                        Percentage = (double)g.Count() / packets.Count * 100,
-                        Color = protocolColors.TryGetValue(g.Key.ToString(), out var color) ? color : protocolColors.GetValueOrDefault("Other", "#808080")
+                        var groupList = g.ToList();
+                        var packetCount = groupList.Count;
+                        return new ProtocolStatistics
+                        {
+                            Protocol = g.Key.ToString(),
+                            PacketCount = packetCount,
+                            ByteCount = groupList.Sum(static p => (long)p.Length),
+                            Percentage = totalPackets > 0 ? (double)packetCount / totalPackets * 100 : 0,
+                            Color = protocolColors.TryGetValue(g.Key.ToString(), out var color) ? color : protocolColors.GetValueOrDefault("Other", "#808080")
+                        };
                     })
                     .OrderByDescending(p => p.PacketCount)
                     .Take(10)
@@ -36,26 +42,33 @@ namespace PCAPAnalyzer.Core.Services.Statistics
 
                 return protocolGroups;
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                DebugLogger.Log($"[StatisticsCalculator] Error calculating protocol statistics: {ex.Message}");
+                DebugLogger.Log($"[{nameof(StatisticsCalculator)}.{nameof(CalculateProtocolStatistics)}] Error: {ex.Message}");
                 return new Dictionary<string, ProtocolStatistics>();
             }
         }
 
         public List<EndpointStatistics> CalculateTopEndpoints(List<PacketInfo> packets, bool isSource)
         {
+            var totalPackets = packets.Count;
             var endpoints = packets
                 .GroupBy(p => isSource ? p.SourceIP : p.DestinationIP)
-                .Select(g => new EndpointStatistics
+                .Select(g =>
                 {
-                    Address = g.Key,
-                    PacketCount = g.Count(),
-                    ByteCount = g.Sum(static p => (long)p.Length),
-                    Percentage = (double)g.Count() / packets.Count * 100,
-                    ProtocolBreakdown = g.GroupBy(p => p.Protocol)
-                        .ToDictionary(pg => pg.Key.ToString(), pg => (long)pg.Count()),
-                    IsInternal = IsInternalIP(g.Key)
+                    var groupList = g.ToList();
+                    var packetCount = groupList.Count;
+                    return new EndpointStatistics
+                    {
+                        Address = g.Key,
+                        PacketCount = packetCount,
+                        ByteCount = groupList.Sum(static p => (long)p.Length),
+                        Percentage = totalPackets > 0 ? (double)packetCount / totalPackets * 100 : 0,
+                        ProtocolBreakdown = groupList
+                            .GroupBy(p => p.Protocol)
+                            .ToDictionary(pg => pg.Key.ToString(), pg => (long)pg.Count()),
+                        IsInternal = IsInternalIP(g.Key)
+                    };
                 })
                 .OrderByDescending(e => e.PacketCount)
                 .Take(30)
@@ -76,17 +89,21 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                     DstPort = string.Compare(p.SourceIP, p.DestinationIP, StringComparison.Ordinal) < 0 ? p.DestinationPort : p.SourcePort,
                     p.Protocol
                 })
-                .Select(g => new ConversationStatistics
+                .Select(g =>
                 {
-                    SourceAddress = g.Key.Source,
-                    DestinationAddress = g.Key.Destination,
-                    SourcePort = g.Key.SrcPort,
-                    DestinationPort = g.Key.DstPort,
-                    Protocol = g.Key.Protocol.ToString(),
-                    PacketCount = g.Count(),
-                    ByteCount = g.Sum(static p => (long)p.Length),
-                    StartTime = g.Min(p => p.Timestamp),
-                    EndTime = g.Max(p => p.Timestamp)
+                    var groupList = g.ToList();
+                    return new ConversationStatistics
+                    {
+                        SourceAddress = g.Key.Source,
+                        DestinationAddress = g.Key.Destination,
+                        SourcePort = g.Key.SrcPort,
+                        DestinationPort = g.Key.DstPort,
+                        Protocol = g.Key.Protocol.ToString(),
+                        PacketCount = groupList.Count,
+                        ByteCount = groupList.Sum(static p => (long)p.Length),
+                        StartTime = groupList.Min(p => p.Timestamp),
+                        EndTime = groupList.Max(p => p.Timestamp)
+                    };
                 })
                 .OrderByDescending(c => c.PacketCount)
                 .ToList();
@@ -112,30 +129,29 @@ namespace PCAPAnalyzer.Core.Services.Statistics
 
             foreach (var p in packets)
             {
-                var seenInPacket = new HashSet<(int, Protocol)>();
                 var hasPortData = false;
+                var srcKey = (p.SourcePort, p.Protocol);
 
                 if (p.SourcePort > 0)
                 {
                     hasPortData = true;
-                    var key = (p.SourcePort, p.Protocol);
-                    seenInPacket.Add(key);
-                    if (portStats.TryGetValue(key, out var stats))
-                        portStats[key] = (stats.Count + 1, stats.Bytes + p.Length);
+                    if (portStats.TryGetValue(srcKey, out var stats))
+                        portStats[srcKey] = (stats.Count + 1, stats.Bytes + p.Length);
                     else
-                        portStats[key] = (1, p.Length);
+                        portStats[srcKey] = (1, p.Length);
                 }
 
                 if (p.DestinationPort > 0)
                 {
                     hasPortData = true;
-                    var key = (p.DestinationPort, p.Protocol);
-                    if (!seenInPacket.Contains(key))
+                    var dstKey = (p.DestinationPort, p.Protocol);
+                    // Avoid double-counting when src and dst ports are the same
+                    if (p.SourcePort != p.DestinationPort)
                     {
-                        if (portStats.TryGetValue(key, out var stats))
-                            portStats[key] = (stats.Count + 1, stats.Bytes + p.Length);
+                        if (portStats.TryGetValue(dstKey, out var stats))
+                            portStats[dstKey] = (stats.Count + 1, stats.Bytes + p.Length);
                         else
-                            portStats[key] = (1, p.Length);
+                            portStats[dstKey] = (1, p.Length);
                     }
                 }
 

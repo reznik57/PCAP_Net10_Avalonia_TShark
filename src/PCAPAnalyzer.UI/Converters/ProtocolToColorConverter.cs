@@ -4,6 +4,7 @@ using Avalonia.Data.Converters;
 using Avalonia.Media;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Security;
+using PCAPAnalyzer.UI.Utilities;
 using PCAPAnalyzer.UI.ViewModels.Components;
 
 namespace PCAPAnalyzer.UI.Converters;
@@ -11,27 +12,13 @@ namespace PCAPAnalyzer.UI.Converters;
 /// <summary>
 /// Converts protocol information to a color for visual identification in packet rows.
 /// Uses L7 protocol if available, falls back to L4 protocol.
+/// Colors are resolved from theme resources via ThemeColorHelper.
 /// </summary>
 public class ProtocolToColorConverter : IMultiValueConverter
 {
-    // Protocol color mappings (based on Wireshark-style coloring)
-    private static readonly IBrush TcpBrush = new SolidColorBrush(Color.Parse("#3FB950"));      // Green
-    private static readonly IBrush UdpBrush = new SolidColorBrush(Color.Parse("#58A6FF"));      // Blue
-    private static readonly IBrush IcmpBrush = new SolidColorBrush(Color.Parse("#F78166"));     // Orange-red
-    private static readonly IBrush HttpBrush = new SolidColorBrush(Color.Parse("#A371F7"));     // Purple
-    private static readonly IBrush HttpsBrush = new SolidColorBrush(Color.Parse("#8B5CF6"));    // Deep purple
-    private static readonly IBrush TlsBrush = new SolidColorBrush(Color.Parse("#C69026"));      // Gold
-    private static readonly IBrush DnsBrush = new SolidColorBrush(Color.Parse("#FFA657"));      // Orange
-    private static readonly IBrush SshBrush = new SolidColorBrush(Color.Parse("#56D4DD"));      // Teal
-    private static readonly IBrush FtpBrush = new SolidColorBrush(Color.Parse("#FF7B72"));      // Red
-    private static readonly IBrush SmtpBrush = new SolidColorBrush(Color.Parse("#D29922"));     // Yellow
-    private static readonly IBrush SipBrush = new SolidColorBrush(Color.Parse("#F97583"));      // Pink
-    private static readonly IBrush RtpBrush = new SolidColorBrush(Color.Parse("#FFAB70"));      // Light orange
-    private static readonly IBrush DefaultBrush = new SolidColorBrush(Color.Parse("#6E7681"));  // Gray
-
     public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (values.Count < 2) return DefaultBrush;
+        if (values.Count < 2) return ThemeColorHelper.GetProtocolBrush("unknown");
 
         var l4Protocol = values[0] as Protocol? ?? Protocol.Unknown;
         var l7Protocol = values[1] as string;
@@ -41,29 +28,36 @@ public class ProtocolToColorConverter : IMultiValueConverter
         {
             var l7Upper = l7Protocol.ToUpperInvariant();
 
-            if (l7Upper.Contains("HTTP/", StringComparison.Ordinal) || l7Upper == "HTTP") return HttpBrush;
-            if (l7Upper == "HTTPS" || l7Upper.Contains("TLS", StringComparison.Ordinal)) return HttpsBrush;
-            if (l7Upper == "TLS" || l7Upper == "SSL") return TlsBrush;
-            if (l7Upper == "DNS" || l7Upper == "MDNS") return DnsBrush;
-            if (l7Upper == "SSH") return SshBrush;
-            if (l7Upper.StartsWith("FTP", StringComparison.Ordinal)) return FtpBrush;
-            if (l7Upper == "SMTP" || l7Upper == "IMAP" || l7Upper == "POP3") return SmtpBrush;
-            if (l7Upper == "SIP") return SipBrush;
-            if (l7Upper == "RTP" || l7Upper == "RTCP") return RtpBrush;
-            if (l7Upper == "LDAP") return new SolidColorBrush(Color.Parse("#79C0FF"));
-            if (l7Upper == "SMB" || l7Upper == "SMB2") return new SolidColorBrush(Color.Parse("#7EE787"));
-            if (l7Upper == "NTP") return new SolidColorBrush(Color.Parse("#A5D6FF"));
-            if (l7Upper == "DHCP") return new SolidColorBrush(Color.Parse("#FFC058"));
+            if (l7Upper.Contains("HTTP/", StringComparison.Ordinal) || l7Upper == "HTTP")
+                return ThemeColorHelper.GetProtocolBrush("HTTP");
+            if (l7Upper == "HTTPS" || l7Upper.Contains("TLS", StringComparison.Ordinal))
+                return ThemeColorHelper.GetProtocolBrush("HTTPS");
+            if (l7Upper == "TLS" || l7Upper == "SSL")
+                return ThemeColorHelper.GetProtocolBrush("TLS");
+            if (l7Upper == "DNS" || l7Upper == "MDNS")
+                return ThemeColorHelper.GetProtocolBrush("DNS");
+            if (l7Upper == "SSH")
+                return ThemeColorHelper.GetProtocolBrush("SSH");
+            if (l7Upper.StartsWith("FTP", StringComparison.Ordinal))
+                return ThemeColorHelper.GetProtocolBrush("FTP");
+            if (l7Upper == "SMTP" || l7Upper == "IMAP" || l7Upper == "POP3")
+                return ThemeColorHelper.GetProtocolBrush("SMTP");
+            if (l7Upper == "SIP")
+                return ThemeColorHelper.GetProtocolBrush("SIP");
+            if (l7Upper == "RTP" || l7Upper == "RTCP")
+                return ThemeColorHelper.GetProtocolBrush("RTP");
+            if (l7Upper == "LDAP")
+                return ThemeColorHelper.GetProtocolBrush("LDAP");
+            if (l7Upper == "SMB" || l7Upper == "SMB2")
+                return ThemeColorHelper.GetProtocolBrush("SMB");
+            if (l7Upper == "NTP")
+                return ThemeColorHelper.GetProtocolBrush("NTP");
+            if (l7Upper == "DHCP")
+                return ThemeColorHelper.GetProtocolBrush("DHCP");
         }
 
         // Fall back to L4 protocol
-        return l4Protocol switch
-        {
-            Protocol.TCP => TcpBrush,
-            Protocol.UDP => UdpBrush,
-            Protocol.ICMP => IcmpBrush,
-            _ => DefaultBrush
-        };
+        return ThemeColorHelper.GetProtocolBrush(l4Protocol.ToString());
     }
 }
 
@@ -76,32 +70,16 @@ public class SimpleProtocolToColorConverter : IValueConverter
     {
         if (value is Protocol protocol)
         {
-            return protocol switch
-            {
-                Protocol.TCP => new SolidColorBrush(Color.Parse("#3FB950")),
-                Protocol.UDP => new SolidColorBrush(Color.Parse("#58A6FF")),
-                Protocol.ICMP => new SolidColorBrush(Color.Parse("#F78166")),
-                _ => new SolidColorBrush(Color.Parse("#6E7681"))
-            };
+            return ThemeColorHelper.GetProtocolBrush(protocol.ToString());
         }
 
         // Handle string protocol names
         if (value is string protocolStr)
         {
-            return protocolStr.ToUpperInvariant() switch
-            {
-                "TCP" => new SolidColorBrush(Color.Parse("#3FB950")),
-                "UDP" => new SolidColorBrush(Color.Parse("#58A6FF")),
-                "ICMP" => new SolidColorBrush(Color.Parse("#F78166")),
-                "HTTP" => new SolidColorBrush(Color.Parse("#A371F7")),
-                "HTTPS" or "TLS" or "SSL" => new SolidColorBrush(Color.Parse("#8B5CF6")),
-                "DNS" => new SolidColorBrush(Color.Parse("#FFA657")),
-                "SSH" => new SolidColorBrush(Color.Parse("#56D4DD")),
-                _ => new SolidColorBrush(Color.Parse("#6E7681"))
-            };
+            return ThemeColorHelper.GetProtocolBrush(protocolStr);
         }
 
-        return new SolidColorBrush(Color.Parse("#6E7681"));
+        return ThemeColorHelper.GetProtocolBrush("unknown");
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
@@ -115,7 +93,7 @@ public class SimpleProtocolToColorConverter : IValueConverter
 public class StreamHighlightConverter : IMultiValueConverter
 {
     private static readonly IBrush TransparentBrush = Brushes.Transparent;
-    private static readonly IBrush StreamHighlightBrush = new SolidColorBrush(Color.Parse("#1A3B82F6")); // Subtle blue
+    private static IBrush StreamHighlightBrush => ThemeColorHelper.StreamHighlightBrush;
 
     public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -141,7 +119,7 @@ public class StreamHighlightConverter : IMultiValueConverter
 public class SelectedPacketConverter : IMultiValueConverter
 {
     private static readonly IBrush TransparentBrush = Brushes.Transparent;
-    private static readonly IBrush SelectedBrush = new SolidColorBrush(Color.Parse("#333B82F6")); // Blue for selected
+    private static IBrush SelectedBrush => ThemeColorHelper.SelectionHighlightBrush;
 
     public object? Convert(IList<object?> values, Type targetType, object? parameter, CultureInfo culture)
     {
@@ -279,15 +257,9 @@ public class PortToServiceWithRiskConverter : IValueConverter
 /// </summary>
 public class PortRiskToColorConverter : IValueConverter
 {
-    private static readonly IBrush LowRiskBrush = new SolidColorBrush(Color.Parse("#4CAF50"));      // Green
-    private static readonly IBrush MediumRiskBrush = new SolidColorBrush(Color.Parse("#FFA726"));   // Orange
-    private static readonly IBrush HighRiskBrush = new SolidColorBrush(Color.Parse("#EF5350"));     // Red
-    private static readonly IBrush CriticalRiskBrush = new SolidColorBrush(Color.Parse("#B71C1C")); // Dark Red
-    private static readonly IBrush UnknownBrush = new SolidColorBrush(Color.Parse("#6E7681"));      // Gray
-
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is not PacketInfo packet) return UnknownBrush;
+        if (value is not PacketInfo packet) return ThemeColorHelper.GetSecurityRatingBrush("unknown");
 
         // Use the same port selection logic
         var isTcp = packet.Protocol == Protocol.TCP;
@@ -299,18 +271,18 @@ public class PortRiskToColorConverter : IValueConverter
                     ? packet.DestinationPort
                     : packet.SourcePort;
 
-        if (port == 0) return UnknownBrush;
+        if (port == 0) return ThemeColorHelper.GetSecurityRatingBrush("unknown");
 
         var portInfo = PortDatabase.GetPortInfo(port, isTcp);
-        if (!portInfo.HasValue) return UnknownBrush;
+        if (!portInfo.HasValue) return ThemeColorHelper.GetSecurityRatingBrush("unknown");
 
         return portInfo.Value.Risk switch
         {
-            PortDatabase.PortRisk.Low => LowRiskBrush,
-            PortDatabase.PortRisk.Medium => MediumRiskBrush,
-            PortDatabase.PortRisk.High => HighRiskBrush,
-            PortDatabase.PortRisk.Critical => CriticalRiskBrush,
-            _ => UnknownBrush
+            PortDatabase.PortRisk.Low => ThemeColorHelper.GetSecurityRatingBrush("low"),
+            PortDatabase.PortRisk.Medium => ThemeColorHelper.GetSecurityRatingBrush("medium"),
+            PortDatabase.PortRisk.High => ThemeColorHelper.GetSecurityRatingBrush("high"),
+            PortDatabase.PortRisk.Critical => ThemeColorHelper.GetSecurityRatingBrush("critical"),
+            _ => ThemeColorHelper.GetSecurityRatingBrush("unknown")
         };
     }
 

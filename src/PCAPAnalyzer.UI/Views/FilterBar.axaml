@@ -6,7 +6,7 @@
              xmlns:converters="using:PCAPAnalyzer.UI.Converters"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="180"
              x:Class="PCAPAnalyzer.UI.Views.FilterBar"
-             x:DataType="vm:EnhancedFilterViewModel">
+             x:DataType="vm:PacketFilterViewModel">
 
     <UserControl.Resources>
         <converters:ApplyFilterButtonTextConverter x:Key="ApplyFilterButtonTextConverter"/>
@@ -16,9 +16,9 @@
         <ControlTemplate x:Key="FilterChipWithIcon" x:DataType="ContentControl">
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <Border Background="{Binding Tag}" CornerRadius="10" Width="20" Height="20">
-                    <TextBlock Text="{Binding Content}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding Content}" FontSize="{StaticResource FontSizeSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Border>
-                <TextBlock Text="{TemplateBinding Content}" FontSize="12"/>
+                <TextBlock Text="{TemplateBinding Content}" FontSize="{StaticResource FontSizeBase}"/>
             </StackPanel>
         </ControlTemplate>
     </UserControl.Resources>

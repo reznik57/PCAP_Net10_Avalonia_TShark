@@ -278,4 +278,103 @@ public partial class CountryDataViewModel : ObservableObject
         _countryIncomingIndices.Clear();
         DebugLogger.Log("[CountryDataViewModel] Indices cleared");
     }
+
+    // Timeline computation cache
+    private DateTime? _captureStartTime;
+    private DateTime? _captureEndTime;
+
+    /// <summary>
+    /// Gets timeline buckets for a country (20 buckets across capture duration).
+    /// Each bucket contains the packet count for that time slice.
+    /// </summary>
+    public IReadOnlyList<double>? GetCountryTimelineBuckets(string countryCode, CountryTableContext context)
+    {
+        if (_allPackets == null || _allPackets.Count == 0 || string.IsNullOrWhiteSpace(countryCode))
+            return null;
+
+        // Get packet indices for this country
+        var indices = context switch
+        {
+            CountryTableContext.SourcePackets or CountryTableContext.SourceBytes => GetCountryOutgoingIndices(countryCode),
+            CountryTableContext.DestinationPackets or CountryTableContext.DestinationBytes => GetCountryIncomingIndices(countryCode),
+            _ => GetCountryPacketIndices(countryCode)
+        };
+
+        if (indices == null || indices.Count == 0)
+            return null;
+
+        // Compute capture time range (cache for performance)
+        if (_captureStartTime == null || _captureEndTime == null)
+        {
+            ComputeCaptureTimeRange();
+        }
+
+        if (_captureStartTime == null || _captureEndTime == null || _captureStartTime >= _captureEndTime)
+            return null;
+
+        var startTime = _captureStartTime.Value;
+        var endTime = _captureEndTime.Value;
+        var duration = endTime - startTime;
+
+        const int bucketCount = 20;
+        var buckets = new double[bucketCount];
+        var bucketDuration = duration.TotalSeconds / bucketCount;
+
+        if (bucketDuration <= 0)
+        {
+            // All packets at same time - put all in first bucket
+            buckets[0] = indices.Count;
+            return buckets;
+        }
+
+        // Bucket the packets by timestamp
+        foreach (var index in indices)
+        {
+            if (index >= _allPackets.Count) continue;
+            var packet = _allPackets[index];
+            var timestamp = packet.Timestamp;
+
+            var secondsFromStart = (timestamp - startTime).TotalSeconds;
+            var bucketIndex = (int)(secondsFromStart / bucketDuration);
+            bucketIndex = Math.Clamp(bucketIndex, 0, bucketCount - 1);
+
+            buckets[bucketIndex]++;
+        }
+
+        return buckets;
+    }
+
+    /// <summary>
+    /// Computes and caches the capture time range
+    /// </summary>
+    private void ComputeCaptureTimeRange()
+    {
+        if (_allPackets == null || _allPackets.Count == 0)
+            return;
+
+        DateTime minTime = DateTime.MaxValue;
+        DateTime maxTime = DateTime.MinValue;
+
+        foreach (var packet in _allPackets)
+        {
+            if (packet.Timestamp < minTime) minTime = packet.Timestamp;
+            if (packet.Timestamp > maxTime) maxTime = packet.Timestamp;
+        }
+
+        if (minTime < DateTime.MaxValue && maxTime > DateTime.MinValue)
+        {
+            _captureStartTime = minTime;
+            _captureEndTime = maxTime;
+            DebugLogger.Log($"[CountryDataViewModel] Capture time range: {minTime:HH:mm:ss} - {maxTime:HH:mm:ss} ({(maxTime - minTime).TotalSeconds:F1}s)");
+        }
+    }
+
+    /// <summary>
+    /// Invalidates cached timeline data (call when packets change)
+    /// </summary>
+    public void InvalidateTimelineCache()
+    {
+        _captureStartTime = null;
+        _captureEndTime = null;
+    }
 }

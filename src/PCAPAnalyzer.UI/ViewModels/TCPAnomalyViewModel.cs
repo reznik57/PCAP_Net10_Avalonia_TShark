@@ -8,16 +8,24 @@ using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels
 {
     public partial class TCPAnomalyViewModel : ObservableObject
     {
+        // Static color references for theme consistency (internal for use by related classes in this file)
+        internal static readonly string ColorCritical = ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444");
+        internal static readonly string ColorHigh = ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B");
+        internal static readonly string ColorMedium = ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6");
+        internal static readonly string ColorLow = ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981");
+        internal static readonly string ColorMuted = ThemeColorHelper.GetColorHex("TextMuted", "#6B7280");
+
         [ObservableProperty] private string id = string.Empty;
         [ObservableProperty] private string type = string.Empty;
         [ObservableProperty] private string description = string.Empty;
         [ObservableProperty] private string severity = string.Empty;
-        [ObservableProperty] private string severityColor = "#6B7280";
+        [ObservableProperty] private string severityColor = ColorMuted;
         [ObservableProperty] private DateTime detectedAt;
         [ObservableProperty] private string sourceEndpoint = string.Empty;
         [ObservableProperty] private string destinationEndpoint = string.Empty;
@@ -59,11 +67,11 @@ namespace PCAPAnalyzer.UI.ViewModels
         {
             return severity switch
             {
-                AnomalySeverity.Critical => "#EF4444",
-                AnomalySeverity.High => "#F59E0B",
-                AnomalySeverity.Medium => "#3B82F6",
-                AnomalySeverity.Low => "#10B981",
-                _ => "#6B7280"
+                AnomalySeverity.Critical => ColorCritical,
+                AnomalySeverity.High => ColorHigh,
+                AnomalySeverity.Medium => ColorMedium,
+                AnomalySeverity.Low => ColorLow,
+                _ => ColorMuted
             };
         }
     }
@@ -100,9 +108,9 @@ namespace PCAPAnalyzer.UI.ViewModels
             Protocol = port.Protocol;
             ServiceName = port.ServiceName;
             PacketCount = port.PacketCount;
-            PacketCountFormatted = NumberFormatter.FormatCount(port.PacketCount);
+            PacketCountFormatted = Core.Utilities.NumberFormatter.FormatCount(port.PacketCount);
             ByteCount = port.ByteCount;
-            ByteCountFormatted = NumberFormatter.FormatBytes(port.ByteCount);
+            ByteCountFormatted = Core.Utilities.NumberFormatter.FormatBytes(port.ByteCount);
             UniqueHostCount = port.UniqueHosts.Count;
             Percentage = port.Percentage;
             IsWellKnown = port.IsWellKnown;
@@ -141,7 +149,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         [ObservableProperty] private string throughputFormatted = string.Empty;
         [ObservableProperty] private string duration = string.Empty;
         [ObservableProperty] private string state = string.Empty;
-        [ObservableProperty] private string stateColor = "#6B7280";
+        [ObservableProperty] private string stateColor = TCPAnomalyViewModel.ColorMuted;
         [ObservableProperty] private int anomalyCount;
         [ObservableProperty] private ObservableCollection<TCPAnomalyViewModel> anomalies = new();
 
@@ -159,10 +167,10 @@ namespace PCAPAnalyzer.UI.ViewModels
             SourceEndpoint = stream.SourceEndpoint;
             DestinationEndpoint = stream.DestinationEndpoint;
             TotalPackets = stream.TotalPackets;
-            TotalBytesFormatted = NumberFormatter.FormatBytes(stream.TotalBytes);
+            TotalBytesFormatted = Core.Utilities.NumberFormatter.FormatBytes(stream.TotalBytes);
             RetransmissionRate = stream.RetransmissionRate;
             PacketLossRate = stream.PacketLossRate;
-            ThroughputFormatted = NumberFormatter.FormatBytes((long)stream.Throughput) + "/s";
+            ThroughputFormatted = Core.Utilities.NumberFormatter.FormatBytes((long)stream.Throughput) + "/s";
             Duration = FormatDuration(stream.EndTime - stream.StartTime);
             State = stream.State.ToString();
             StateColor = GetStateColor(stream.State);
@@ -179,16 +187,16 @@ namespace PCAPAnalyzer.UI.ViewModels
             OnViewDetails?.Invoke(this);
         }
 
-        private string GetStateColor(TCPConnectionState state)
+        private static string GetStateColor(TCPConnectionState state)
         {
             return state switch
             {
-                TCPConnectionState.Established => "#10B981",
-                TCPConnectionState.Closed => "#EF4444",
-                TCPConnectionState.Closing => "#F59E0B",
-                TCPConnectionState.SynSent => "#3B82F6",
-                TCPConnectionState.SynReceived => "#3B82F6",
-                _ => "#6B7280"
+                TCPConnectionState.Established => TCPAnomalyViewModel.ColorLow,
+                TCPConnectionState.Closed => TCPAnomalyViewModel.ColorCritical,
+                TCPConnectionState.Closing => TCPAnomalyViewModel.ColorHigh,
+                TCPConnectionState.SynSent => TCPAnomalyViewModel.ColorMedium,
+                TCPConnectionState.SynReceived => TCPAnomalyViewModel.ColorMedium,
+                _ => TCPAnomalyViewModel.ColorMuted
             };
         }
 

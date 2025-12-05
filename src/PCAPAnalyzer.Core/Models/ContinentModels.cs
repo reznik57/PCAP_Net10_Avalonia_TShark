@@ -300,6 +300,70 @@ namespace PCAPAnalyzer.Core.Models
 
             // Note: Antarctica (AQ) is intentionally excluded
         };
+
+        /// <summary>
+        /// Gets the continent code for a country code.
+        /// Returns "Unknown" if not found.
+        /// </summary>
+        public static string GetContinentCode(string countryCode)
+        {
+            if (string.IsNullOrWhiteSpace(countryCode))
+                return "Unknown";
+
+            return CountryToContinentMap.TryGetValue(countryCode.ToUpperInvariant(), out var code)
+                ? code
+                : "Unknown";
+        }
+
+        /// <summary>
+        /// Gets the continent name for a country code.
+        /// Returns "Unknown" if not found.
+        /// </summary>
+        public static string GetContinentName(string countryCode)
+        {
+            var code = GetContinentCode(countryCode);
+            if (code == "Unknown")
+                return "Unknown";
+
+            return Continents.TryGetValue(code, out var continent)
+                ? continent.Name
+                : code; // Return code if continent not defined
+        }
+
+        /// <summary>
+        /// Gets the continent display name for a country code.
+        /// Handles special cases like Internal and IPv6.
+        /// Uses abbreviated names suitable for UI display (e.g., "N. America" instead of "North America").
+        /// </summary>
+        public static string GetContinentDisplayName(string countryCode)
+        {
+            if (string.IsNullOrWhiteSpace(countryCode))
+                return "Unknown";
+
+            var upper = countryCode.ToUpperInvariant();
+
+            // Handle special cases first
+            if (upper is "INT" or "PRIV" or "PRV" or "INTERNAL")
+                return "Internal";
+            if (upper is "IP6" or "IP6_LINK" or "IP6_LOOP" or "IP6_MCAST" or
+                "IP6_GLOBAL" or "IP6_ULA" or "IP6_SITE" or "IP6_ANY" or "IPV6")
+                return "IPv6";
+
+            // Get continent code, then map to abbreviated display name
+            var code = GetContinentCode(countryCode);
+            return code switch
+            {
+                "NA" => "N. America",
+                "SA" => "S. America",
+                "EU" => "Europe",
+                "AS" => "Asia",
+                "AF" => "Africa",
+                "OC" => "Oceania",
+                "INT" => "Internal",
+                "IP6" => "IPv6",
+                _ => Continents.TryGetValue(code, out var continent) ? continent.Name : "Unknown"
+            };
+        }
     }
 }
 

@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.TShark.Configuration;
 
 namespace PCAPAnalyzer.TShark;
 
@@ -95,11 +96,32 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
         _totalPacketsProcessed = 0;
         CreateNewChannel();
 
+        // Reset string pools for new analysis (memory optimization)
+        // Note: Also called by AnalysisOrchestrator, but safe to call twice
+        TSharkParserOptimized.ResetPools();
+
         try
         {
+            DebugLogger.Log($"[ParallelTSharkService] Starting background processing for: {Path.GetFileName(pcapPath)}");
+
             // Start background processing
-            _ = Task.Run(() => ProcessPcapParallelAsync(pcapPath, cancellationToken), cancellationToken);
-            await Task.CompletedTask; // Satisfy async method requirement
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await ProcessPcapParallelAsync(pcapPath, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    DebugLogger.Log($"[ParallelTSharkService] ❌ Background task failed: {ex.Message}");
+                    _packetChannel.Writer.TryComplete(ex);
+                }
+            }, cancellationToken);
+
+            // Give background task time to start before returning
+            await Task.Delay(50, cancellationToken);
+
+            DebugLogger.Log($"[ParallelTSharkService] Background task started, IsAnalyzing={_isAnalyzing}");
             return true;
         }
         catch (Exception ex)
@@ -121,20 +143,22 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
         var sw = Stopwatch.StartNew();
         List<string> chunkFiles = new();
 
+        DebugLogger.Log($"[ParallelTSharkService] ProcessPcapParallelAsync ENTERED for: {Path.GetFileName(pcapPath)}");
+
         try
         {
-            _logger.LogInformation("🚀 Starting PARALLEL PCAP analysis: {File} using {Cores} cores",
-                Path.GetFileName(pcapPath), _maxParallelism);
+            DebugLogger.Log($"[ParallelTSharkService] 🚀 Starting PARALLEL PCAP analysis: {Path.GetFileName(pcapPath)} using {_maxParallelism} cores");
 
             // STEP 1: Split PCAP into chunks (3-5s for 1.1M packets)
+            DebugLogger.Log($"[ParallelTSharkService] Starting editcap split...");
             var splitSw = Stopwatch.StartNew();
             chunkFiles = await SplitPcapAsync(pcapPath, cancellationToken);
             splitSw.Stop();
 
-            _logger.LogInformation("✂️  Split PCAP into {Count} chunks in {Time:F1}s",
-                chunkFiles.Count, splitSw.Elapsed.TotalSeconds);
+            DebugLogger.Log($"[ParallelTSharkService] ✂️  Split PCAP into {chunkFiles.Count} chunks in {splitSw.Elapsed.TotalSeconds:F1}s");
 
             // STEP 2: Process all chunks in parallel (17-25s for 12 chunks)
+            DebugLogger.Log($"[ParallelTSharkService] Starting parallel chunk processing for {chunkFiles.Count} chunks...");
             var processSw = Stopwatch.StartNew();
 
             // Create semaphore to limit parallelism (prevent process explosion)
@@ -143,13 +167,25 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
             // ✅ CRITICAL FIX: Calculate frame offsets for each chunk to avoid duplicate frame numbers
             // editcap creates chunks with frame.number starting from 1 in EACH chunk file
             // We must add (chunkIndex * chunkSize) to each frame number to get absolute frame numbers
+            DebugLogger.Log($"[ParallelTSharkService] Creating {chunkFiles.Count} chunk tasks...");
             var chunkTasks = chunkFiles.Select(async (chunkPath, chunkIndex) =>
             {
+                DebugLogger.Log($"[ParallelTSharkService] Chunk {chunkIndex} task started, waiting for semaphore...");
                 await semaphore.WaitAsync(cancellationToken);
+                DebugLogger.Log($"[ParallelTSharkService] Chunk {chunkIndex} acquired semaphore");
                 try
                 {
                     var frameOffset = chunkIndex * _chunkSize; // Chunk 0: offset=0, Chunk 1: offset=100000, etc.
-                    return await ProcessChunkAsync(chunkPath, chunkIndex, frameOffset, cancellationToken);
+                    DebugLogger.Log($"[ParallelTSharkService] Chunk {chunkIndex} calling ProcessChunkAsync...");
+                    var result = await ProcessChunkAsync(chunkPath, chunkIndex, frameOffset, cancellationToken);
+                    DebugLogger.Log($"[ParallelTSharkService] Chunk {chunkIndex} completed: {result} packets");
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    DebugLogger.Log($"[ParallelTSharkService] Chunk {chunkIndex} FAILED: {ex.GetType().Name}: {ex.Message}");
+                    DebugLogger.Log($"[ParallelTSharkService] Chunk {chunkIndex} stack: {ex.StackTrace}");
+                    return 0;
                 }
                 finally
                 {
@@ -157,33 +193,41 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
                 }
             }).ToArray();
 
+            DebugLogger.Log($"[ParallelTSharkService] Created {chunkTasks.Length} chunk tasks, calling Task.WhenAll...");
             var results = await Task.WhenAll(chunkTasks);
+            DebugLogger.Log($"[ParallelTSharkService] Task.WhenAll completed with {results.Length} results");
             processSw.Stop();
 
             var totalPackets = results.Sum();
             _totalPacketsProcessed = totalPackets;
 
-            _logger.LogInformation("⚡ Parallel processing complete: {Packets:N0} packets in {Time:F1}s ({Rate:F0} pps)",
-                totalPackets, processSw.Elapsed.TotalSeconds, totalPackets / processSw.Elapsed.TotalSeconds);
-
-            _logger.LogInformation("✅ Total analysis time: {Time:F1}s (Split: {Split:F1}s + Process: {Process:F1}s)",
-                sw.Elapsed.TotalSeconds, splitSw.Elapsed.TotalSeconds, processSw.Elapsed.TotalSeconds);
+            DebugLogger.Log($"[ParallelTSharkService] ⚡ Parallel processing complete: {totalPackets:N0} packets in {processSw.Elapsed.TotalSeconds:F1}s");
+            DebugLogger.Log($"[ParallelTSharkService] ✅ Total analysis time: {sw.Elapsed.TotalSeconds:F1}s");
         }
         catch (OperationCanceledException)
         {
-            _logger.LogInformation("Analysis cancelled by user");
+            DebugLogger.Log("[ParallelTSharkService] Analysis cancelled by user");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Error during parallel processing");
+            DebugLogger.Log($"[ParallelTSharkService] ❌ Error during parallel processing: {ex.Message}");
+            DebugLogger.Log($"[ParallelTSharkService] Stack trace: {ex.StackTrace}");
         }
         finally
         {
+            DebugLogger.Log($"[ParallelTSharkService] Entering finally block, processed {_totalPacketsProcessed} packets");
+
             // STEP 3: Cleanup temp files
             await CleanupChunksAsync(chunkFiles);
 
+            // Log pool statistics for memory optimization verification
+            var (ipCount, protoCount) = TSharkParserOptimized.GetPoolStats();
+            DebugLogger.Log($"[ParallelTSharkService] 📊 String pools: {ipCount} unique IPs, {protoCount} unique protocols interned");
+
+            DebugLogger.Log("[ParallelTSharkService] Completing packet channel...");
             _packetChannel.Writer.TryComplete();
             _isAnalyzing = false;
+            DebugLogger.Log("[ParallelTSharkService] ProcessPcapParallelAsync EXITING");
         }
     }
 
@@ -242,21 +286,43 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
     private async Task<int> ProcessChunkAsync(string chunkPath, int chunkIndex, int frameOffset, CancellationToken ct)
     {
         var packetCount = 0;
+        var parseFailures = 0;
         var sw = Stopwatch.StartNew();
 
         try
         {
             var startInfo = BuildTSharkProcessStartInfo(chunkPath);
-            using var process = Process.Start(startInfo)!;
 
-            _logger.LogDebug("Chunk {Index} starting: frameOffset={Offset} (frames {Start}-{End})",
-                chunkIndex, frameOffset, frameOffset + 1, frameOffset + _chunkSize);
+            // Log the command being executed (first chunk only to avoid log spam)
+            if (chunkIndex == 0)
+            {
+                DebugLogger.Log($"[ParallelTSharkService] TShark command: {startInfo.FileName} {startInfo.Arguments?.Substring(0, Math.Min(200, startInfo.Arguments?.Length ?? 0))}...");
+            }
+
+            using var process = Process.Start(startInfo);
+            if (process == null)
+            {
+                DebugLogger.Log($"[ParallelTSharkService] ❌ Chunk {chunkIndex}: Failed to start TShark process!");
+                return 0;
+            }
+
+            DebugLogger.Log($"[ParallelTSharkService] Chunk {chunkIndex} TShark started, reading output...");
 
             // Parse TShark output line-by-line using optimized Span<T> parser
+            var linesRead = 0;
             while (!ct.IsCancellationRequested)
             {
                 var line = await process.StandardOutput.ReadLineAsync(ct);
                 if (line == null) break;
+                linesRead++;
+
+                // Log first line of first chunk to verify format
+                if (chunkIndex == 0 && linesRead == 1)
+                {
+                    var tabCount = line.Count(c => c == '\t');
+                    DebugLogger.Log($"[ParallelTSharkService] First line has {tabCount} tabs, length={line.Length}");
+                    DebugLogger.Log($"[ParallelTSharkService] First 200 chars: {line.Substring(0, Math.Min(200, line.Length))}");
+                }
 
                 // Use Phase 1 optimized parser (2.7× faster)
                 var packet = TSharkParserOptimized.ParseLine(line.AsSpan());
@@ -272,12 +338,22 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
                     await _packetChannel.Writer.WriteAsync(correctedPacket, ct);
                     packetCount++;
                 }
+                else
+                {
+                    parseFailures++;
+                }
+            }
+
+            // Read stderr for any errors
+            var stderr = await process.StandardError.ReadToEndAsync(ct);
+            if (!string.IsNullOrWhiteSpace(stderr))
+            {
+                DebugLogger.Log($"[ParallelTSharkService] Chunk {chunkIndex} TShark stderr: {stderr.Substring(0, Math.Min(500, stderr.Length))}");
             }
 
             await process.WaitForExitAsync(ct);
 
-            _logger.LogDebug("Chunk {Index} completed: {Count:N0} packets in {Time:F1}s ({Rate:F0} pps)",
-                chunkIndex, packetCount, sw.Elapsed.TotalSeconds, packetCount / sw.Elapsed.TotalSeconds);
+            DebugLogger.Log($"[ParallelTSharkService] Chunk {chunkIndex}: {linesRead} lines read, {packetCount} packets parsed, {parseFailures} failures, exit={process.ExitCode}");
 
             return packetCount;
         }
@@ -295,7 +371,7 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
 
     /// <summary>
     /// Builds TShark process start info for a chunk file.
-    /// Same field extraction as sequential service.
+    /// Uses centralized TSharkFieldDefinitions for all 60 fields (core + credentials + OS fingerprint).
     /// Supports WSL path conversion for Windows + WSL2 environments
     /// </summary>
     private ProcessStartInfo BuildTSharkProcessStartInfo(string chunkPath)
@@ -303,13 +379,8 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
         // Convert path for WSL if needed
         var effectiveChunkPath = _tsharkInfo.ConvertPathIfNeeded(chunkPath);
 
-        var arguments = $"-r \"{effectiveChunkPath}\" -T fields " +
-                       "-e frame.number -e frame.time -e frame.time_epoch -e frame.len " +
-                       "-e ip.src -e ip.dst -e ipv6.src -e ipv6.dst " +
-                       "-e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport " +
-                       "-e _ws.col.Protocol -e frame.protocols -e _ws.col.Info " +
-                       "-e tcp.flags -e tcp.seq -e tcp.ack -e tcp.window_size " +
-                       "-E occurrence=f";
+        // Use centralized field definitions (same as TSharkService)
+        var arguments = TSharkFieldDefinitions.BuildStreamingArguments(effectiveChunkPath);
 
         return _tsharkInfo.CreateProcessStartInfo(arguments);
     }

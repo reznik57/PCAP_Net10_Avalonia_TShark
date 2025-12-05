@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Utilities;
 using PCAPAnalyzer.UI.ViewModels.Components;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
@@ -25,7 +26,7 @@ public class MainWindowStatsViewModel
     public void InitializePacketAnalysisStats(StatsBarControlViewModel statsBar)
     {
         statsBar.SectionTitle = "PACKET ANALYSIS OVERVIEW";
-        statsBar.AccentColor = "#3B82F6";
+        statsBar.AccentColor = ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6");
         statsBar.ColumnCount = 5;
         UpdatePacketAnalysisStats(statsBar, null);
     }
@@ -45,11 +46,11 @@ public class MainWindowStatsViewModel
         {
             var totalPackets = $"Total: {data.TotalPackets.ToString("N0", germanCulture)}";
             var filtered = $"Filtered: {data.FilteredCount.ToString("N0", germanCulture)} ({data.FilteredPct:F1}%)";
-            statsBar.AddStat("PACKETS", totalPackets, "📦", "#58A6FF", filtered, "#3FB950");
+            statsBar.AddStat("PACKETS", totalPackets, "📦", ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"), filtered, ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950"));
         }
         else
         {
-            statsBar.AddStat("PACKETS", data.TotalPackets.ToString("N0", germanCulture), "📦", "#58A6FF");
+            statsBar.AddStat("PACKETS", data.TotalPackets.ToString("N0", germanCulture), "📦", ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"));
         }
 
         // Stat 2: Traffic
@@ -57,11 +58,11 @@ public class MainWindowStatsViewModel
         {
             var totalTraffic = $"Total: {FormatBytesGerman(data.TotalBytes)}";
             var filtered = $"Filtered: {FormatBytesGerman(data.FilteredBytes)} ({data.TrafficPct:F1}%)";
-            statsBar.AddStat("TRAFFIC", totalTraffic, "💾", "#58A6FF", filtered, "#3FB950");
+            statsBar.AddStat("TRAFFIC", totalTraffic, "💾", ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"), filtered, ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950"));
         }
         else
         {
-            statsBar.AddStat("TRAFFIC", FormatBytesGerman(data.TotalBytes), "💾", "#58A6FF");
+            statsBar.AddStat("TRAFFIC", FormatBytesGerman(data.TotalBytes), "💾", ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"));
         }
 
         // Stat 3: Unique IPs
@@ -70,11 +71,11 @@ public class MainWindowStatsViewModel
             var totalIPs = $"Total: {data.TotalUniqueIPs.ToString("N0", germanCulture)}";
             var ipPct = data.TotalUniqueIPs > 0 ? (data.FilteredUniqueIPs * 100.0 / data.TotalUniqueIPs) : 0.0;
             var filtered = $"Filtered: {data.FilteredUniqueIPs.ToString("N0", germanCulture)} ({ipPct:F1}%)";
-            statsBar.AddStat("UNIQUE IPs", totalIPs, "🌐", "#58A6FF", filtered, "#3FB950");
+            statsBar.AddStat("UNIQUE IPs", totalIPs, "🌐", ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"), filtered, ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950"));
         }
         else
         {
-            statsBar.AddStat("UNIQUE IPs", data.TotalUniqueIPs.ToString("N0", germanCulture), "🌐", "#58A6FF");
+            statsBar.AddStat("UNIQUE IPs", data.TotalUniqueIPs.ToString("N0", germanCulture), "🌐", ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"));
         }
 
         // Stat 4: Destination Ports
@@ -83,11 +84,11 @@ public class MainWindowStatsViewModel
             var totalPorts = $"Total: {data.TotalDestPorts.ToString("N0", germanCulture)}";
             var portPct = data.TotalDestPorts > 0 ? (data.FilteredDestPorts * 100.0 / data.TotalDestPorts) : 0.0;
             var filtered = $"Filtered: {data.FilteredDestPorts.ToString("N0", germanCulture)} ({portPct:F1}%)";
-            statsBar.AddStat("DEST PORTS", totalPorts, "🔌", "#58A6FF", filtered, "#3FB950");
+            statsBar.AddStat("DEST PORTS", totalPorts, "🔌", ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"), filtered, ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950"));
         }
         else
         {
-            statsBar.AddStat("DEST PORTS", data.TotalDestPorts.ToString("N0", germanCulture), "🔌", "#58A6FF");
+            statsBar.AddStat("DEST PORTS", data.TotalDestPorts.ToString("N0", germanCulture), "🔌", ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"));
         }
 
         // Stat 5: Streams
@@ -96,11 +97,11 @@ public class MainWindowStatsViewModel
             var totalConvs = $"Total: {data.TotalConversations.ToString("N0", germanCulture)}";
             var convPct = data.TotalConversations > 0 ? (data.FilteredConversations * 100.0 / data.TotalConversations) : 0.0;
             var filtered = $"Filtered: {data.FilteredConversations.ToString("N0", germanCulture)} ({convPct:F1}%)";
-            statsBar.AddStat("STREAMS", totalConvs, "💬", "#58A6FF", filtered, "#3FB950");
+            statsBar.AddStat("STREAMS", totalConvs, "💬", ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"), filtered, ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950"));
         }
         else
         {
-            statsBar.AddStat("STREAMS", data.TotalConversations.ToString("N0", germanCulture), "💬", "#58A6FF");
+            statsBar.AddStat("STREAMS", data.TotalConversations.ToString("N0", germanCulture), "💬", ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"));
         }
     }
 

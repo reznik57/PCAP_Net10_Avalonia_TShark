@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.ViewModels.Components;
 
 namespace PCAPAnalyzer.UI.ViewModels.FileAnalysis;
@@ -16,6 +17,10 @@ namespace PCAPAnalyzer.UI.ViewModels.FileAnalysis;
 /// </summary>
 public partial class FileAnalysisStagesViewModel : ObservableObject
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     private MainWindowAnalysisViewModel? _analysisVm;
     private bool _isComplete; // Prevent late stage syncs after completion
 
@@ -121,7 +126,7 @@ public partial class FileAnalysisStagesViewModel : ObservableObject
     {
         if (stageIndex >= Stages.Count) return;
 
-        Dispatcher.UIThread.Post(() =>
+        Dispatcher.Post(() =>
         {
             var stage = Stages[stageIndex];
             var previousState = stage.State;
@@ -154,7 +159,7 @@ public partial class FileAnalysisStagesViewModel : ObservableObject
     {
         if (Stages.Count < 4) return;
 
-        Dispatcher.UIThread.Post(() =>
+        Dispatcher.Post(() =>
         {
             var stage = Stages[3];
             var wasActive = stage.State == AnalysisStageState.Active;
@@ -200,7 +205,7 @@ public partial class FileAnalysisStagesViewModel : ObservableObject
     {
         if (Stages.Count < 4) return;
 
-        Dispatcher.UIThread.Post(() =>
+        Dispatcher.Post(() =>
         {
             var stage = Stages[3];
 
@@ -265,7 +270,7 @@ public partial class FileAnalysisStagesViewModel : ObservableObject
             var stage = Stages.FirstOrDefault(s => s.Key == stageKey);
             if (stage != null)
             {
-                Dispatcher.UIThread.Post(() =>
+                Dispatcher.Post(() =>
                 {
                     if (stage.State != AnalysisStageState.Completed)
                     {

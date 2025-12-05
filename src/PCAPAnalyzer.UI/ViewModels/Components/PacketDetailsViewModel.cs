@@ -2,17 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Services;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -23,9 +23,11 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 /// </summary>
 public partial class PacketDetailsViewModel : ObservableObject
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     private readonly ProtocolParser _protocolParser;
-    private readonly HexFormatter _hexFormatter;
-    private readonly PCAPAnalyzer.Core.Services.HexDataService? _hexDataService;
     private readonly StreamAnalyzer _streamAnalyzer;
     private readonly ProtocolDeepDiveService? _deepDiveService;
     private readonly StreamSecurityAnalyzer _streamSecurityAnalyzer = new();
@@ -35,22 +37,12 @@ public partial class PacketDetailsViewModel : ObservableObject
     // Stream analysis cache: key = stream identifier, value = analysis result
     private readonly Dictionary<string, StreamAnalysisResult> _streamCache = new();
 
-    // Pre-loaded hex data cache: key = frame number, value = raw bytes
-    // Populated by batch extraction when page loads for instant hex dump display
-    private readonly Dictionary<uint, byte[]> _hexDataCache = new();
-
     [ObservableProperty] private PacketInfo? _currentPacket;
     [ObservableProperty] private bool _hasPacket;
     [ObservableProperty] private string _emptyStateMessage = "Select a packet to view details";
 
     // Packet Analysis Tab - Protocol Layers section
     [ObservableProperty] private ObservableCollection<ProtocolTreeItemViewModel> _protocolTree = new();
-
-    // Hex data for deep analysis (internal use, no dedicated tab)
-    [ObservableProperty] private ObservableCollection<HexDumpLineViewModel> _hexDumpLines = new();
-    [ObservableProperty] private bool _hexDumpAvailable;
-    [ObservableProperty] private bool _hexDumpLoading;
-    [ObservableProperty] private string _hexDumpPlaceholder = "Hex data available for protocol analysis.";
 
     // Stream Context Tab
     [ObservableProperty] private string _flowStreamId = "--";
@@ -64,7 +56,7 @@ public partial class PacketDetailsViewModel : ObservableObject
 
     // Security Indicators
     [ObservableProperty] private string _securityRiskLevel = "--";
-    [ObservableProperty] private string _securityRiskColor = "#6E7681";
+    [ObservableProperty] private string _securityRiskColor = ThemeColorHelper.GetColorHex("TextMuted", "#6E7681");
     [ObservableProperty] private string _sourcePortSecurity = "--";
     [ObservableProperty] private string _destinationPortSecurity = "--";
     [ObservableProperty] private string _sourceGeoInfo = "--";
@@ -76,15 +68,15 @@ public partial class PacketDetailsViewModel : ObservableObject
     [ObservableProperty] private int _streamRiskScore;
     [ObservableProperty] private string _streamRiskScoreDisplay = "0";
     [ObservableProperty] private string _encryptionStatus = "Unknown";
-    [ObservableProperty] private string _encryptionStatusColor = "#6E7681";
+    [ObservableProperty] private string _encryptionStatusColor = ThemeColorHelper.GetColorHex("TextMuted", "#6E7681");
     [ObservableProperty] private string _encryptionProtocol = "";
     [ObservableProperty] private bool _beaconingDetected;
     [ObservableProperty] private string _beaconingInterval = "Not detected";
     [ObservableProperty] private string _beaconingConfidence = "";
-    [ObservableProperty] private string _beaconingColor = "#22C55E";
+    [ObservableProperty] private string _beaconingColor = ThemeColorHelper.GetColorHex("ColorSuccess", "#22C55E");
     [ObservableProperty] private string _uploadDownloadRatio = "--";
     [ObservableProperty] private bool _dataExfiltrationIndicator;
-    [ObservableProperty] private string _exfiltrationColor = "#22C55E";
+    [ObservableProperty] private string _exfiltrationColor = ThemeColorHelper.GetColorHex("ColorSuccess", "#22C55E");
     [ObservableProperty] private bool _hasEnhancedSecurityAnalysis;
 
     // Directional Metrics
@@ -110,10 +102,21 @@ public partial class PacketDetailsViewModel : ObservableObject
 
     // Packet Analysis Tab - Cleartext Detection section
     [ObservableProperty] private bool _hasCleartextCredentials;
-    [ObservableProperty] private string _cleartextSeverityColor = "#6E7681";
+    [ObservableProperty] private string _cleartextSeverityColor = ThemeColorHelper.GetColorHex("TextMuted", "#6E7681");
     [ObservableProperty] private string _cleartextSeverityText = "";
     [ObservableProperty] private ObservableCollection<CleartextContentViewModel> _cleartextContents = new();
     [ObservableProperty] private int _totalCredentialsCount;
+
+    // Static color references for theme consistency
+    private static readonly string ColorMuted = ThemeColorHelper.GetColorHex("TextMuted", "#6E7681");
+    private static readonly string ColorDanger = ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444");
+    private static readonly string ColorWarning = ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B");
+    private static readonly string ColorOrange = ThemeColorHelper.GetColorHex("ColorOrange", "#F97316");
+    private static readonly string ColorInfo = ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6");
+    private static readonly string ColorSuccess = ThemeColorHelper.GetColorHex("ColorSuccess", "#22C55E");
+    private static readonly string ColorSuccessLight = ThemeColorHelper.GetColorHex("ColorSuccessLight", "#8BC34A");
+    private static readonly string ColorBeaconing = ThemeColorHelper.GetColorHex("ColorWarningLight", "#FFA726");
+    private static readonly string ColorExfiltration = ThemeColorHelper.GetColorHex("ColorDangerLight", "#EF5350");
 
     // Event raised when user requests to filter by current stream
     public event EventHandler<PacketFilter>? FilterByStreamRequested;
@@ -126,21 +129,16 @@ public partial class PacketDetailsViewModel : ObservableObject
 
     public PacketDetailsViewModel(
         ProtocolParser protocolParser,
-        HexFormatter hexFormatter,
         StreamAnalyzer streamAnalyzer,
-        PCAPAnalyzer.Core.Services.HexDataService? hexDataService = null,
         ProtocolDeepDiveService? deepDiveService = null)
     {
         _protocolParser = protocolParser ?? throw new ArgumentNullException(nameof(protocolParser));
-        _hexFormatter = hexFormatter ?? throw new ArgumentNullException(nameof(hexFormatter));
         _streamAnalyzer = streamAnalyzer ?? throw new ArgumentNullException(nameof(streamAnalyzer));
-        _hexDataService = hexDataService; // Optional - hex dump disabled if null
         _deepDiveService = deepDiveService; // Optional - deep dive disabled if null
     }
 
     /// <summary>
-    /// Sets the current PCAP file path for hex data extraction.
-    /// Must be called after file load to enable hex dump functionality.
+    /// Sets the current PCAP file path for protocol deep dive.
     /// </summary>
     public void SetPcapPath(string pcapPath)
     {
@@ -163,51 +161,6 @@ public partial class PacketDetailsViewModel : ObservableObject
     public void ClearStreamCache()
     {
         _streamCache.Clear();
-        _hexDataCache.Clear();
-    }
-
-    /// <summary>
-    /// Pre-loads hex data for multiple frames using batch extraction.
-    /// Call this when a page of packets is displayed for instant hex dump access.
-    /// </summary>
-    public async Task PreloadHexDataForFramesAsync(IEnumerable<uint> frameNumbers, CancellationToken cancellationToken = default)
-    {
-        if (_hexDataService == null || string.IsNullOrWhiteSpace(_currentPcapPath))
-            return;
-
-        var framesToLoad = frameNumbers.Where(f => !_hexDataCache.ContainsKey(f)).ToList();
-        if (framesToLoad.Count == 0)
-            return;
-
-        DebugLogger.Log($"[DETAILS] PreloadHexData - extracting {framesToLoad.Count} frames");
-        try
-        {
-            var batchResult = await _hexDataService.ExtractHexDataBatchAsync(_currentPcapPath, framesToLoad, cancellationToken);
-            foreach (var kvp in batchResult)
-            {
-                _hexDataCache[kvp.Key] = kvp.Value;
-            }
-            DebugLogger.Log($"[DETAILS] PreloadHexData - cached {batchResult.Count} frames");
-        }
-        catch (Exception ex)
-        {
-            DebugLogger.Log($"[DETAILS] PreloadHexData error: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// Checks if hex data is pre-loaded for a frame.
-    /// </summary>
-    public bool HasPreloadedHexData(uint frameNumber) => _hexDataCache.ContainsKey(frameNumber);
-
-    /// <summary>
-    /// Command for loading hex dump on-demand
-    /// </summary>
-    [RelayCommand]
-    private async Task LoadHexDump()
-    {
-        DebugLogger.Log("[PacketDetailsViewModel] LoadHexDump command triggered!");
-        await LoadHexDumpAsync();
     }
 
     /// <summary>
@@ -252,7 +205,7 @@ public partial class PacketDetailsViewModel : ObservableObject
                 // Extract summary
                 var summary = ProtocolDeepDiveService.ExtractSummary(result);
 
-                await Dispatcher.UIThread.InvokeAsync(() =>
+                await Dispatcher.InvokeAsync(() =>
                 {
                     DeepDiveProtocol = summary.Protocol;
                     DeepDiveIcon = summary.Icon;
@@ -320,9 +273,9 @@ public partial class PacketDetailsViewModel : ObservableObject
                     };
                     CleartextSeverityColor = result.MaxSeverity switch
                     {
-                        CleartextSeverity.Critical => "#EF4444",
-                        CleartextSeverity.Warning => "#F59E0B",
-                        _ => "#3B82F6"
+                        CleartextSeverity.Critical => ColorDanger,
+                        CleartextSeverity.Warning => ColorWarning,
+                        _ => ColorInfo
                     };
 
                     DeepDiveAvailable = true;
@@ -445,7 +398,7 @@ public partial class PacketDetailsViewModel : ObservableObject
         var previousFrame = CurrentPacket?.FrameNumber;
         if (previousFrame != packet.Value.FrameNumber)
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await Dispatcher.InvokeAsync(() =>
             {
                 DeepDiveAvailable = false;
                 DeepDiveLoading = false;
@@ -456,13 +409,13 @@ public partial class PacketDetailsViewModel : ObservableObject
                 HasCleartextCredentials = false;
                 TotalCredentialsCount = 0;
                 CleartextSeverityText = "";
-                CleartextSeverityColor = "#6E7681";
+                CleartextSeverityColor = ColorMuted;
                 CleartextContents.Clear();
             });
         }
 
         // CRITICAL: Update UI-bound properties on UI thread
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        await Dispatcher.InvokeAsync(() =>
         {
             CurrentPacket = packet;
             HasPacket = true;
@@ -472,7 +425,6 @@ public partial class PacketDetailsViewModel : ObservableObject
         await Task.Run(() =>
         {
             LoadProtocolTree(packet.Value);
-            LoadHexDump(packet.Value);
             LoadFlowInfo(packet.Value);
         });
     }
@@ -485,14 +437,12 @@ public partial class PacketDetailsViewModel : ObservableObject
         CurrentPacket = null;
         HasPacket = false;
 
-        Dispatcher.UIThread.Post(() =>
+        Dispatcher.Post(() =>
         {
             ProtocolTree.Clear();
-            HexDumpLines.Clear();
             SecurityWarnings.Clear();
         });
 
-        HexDumpAvailable = false;
         FlowInfoAvailable = false;
         FlowStreamId = "--";
         FlowConversation = "--";
@@ -503,7 +453,7 @@ public partial class PacketDetailsViewModel : ObservableObject
 
         // Reset security indicators
         SecurityRiskLevel = "--";
-        SecurityRiskColor = "#6E7681";
+        SecurityRiskColor = ColorMuted;
         SourcePortSecurity = "--";
         DestinationPortSecurity = "--";
         SourceGeoInfo = "--";
@@ -531,8 +481,8 @@ public partial class PacketDetailsViewModel : ObservableObject
         HasCleartextCredentials = false;
         TotalCredentialsCount = 0;
         CleartextSeverityText = "";
-        CleartextSeverityColor = "#6E7681";
-        Dispatcher.UIThread.Post(() =>
+        CleartextSeverityColor = ColorMuted;
+        Dispatcher.Post(() =>
         {
             DeepDiveSummary.Clear();
             DeepDiveLayers.Clear();
@@ -547,7 +497,7 @@ public partial class PacketDetailsViewModel : ObservableObject
     {
         var tree = _protocolParser.ParseProtocolTree(packet);
 
-        Dispatcher.UIThread.InvokeAsync(() =>
+        Dispatcher.InvokeAsync(() =>
         {
             ProtocolTree.Clear();
             foreach (var item in tree)
@@ -558,117 +508,6 @@ public partial class PacketDetailsViewModel : ObservableObject
             OnPropertyChanged(nameof(ProtocolTree));
             OnPropertyChanged(nameof(HasPacket));
         });
-    }
-
-    /// <summary>
-    /// Generates hex dump display from packet payload.
-    /// If payload is already loaded, formats immediately.
-    /// Otherwise, shows "Load Hex Dump" prompt for on-demand extraction.
-    /// </summary>
-    private void LoadHexDump(PacketInfo packet)
-    {
-        // Check if payload is already populated
-        if (!packet.Payload.IsEmpty)
-        {
-            var lines = _hexFormatter.FormatHexDump(packet.Payload);
-            Dispatcher.UIThread.Post(() =>
-            {
-                HexDumpLines.Clear();
-                foreach (var line in lines)
-                {
-                    HexDumpLines.Add(line);
-                }
-                HexDumpAvailable = true;
-                HexDumpLoading = false;
-            });
-        }
-        else
-        {
-            // Hex dump not loaded yet - user must click "Load Hex Dump" button
-            HexDumpAvailable = false;
-            HexDumpLoading = false;
-
-            Dispatcher.UIThread.Post(() =>
-            {
-                HexDumpLines.Clear();
-            });
-        }
-    }
-
-    /// <summary>
-    /// Loads hex dump on-demand by extracting raw packet bytes from PCAP using TShark.
-    /// Called when user clicks "Load Hex Dump" button in Hex Dump tab.
-    /// </summary>
-    public async Task LoadHexDumpAsync()
-    {
-        if (CurrentPacket == null || HexDumpLoading)
-            return;
-
-        try
-        {
-            HexDumpLoading = true;
-            var frameNumber = CurrentPacket.Value.FrameNumber;
-
-            // OPTIMIZATION: Check pre-loaded cache first (instant display)
-            if (_hexDataCache.TryGetValue(frameNumber, out var cachedBytes))
-            {
-                DebugLogger.Log($"[HEX] ✓ Using cached hex data for frame {frameNumber} ({cachedBytes.Length} bytes)");
-                await DisplayHexBytes(cachedBytes);
-                return;
-            }
-
-            // Fallback: Extract from PCAP (slow for large files)
-            if (_hexDataService == null || string.IsNullOrWhiteSpace(_currentPcapPath))
-            {
-                HexDumpPlaceholder = "Hex data service not available.\nEnsure TShark is installed.";
-                HexDumpLoading = false;
-                return;
-            }
-
-            DebugLogger.Log($"[HEX] Extracting from PCAP (not cached)...");
-            var hexBytes = await _hexDataService.ExtractHexDataAsync(_currentPcapPath, frameNumber);
-
-            if (hexBytes.Length == 0)
-            {
-                HexDumpPlaceholder = $"Failed to extract hex data for frame {frameNumber}.\nEnsure TShark is installed and accessible.";
-                HexDumpLoading = false;
-                return;
-            }
-
-            // Cache the result for future use
-            _hexDataCache[frameNumber] = hexBytes;
-            await DisplayHexBytes(hexBytes);
-        }
-        catch (Exception ex)
-        {
-            HexDumpPlaceholder = $"Error loading hex dump: {ex.Message}";
-            HexDumpLoading = false;
-        }
-    }
-
-    /// <summary>
-    /// Formats and displays hex bytes in the UI.
-    /// </summary>
-    private async Task DisplayHexBytes(byte[] hexBytes)
-    {
-        var lines = _hexFormatter.FormatHexDump(hexBytes.AsSpan());
-
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            HexDumpLines.Clear();
-            foreach (var line in lines)
-            {
-                HexDumpLines.Add(line);
-            }
-            HexDumpAvailable = true;
-            HexDumpLoading = false;
-        });
-
-        // Update PacketInfo with loaded payload (cache for future access)
-        if (CurrentPacket.HasValue)
-        {
-            CurrentPacket = CurrentPacket.Value with { Payload = hexBytes };
-        }
     }
 
     /// <summary>
@@ -740,7 +579,7 @@ public partial class PacketDetailsViewModel : ObservableObject
 
             if (streamPackets.Count == 0)
             {
-                await Dispatcher.UIThread.InvokeAsync(() =>
+                await Dispatcher.InvokeAsync(() =>
                 {
                     FlowStatistics = "No stream packets found";
                 });
@@ -758,7 +597,7 @@ public partial class PacketDetailsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await Dispatcher.InvokeAsync(() =>
             {
                 FlowStatistics = $"Stream analysis error: {ex.Message}";
             });
@@ -832,7 +671,7 @@ public partial class PacketDetailsViewModel : ObservableObject
 
         // Security indicators
         string riskLevel = "--";
-        string riskColor = "#6E7681";
+        string riskColor = ColorMuted;
         string srcPortSec = "--";
         string dstPortSec = "--";
         string srcGeo = "--";
@@ -844,11 +683,11 @@ public partial class PacketDetailsViewModel : ObservableObject
             riskLevel = analysis.Security.OverallRisk.ToString();
             riskColor = analysis.Security.OverallRisk switch
             {
-                ThreatSeverity.Critical => "#EF4444",
-                ThreatSeverity.High => "#F97316",
-                ThreatSeverity.Medium => "#EAB308",
-                ThreatSeverity.Low => "#22C55E",
-                _ => "#6E7681"
+                ThreatSeverity.Critical => ColorDanger,
+                ThreatSeverity.High => ColorOrange,
+                ThreatSeverity.Medium => ThemeColorHelper.GetColorHex("ColorYellow", "#EAB308"),
+                ThreatSeverity.Low => ColorSuccess,
+                _ => ColorMuted
             };
             warnings = analysis.Security.Warnings;
 
@@ -891,7 +730,7 @@ public partial class PacketDetailsViewModel : ObservableObject
         // Format comprehensive statistics
         var stats = FormatStreamStatistics(currentPacket, analysis);
 
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        await Dispatcher.InvokeAsync(() =>
         {
             FlowPacketCount = $"{analysis.PacketCount} packets";
             FlowPreviousPacket = previousPacketDisplay;
@@ -929,14 +768,14 @@ public partial class PacketDetailsViewModel : ObservableObject
                 BeaconingConfidence = enhancedSecurity.BeaconingDetected
                     ? $"({enhancedSecurity.BeaconingConfidence:F0}%)"
                     : "";
-                BeaconingColor = enhancedSecurity.BeaconingDetected ? "#FFA726" : "#22C55E";
+                BeaconingColor = enhancedSecurity.BeaconingDetected ? ColorBeaconing : ColorSuccess;
 
                 // Exfiltration
                 UploadDownloadRatio = double.IsInfinity(enhancedSecurity.UploadDownloadRatio)
                     ? "∞:1 (upload only)"
                     : $"{enhancedSecurity.UploadDownloadRatio:F1}:1";
                 DataExfiltrationIndicator = enhancedSecurity.DataExfiltrationIndicator;
-                ExfiltrationColor = enhancedSecurity.DataExfiltrationIndicator ? "#FFA726" : "#22C55E";
+                ExfiltrationColor = enhancedSecurity.DataExfiltrationIndicator ? ColorBeaconing : ColorSuccess;
             }
             else
             {
@@ -1020,126 +859,15 @@ public partial class PacketDetailsViewModel : ObservableObject
     {
         return status switch
         {
-            Core.Services.EncryptionStatus.Encrypted => "#22C55E",        // Green
-            Core.Services.EncryptionStatus.LikelyEncrypted => "#8BC34A",  // Light Green
-            Core.Services.EncryptionStatus.LikelyUnencrypted => "#FFA726",// Orange
-            Core.Services.EncryptionStatus.Unencrypted => "#EF5350",      // Red
-            _ => "#6E7681"                                                 // Gray
+            Core.Services.EncryptionStatus.Encrypted => ColorSuccess,
+            Core.Services.EncryptionStatus.LikelyEncrypted => ColorSuccessLight,
+            Core.Services.EncryptionStatus.LikelyUnencrypted => ColorBeaconing,
+            Core.Services.EncryptionStatus.Unencrypted => ColorExfiltration,
+            _ => ColorMuted
         };
     }
 
-    /// <summary>
-    /// Formats stream analysis results into rich display text.
-    /// </summary>
-    private static string FormatStreamStatistics(PacketInfo currentPacket, StreamAnalysisResult analysis)
-    {
-        var sb = new StringBuilder();
-
-        // Current Packet Info
-        sb.AppendLine("═══════════════════════════════════════════════════════");
-        sb.AppendLine($"  CURRENT PACKET: #{currentPacket.FrameNumber}");
-        sb.AppendLine("═══════════════════════════════════════════════════════");
-        sb.AppendLine($"Length: {currentPacket.Length} bytes");
-        sb.AppendLine($"Timestamp: {currentPacket.Timestamp:yyyy-MM-dd HH:mm:ss.fff}");
-        sb.AppendLine();
-
-        // TCP Connection State (if TCP)
-        if (currentPacket.Protocol == Protocol.TCP)
-        {
-            sb.AppendLine("═══════════════════════════════════════════════════════");
-            sb.AppendLine("  TCP CONNECTION STATE");
-            sb.AppendLine("═══════════════════════════════════════════════════════");
-            sb.AppendLine($"State: {analysis.TcpState.State}");
-
-            if (analysis.TcpState.Handshake != null)
-            {
-                sb.AppendLine($"Handshake: {analysis.TcpState.Handshake.GetDisplayString()}");
-                if (analysis.TcpState.Handshake.HandshakeDuration.HasValue)
-                {
-                    sb.AppendLine($"Handshake Duration: {analysis.TcpState.Handshake.HandshakeDuration.Value.TotalMilliseconds:F2} ms");
-                }
-            }
-
-            sb.AppendLine($"Retransmissions: {analysis.TcpState.RetransmissionCount} packets");
-            sb.AppendLine($"Window Scaling: {analysis.TcpState.WindowScaling.GetDisplayString()}");
-            sb.AppendLine($"Flags: {analysis.TcpState.Flags.GetDisplayString()}");
-            sb.AppendLine();
-        }
-
-        // Bandwidth Metrics
-        sb.AppendLine("═══════════════════════════════════════════════════════");
-        sb.AppendLine("  BANDWIDTH METRICS");
-        sb.AppendLine("═══════════════════════════════════════════════════════");
-
-        var totalMB = analysis.Bandwidth.TotalBytes / (1024.0 * 1024.0);
-        var totalKB = analysis.Bandwidth.TotalBytes / 1024.0;
-
-        if (totalMB >= 1.0)
-            sb.AppendLine($"Total Data: {totalMB:F2} MB ({analysis.Bandwidth.TotalBytes:N0} bytes)");
-        else if (totalKB >= 1.0)
-            sb.AppendLine($"Total Data: {totalKB:F2} KB ({analysis.Bandwidth.TotalBytes:N0} bytes)");
-        else
-            sb.AppendLine($"Total Data: {analysis.Bandwidth.TotalBytes:N0} bytes");
-
-        sb.AppendLine($"Duration: {analysis.Bandwidth.Duration.TotalSeconds:F2} seconds");
-        sb.AppendLine($"Average Throughput: {analysis.Bandwidth.GetAverageThroughputDisplay()}");
-
-        if (analysis.Bandwidth.Peak != null)
-        {
-            sb.AppendLine($"Peak Throughput: {analysis.Bandwidth.Peak.GetDisplayString()} at {analysis.Bandwidth.Peak.Timestamp:HH:mm:ss.fff}");
-        }
-
-        sb.AppendLine($"Average Packet Size: {analysis.Bandwidth.AveragePacketSize:F1} bytes");
-        sb.AppendLine($"Packet Rate: {analysis.Bandwidth.AveragePacketsPerSecond:F1} packets/sec");
-        sb.AppendLine();
-
-        // Timing Analysis (if RTT data available)
-        if (analysis.Timing.HasRttData)
-        {
-            sb.AppendLine("═══════════════════════════════════════════════════════");
-            sb.AppendLine("  TIMING ANALYSIS");
-            sb.AppendLine("═══════════════════════════════════════════════════════");
-            sb.AppendLine($"Average RTT: {analysis.Timing.AverageRttMs:F2} ms");
-
-            if (analysis.Timing.MinRttSample != null)
-            {
-                sb.AppendLine($"Min RTT: {analysis.Timing.MinRttMs:F2} ms (packet #{analysis.Timing.MinRttSample.RequestPacket} ↔ #{analysis.Timing.MinRttSample.ResponsePacket})");
-            }
-
-            if (analysis.Timing.MaxRttSample != null)
-            {
-                sb.AppendLine($"Max RTT: {analysis.Timing.MaxRttMs:F2} ms (packet #{analysis.Timing.MaxRttSample.RequestPacket} ↔ #{analysis.Timing.MaxRttSample.ResponsePacket})");
-            }
-
-            if (analysis.Timing.JitterMs.HasValue)
-            {
-                sb.AppendLine($"Jitter: {analysis.Timing.JitterMs.Value:F2} ms");
-            }
-
-            sb.AppendLine();
-        }
-
-        sb.AppendLine($"Inter-Packet Delay: {analysis.Timing.AverageInterPacketDelayMs:F2} ms (avg)");
-        sb.AppendLine();
-
-        // Application Protocol
-        sb.AppendLine("═══════════════════════════════════════════════════════");
-        sb.AppendLine("  APPLICATION LAYER");
-        sb.AppendLine("═══════════════════════════════════════════════════════");
-        sb.AppendLine($"Protocol: {analysis.Protocol.GetDisplayString()}");
-        sb.AppendLine($"Description: {analysis.Protocol.Description}");
-
-        if (analysis.Protocol.Details.Count > 0)
-        {
-            sb.AppendLine("Details:");
-            foreach (var detail in analysis.Protocol.Details)
-            {
-                sb.AppendLine($"  {detail.Key}: {detail.Value}");
-            }
-        }
-
-        return sb.ToString();
-    }
+    // NOTE: FormatStreamStatistics moved to PacketDetailsViewModel.Formatting.cs
 
     /// <summary>
     /// Generates a stream key for caching (bidirectional conversation identifier).
@@ -1192,13 +920,18 @@ public class ProtocolLayerViewModel
 /// </summary>
 public class ProtocolFieldViewModel
 {
+    private static readonly string HighlightNameColor = ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF");
+    private static readonly string NormalNameColor = ThemeColorHelper.GetColorHex("TextMuted", "#8B949E");
+    private static readonly string HighlightValueColor = ThemeColorHelper.GetColorHex("TextPrimary", "#F0F6FC");
+    private static readonly string NormalValueColor = ThemeColorHelper.GetColorHex("TextSecondary", "#C9D1D9");
+
     public string Name { get; set; } = "";
     public string Value { get; set; } = "";
     public int IndentLevel { get; set; }
     public bool IsHighlighted { get; set; }
     public int IndentPixels => IndentLevel * 16;
-    public string NameColor => IsHighlighted ? "#58A6FF" : "#8B949E";
-    public string ValueColor => IsHighlighted ? "#F0F6FC" : "#C9D1D9";
+    public string NameColor => IsHighlighted ? HighlightNameColor : NormalNameColor;
+    public string ValueColor => IsHighlighted ? HighlightValueColor : NormalValueColor;
 }
 
 /// <summary>
@@ -1206,6 +939,13 @@ public class ProtocolFieldViewModel
 /// </summary>
 public class CleartextContentViewModel
 {
+    private static readonly string CriticalColor = ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444");
+    private static readonly string WarningColor = ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B");
+    private static readonly string InfoColor = ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6");
+    private static readonly string CriticalHeader = ThemeColorHelper.GetColorHex("ColorDangerDark", "#7F1D1D");
+    private static readonly string WarningHeader = ThemeColorHelper.GetColorHex("ColorWarningDark", "#78350F");
+    private static readonly string InfoHeader = ThemeColorHelper.GetColorHex("AccentBlueDark", "#1E3A5F");
+
     public string Protocol { get; set; } = "";
     public string ContentType { get; set; } = "";
     public string Description { get; set; } = "";
@@ -1222,15 +962,15 @@ public class CleartextContentViewModel
     };
     public string SeverityColor => Severity switch
     {
-        CleartextSeverity.Critical => "#EF4444",
-        CleartextSeverity.Warning => "#F59E0B",
-        _ => "#3B82F6"
+        CleartextSeverity.Critical => CriticalColor,
+        CleartextSeverity.Warning => WarningColor,
+        _ => InfoColor
     };
     public string HeaderColor => Severity switch
     {
-        CleartextSeverity.Critical => "#7F1D1D",
-        CleartextSeverity.Warning => "#78350F",
-        _ => "#1E3A5F"
+        CleartextSeverity.Critical => CriticalHeader,
+        CleartextSeverity.Warning => WarningHeader,
+        _ => InfoHeader
     };
 }
 
@@ -1239,6 +979,11 @@ public class CleartextContentViewModel
 /// </summary>
 public class CleartextCredentialViewModel
 {
+    private static readonly string PasswordFieldColor = ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444");
+    private static readonly string NormalFieldColor = ThemeColorHelper.GetColorHex("TextPrimary", "#F0F6FC");
+    private static readonly string PasswordValueColor = ThemeColorHelper.GetColorHex("ColorDangerLight", "#FCA5A5");
+    private static readonly string NormalValueColor = ThemeColorHelper.GetColorHex("TextSecondary", "#C9D1D9");
+
     public string Protocol { get; set; } = "";
     public string CredentialType { get; set; } = "";
     public string FieldName { get; set; } = "";
@@ -1246,7 +991,7 @@ public class CleartextCredentialViewModel
     public bool IsPassword { get; set; }
     public string SecurityWarning { get; set; } = "";
 
-    public string FieldColor => IsPassword ? "#EF4444" : "#F0F6FC";
-    public string ValueColor => IsPassword ? "#FCA5A5" : "#C9D1D9";
+    public string FieldColor => IsPassword ? PasswordFieldColor : NormalFieldColor;
+    public string ValueColor => IsPassword ? PasswordValueColor : NormalValueColor;
     public string Icon => IsPassword ? "🔑" : "👤";
 }

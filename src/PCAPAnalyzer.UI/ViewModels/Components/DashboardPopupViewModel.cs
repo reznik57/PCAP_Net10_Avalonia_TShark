@@ -8,9 +8,11 @@ using CommunityToolkit.Mvvm.Input;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using LiveChartsCore;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.UI.ViewModels;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Services;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -21,6 +23,10 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 /// </summary>
 public partial class DashboardPopupViewModel : ObservableObject
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     // ==================== POPUP STATE ====================
 
     [ObservableProperty] private bool _isPopupVisible;
@@ -269,9 +275,9 @@ public partial class DashboardPopupViewModel : ObservableObject
             }
 
             // Ensure we're on UI thread
-            if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+            if (!Dispatcher.CheckAccess())
             {
-                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => ShowChartPopup(chartType));
+                Dispatcher.InvokeAsync(() => ShowChartPopup(chartType));
                 return;
             }
 
@@ -325,9 +331,9 @@ public partial class DashboardPopupViewModel : ObservableObject
     [RelayCommand]
     private async Task ShowIPDetails(object? parameter)
     {
-        if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+        if (!Dispatcher.CheckAccess())
         {
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () => await ShowIPDetails(parameter));
+            await Dispatcher.InvokeAsync(async () => await ShowIPDetails(parameter));
             return;
         }
 
@@ -356,9 +362,9 @@ public partial class DashboardPopupViewModel : ObservableObject
     {
         DebugLogger.Log($"[DashboardPopupViewModel] ShowPortDetails called with parameter: {parameter?.GetType().Name ?? "null"}");
 
-        if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+        if (!Dispatcher.CheckAccess())
         {
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () => await ShowPortDetails(parameter));
+            await Dispatcher.InvokeAsync(async () => await ShowPortDetails(parameter));
             return;
         }
 
@@ -389,9 +395,9 @@ public partial class DashboardPopupViewModel : ObservableObject
     {
         DebugLogger.Log($"[DashboardPopupViewModel] ShowConnectionDetails called");
 
-        if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+        if (!Dispatcher.CheckAccess())
         {
-            await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () => await ShowConnectionDetails(parameter));
+            await Dispatcher.InvokeAsync(async () => await ShowConnectionDetails(parameter));
             return;
         }
 

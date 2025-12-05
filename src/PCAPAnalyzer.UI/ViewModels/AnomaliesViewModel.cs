@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
@@ -22,6 +21,7 @@ namespace PCAPAnalyzer.UI.ViewModels;
 /// </summary>
 public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget, IDisposable
 {
+    private readonly IDispatcherService _dispatcher;
     private readonly IAnomalyFrameIndexService _frameIndexService;
     private readonly GlobalFilterState _globalFilterState;
     private readonly IGeoIPService _geoIPService;
@@ -29,6 +29,7 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
 
     private List<NetworkAnomaly> _allAnomalies = new();
     private List<NetworkAnomaly> _filteredAnomalies = new();
+    private List<PacketInfo> _allPackets = new();
     private CancellationTokenSource? _filterCts;
     private bool _disposed;
 
@@ -37,6 +38,7 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
     public AnomaliesChartsViewModel Charts { get; }
     public AnomaliesDrillDownViewModel DrillDown { get; }
     public AnomaliesFilterViewModel Filters { get; }
+    public AnomaliesPacketTableViewModel PacketTable { get; }
 
     // Loading state
     [ObservableProperty] private bool _isLoading;
@@ -51,11 +53,13 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
     public string TabName => "Anomalies";
 
     public AnomaliesViewModel(
+        IDispatcherService dispatcher,
         IAnomalyFrameIndexService frameIndexService,
         GlobalFilterState globalFilterState,
         IGeoIPService geoIPService,
         ILogger<AnomaliesViewModel> logger)
     {
+        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _frameIndexService = frameIndexService;
         _globalFilterState = globalFilterState;
         _geoIPService = geoIPService;
@@ -66,6 +70,7 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
         Charts = new AnomaliesChartsViewModel();
         DrillDown = new AnomaliesDrillDownViewModel();
         Filters = new AnomaliesFilterViewModel(globalFilterState);
+        PacketTable = new AnomaliesPacketTableViewModel();
 
         // Subscribe to filter changes
         Filters.FiltersChanged += OnFiltersChanged;
@@ -85,6 +90,9 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
             HasData = false;
             return;
         }
+
+        // Store packets for packet table
+        _allPackets = result.AllPackets ?? new List<PacketInfo>();
 
         await LoadFromAnalysisResultAsync(result.Anomalies);
     }
@@ -139,7 +147,7 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
             var ports = BuildPortBreakdown(_filteredAnomalies);
             var categories = BuildCategoryBreakdown(_filteredAnomalies);
 
-            Dispatcher.UIThread.Post(() =>
+            _dispatcher.Post(() =>
             {
                 Statistics.UpdateKPIs(kpis);
                 Statistics.UpdateTopSources(sources);
@@ -153,6 +161,9 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
                 Charts.UpdateTimeline(timePoints);
                 Charts.UpdateCategoryDonut(categories);
                 Charts.UpdatePortsBar(ports);
+
+                // Update packet table with filtered anomalies
+                PacketTable.LoadPackets(_allPackets, _filteredAnomalies);
             });
         });
     }
@@ -449,6 +460,9 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
             .ToList();
 
         DrillDown.ShowSourceDetail(source.IpAddress, sourceAnomalies);
+
+        // Filter packet table to show packets from this source
+        PacketTable.FilterBySource(source.IpAddress);
     }
 
     [RelayCommand]
@@ -459,6 +473,9 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
             .ToList();
 
         DrillDown.ShowTargetDetail(target.IpAddress, targetAnomalies);
+
+        // Filter packet table to show packets to this target
+        PacketTable.FilterByTarget(target.IpAddress);
     }
 
     [RelayCommand]
@@ -470,22 +487,53 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
 
         var serviceName = string.IsNullOrEmpty(port.ServiceName) ? port.Port.ToString() : $"{port.Port} ({port.ServiceName})";
         DrillDown.ShowPortDetail(serviceName, portAnomalies);
+
+        // Filter packet table to show packets on this port
+        PacketTable.FilterByPort(port.Port);
     }
 
     [RelayCommand]
     private void ShowTimeSliceDrillDown(DateTime timestamp)
     {
         DrillDown.ShowTimeSliceDrillDown(timestamp, TimeSpan.FromMinutes(5), _filteredAnomalies);
+
+        // Filter packet table to show packets in this time window
+        PacketTable.FilterByTimeWindow(timestamp, TimeSpan.FromMinutes(5));
+    }
+
+    [RelayCommand]
+    private void ShowTimePointDetails(DateTime timestamp)
+    {
+        // Show detailed popup for anomalies at this time point (±30 seconds window)
+        DrillDown.ShowTimePointDetails(timestamp, TimeSpan.FromSeconds(30), _filteredAnomalies);
+
+        // Filter packet table to show packets in this time window
+        PacketTable.FilterByTimeWindow(timestamp, TimeSpan.FromSeconds(30));
+    }
+
+    [RelayCommand]
+    private void ShowCategoryDrillDown(AnomalyCategoryViewModel category)
+    {
+        var categoryAnomalies = _filteredAnomalies
+            .Where(a => a.Category == category.Category)
+            .ToList();
+
+        DrillDown.ShowCategoryDetail(category.Category.ToString(), categoryAnomalies);
+
+        // Filter packet table to show packets of this category
+        PacketTable.FilterByCategory(category.Category);
     }
 
     public void Clear()
     {
         _allAnomalies.Clear();
         _filteredAnomalies.Clear();
+        _allPackets.Clear();
         _frameIndexService.ClearIndex();
         Statistics.Clear();
         Charts.Clear();
         DrillDown.Clear();
+        PacketTable.Clear();
         HasData = false;
     }
 

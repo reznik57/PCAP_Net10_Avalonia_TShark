@@ -3,11 +3,11 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.Core.Models.Capture;
 using PCAPAnalyzer.Core.Services.Capture;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Capture;
 
@@ -53,10 +53,10 @@ public partial class LiveCaptureViewModel : ViewModelBase, IDisposable
     private string _statusMessage = "Ready to capture";
 
     /// <summary>
-    /// Status color
+    /// Status color - uses ThemeColorHelper for consistency
     /// </summary>
     [ObservableProperty]
-    private string _statusColor = "#6C757D"; // Gray
+    private string _statusColor = ThemeColorHelper.GetCaptureStatusColorHex("idle");
 
     /// <summary>
     /// Current session ID
@@ -240,7 +240,7 @@ public partial class LiveCaptureViewModel : ViewModelBase, IDisposable
             UpdateCommands();
 
             StatusMessage = $"Capturing on {SelectedInterfaceName}";
-            StatusColor = "#3FB950"; // Green
+            StatusColor = ThemeColorHelper.GetCaptureStatusColorHex("capturing");
         }
         catch (Exception ex)
         {
@@ -263,7 +263,7 @@ public partial class LiveCaptureViewModel : ViewModelBase, IDisposable
             UpdateCommands();
 
             StatusMessage = $"Capture stopped. Captured {StatisticsViewModel.TotalPackets:N0} packets";
-            StatusColor = "#8B949E"; // Gray
+            StatusColor = ThemeColorHelper.GetCaptureStatusColorHex("stopped");
         }
         catch (Exception ex)
         {
@@ -284,7 +284,7 @@ public partial class LiveCaptureViewModel : ViewModelBase, IDisposable
             UpdateCommands();
 
             StatusMessage = "Capture paused";
-            StatusColor = "#FFA657"; // Orange
+            StatusColor = ThemeColorHelper.GetCaptureStatusColorHex("paused");
         }
         catch (Exception ex)
         {
@@ -305,7 +305,7 @@ public partial class LiveCaptureViewModel : ViewModelBase, IDisposable
             UpdateCommands();
 
             StatusMessage = $"Capturing on {SelectedInterfaceName}";
-            StatusColor = "#3FB950"; // Green
+            StatusColor = ThemeColorHelper.GetCaptureStatusColorHex("capturing");
         }
         catch (Exception ex)
         {
@@ -455,32 +455,32 @@ public partial class LiveCaptureViewModel : ViewModelBase, IDisposable
             {
                 case CaptureStatus.Initializing:
                     StatusMessage = "Initializing capture...";
-                    StatusColor = "#FFA657"; // Orange
+                    StatusColor = ThemeColorHelper.GetCaptureStatusColorHex("initializing");
                     break;
 
                 case CaptureStatus.Capturing:
                     StatusMessage = $"Capturing on {SelectedInterfaceName}";
-                    StatusColor = "#3FB950"; // Green
+                    StatusColor = ThemeColorHelper.GetCaptureStatusColorHex("capturing");
                     IsCapturing = true;
                     break;
 
                 case CaptureStatus.Paused:
                     StatusMessage = "Capture paused";
-                    StatusColor = "#FFA657"; // Orange
+                    StatusColor = ThemeColorHelper.GetCaptureStatusColorHex("paused");
                     IsPaused = true;
                     break;
 
                 case CaptureStatus.Stopped:
                 case CaptureStatus.Completed:
                     StatusMessage = "Capture stopped";
-                    StatusColor = "#8B949E"; // Gray
+                    StatusColor = ThemeColorHelper.GetCaptureStatusColorHex("stopped");
                     IsCapturing = false;
                     IsPaused = false;
                     break;
 
                 case CaptureStatus.Failed:
                     StatusMessage = "Capture failed";
-                    StatusColor = "#FF7B72"; // Red
+                    StatusColor = ThemeColorHelper.GetCaptureStatusColorHex("failed");
                     IsCapturing = false;
                     IsPaused = false;
                     ShowError(_captureService.CurrentSession?.ErrorMessage ?? "Unknown error");

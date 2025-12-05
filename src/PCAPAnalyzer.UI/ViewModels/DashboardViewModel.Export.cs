@@ -8,6 +8,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.ViewModels.Components;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels;
 
@@ -350,7 +351,7 @@ public partial class DashboardViewModel
     private void ShowExportStatus(string message, bool isError = false)
     {
         ExportStatusMessage = message;
-        ExportStatusColor = isError ? "#DA3633" : "#238636"; // GitHub red for errors, green for success
+        ExportStatusColor = isError ? ThemeColorHelper.GetColorHex("ColorDanger", "#DA3633") : ThemeColorHelper.GetColorHex("ColorSuccess", "#238636"); // GitHub red for errors, green for success
     }
 
     private void ClearExportStatus()

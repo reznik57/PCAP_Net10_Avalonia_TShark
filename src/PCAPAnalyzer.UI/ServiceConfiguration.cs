@@ -3,6 +3,7 @@ using System.IO;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using PCAPAnalyzer.Core.Caching;
@@ -34,6 +35,8 @@ namespace PCAPAnalyzer.UI
     /// Configures dependency injection for the application.
     /// Centralizes service registration for better maintainability.
     /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "CA1506:Avoid excessive class coupling",
+        Justification = "DI configuration class must reference all registered types by design")]
     public static class ServiceConfiguration
     {
         /// <summary>
@@ -230,7 +233,7 @@ namespace PCAPAnalyzer.UI
                 var cache = provider.GetRequiredService<IMemoryCache>();
                 var config = provider.GetRequiredService<StatisticsCacheConfiguration>();
 
-                return new EnhancedCachedStatisticsService(baseStatistics, cache, config);
+                return new CachedStatisticsService(baseStatistics, cache, config);
             });
 
             // ✅ ARCHITECTURE: FilterServiceCore composition pattern
@@ -316,7 +319,12 @@ namespace PCAPAnalyzer.UI
             });
 
             // Anomaly Detection (Singleton - maintains registered detectors)
-            services.AddSingleton<IUnifiedAnomalyDetectionService, UnifiedAnomalyDetectionService>();
+            // Includes GeoThreatDetector for high-risk country traffic, single-IP countries, and geo exfiltration
+            services.AddSingleton<IUnifiedAnomalyDetectionService>(provider =>
+            {
+                var geoIPService = provider.GetService<IGeoIPService>();
+                return new UnifiedAnomalyDetectionService(geoIPService);
+            });
 
             // Credential Detection (Singleton - collects credential findings during packet parsing)
             // Detects cleartext credentials in HTTP Basic Auth, FTP, SMTP, IMAP, POP3, LDAP, SNMP,
@@ -436,6 +444,10 @@ namespace PCAPAnalyzer.UI
 
         private static void RegisterUIServices(IServiceCollection services)
         {
+            // Dispatcher Service (Singleton - abstracts UI thread dispatching for testability)
+            // Allows ViewModels to marshal calls to UI thread without depending on Avalonia.Threading
+            services.AddSingleton<IDispatcherService, AvaloniaDispatcherService>();
+
             // Screenshot Service (Transient)
             services.AddTransient<IScreenshotService, ScreenshotService>();
 
@@ -476,7 +488,6 @@ namespace PCAPAnalyzer.UI
 
             // Packet Details Services (Transient - stateless parsing and formatting)
             services.AddTransient<ProtocolParser>();
-            services.AddTransient<HexFormatter>();
 
             // Stream Analyzer (Singleton - stateless stream analysis with security services)
             // Analyzes TCP/UDP streams for state machine, bandwidth, timing, and protocol detection
@@ -488,14 +499,6 @@ namespace PCAPAnalyzer.UI
                 return new StreamAnalyzer(portDetector, geoService);
             });
 
-            // Hex Data Service (Singleton - manages TShark JSON extraction for hex dump)
-            // Extracts raw packet bytes on-demand using TShark -T json -x
-            services.AddSingleton<PCAPAnalyzer.Core.Services.HexDataService>(provider =>
-            {
-                var logger = provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<PCAPAnalyzer.Core.Services.HexDataService>>();
-                return new PCAPAnalyzer.Core.Services.HexDataService(logger);
-            });
-
             // Protocol Deep Dive Service (Singleton - TShark verbose output extraction)
             // Extracts detailed protocol dissection for on-demand protocol analysis tab
             services.AddSingleton<ProtocolDeepDiveService>();
@@ -504,7 +507,25 @@ namespace PCAPAnalyzer.UI
         private static void RegisterViewModels(IServiceCollection services)
         {
             // Main Window ViewModel (Transient - created once per window)
-            services.AddTransient<MainWindowViewModel>();
+            services.AddTransient<MainWindowViewModel>(provider =>
+            {
+                var dispatcherService = provider.GetRequiredService<IDispatcherService>();
+                var tsharkService = provider.GetService<ITSharkService>() ?? new TSharkService(NullLogger<TSharkService>.Instance);
+                var insecurePortDetector = provider.GetService<IInsecurePortDetector>() ?? new InsecurePortDetector();
+                var statisticsService = provider.GetService<IStatisticsService>();
+                var anomalyService = provider.GetService<IUnifiedAnomalyDetectionService>();
+                var geoIPService = provider.GetService<IGeoIPService>() ?? new UnifiedGeoIPService();
+                var packetDetailsViewModel = provider.GetService<PacketDetailsViewModel>();
+                var orchestrator = provider.GetService<AnalysisOrchestrator>();
+                var reportService = provider.GetService<IReportGeneratorService>();
+                var filterBuilder = provider.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService();
+                var analysisCoordinator = provider.GetService<IAnalysisCoordinator>();
+                var sessionCache = provider.GetService<ISessionAnalysisCache>() ?? new SessionAnalysisCacheService();
+                return new MainWindowViewModel(
+                    dispatcherService, tsharkService, insecurePortDetector, statisticsService, anomalyService,
+                    geoIPService, packetDetailsViewModel, orchestrator, reportService,
+                    filterBuilder, analysisCoordinator, null, sessionCache);
+            });
 
             // Child ViewModels
             // ✅ CRITICAL FIX: FileAnalysisViewModel MUST be Singleton to ensure event subscriptions work
@@ -519,11 +540,64 @@ namespace PCAPAnalyzer.UI
                 var orchestrator = provider.GetRequiredService<AnalysisOrchestrator>();
                 return new FileAnalysisViewModel(tshark, stats, sessionCache, null, fileDialog, orchestrator);
             });
-            services.AddTransient<DashboardViewModel>();
-            services.AddTransient<CountryTrafficViewModel>();
-            services.AddTransient<ThreatsViewModel>();
-            services.AddTransient<AnomaliesViewModel>();
-            services.AddTransient<EnhancedMapViewModel>();
+            services.AddTransient<DashboardViewModel>(provider =>
+            {
+                var dispatcherService = provider.GetRequiredService<IDispatcherService>();
+                var statisticsService = provider.GetRequiredService<IStatisticsService>();
+                var anomalyService = provider.GetService<IUnifiedAnomalyDetectionService>() ?? new UnifiedAnomalyDetectionService();
+                var filterCore = provider.GetRequiredService<IFilterServiceCore>();
+                var filterService = new TabFilterService("Dashboard", filterCore);
+                var dashboardFilterService = provider.GetService<IDashboardFilterService>() ?? new DashboardFilterService();
+                var csvExportService = provider.GetService<ICsvExportService>();
+                var fileDialogService = provider.GetService<IFileDialogService>();
+                var filterBuilder = provider.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService();
+                var filterPresetService = provider.GetService<IFilterPresetService>();
+                var globalFilterState = provider.GetService<GlobalFilterState>();
+                var anomalyFrameIndexService = provider.GetService<IAnomalyFrameIndexService>();
+                return new DashboardViewModel(
+                    dispatcherService, statisticsService, anomalyService, filterService, dashboardFilterService,
+                    csvExportService, fileDialogService, filterBuilder, filterPresetService,
+                    globalFilterState, anomalyFrameIndexService);
+            });
+            services.AddTransient<CountryTrafficViewModel>(provider =>
+            {
+                var geoIPService = provider.GetRequiredService<IGeoIPService>();
+                var dispatcherService = provider.GetRequiredService<IDispatcherService>();
+                var filterCore = provider.GetRequiredService<IFilterServiceCore>();
+                var filterService = new TabFilterService("Country Traffic", filterCore);
+                var filterBuilder = provider.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService();
+                var globalFilterState = provider.GetService<GlobalFilterState>();
+                return new CountryTrafficViewModel(dispatcherService, geoIPService, filterService, filterBuilder, globalFilterState);
+            });
+            services.AddTransient<ThreatsViewModel>(provider =>
+            {
+                var dispatcherService = provider.GetRequiredService<IDispatcherService>();
+                var insecurePortDetector = provider.GetService<IInsecurePortDetector>() ?? new InsecurePortDetector();
+                var anomalyService = provider.GetService<IUnifiedAnomalyDetectionService>() ?? new UnifiedAnomalyDetectionService();
+                var credentialService = provider.GetService<ICredentialDetectionService>();
+                var filterCore = provider.GetRequiredService<IFilterServiceCore>();
+                var filterService = new TabFilterService("Security Threats", filterCore);
+                var cacheService = provider.GetService<PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService>();
+                var filterBuilder = provider.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService();
+                var globalFilterState = provider.GetService<GlobalFilterState>();
+                return new ThreatsViewModel(dispatcherService, insecurePortDetector, anomalyService, credentialService, filterService, cacheService, filterBuilder, globalFilterState);
+            });
+            services.AddTransient<AnomaliesViewModel>(provider =>
+            {
+                var dispatcherService = provider.GetRequiredService<IDispatcherService>();
+                var frameIndexService = provider.GetRequiredService<IAnomalyFrameIndexService>();
+                var globalFilterState = provider.GetRequiredService<GlobalFilterState>();
+                var geoIPService = provider.GetRequiredService<IGeoIPService>();
+                var logger = provider.GetRequiredService<ILogger<AnomaliesViewModel>>();
+                return new AnomaliesViewModel(dispatcherService, frameIndexService, globalFilterState, geoIPService, logger);
+            });
+            services.AddTransient<GeographicMapViewModel>(provider =>
+            {
+                var geoIPService = provider.GetRequiredService<IGeoIPService>();
+                var statisticsService = provider.GetRequiredService<IStatisticsService>();
+                var protocolColorService = provider.GetService<IProtocolColorService>();
+                return new GeographicMapViewModel(geoIPService, statisticsService, protocolColorService);
+            });
             services.AddTransient<ReportViewModel>();
             services.AddTransient<TopTalkersViewModel>();
             services.AddTransient<AnomalyViewModel>();
@@ -552,11 +626,9 @@ namespace PCAPAnalyzer.UI
             services.AddTransient<PacketDetailsViewModel>(provider =>
             {
                 var protocolParser = provider.GetRequiredService<ProtocolParser>();
-                var hexFormatter = provider.GetRequiredService<HexFormatter>();
                 var streamAnalyzer = provider.GetRequiredService<StreamAnalyzer>();
-                var hexDataService = provider.GetRequiredService<PCAPAnalyzer.Core.Services.HexDataService>();
                 var deepDiveService = provider.GetRequiredService<ProtocolDeepDiveService>();
-                return new PacketDetailsViewModel(protocolParser, hexFormatter, streamAnalyzer, hexDataService, deepDiveService);
+                return new PacketDetailsViewModel(protocolParser, streamAnalyzer, deepDiveService);
             });
 
             // Filter Panel ViewModels (Transient - one per filter panel instance)

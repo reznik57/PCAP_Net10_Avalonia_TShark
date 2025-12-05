@@ -5,14 +5,15 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia.Media;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Interfaces;
 using PCAPAnalyzer.UI.Services;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels;
 
@@ -22,6 +23,12 @@ namespace PCAPAnalyzer.UI.ViewModels;
 /// </summary>
 public partial class CompareViewModel : ObservableObject, IDisposable
 {
+    // ==================== DISPATCHER ====================
+
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     // ==================== SERVICES ====================
 
     private readonly IPacketComparer _packetComparer;
@@ -72,9 +79,9 @@ public partial class CompareViewModel : ObservableObject, IDisposable
 
     // ==================== COLORS ====================
 
-    public static IBrush FileAColor => new SolidColorBrush(Color.Parse("#F85149"));  // Red
-    public static IBrush FileBColor => new SolidColorBrush(Color.Parse("#3FB950"));  // Green
-    public static IBrush BothColor => new SolidColorBrush(Color.Parse("#8B949E"));   // Gray
+    public static IBrush FileAColor => ThemeColorHelper.CompareFileABrush;
+    public static IBrush FileBColor => ThemeColorHelper.CompareFileBBrush;
+    public static IBrush BothColor => ThemeColorHelper.CompareBothBrush;
 
     // ==================== CONSTRUCTOR ====================
 
@@ -154,7 +161,7 @@ public partial class CompareViewModel : ObservableObject, IDisposable
                 progress,
                 _comparisonCts.Token);
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            await Dispatcher.InvokeAsync(() =>
             {
                 UpdateFromResult(result);
                 HasResults = true;
@@ -359,8 +366,8 @@ public class ComparedPacketViewModel
     /// </summary>
     public IBrush RowBackground => Source switch
     {
-        PacketSource.FileA => new SolidColorBrush(Color.Parse("#1A0D0D")),  // Dark red tint
-        PacketSource.FileB => new SolidColorBrush(Color.Parse("#0D1A0D")),  // Dark green tint
+        PacketSource.FileA => ThemeColorHelper.GetCompareFileTintBrush("FileA"),
+        PacketSource.FileB => ThemeColorHelper.GetCompareFileTintBrush("FileB"),
         _ => new SolidColorBrush(Colors.Transparent)
     };
 

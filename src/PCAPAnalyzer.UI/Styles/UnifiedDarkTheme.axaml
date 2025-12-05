@@ -10,7 +10,14 @@
     
     <!-- Global Design Tokens -->
     <Styles.Resources>
-        <!-- ═══ SPACING SYSTEM ═══ -->
+        <!-- ═══ SPACING SYSTEM (4px base) ═══ -->
+        <x:Double x:Key="SpaceXS">4</x:Double>
+        <x:Double x:Key="SpaceSM">8</x:Double>
+        <x:Double x:Key="SpaceMD">12</x:Double>
+        <x:Double x:Key="SpaceLG">16</x:Double>
+        <x:Double x:Key="SpaceXL">24</x:Double>
+        <x:Double x:Key="Space2XL">32</x:Double>
+        <!-- Legacy spacing aliases -->
         <x:Double x:Key="Space1">4</x:Double>
         <x:Double x:Key="Space2">8</x:Double>
         <x:Double x:Key="Space3">12</x:Double>
@@ -19,128 +26,425 @@
         <x:Double x:Key="Space6">24</x:Double>
         <x:Double x:Key="Space8">32</x:Double>
         <x:Double x:Key="Space10">40</x:Double>
-        
+
         <!-- ═══ BORDER RADIUS ═══ -->
         <CornerRadius x:Key="RadiusSmall">4</CornerRadius>
-        <CornerRadius x:Key="RadiusMedium">8</CornerRadius>
-        <CornerRadius x:Key="RadiusLarge">12</CornerRadius>
-        <CornerRadius x:Key="RadiusXLarge">16</CornerRadius>
+        <CornerRadius x:Key="RadiusMedium">6</CornerRadius>
+        <CornerRadius x:Key="RadiusLarge">8</CornerRadius>
+        <CornerRadius x:Key="RadiusXLarge">12</CornerRadius>
         <CornerRadius x:Key="RadiusPill">20</CornerRadius>
-        
+        <CornerRadius x:Key="RadiusChip">12</CornerRadius>
+
         <!-- ═══ TYPOGRAPHY ═══ -->
         <FontFamily x:Key="FontDefault">-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif</FontFamily>
         <x:Double x:Key="FontSizeXS">10</x:Double>
         <x:Double x:Key="FontSizeSmall">11</x:Double>
         <x:Double x:Key="FontSizeBase">12</x:Double>
-        <x:Double x:Key="FontSizeMedium">14</x:Double>
+        <x:Double x:Key="FontSizeMedium">13</x:Double>
+        <x:Double x:Key="FontSizeInput">14</x:Double>
         <x:Double x:Key="FontSizeLarge">16</x:Double>
         <x:Double x:Key="FontSizeXL">18</x:Double>
         <x:Double x:Key="FontSizeHeading">24</x:Double>
-        <x:Double x:Key="FontSizeDisplay">32</x:Double>
-        
+        <x:Double x:Key="FontSizeDisplay">28</x:Double>
+
         <FontWeight x:Key="FontWeightNormal">Normal</FontWeight>
         <FontWeight x:Key="FontWeightMedium">Medium</FontWeight>
         <FontWeight x:Key="FontWeightSemiBold">SemiBold</FontWeight>
         <FontWeight x:Key="FontWeightBold">Bold</FontWeight>
-        
+
         <!-- ═══ ANIMATION DURATIONS ═══ -->
         <x:Double x:Key="AnimationFast">150</x:Double>
         <x:Double x:Key="AnimationNormal">200</x:Double>
         <x:Double x:Key="AnimationSlow">300</x:Double>
-        
-        <!-- ═══ COLOR PALETTE - UNIFIED DARK THEME ═══ -->
-        
-        <!-- Background Colors (7 levels of depth) -->
-        <Color x:Key="BackgroundLevel0">#0A0B0F</Color>  <!-- Darkest - App background -->
-        <Color x:Key="BackgroundLevel1">#0D1117</Color>  <!-- Primary background -->
-        <Color x:Key="BackgroundLevel2">#161B22</Color>  <!-- Card background -->
-        <Color x:Key="BackgroundLevel3">#1C2128</Color>  <!-- Elevated cards -->
-        <Color x:Key="BackgroundLevel4">#262C36</Color>  <!-- Hover states -->
-        <Color x:Key="BackgroundLevel5">#30363D</Color>  <!-- Active states -->
-        <Color x:Key="BackgroundLevel6">#373E47</Color>  <!-- Highest elevation -->
-        
-        <!-- Text Colors -->
-        <Color x:Key="TextPrimary">#F0F6FC</Color>
-        <Color x:Key="TextSecondary">#8B949E</Color>
-        <Color x:Key="TextMuted">#6E7681</Color>
-        <Color x:Key="TextDisabled">#484F58</Color>
-        <Color x:Key="TextInverse">#0D1117</Color>
-        
-        <!-- Semantic Colors -->
-        <Color x:Key="ColorSuccess">#3FB950</Color>
-        <Color x:Key="ColorWarning">#F97316</Color>
-        <Color x:Key="ColorDanger">#F85149</Color>
-        <Color x:Key="ColorInfo">#58A6FF</Color>
-        <Color x:Key="ColorPrimary">#2F81F7</Color>
-        <Color x:Key="ColorSecondary">#8B5CF6</Color>
-        
-        <!-- Accent Colors -->
-        <Color x:Key="AccentBlue">#58A6FF</Color>
-        <Color x:Key="AccentGreen">#3FB950</Color>
-        <Color x:Key="AccentRed">#F85149</Color>
-        <Color x:Key="AccentOrange">#F97316</Color>
-        <Color x:Key="AccentYellow">#F59E0B</Color>
+
+        <!-- ════════════════════════════════════════════════════════════════
+             SLACK-STYLE COLOR PALETTE
+             Warmer grays, softer text, Slack accent colors
+             ════════════════════════════════════════════════════════════════ -->
+
+        <!-- Background Colors (warm grays, 5 levels) -->
+        <Color x:Key="BackgroundLevel0">#1A1D21</Color>  <!-- Window/App background -->
+        <Color x:Key="BackgroundLevel1">#222529</Color>  <!-- Panel backgrounds -->
+        <Color x:Key="BackgroundLevel2">#2C2F33</Color>  <!-- Card backgrounds -->
+        <Color x:Key="BackgroundLevel3">#36393F</Color>  <!-- Elevated/Hover -->
+        <Color x:Key="BackgroundLevel4">#3F4248</Color>  <!-- Active states -->
+        <Color x:Key="BackgroundLevel5">#484B51</Color>  <!-- Highest elevation -->
+        <Color x:Key="BackgroundLevel6">#52555B</Color>  <!-- Legacy compat -->
+
+        <!-- Text Colors (softer, not pure white) -->
+        <Color x:Key="TextPrimary">#DCDDDE</Color>
+        <Color x:Key="TextSecondary">#96989D</Color>
+        <Color x:Key="TextMuted">#72767D</Color>
+        <Color x:Key="TextDisabled">#5D6167</Color>
+        <Color x:Key="TextInverse">#1A1D21</Color>
+
+        <!-- Semantic Colors (Slack palette) -->
+        <Color x:Key="ColorPrimary">#1264A3</Color>     <!-- Primary actions -->
+        <Color x:Key="ColorPrimaryHover">#0B4F8A</Color>
+        <Color x:Key="ColorPrimaryLight">#1D9BD1</Color>
+        <Color x:Key="ColorSuccess">#2BAC76</Color>     <!-- Include, success -->
+        <Color x:Key="ColorSuccessHover">#249966</Color>
+        <Color x:Key="ColorDanger">#E01E5A</Color>      <!-- Exclude, errors -->
+        <Color x:Key="ColorDangerHover">#C91850</Color>
+        <Color x:Key="ColorWarning">#ECB22E</Color>     <!-- Warnings -->
+        <Color x:Key="ColorInfo">#1D9BD1</Color>        <!-- Info states -->
+        <Color x:Key="ColorSecondary">#8B5CF6</Color>   <!-- Secondary accent -->
+
+        <!-- Accent Colors (legacy compat + new) -->
+        <Color x:Key="AccentBlue">#1264A3</Color>
+        <Color x:Key="AccentBlueLight">#1D9BD1</Color>
+        <Color x:Key="AccentGreen">#2BAC76</Color>
+        <Color x:Key="AccentRed">#E01E5A</Color>
+        <Color x:Key="AccentOrange">#ECB22E</Color>
+        <Color x:Key="AccentYellow">#ECB22E</Color>
         <Color x:Key="AccentPurple">#8B5CF6</Color>
-        <Color x:Key="AccentCyan">#39D0D0</Color>
-        <Color x:Key="AccentPink">#F778BA</Color>
-        
-        <!-- Border Colors -->
-        <Color x:Key="BorderDefault">#30363D</Color>
-        <Color x:Key="BorderSubtle">#21262D</Color>
-        <Color x:Key="BorderStrong">#484F58</Color>
-        <Color x:Key="BorderFocus">#58A6FF</Color>
-        
-        <!-- Chart Colors -->
-        <Color x:Key="ChartColor1">#58A6FF</Color>
-        <Color x:Key="ChartColor2">#3FB950</Color>
-        <Color x:Key="ChartColor3">#F97316</Color>
+        <Color x:Key="AccentCyan">#1D9BD1</Color>
+        <Color x:Key="AccentPink">#E01E5A</Color>
+
+        <!-- Tinted Backgrounds (for filter/selection states) -->
+        <Color x:Key="DangerTint">#2C1A1A</Color>
+        <Color x:Key="SuccessTint">#1A2C1A</Color>
+        <Color x:Key="WarningTint">#2C2A1A</Color>
+        <Color x:Key="InfoTint">#1A2A2C</Color>
+
+        <!-- Alert Box Colors (for inline notifications/alerts) -->
+        <Color x:Key="AlertDangerBg">#3D2020</Color>
+        <Color x:Key="AlertDangerText">#F8D7DA</Color>
+        <Color x:Key="AlertSuccessBg">#1B3D2B</Color>
+        <Color x:Key="AlertSuccessText">#D4EDDA</Color>
+        <Color x:Key="AlertSuccessTextMuted">#A3CFB8</Color>
+        <Color x:Key="AlertWarningBg">#3D3520</Color>
+        <Color x:Key="AlertWarningText">#FFF3CD</Color>
+        <Color x:Key="AlertInfoBg">#1B2D3D</Color>
+        <Color x:Key="AlertInfoText">#CFE2FF</Color>
+
+        <!-- Popup/Dialog Colors (darker than main UI for contrast) -->
+        <Color x:Key="PopupBg">#0D1117</Color>
+        <Color x:Key="PopupBgSecondary">#161B22</Color>
+        <Color x:Key="PopupBgTertiary">#21262D</Color>
+        <Color x:Key="PopupBorder">#30363D</Color>
+        <Color x:Key="PopupText">#F0F6FC</Color>
+        <Color x:Key="PopupTextSecondary">#8B949E</Color>
+        <Color x:Key="PopupLink">#58A6FF</Color>
+        <Color x:Key="PopupSuccess">#238636</Color>
+        <Color x:Key="PopupSuccessHover">#2EA043</Color>
+
+        <!-- Border Colors (minimal, use sparingly) -->
+        <Color x:Key="BorderDefault">#3F4248</Color>
+        <Color x:Key="BorderSubtle">#36393F</Color>
+        <Color x:Key="BorderStrong">#4D5156</Color>
+        <Color x:Key="BorderFocus">#1264A3</Color>
+
+        <!-- Badge Colors (semi-transparent) -->
+        <Color x:Key="BadgeBlue">#1F6FEB33</Color>
+        <Color x:Key="BadgeGreen">#3FB95033</Color>
+        <Color x:Key="BadgeRed">#F8514933</Color>
+        <Color x:Key="BadgeYellow">#F9731633</Color>
+        <Color x:Key="BadgePurple">#8B5CF633</Color>
+
+        <!-- Threat Level Colors -->
+        <Color x:Key="ThreatCritical">#EF4444</Color>
+        <Color x:Key="ThreatCriticalBorder">#DC2626</Color>
+        <Color x:Key="ThreatHigh">#F97316</Color>
+        <Color x:Key="ThreatHighBorder">#EA580C</Color>
+        <Color x:Key="ThreatMedium">#F59E0B</Color>
+        <Color x:Key="ThreatMediumBorder">#D97706</Color>
+        <Color x:Key="ThreatLow">#3FB950</Color>
+        <Color x:Key="ThreatLowBorder">#2EA043</Color>
+
+        <!-- Loading/Overlay Colors -->
+        <Color x:Key="OverlayDark">#E00A0E1B</Color>
+        <Color x:Key="OverlayBlack50">#80000000</Color>
+        <Color x:Key="OverlayBlack70">#AA000000</Color>
+        <Color x:Key="OverlayBlack80">#CC000000</Color>
+        <Color x:Key="GradientBlue">#3B82F6</Color>
+        <Color x:Key="GradientGreen">#10B981</Color>
+        <Color x:Key="ShadowColor">#00000026</Color>
+        <Color x:Key="ShadowColorStrong">#00000040</Color>
+
+        <!-- Security/Warning Background Colors -->
+        <Color x:Key="SecurityCriticalBg">#7F1D1D</Color>
+        <Color x:Key="SecurityCriticalBgDark">#450A0A</Color>
+        <Color x:Key="SecurityCriticalText">#FECACA</Color>
+        <Color x:Key="SecurityCriticalTextLight">#FCA5A5</Color>
+        <Color x:Key="SecurityWarningBg">#422006</Color>
+        <Color x:Key="SecurityWarningBorder">#92400E</Color>
+
+        <!-- Filter State Colors -->
+        <Color x:Key="FilterIncludeBg">#1E3A5F</Color>
+        <Color x:Key="FilterIncludeText">#60A5FA</Color>
+        <Color x:Key="FilterExcludeBg">#5F1E1E</Color>
+        <Color x:Key="FilterExcludeText">#F87171</Color>
+        <Color x:Key="FilterWarningBg">#5F4B1E</Color>
+        <Color x:Key="FilterWarningText">#FBBF24</Color>
+        <Color x:Key="FilterSuccessBg">#1E5F4B</Color>
+        <Color x:Key="FilterSuccessText">#34D399</Color>
+
+        <!-- Quick Filter Mode Colors -->
+        <Color x:Key="QuickFilterIncludeBorder">#10B981</Color>
+        <Color x:Key="QuickFilterExcludeBorder">#EF4444</Color>
+        <Color x:Key="QuickFilterIncludeBg">#0D1620</Color>
+        <Color x:Key="QuickFilterExcludeBg">#1A0D0D</Color>
+        <Color x:Key="QuickFilterIncludeLabelText">#7EE787</Color>
+        <Color x:Key="QuickFilterExcludeLabelText">#FF7B72</Color>
+        <Color x:Key="QuickFilterIncludeLabelBg">#1A3D1A</Color>
+        <Color x:Key="QuickFilterExcludeLabelBg">#3D1A1A</Color>
+        <Color x:Key="QuickFilterIncludeLabelBorder">#2EA043</Color>
+        <Color x:Key="QuickFilterExcludeLabelBorder">#F85149</Color>
+        <Color x:Key="QuickFilterIncludeGlow">#10B98140</Color>
+        <Color x:Key="QuickFilterExcludeGlow">#EF444440</Color>
+
+        <!-- Countdown/Alert Colors -->
+        <Color x:Key="CountdownActiveBg">#E0B91C1C</Color>
+        <Color x:Key="CountdownActiveBorder">#DC2626</Color>
+        <Color x:Key="CountdownInactiveBorder">#58A6FF</Color>
+
+        <!-- Analysis Stage Colors -->
+        <Color x:Key="StagePendingFill">#4B5563</Color>
+        <Color x:Key="StageActiveFill">#3B82F6</Color>
+        <Color x:Key="StageCompletedFill">#22C55E</Color>
+        <Color x:Key="StageErrorFill">#EF4444</Color>
+        <Color x:Key="StagePendingText">#D1D5DB</Color>
+        <Color x:Key="StageActiveText">#93C5FD</Color>
+        <Color x:Key="StageCompletedText">#22C55E</Color>
+        <Color x:Key="StageErrorText">#EF4444</Color>
+
+        <!-- Status Colors -->
+        <Color x:Key="StatusGreen">#4ADE80</Color>
+        <Color x:Key="StatusBlue">#4A9FFF</Color>
+        <Color x:Key="StatusYellow">#FFC107</Color>
+        <Color x:Key="StatusRed">#FF5252</Color>
+        <Color x:Key="StatusGray">#8B949E</Color>
+        <Color x:Key="StatusOrange">#FFA657</Color>
+
+        <!-- Chart Series Colors -->
+        <Color x:Key="ChartBlue">#3B82F6</Color>
+        <Color x:Key="ChartGreen">#10B981</Color>
+        <Color x:Key="ChartAmber">#F59E0B</Color>
+        <Color x:Key="ChartRed">#EF4444</Color>
+        <Color x:Key="ChartPurple">#8B5CF6</Color>
+        <Color x:Key="ChartPink">#EC4899</Color>
+        <Color x:Key="ChartCyan">#06B6D4</Color>
+        <Color x:Key="ChartLime">#84CC16</Color>
+        <Color x:Key="ChartOrange">#F97316</Color>
+        <Color x:Key="ChartIndigo">#6366F1</Color>
+        <Color x:Key="ChartTeal">#14B8A6</Color>
+        <Color x:Key="ChartGray">#6B7280</Color>
+
+        <!-- Compare View Colors -->
+        <Color x:Key="CompareFileA">#F85149</Color>
+        <Color x:Key="CompareFileB">#3FB950</Color>
+        <Color x:Key="CompareBoth">#8B949E</Color>
+        <Color x:Key="CompareFileATint">#1A0D0D</Color>
+        <Color x:Key="CompareFileBTint">#0D1A0D</Color>
+
+        <!-- Map Traffic Heat Colors -->
+        <Color x:Key="MapTrafficNone">#1C2128</Color>
+        <Color x:Key="MapTrafficLow">#3B82F6</Color>
+        <Color x:Key="MapTrafficMedium">#F97316</Color>
+        <Color x:Key="MapTrafficHigh">#EF4444</Color>
+        <Color x:Key="MapHighRisk">#DC2626</Color>
+
+        <!-- QoS/Metric Colors (latency blues, jitter oranges/reds) -->
+        <Color x:Key="MetricLatencyP5">#87CEEB</Color>
+        <Color x:Key="MetricLatencyAvg">#1F6FEB</Color>
+        <Color x:Key="MetricLatencyP95">#4682B4</Color>
+        <Color x:Key="MetricLatencyMax">#0969DA</Color>
+        <Color x:Key="MetricJitterAll">#FB923C</Color>
+        <Color x:Key="MetricJitterMin">#FFA657</Color>
+        <Color x:Key="MetricJitterP5">#FFFACD</Color>
+        <Color x:Key="MetricJitterAvg">#F85149</Color>
+        <Color x:Key="MetricJitterP95">#FF6347</Color>
+        <Color x:Key="MetricJitterMax">#DA3633</Color>
+
+        <!-- QoS Severity Colors (for latency/jitter severity displays) -->
+        <Color x:Key="LatencyCritical">#003366</Color>
+        <Color x:Key="LatencyHigh">#1F6FEB</Color>
+        <Color x:Key="LatencyMedium">#87CEEB</Color>
+        <Color x:Key="JitterCritical">#DC143C</Color>
+        <Color x:Key="JitterHigh">#FF8C00</Color>
+        <Color x:Key="JitterMedium">#FFD700</Color>
+
+        <!-- Purple Accent Variations (for threats) -->
+        <Color x:Key="AccentPurpleDark">#5B21B6</Color>
+        <Color x:Key="AccentPurpleLight">#A78BFA</Color>
+        <Color x:Key="AccentPurpleMedium">#6D28D9</Color>
+        <Color x:Key="AccentPurpleGlow">#8B5CF660</Color>
+        <Color x:Key="AccentPurpleGlowLight">#8B5CF640</Color>
+
+        <!-- Report Gradient Colors -->
+        <Color x:Key="ReportGradientStart">#667eea</Color>
+        <Color x:Key="ReportGradientEnd">#764ba2</Color>
+
+        <!-- Severity Tint Backgrounds (20% opacity semantic colors) -->
+        <Color x:Key="SeverityCriticalTint">#E01E5A20</Color>
+        <Color x:Key="SeverityHighTint">#ECB22E20</Color>
+        <Color x:Key="SeverityMediumTint">#1264A320</Color>
+        <Color x:Key="SeverityLowTint">#2BAC7620</Color>
+        <Color x:Key="SeverityLowTintLight">#2BAC7615</Color>
+
+        <!-- Map Legend Colors -->
+        <Color x:Key="MapLegendGray">#6B7280</Color>
+        <Color x:Key="MapLegendBlue">#3B82F6</Color>
+        <Color x:Key="MapLegendGreen">#10B981</Color>
+        <Color x:Key="MapLegendYellow">#F59E0B</Color>
+        <Color x:Key="MapLegendRed">#EF4444</Color>
+
+        <!-- Dashboard Stat Colors -->
+        <Color x:Key="StatPackets">#3B82F6</Color>
+        <Color x:Key="StatBytes">#10B981</Color>
+        <Color x:Key="StatIPs">#F59E0B</Color>
+        <Color x:Key="StatConversations">#06B6D4</Color>
+        <Color x:Key="StatPorts">#EC4899</Color>
+        <Color x:Key="StatPurple">#A855F7</Color>
+        <Color x:Key="StatTeal">#14B8A6</Color>
+        <Color x:Key="WarningPanelBg">#2D1F00</Color>
+        <Color x:Key="WarningPanelText">#D4A574</Color>
+
+        <!-- File Selection State Colors -->
+        <Color x:Key="FileStateSuccess">#a6e3a120</Color>
+        <Color x:Key="FileStateSuccessBorder">#a6e3a140</Color>
+        <Color x:Key="FileStateInfo">#89b4fa20</Color>
+        <Color x:Key="FileStateInfoBorder">#89b4fa40</Color>
+        <Color x:Key="FileStatePurple">#cba6f720</Color>
+        <Color x:Key="FileStatePurpleBorder">#cba6f740</Color>
+        <Color x:Key="FileStateWarning">#f9e2af20</Color>
+        <Color x:Key="FileStateGlow">#89b4fa40</Color>
+
+        <!-- Primary with Opacity -->
+        <Color x:Key="ColorPrimaryTint">#1264A340</Color>
+        <Color x:Key="ColorPrimaryTintLight">#1264A326</Color>
+
+        <!-- Chart Colors (keep vibrant for data viz) -->
+        <Color x:Key="ChartColor1">#1D9BD1</Color>
+        <Color x:Key="ChartColor2">#2BAC76</Color>
+        <Color x:Key="ChartColor3">#ECB22E</Color>
         <Color x:Key="ChartColor4">#8B5CF6</Color>
-        <Color x:Key="ChartColor5">#F778BA</Color>
-        <Color x:Key="ChartColor6">#39D0D0</Color>
-        
+        <Color x:Key="ChartColor5">#E01E5A</Color>
+        <Color x:Key="ChartColor6">#36C5F0</Color>
+
+        <!-- Protocol Colors (L4/L7) -->
+        <Color x:Key="ProtocolTCP">#3FB950</Color>
+        <Color x:Key="ProtocolUDP">#58A6FF</Color>
+        <Color x:Key="ProtocolICMP">#F78166</Color>
+        <Color x:Key="ProtocolHTTP">#A371F7</Color>
+        <Color x:Key="ProtocolHTTPS">#8B5CF6</Color>
+        <Color x:Key="ProtocolTLS">#C69026</Color>
+        <Color x:Key="ProtocolDNS">#FFA657</Color>
+        <Color x:Key="ProtocolSSH">#56D4DD</Color>
+        <Color x:Key="ProtocolFTP">#FF7B72</Color>
+        <Color x:Key="ProtocolSMTP">#D29922</Color>
+        <Color x:Key="ProtocolSIP">#F97583</Color>
+        <Color x:Key="ProtocolRTP">#FFAB70</Color>
+        <Color x:Key="ProtocolLDAP">#79C0FF</Color>
+        <Color x:Key="ProtocolSMB">#7EE787</Color>
+        <Color x:Key="ProtocolNTP">#A5D6FF</Color>
+        <Color x:Key="ProtocolDHCP">#FFC058</Color>
+        <Color x:Key="ProtocolDefault">#6E7681</Color>
+
+        <!-- Security Rating Colors -->
+        <Color x:Key="RatingSecure">#4CAF50</Color>
+        <Color x:Key="RatingLow">#8BC34A</Color>
+        <Color x:Key="RatingMedium">#FFA726</Color>
+        <Color x:Key="RatingHigh">#EF5350</Color>
+        <Color x:Key="RatingCritical">#B71C1C</Color>
+        <Color x:Key="RatingUnknown">#9E9E9E</Color>
+
+        <!-- Traffic Intensity Colors -->
+        <Color x:Key="TrafficNone">#6B7280</Color>
+        <Color x:Key="TrafficLow">#3B82F6</Color>
+        <Color x:Key="TrafficMedium">#10B981</Color>
+        <Color x:Key="TrafficHigh">#F59E0B</Color>
+        <Color x:Key="TrafficCritical">#EF4444</Color>
+
+        <!-- Validation Colors -->
+        <Color x:Key="ValidationValid">#30363D</Color>
+        <Color x:Key="ValidationInvalid">#EF4444</Color>
+
+        <!-- Highlight Colors -->
+        <Color x:Key="HighlightYellow">#FFD700</Color>
+        <Color x:Key="HighlightOrange">#FFA500</Color>
+        <Color x:Key="StreamHighlight">#1A3B82F6</Color>
+        <Color x:Key="SelectionHighlight">#333B82F6</Color>
+
+        <!-- Map/Rendering Colors -->
+        <Color x:Key="MapBorder">#374151</Color>
+        <Color x:Key="MapLand">#4B5563</Color>
+        <Color x:Key="MapTooltipBg">#DC1E293B</Color>
+        <Color x:Key="MapTooltipHover">#F0334155</Color>
+        <Color x:Key="MapTextDim">#9CA3AF</Color>
+        <Color x:Key="MapTextBright">#E5E7EB</Color>
+        <Color x:Key="MapGlowWhite">#64FFFFFF</Color>
+
+        <!-- Percentage Bar Colors -->
+        <Color x:Key="PercentageTrack">#484F58</Color>
+        <Color x:Key="PercentageHotStart">#F85149</Color>
+        <Color x:Key="PercentageHotEnd">#F0883E</Color>
+        <Color x:Key="PercentageWarmStart">#F0883E</Color>
+        <Color x:Key="PercentageWarmEnd">#3FB950</Color>
+        <Color x:Key="PercentageCoolStart">#58A6FF</Color>
+        <Color x:Key="PercentageCoolEnd">#79C0FF</Color>
+
         <!-- Convert Colors to Brushes -->
         <SolidColorBrush x:Key="BackgroundDarkest" Color="{StaticResource BackgroundLevel0}"/>
-        <SolidColorBrush x:Key="BackgroundDark" Color="{StaticResource BackgroundLevel1}"/>
+        <SolidColorBrush x:Key="BackgroundDark" Color="{StaticResource BackgroundLevel0}"/>
         <SolidColorBrush x:Key="BackgroundCard" Color="{StaticResource BackgroundLevel2}"/>
         <SolidColorBrush x:Key="BackgroundElevated" Color="{StaticResource BackgroundLevel3}"/>
-        <SolidColorBrush x:Key="BackgroundMedium" Color="{StaticResource BackgroundLevel3}"/>
-        <SolidColorBrush x:Key="BackgroundLight" Color="{StaticResource BackgroundLevel4}"/>
-        <SolidColorBrush x:Key="BackgroundHover" Color="{StaticResource BackgroundLevel4}"/>
-        <SolidColorBrush x:Key="BackgroundActive" Color="{StaticResource BackgroundLevel5}"/>
-        
+        <SolidColorBrush x:Key="BackgroundMedium" Color="{StaticResource BackgroundLevel2}"/>
+        <SolidColorBrush x:Key="BackgroundLight" Color="{StaticResource BackgroundLevel3}"/>
+        <SolidColorBrush x:Key="BackgroundHover" Color="{StaticResource BackgroundLevel3}"/>
+        <SolidColorBrush x:Key="BackgroundActive" Color="{StaticResource BackgroundLevel4}"/>
+        <SolidColorBrush x:Key="BackgroundPanel" Color="{StaticResource BackgroundLevel1}"/>
+
         <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimary}"/>
         <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}"/>
         <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource TextMuted}"/>
-        
+
         <SolidColorBrush x:Key="BorderPrimary" Color="{StaticResource BorderDefault}"/>
         <SolidColorBrush x:Key="BorderSubtleBrush" Color="{StaticResource BorderSubtle}"/>
         <SolidColorBrush x:Key="BorderStrongBrush" Color="{StaticResource BorderStrong}"/>
-        
+
         <SolidColorBrush x:Key="AccentPrimary" Color="{StaticResource ColorPrimary}"/>
         <SolidColorBrush x:Key="AccentSecondary" Color="{StaticResource ColorSecondary}"/>
-        
-        <!-- Gradients -->
-        <LinearGradientBrush x:Key="GradientPrimary" StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Offset="0" Color="{StaticResource ColorPrimary}"/>
-            <GradientStop Offset="1" Color="{StaticResource AccentBlue}"/>
-        </LinearGradientBrush>
-        
-        <LinearGradientBrush x:Key="GradientSuccess" StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Offset="0" Color="{StaticResource ColorSuccess}"/>
-            <GradientStop Offset="1" Color="#2EA043"/>
-        </LinearGradientBrush>
-        
-        <LinearGradientBrush x:Key="GradientDanger" StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Offset="0" Color="{StaticResource ColorDanger}"/>
-            <GradientStop Offset="1" Color="#DC2626"/>
-        </LinearGradientBrush>
-        
+
+        <!-- Slack-style specific brushes -->
+        <SolidColorBrush x:Key="SlackPrimary" Color="{StaticResource ColorPrimary}"/>
+        <SolidColorBrush x:Key="SlackSuccess" Color="{StaticResource ColorSuccess}"/>
+        <SolidColorBrush x:Key="SlackDanger" Color="{StaticResource ColorDanger}"/>
+        <SolidColorBrush x:Key="SlackWarning" Color="{StaticResource ColorWarning}"/>
+        <SolidColorBrush x:Key="SlackInfo" Color="{StaticResource ColorInfo}"/>
+        <SolidColorBrush x:Key="AccentCyanBrush" Color="{StaticResource AccentCyan}"/>
+        <SolidColorBrush x:Key="AccentPurpleBrush" Color="{StaticResource AccentPurple}"/>
+
+        <!-- Chart Brushes -->
+        <SolidColorBrush x:Key="ChartBrush1" Color="{StaticResource ChartColor1}"/>
+        <SolidColorBrush x:Key="ChartBrush2" Color="{StaticResource ChartColor2}"/>
+        <SolidColorBrush x:Key="ChartBrush3" Color="{StaticResource ChartColor3}"/>
+        <SolidColorBrush x:Key="ChartBrush4" Color="{StaticResource ChartColor4}"/>
+        <SolidColorBrush x:Key="ChartBrush5" Color="{StaticResource ChartColor5}"/>
+        <SolidColorBrush x:Key="ChartBrush6" Color="{StaticResource ChartColor6}"/>
+
+        <!-- Popup/Dialog Brushes -->
+        <SolidColorBrush x:Key="PopupBgBrush" Color="{StaticResource PopupBg}"/>
+        <SolidColorBrush x:Key="PopupBgSecondaryBrush" Color="{StaticResource PopupBgSecondary}"/>
+        <SolidColorBrush x:Key="PopupBgTertiaryBrush" Color="{StaticResource PopupBgTertiary}"/>
+        <SolidColorBrush x:Key="PopupBorderBrush" Color="{StaticResource PopupBorder}"/>
+        <SolidColorBrush x:Key="PopupTextBrush" Color="{StaticResource PopupText}"/>
+        <SolidColorBrush x:Key="PopupTextSecondaryBrush" Color="{StaticResource PopupTextSecondary}"/>
+        <SolidColorBrush x:Key="PopupLinkBrush" Color="{StaticResource PopupLink}"/>
+        <SolidColorBrush x:Key="PopupSuccessBrush" Color="{StaticResource PopupSuccess}"/>
+
+        <!-- Gradients (simplified - Slack uses flat colors mostly) -->
+        <SolidColorBrush x:Key="GradientPrimary" Color="{StaticResource ColorPrimary}"/>
+        <SolidColorBrush x:Key="GradientSuccess" Color="{StaticResource ColorSuccess}"/>
+        <SolidColorBrush x:Key="GradientDanger" Color="{StaticResource ColorDanger}"/>
+
         <!-- Backward Compatibility Aliases -->
         <SolidColorBrush x:Key="BackgroundDarkestBrush" Color="{StaticResource BackgroundLevel0}"/>
-        <SolidColorBrush x:Key="BackgroundDarkBrush" Color="{StaticResource BackgroundLevel1}"/>
+        <SolidColorBrush x:Key="BackgroundDarkBrush" Color="{StaticResource BackgroundLevel0}"/>
         <SolidColorBrush x:Key="BackgroundCardBrush" Color="{StaticResource BackgroundLevel2}"/>
         <SolidColorBrush x:Key="BackgroundElevatedBrush" Color="{StaticResource BackgroundLevel3}"/>
-        <SolidColorBrush x:Key="BackgroundHoverBrush" Color="{StaticResource BackgroundLevel4}"/>
+        <SolidColorBrush x:Key="BackgroundHoverBrush" Color="{StaticResource BackgroundLevel3}"/>
         <SolidColorBrush x:Key="Background1Brush" Color="{StaticResource BackgroundLevel0}"/>
         <SolidColorBrush x:Key="Background2Brush" Color="{StaticResource BackgroundLevel1}"/>
         <SolidColorBrush x:Key="Background3Brush" Color="{StaticResource BackgroundLevel2}"/>
@@ -164,9 +468,10 @@
     </Style>
     
     <!-- ════════════════════════════════════════════════════════════════
-         BUTTON STYLES
+         BUTTON STYLES - SLACK STYLE
+         No scale transforms, flat colors, 150ms transitions
          ════════════════════════════════════════════════════════════════ -->
-    
+
     <!-- Base Button -->
     <Style Selector="Button">
         <Setter Property="FontWeight" Value="{StaticResource FontWeightMedium}"/>
@@ -175,160 +480,696 @@
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="Transitions">
             <Transitions>
-                <DoubleTransition Property="Opacity" Duration="0:0:0.2"/>
-                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
-                <BrushTransition Property="Background" Duration="0:0:0.2"/>
+                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+                <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
             </Transitions>
         </Setter>
     </Style>
-    
+
+    <!-- No scale on hover - Slack style -->
     <Style Selector="Button:pointerover">
-        <Setter Property="RenderTransform" Value="scale(1.02)"/>
+        <!-- Intentionally empty - no scale transform -->
     </Style>
-    
+
     <Style Selector="Button:pressed">
-        <Setter Property="RenderTransform" Value="scale(0.98)"/>
+        <!-- Intentionally empty - no scale transform -->
     </Style>
-    
+
     <Style Selector="Button:disabled">
-        <Setter Property="Opacity" Value="0.5"/>
+        <Setter Property="Opacity" Value="0.4"/>
         <Setter Property="Cursor" Value="Arrow"/>
     </Style>
-    
-    <!-- Primary Button -->
+
+    <!-- Primary Button - Slack Blue -->
     <Style Selector="Button.primary, Button.primary-action">
-        <Setter Property="Background" Value="{StaticResource GradientPrimary}"/>
+        <Setter Property="Background" Value="{StaticResource ColorPrimary}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
-        <Setter Property="Padding" Value="16,10"/>
-        <Setter Property="MinHeight" Value="40"/>
-        <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="MinHeight" Value="32"/>
+        <Setter Property="FontWeight" Value="{StaticResource FontWeightMedium}"/>
     </Style>
-    
+
     <Style Selector="Button.primary:pointerover, Button.primary-action:pointerover">
-        <Setter Property="Background">
-            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                <GradientStop Offset="0" Color="#1F6FEB"/>
-                <GradientStop Offset="1" Color="#2F81F7"/>
-            </LinearGradientBrush>
-        </Setter>
+        <Setter Property="Background" Value="{StaticResource ColorPrimaryHover}"/>
     </Style>
-    
-    <!-- Secondary Button -->
+
+    <Style Selector="Button.primary:pressed, Button.primary-action:pressed">
+        <Setter Property="Background" Value="{StaticResource ColorPrimaryHover}"/>
+    </Style>
+
+    <!-- Secondary Button - Transparent with border -->
     <Style Selector="Button.secondary, Button.secondary-action">
-        <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
+        <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderPrimary}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderStrong}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
-        <Setter Property="Padding" Value="16,10"/>
-        <Setter Property="MinHeight" Value="40"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="MinHeight" Value="32"/>
     </Style>
-    
+
     <Style Selector="Button.secondary:pointerover, Button.secondary-action:pointerover">
-        <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderStrongBrush}"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundLevel3}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource TextDisabled}"/>
     </Style>
-    
-    <!-- Danger Button -->
+
+    <Style Selector="Button.secondary:pressed, Button.secondary-action:pressed">
+        <Setter Property="Background" Value="{StaticResource BackgroundLevel4}"/>
+    </Style>
+
+    <!-- Danger Button - Slack Pink/Red, outline style -->
     <Style Selector="Button.danger, Button.danger-action">
-        <Setter Property="Background" Value="{StaticResource GradientDanger}"/>
-        <Setter Property="Foreground" Value="White"/>
-        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource ColorDanger}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ColorDanger}"/>
+        <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
-        <Setter Property="Padding" Value="16,10"/>
-        <Setter Property="MinHeight" Value="40"/>
-        <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="MinHeight" Value="32"/>
+        <Setter Property="FontWeight" Value="{StaticResource FontWeightMedium}"/>
     </Style>
-    
+
     <Style Selector="Button.danger:pointerover, Button.danger-action:pointerover">
-        <Setter Property="Background">
-            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                <GradientStop Offset="0" Color="#DC2626"/>
-                <GradientStop Offset="1" Color="#B91C1C"/>
-            </LinearGradientBrush>
-        </Setter>
+        <Setter Property="Background" Value="{StaticResource ColorDanger}"/>
+        <Setter Property="Foreground" Value="White"/>
     </Style>
-    
-    <!-- Ghost Button -->
+
+    <Style Selector="Button.danger:pressed, Button.danger-action:pressed">
+        <Setter Property="Background" Value="{StaticResource ColorDangerHover}"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <!-- Ghost Button - Transparent, subtle hover -->
     <Style Selector="Button.ghost">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="Padding" Value="8,6"/>
     </Style>
-    
+
     <Style Selector="Button.ghost:pointerover">
-        <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundLevel3}"/>
+    </Style>
+
+    <Style Selector="Button.ghost:pressed">
+        <Setter Property="Background" Value="{StaticResource BackgroundLevel4}"/>
     </Style>
     
     <!-- ════════════════════════════════════════════════════════════════
-         CARD STYLES
+         CARD STYLES - SLACK STYLE
+         Minimal borders, subtle shadows, no transform animations
          ════════════════════════════════════════════════════════════════ -->
-    
+
     <!-- Standard Card -->
     <Style Selector="Border.card, Border.modern-card">
-        <Setter Property="Background" Value="{StaticResource BackgroundCard}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderPrimary}"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundLevel2}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BackgroundLevel3}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}"/>
+        <Setter Property="Padding" Value="20"/>
+        <Setter Property="BoxShadow" Value="0 2 8 0 #00000026"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.card:pointerover, Border.modern-card:pointerover">
+        <Setter Property="BorderBrush" Value="{StaticResource BorderStrong}"/>
+    </Style>
+
+    <!-- Unified Card (new Slack-style) -->
+    <Style Selector="Border.modern-card-unified">
+        <Setter Property="Background" Value="{StaticResource BackgroundLevel1}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BackgroundLevel3}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusXLarge}"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="BoxShadow" Value="0 2 8 0 #00000026"/>
+    </Style>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         TABLE & DATA DISPLAY STYLES
+         ════════════════════════════════════════════════════════════════ -->
+
+    <!-- Table Header - Unified Style -->
+    <Style Selector="Border.table-header-unified">
+        <Setter Property="Background" Value="{DynamicResource BackgroundCard}"/>
+        <Setter Property="Height" Value="48"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+
+    <!-- Ranked Table Row -->
+    <Style Selector="Border.ranked-table-row">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Margin" Value="8,2"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.ranked-table-row:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BackgroundHover}"/>
+    </Style>
+
+    <!-- Service Badge -->
+    <Style Selector="Border.service-badge">
+        <Setter Property="Background" Value="{DynamicResource BackgroundElevated}"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}"/>
+        <Setter Property="Padding" Value="6,2"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+
+    <!-- Percentage Track -->
+    <Style Selector="Border.percentage-track">
+        <Setter Property="Background" Value="{DynamicResource BackgroundElevated}"/>
+        <Setter Property="CornerRadius" Value="3"/>
+        <Setter Property="Height" Value="20"/>
+    </Style>
+
+    <!-- Percentage Text -->
+    <Style Selector="TextBlock.percentage-text">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeXS}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Rank Number -->
+    <Style Selector="TextBlock.rank-number">
+        <Setter Property="Width" Value="25"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        <Setter Property="TextAlignment" Value="Right"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+    </Style>
+
+    <!-- Details Button -->
+    <Style Selector="Button.details-btn">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.details-btn:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BackgroundHover}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <Style Selector="Button.details-btn:pressed">
+        <Setter Property="Background" Value="{DynamicResource BackgroundActive}"/>
+    </Style>
+
+    <!-- Fixed Height Table ScrollViewer -->
+    <Style Selector="ScrollViewer.fixed-height-table">
+        <Setter Property="Height" Value="440"/>
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+    </Style>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         KPI & METRIC CARD STYLES
+         ════════════════════════════════════════════════════════════════ -->
+
+    <!-- KPI Card -->
+    <Style Selector="Border.kpi-card">
+        <Setter Property="Background" Value="{DynamicResource BackgroundCard}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}"/>
         <Setter Property="Padding" Value="16"/>
-        <Setter Property="BoxShadow" Value="0 1 3 0 #00000022"/>
-        <Setter Property="Transitions">
-            <Transitions>
-                <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.2"/>
-                <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
-            </Transitions>
-        </Setter>
+        <Setter Property="MinHeight" Value="80"/>
     </Style>
-    
-    <Style Selector="Border.card:pointerover, Border.modern-card:pointerover">
-        <Setter Property="BorderBrush" Value="{StaticResource BorderStrongBrush}"/>
-        <Setter Property="BoxShadow" Value="0 4 6 0 #00000033"/>
+
+    <Style Selector="TextBlock.kpi-label">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="FontWeight" Value="{StaticResource FontWeightMedium}"/>
     </Style>
-    
-    <!-- Stat Card -->
-    <Style Selector="Border.stat-card, Border.stat-card-modern">
-        <Setter Property="Background">
-            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                <GradientStop Offset="0" Color="{StaticResource BackgroundLevel3}"/>
-                <GradientStop Offset="1" Color="{StaticResource BackgroundLevel2}"/>
-            </LinearGradientBrush>
-        </Setter>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}"/>
+
+    <Style Selector="TextBlock.kpi-value">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeHeading}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="FontWeight" Value="{StaticResource FontWeightBold}"/>
+    </Style>
+
+    <!-- Dashboard Card (for VisualizationDashboardView) -->
+    <Style Selector="Border.dashboard-card">
+        <Setter Property="Background" Value="{DynamicResource BackgroundCard}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}"/>
+        <Setter Property="Padding" Value="20"/>
+        <Setter Property="BoxShadow" Value="0 2 8 0 #00000026"/>
+    </Style>
+
+    <Style Selector="TextBlock.card-title">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeLarge}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}"/>
+    </Style>
+
+    <Style Selector="TextBlock.card-subtitle">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+    </Style>
+
+    <Style Selector="TextBlock.card-value">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeDisplay}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="FontWeight" Value="{StaticResource FontWeightBold}"/>
+    </Style>
+
+    <Style Selector="TextBlock.section-title">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeMedium}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}"/>
+        <Setter Property="Margin" Value="0,0,0,12"/>
+    </Style>
+
+    <!-- Chart Container -->
+    <Style Selector="Border.chart-container">
+        <Setter Property="Background" Value="{DynamicResource BackgroundCard}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}"/>
         <Setter Property="Padding" Value="16"/>
-        <Setter Property="MinHeight" Value="90"/>
-        <Setter Property="Transitions">
-            <Transitions>
-                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.2"/>
-                <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
-            </Transitions>
-        </Setter>
+        <Setter Property="MinHeight" Value="300"/>
     </Style>
-    
-    <Style Selector="Border.stat-card:pointerover, Border.stat-card-modern:pointerover">
-        <Setter Property="BorderBrush" Value="{StaticResource AccentPrimary}"/>
-        <Setter Property="RenderTransform" Value="translateY(-2px)"/>
-    </Style>
-    
-    <!-- Control Panel -->
-    <Style Selector="Border.control-panel">
-        <Setter Property="Background" Value="{StaticResource BackgroundCard}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderPrimary}"/>
+
+    <!-- Analytics Card -->
+    <Style Selector="Border.analytics-card">
+        <Setter Property="Background" Value="{DynamicResource BackgroundPanel}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}"/>
         <Setter Property="Padding" Value="20"/>
     </Style>
-    
-    <!-- Packet Card -->
-    <Style Selector="Border.packet-card">
-        <Setter Property="Background" Value="{StaticResource BackgroundCard}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderSubtleBrush}"/>
+
+    <!-- Modern Card Inner -->
+    <Style Selector="Border.modern-card-inner">
+        <Setter Property="Background" Value="{DynamicResource BackgroundPanel}"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         BUTTON VARIANTS
+         ════════════════════════════════════════════════════════════════ -->
+
+    <!-- Primary Button (alias for primary-action) -->
+    <Style Selector="Button.primary-button">
+        <Setter Property="Background" Value="{DynamicResource AccentPrimary}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="MinHeight" Value="32"/>
+        <Setter Property="FontWeight" Value="{StaticResource FontWeightMedium}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.primary-button:pointerover">
+        <Setter Property="Background" Value="{StaticResource ColorPrimaryHover}"/>
+    </Style>
+
+    <!-- Secondary Button -->
+    <Style Selector="Button.secondary-button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="Padding" Value="16,8"/>
+        <Setter Property="MinHeight" Value="32"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.secondary-button:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BackgroundHover}"/>
+    </Style>
+
+    <!-- Tertiary Button -->
+    <Style Selector="Button.tertiary-button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.tertiary-button:pointerover">
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource BackgroundHover}"/>
+    </Style>
+
+    <!-- Export Button -->
+    <Style Selector="Button.export-button">
+        <Setter Property="Background" Value="{DynamicResource AccentPrimary}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBase}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.export-button:pointerover">
+        <Setter Property="Background" Value="{StaticResource ColorPrimaryHover}"/>
+    </Style>
+
+    <!-- Action Button (small) -->
+    <Style Selector="Button.action-btn">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="6,4"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.action-btn:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BackgroundHover}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <!-- Clear Button -->
+    <Style Selector="Button.clear-btn">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource SlackDanger}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource SlackDanger}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.clear-btn:pointerover">
+        <Setter Property="Background" Value="{DynamicResource SlackDanger}"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <!-- Close Button -->
+    <Style Selector="Button.close-btn">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="4"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.close-btn:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BackgroundHover}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <!-- Link Button -->
+    <Style Selector="Button.link-button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource AccentPrimary}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.link-button:pointerover">
+        <Setter Property="Foreground" Value="{StaticResource ColorPrimaryLight}"/>
+    </Style>
+
+    <!-- Row Button (inline table actions) -->
+    <Style Selector="Button.row-btn">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="4,2"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeXS}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.row-btn:pointerover">
+        <Setter Property="Foreground" Value="{DynamicResource AccentPrimary}"/>
+    </Style>
+
+    <!-- Page Button (pagination) -->
+    <Style Selector="Button.page-btn">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="MinWidth" Value="32"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.page-btn:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BackgroundHover}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         FILTER & CONTROL STYLES
+         ════════════════════════════════════════════════════════════════ -->
+
+    <!-- Filter Chip Slack Style -->
+    <Style Selector="ToggleButton.filter-chip-slack">
+        <Setter Property="Background" Value="{DynamicResource BackgroundElevated}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusChip}"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBase}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="MinHeight" Value="28"/>
+    </Style>
+
+    <Style Selector="ToggleButton.filter-chip-slack:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BackgroundActive}"/>
+    </Style>
+
+    <Style Selector="ToggleButton.filter-chip-slack:checked">
+        <Setter Property="Background" Value="{DynamicResource AccentPrimary}"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <!-- Filter Combo -->
+    <Style Selector="ComboBox.filter-combo">
+        <Setter Property="Background" Value="{DynamicResource BackgroundDark}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderPrimary}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="MinHeight" Value="36"/>
+    </Style>
+
+    <!-- Quick Filter Toggle -->
+    <Style Selector="ToggleButton.quick-filter-toggle">
+        <Setter Property="Background" Value="{DynamicResource BackgroundElevated}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="Padding" Value="10,6"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="ToggleButton.quick-filter-toggle:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BackgroundActive}"/>
+    </Style>
+
+    <Style Selector="ToggleButton.quick-filter-toggle:checked">
+        <Setter Property="Background" Value="{DynamicResource AccentPrimary}"/>
+        <Setter Property="Foreground" Value="White"/>
+    </Style>
+
+    <!-- Mode Toggle -->
+    <Style Selector="ToggleButton.mode-toggle">
+        <Setter Property="Background" Value="{DynamicResource BackgroundCard}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="ToggleButton.mode-toggle:checked">
+        <Setter Property="Background" Value="{DynamicResource AccentPrimary}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentPrimary}"/>
+    </Style>
+
+    <!-- Segment Radio -->
+    <Style Selector="RadioButton.segment-radio">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="RadioButton.segment-radio:checked">
+        <Setter Property="Background" Value="{DynamicResource BackgroundActive}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         DETAIL PANE STYLES
+         ════════════════════════════════════════════════════════════════ -->
+
+    <Style Selector="Button.detail-button">
+        <Setter Property="Background" Value="{DynamicResource BackgroundElevated}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.detail-button:pointerover">
+        <Setter Property="Background" Value="{DynamicResource BackgroundActive}"/>
+    </Style>
+
+    <Style Selector="Border.detail-header">
+        <Setter Property="Background" Value="{DynamicResource BackgroundCard}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        <Setter Property="Padding" Value="16,12"/>
+    </Style>
+
+    <Style Selector="TextBlock.detail-label">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        <Setter Property="FontWeight" Value="{StaticResource FontWeightMedium}"/>
+    </Style>
+
+    <Style Selector="TextBlock.detail-value">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeMedium}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+    </Style>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         REPORT & FINDING STYLES
+         ════════════════════════════════════════════════════════════════ -->
+
+    <Style Selector="Border.report-card">
+        <Setter Property="Background" Value="{DynamicResource BackgroundCard}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}"/>
+        <Setter Property="Padding" Value="20"/>
+        <Setter Property="Margin" Value="0,0,0,16"/>
+    </Style>
+
+    <Style Selector="Border.finding-card">
+        <Setter Property="Background" Value="{DynamicResource BackgroundPanel}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+        <Setter Property="BorderThickness" Value="1,0,0,0"/>
+        <Setter Property="Padding" Value="16,12"/>
+        <Setter Property="Margin" Value="0,8,0,0"/>
+    </Style>
+
+    <!-- Status Pulse (animated indicator) -->
+    <Style Selector="Ellipse.status-pulse">
+        <Setter Property="Width" Value="8"/>
+        <Setter Property="Height" Value="8"/>
+        <Setter Property="Fill" Value="{DynamicResource SlackSuccess}"/>
+    </Style>
+
+    <!-- Badge Unified -->
+    <Style Selector="Border.badge-unified">
+        <Setter Property="Background" Value="{DynamicResource BackgroundElevated}"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusPill}"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="MinWidth" Value="24"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Export CSV Button -->
+    <Style Selector="Button.export-csv">
+        <Setter Property="Background" Value="{DynamicResource AccentPrimary}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ColorPrimaryHover}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+
+    <Style Selector="Button.export-csv:pointerover">
+        <Setter Property="Background" Value="{StaticResource ColorPrimaryHover}"/>
+    </Style>
+
+    <!-- Table Header (legacy alias) -->
+    <Style Selector="Border.table-header">
+        <Setter Property="Background" Value="{DynamicResource BackgroundElevated}"/>
+        <Setter Property="Height" Value="48"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+
+    <!-- Card Title -->
+    <Style Selector="TextBlock.card-title">
+        <Setter Property="FontSize" Value="{StaticResource FontSizeMedium}"/>
+        <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="Margin" Value="0,0,0,12"/>
+    </Style>
+
+    <!-- Stat Card - Flat, no gradient, no transform -->
+    <Style Selector="Border.stat-card, Border.stat-card-modern">
+        <Setter Property="Background" Value="{DynamicResource BackgroundCard}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}"/>
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="MinHeight" Value="90"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+
+    <Style Selector="Border.stat-card:pointerover, Border.stat-card-modern:pointerover">
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentPrimary}"/>
+        <!-- No transform - Slack style -->
+    </Style>
+
+    <!-- Control Panel -->
+    <Style Selector="Border.control-panel">
+        <Setter Property="Background" Value="{DynamicResource BackgroundPanel}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderPrimary}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusXLarge}"/>
+        <Setter Property="Padding" Value="20"/>
+        <Setter Property="BoxShadow" Value="0 2 8 0 #00000026"/>
+    </Style>
+
+    <!-- Packet Card -->
+    <Style Selector="Border.packet-card">
+        <Setter Property="Background" Value="{DynamicResource BackgroundCard}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}"/>
         <Setter Property="Padding" Value="12"/>
         <Setter Property="Margin" Value="0,0,0,8"/>
     </Style>
@@ -383,7 +1224,7 @@
     
     <!-- Quick Stats Loading -->
     <Style Selector="Border.stats-loading">
-        <Setter Property="Background" Value="#E00A0E1B"/>
+        <Setter Property="Background" Value="{StaticResource OverlayDark}"/>
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
         <Setter Property="Padding" Value="16"/>
     </Style>
@@ -435,85 +1276,104 @@
     </Style>
     
     <!-- ════════════════════════════════════════════════════════════════
-         TAB CONTROL STYLES
+         TAB CONTROL STYLES - SLACK STYLE
+         Borderless tabs, bottom accent line, no boxed appearance
          ════════════════════════════════════════════════════════════════ -->
-    
+
     <Style Selector="TabControl">
-        <Setter Property="Background" Value="{StaticResource BackgroundDark}"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundLevel0}"/>
     </Style>
-    
+
     <Style Selector="TabItem">
         <Setter Property="FontSize" Value="{StaticResource FontSizeMedium}"/>
-        <Setter Property="Padding" Value="20,12"/>
-        <Setter Property="Margin" Value="0,0,8,0"/>
+        <Setter Property="Padding" Value="16,10"/>
+        <Setter Property="Margin" Value="0,0,4,0"/>
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,3"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="CornerRadius" Value="8,8,0,0"/>
         <Setter Property="Transitions">
             <Transitions>
-                <BrushTransition Property="Foreground" Duration="0:0:0.2"/>
-                <BrushTransition Property="Background" Duration="0:0:0.2"/>
+                <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
+                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
             </Transitions>
         </Setter>
     </Style>
-    
+
     <Style Selector="TabItem:pointerover">
-        <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
-        <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundLevel3}"/>
         <Setter Property="Cursor" Value="Hand"/>
     </Style>
-    
+
     <Style Selector="TabItem:selected">
-        <Setter Property="Foreground" Value="{StaticResource AccentPrimary}"/>
-        <Setter Property="FontWeight" Value="{StaticResource FontWeightSemiBold}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource AccentPrimary}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontWeight" Value="Medium"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ColorPrimary}"/>
         <Setter Property="BorderThickness" Value="0,0,0,3"/>
     </Style>
-    
+
+    <Style Selector="TabItem:selected:pointerover">
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
     <Style Selector="TabItem:disabled">
         <Setter Property="Foreground" Value="{StaticResource TextDisabled}"/>
         <Setter Property="Opacity" Value="0.5"/>
     </Style>
     
     <!-- ════════════════════════════════════════════════════════════════
-         INPUT CONTROLS
+         INPUT CONTROLS - SLACK STYLE
          ════════════════════════════════════════════════════════════════ -->
-    
+
     <Style Selector="TextBox, TextBox.modern-input">
-        <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderPrimary}"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundLevel0}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderDefault}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-        <Setter Property="CaretBrush" Value="{StaticResource AccentPrimary}"/>
-        <Setter Property="SelectionBrush" Value="{StaticResource AccentPrimary}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="CaretBrush" Value="{StaticResource ColorPrimary}"/>
+        <Setter Property="SelectionBrush" Value="{StaticResource ColorPrimary}"/>
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
-        <Setter Property="MinHeight" Value="40"/>
+        <Setter Property="MinHeight" Value="36"/>
         <Setter Property="Padding" Value="12,8"/>
-        <Setter Property="FontSize" Value="{StaticResource FontSizeMedium}"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeInput}"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
     </Style>
-    
+
     <Style Selector="TextBox:focus">
-        <Setter Property="BorderBrush" Value="{StaticResource AccentPrimary}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ColorPrimary}"/>
         <Setter Property="BorderThickness" Value="2"/>
     </Style>
-    
+
+    <Style Selector="TextBox:pointerover">
+        <Setter Property="BorderBrush" Value="{StaticResource BorderStrong}"/>
+    </Style>
+
     <Style Selector="ComboBox, ComboBox.modern-combo">
-        <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderPrimary}"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundLevel0}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderDefault}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
         <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
-        <Setter Property="MinHeight" Value="40"/>
+        <Setter Property="MinHeight" Value="36"/>
         <Setter Property="Padding" Value="12,8"/>
-        <Setter Property="FontSize" Value="{StaticResource FontSizeMedium}"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeInput}"/>
     </Style>
-    
+
     <Style Selector="ComboBox:focus">
-        <Setter Property="BorderBrush" Value="{StaticResource AccentPrimary}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ColorPrimary}"/>
         <Setter Property="BorderThickness" Value="2"/>
     </Style>
-    
+
     <Style Selector="ComboBox:pointerover">
-        <Setter Property="BorderBrush" Value="{StaticResource BorderStrongBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource BorderStrong}"/>
     </Style>
     
     <!-- ════════════════════════════════════════════════════════════════
@@ -528,23 +1388,23 @@
     </Style>
     
     <Style Selector="Border.badge-blue">
-        <Setter Property="Background" Value="#1F6FEB33"/>
+        <Setter Property="Background" Value="{StaticResource BadgeBlue}"/>
     </Style>
-    
+
     <Style Selector="Border.badge-green">
-        <Setter Property="Background" Value="#3FB95033"/>
+        <Setter Property="Background" Value="{StaticResource BadgeGreen}"/>
     </Style>
-    
+
     <Style Selector="Border.badge-red">
-        <Setter Property="Background" Value="#F8514933"/>
+        <Setter Property="Background" Value="{StaticResource BadgeRed}"/>
     </Style>
-    
+
     <Style Selector="Border.badge-yellow">
-        <Setter Property="Background" Value="#F9731633"/>
+        <Setter Property="Background" Value="{StaticResource BadgeYellow}"/>
     </Style>
-    
+
     <Style Selector="Border.badge-purple">
-        <Setter Property="Background" Value="#8B5CF633"/>
+        <Setter Property="Background" Value="{StaticResource BadgePurple}"/>
     </Style>
     
     <!-- ════════════════════════════════════════════════════════════════
@@ -615,23 +1475,23 @@
     
     <!-- Threat Level Indicators -->
     <Style Selector="Border.threat-critical">
-        <Setter Property="Background" Value="#EF4444"/>
-        <Setter Property="BorderBrush" Value="#DC2626"/>
+        <Setter Property="Background" Value="{StaticResource ThreatCritical}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ThreatCriticalBorder}"/>
     </Style>
-    
+
     <Style Selector="Border.threat-high">
-        <Setter Property="Background" Value="#F97316"/>
-        <Setter Property="BorderBrush" Value="#EA580C"/>
+        <Setter Property="Background" Value="{StaticResource ThreatHigh}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ThreatHighBorder}"/>
     </Style>
-    
+
     <Style Selector="Border.threat-medium">
-        <Setter Property="Background" Value="#F59E0B"/>
-        <Setter Property="BorderBrush" Value="#D97706"/>
+        <Setter Property="Background" Value="{StaticResource ThreatMedium}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ThreatMediumBorder}"/>
     </Style>
-    
+
     <Style Selector="Border.threat-low">
-        <Setter Property="Background" Value="#3FB950"/>
-        <Setter Property="BorderBrush" Value="#2EA043"/>
+        <Setter Property="Background" Value="{StaticResource ThreatLow}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource ThreatLowBorder}"/>
     </Style>
     
     <!-- Connection Status -->
@@ -651,65 +1511,59 @@
         <Setter Property="Fill" Value="{StaticResource ColorWarning}"/>
     </Style>
     
-    <!-- Filter Chips -->
+    <!-- Filter Chips - SLACK STYLE (pill shape, no scale) -->
     <Style Selector="ToggleButton.filter-chip">
-        <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderPrimary}"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundLevel3}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusChip}"/>
         <Setter Property="Padding" Value="12,6"/>
-        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
         <Setter Property="FontSize" Value="{StaticResource FontSizeBase}"/>
         <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="MinHeight" Value="32"/>
+        <Setter Property="MinHeight" Value="28"/>
         <Setter Property="Transitions">
             <Transitions>
-                <BrushTransition Property="Background" Duration="0:0:0.2"/>
-                <BrushTransition Property="BorderBrush" Duration="0:0:0.2"/>
-                <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                <BrushTransition Property="Foreground" Duration="0:0:0.15"/>
             </Transitions>
         </Setter>
     </Style>
-    
+
     <Style Selector="ToggleButton.filter-chip:pointerover">
-        <Setter Property="Background" Value="{StaticResource BackgroundHover}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource AccentPrimary}"/>
-        <Setter Property="RenderTransform" Value="scale(1.02)"/>
+        <Setter Property="Background" Value="{StaticResource BackgroundLevel4}"/>
+        <!-- No scale transform - Slack style -->
     </Style>
-    
+
     <Style Selector="ToggleButton.filter-chip:checked">
-        <Setter Property="Background">
-            <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                <GradientStop Offset="0" Color="#2563EB"/>
-                <GradientStop Offset="1" Color="#1D4ED8"/>
-            </LinearGradientBrush>
-        </Setter>
-        <Setter Property="BorderBrush" Value="#3B82F6"/>
-        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Background" Value="{StaticResource ColorPrimary}"/>
         <Setter Property="Foreground" Value="White"/>
     </Style>
-    
+
+    <Style Selector="ToggleButton.filter-chip:checked:pointerover">
+        <Setter Property="Background" Value="{StaticResource ColorPrimaryHover}"/>
+    </Style>
+
     <Style Selector="ToggleButton.filter-chip:checked /template/ ContentPresenter">
         <Setter Property="TextBlock.Foreground" Value="White"/>
-        <Setter Property="TextBlock.FontWeight" Value="{StaticResource FontWeightMedium}"/>
+        <Setter Property="TextBlock.FontWeight" Value="Medium"/>
     </Style>
     
     <!-- Loading/Calculating Styles -->
     <Style Selector="Border.quick-stats-loading">
         <Setter Property="Background">
             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
-                <GradientStop Offset="0" Color="#0D1117CC"/>
-                <GradientStop Offset="1" Color="#161B22CC"/>
+                <GradientStop Offset="0" Color="{StaticResource PopupBg}"/>
+                <GradientStop Offset="1" Color="{StaticResource PopupBgSecondary}"/>
             </LinearGradientBrush>
         </Setter>
         <Setter Property="BorderBrush" Value="{StaticResource BorderPrimary}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}"/>
         <Setter Property="Padding" Value="24,20"/>
     </Style>
     
     <Style Selector="TextBlock.loading-text">
-        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeInput}"/>
         <Setter Property="FontWeight" Value="Medium"/>
         <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -721,8 +1575,8 @@
         <Setter Property="Background" Value="{StaticResource BackgroundLevel3}"/>
         <Setter Property="Foreground">
             <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                <GradientStop Offset="0" Color="#3B82F6"/>
-                <GradientStop Offset="1" Color="#10B981"/>
+                <GradientStop Offset="0" Color="{StaticResource GradientBlue}"/>
+                <GradientStop Offset="1" Color="{StaticResource GradientGreen}"/>
             </LinearGradientBrush>
         </Setter>
     </Style>

@@ -13,6 +13,7 @@ using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.UI.Models;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.ViewModels.Components;
+using PCAPAnalyzer.UI.Utilities;
 using SkiaSharp;
 
 namespace PCAPAnalyzer.UI.ViewModels
@@ -201,9 +202,9 @@ namespace PCAPAnalyzer.UI.ViewModels
             try
             {
                 // Ensure we're on UI thread
-                if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+                if (!_dispatcher.CheckAccess())
                 {
-                    Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => UpdateModernVisualizations());
+                    _dispatcher.Post(() => UpdateModernVisualizations());
                     return;
                 }
                 
@@ -242,8 +243,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                 new Axis
                 {
                     Labeler = _ => string.Empty,
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
-                    SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#21262D")),
+                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
+                    SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D"))),
                     TextSize = 10
                 }
             };
@@ -253,8 +254,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                 {
                     Name = "Packets/Second",
                     Labeler = value => $"{value:F0} pkt/s",
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
-                    SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#21262D")),
+                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
+                    SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D"))),
                     TextSize = 10,
                     MinLimit = 0
                 }
@@ -269,9 +270,9 @@ namespace PCAPAnalyzer.UI.ViewModels
             try
             {
                 // Ensure we're on UI thread
-                if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+                if (!_dispatcher.CheckAccess())
                 {
-                    Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => UpdateConnectionsDisplay());
+                    _dispatcher.Post(() => UpdateConnectionsDisplay());
                     return;
                 }
 
@@ -412,9 +413,9 @@ namespace PCAPAnalyzer.UI.ViewModels
             try
             {
                 // Ensure we're on UI thread
-                if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+                if (!_dispatcher.CheckAccess())
                 {
-                    Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => UpdatePortsDisplay());
+                    _dispatcher.Post(() => UpdatePortsDisplay());
                     return;
                 }
                 
@@ -436,7 +437,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                         ByteCount = p.ByteCount,
                         PacketCount = p.PacketCount,
                         ServiceName = GetServiceName(p.Port),
-                        ByteCountFormatted = NumberFormatter.FormatBytes(p.ByteCount),
+                        ByteCountFormatted = Core.Utilities.NumberFormatter.FormatBytes(p.ByteCount),
                         PacketCountFormatted = $"{p.PacketCount:N0}",
                         Percentage = (p.ByteCount * 100.0) / (_currentStatistics.TotalBytes > 0 ? _currentStatistics.TotalBytes : 1)
                     })
@@ -453,7 +454,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                         ByteCount = p.ByteCount,
                         PacketCount = p.PacketCount,
                         ServiceName = GetServiceName(p.Port),
-                        ByteCountFormatted = NumberFormatter.FormatBytes(p.ByteCount),
+                        ByteCountFormatted = Core.Utilities.NumberFormatter.FormatBytes(p.ByteCount),
                         PacketCountFormatted = $"{p.PacketCount:N0}",
                         Percentage = (p.PacketCount * 100.0) / (_currentStatistics.TotalPackets > 0 ? _currentStatistics.TotalPackets : 1)
                     })
@@ -507,8 +508,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                         UnitWidth = TimeSpan.FromMinutes(5).Ticks,
                         MinStep = TimeSpan.FromMinutes(5).Ticks,
                         TextSize = 10,
-                        LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
-                        SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#21262D"))
+                        LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
+                        SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D")))
                     }
                 };
 
@@ -527,9 +528,9 @@ namespace PCAPAnalyzer.UI.ViewModels
                         },
                         TextSize = 10,
                         MinLimit = 0,
-                        NamePaint = new SolidColorPaint(SKColor.Parse(ShowPortActivityAsThroughput ? "#10B981" : "#3B82F6")),
-                        LabelsPaint = new SolidColorPaint(SKColor.Parse("#8B949E")),
-                        SeparatorsPaint = new SolidColorPaint(SKColor.Parse("#21262D"))
+                        NamePaint = new SolidColorPaint(SKColor.Parse(ShowPortActivityAsThroughput ? ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981") : ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"))),
+                        LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
+                        SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D")))
                     }
                 };
 
@@ -558,8 +559,18 @@ namespace PCAPAnalyzer.UI.ViewModels
                         DebugLogger.Log($"  [{i}] Port {port.Port}: {port.PacketCount:N0} packets, {port.ByteCount:N0} bytes");
                     }
 
-                    var colors = new[] { "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6",
-                                        "#06B6D4", "#EC4899", "#F97316", "#84CC16", "#6366F1" };
+                    var colors = new[] {
+                        ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
+                        ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
+                        ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
+                        ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"),
+                        ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6"),
+                        ThemeColorHelper.GetColorHex("AccentCyan", "#06B6D4"),
+                        ThemeColorHelper.GetColorHex("AccentPink", "#EC4899"),
+                        ThemeColorHelper.GetColorHex("ColorOrange", "#F97316"),
+                        ThemeColorHelper.GetColorHex("ColorLime", "#84CC16"),
+                        ThemeColorHelper.GetColorHex("AccentIndigo", "#6366F1")
+                    };
 
                     // Limit legend entries to top 3 ports to reduce visual clutter
                     const int MaxLegendEntries = 3;
@@ -625,7 +636,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
         private string FormatBytesPerSecond(long bytesPerSecond)
         {
-            return NumberFormatter.FormatBytes(bytesPerSecond) + "/s";
+            return Core.Utilities.NumberFormatter.FormatBytes(bytesPerSecond) + "/s";
         }
         
         private ObservablePoint[] GeneratePortActivityData(PortStatistics port, int index, bool showThroughput)
@@ -691,9 +702,9 @@ namespace PCAPAnalyzer.UI.ViewModels
             try
             {
                 // Ensure we're on UI thread
-                if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+                if (!_dispatcher.CheckAccess())
                 {
-                    Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => UpdateSourcesDisplay());
+                    _dispatcher.Post(() => UpdateSourcesDisplay());
                     return;
                 }
                 
@@ -751,9 +762,9 @@ namespace PCAPAnalyzer.UI.ViewModels
             try
             {
                 // Ensure we're on UI thread
-                if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+                if (!_dispatcher.CheckAccess())
                 {
-                    Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => UpdateDestinationsDisplay());
+                    _dispatcher.Post(() => UpdateDestinationsDisplay());
                     return;
                 }
                 

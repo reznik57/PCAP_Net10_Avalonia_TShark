@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.Models;
 
@@ -8,6 +9,10 @@ namespace PCAPAnalyzer.UI.Models;
 /// </summary>
 public partial class StatItem : ObservableObject
 {
+    // Default colors from theme (resolved once)
+    private static readonly string DefaultValueColor = ThemeColorHelper.GetColorHex("StatPackets", "#58A6FF");
+    private static readonly string DefaultSecondaryColor = ThemeColorHelper.GetColorHex("TextMuted", "#6E7681");
+
     /// <summary>
     /// Display label for the statistic (e.g., "TOTAL PACKETS", "AVG LATENCY")
     /// </summary>
@@ -27,10 +32,10 @@ public partial class StatItem : ObservableObject
     private string _icon = string.Empty;
 
     /// <summary>
-    /// Color for the value text (e.g., "#58A6FF", "#3FB950", "#F85149")
+    /// Color for the value text (resolved from theme)
     /// </summary>
     [ObservableProperty]
-    private string _valueColor = "#58A6FF";
+    private string _valueColor = DefaultValueColor;
 
     /// <summary>
     /// Optional secondary text (e.g., percentage, threshold indicator)
@@ -39,8 +44,8 @@ public partial class StatItem : ObservableObject
     private string _secondaryText = string.Empty;
 
     /// <summary>
-    /// Color for secondary text
+    /// Color for secondary text (resolved from theme)
     /// </summary>
     [ObservableProperty]
-    private string _secondaryColor = "#6E7681";
+    private string _secondaryColor = DefaultSecondaryColor;
 }

@@ -9,8 +9,9 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using Microsoft.Extensions.DependencyInjection;
 using SkiaSharp;
 using PCAPAnalyzer.Core.Models;
-using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Services;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -20,6 +21,7 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 /// </summary>
 public partial class DashboardChartsViewModel : ObservableObject
 {
+    private readonly IDispatcherService _dispatcher;
     private readonly IProtocolColorService _protocolColorService;
     // ==================== CHART SERIES ====================
 
@@ -50,10 +52,10 @@ public partial class DashboardChartsViewModel : ObservableObject
     [ObservableProperty] private ObservableCollection<ProtocolLegendItem> _protocolLegendItems = new();
     [ObservableProperty] private ObservableCollection<ProtocolPortItem> _protocolPortItems = new();
 
-    public SolidColorPaint TooltipBackground { get; } = new SolidColorPaint(SKColor.Parse("#161B22")) { StrokeThickness = 1 };
-    public SolidColorPaint TooltipTextPaint { get; } = new SolidColorPaint(SKColor.Parse("#F0F6FC"));
-    public SolidColorPaint LegendBackgroundPaint { get; } = new SolidColorPaint(SKColor.Parse("#161B22")) { StrokeThickness = 1 };
-    public SolidColorPaint LegendTextPaint { get; } = new SolidColorPaint(SKColor.Parse("#F0F6FC"));
+    public SolidColorPaint TooltipBackground { get; } = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BackgroundLevel1", "#161B22"))) { StrokeThickness = 1 };
+    public SolidColorPaint TooltipTextPaint { get; } = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextPrimary", "#F0F6FC")));
+    public SolidColorPaint LegendBackgroundPaint { get; } = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BackgroundLevel1", "#161B22"))) { StrokeThickness = 1 };
+    public SolidColorPaint LegendTextPaint { get; } = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextPrimary", "#F0F6FC")));
 
     // ==================== ZOOM PROPERTIES ====================
 
@@ -100,9 +102,12 @@ public partial class DashboardChartsViewModel : ObservableObject
 
     // ==================== CONSTRUCTOR ====================
 
-    public DashboardChartsViewModel(IProtocolColorService? protocolColorService = null)
+    public DashboardChartsViewModel(IDispatcherService? dispatcher = null, IProtocolColorService? protocolColorService = null)
     {
         // Use DI container, fallback to direct instantiation only if DI not available
+        _dispatcher = dispatcher
+            ?? App.Services?.GetService<IDispatcherService>()
+            ?? throw new InvalidOperationException("IDispatcherService not registered");
         _protocolColorService = protocolColorService
             ?? App.Services?.GetService<IProtocolColorService>()
             ?? new ProtocolColorService();
@@ -149,8 +154,8 @@ public partial class DashboardChartsViewModel : ObservableObject
                     TextSize = 10,
                     SeparatorsPaint = new SolidColorPaint(SKColors.LightGray.WithAlpha(50)),
                     MinLimit = 0,  // Start at 0 baseline
-                    NamePaint = new SolidColorPaint(SKColor.Parse("#3FB950")),  // Green to match series
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse("#3FB950"))
+                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950"))),  // Green to match series
+                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950")))
                 },
                 new Axis
                 {
@@ -160,8 +165,8 @@ public partial class DashboardChartsViewModel : ObservableObject
                     Labeler = value => $"{value:N0}",
                     TextSize = 10,
                     MinLimit = 0,  // Start at 0 baseline
-                    NamePaint = new SolidColorPaint(SKColor.Parse("#58A6FF")),  // Blue to match series
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse("#58A6FF"))
+                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"))),  // Blue to match series
+                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF")))
                 },
                 new Axis
                 {
@@ -172,8 +177,8 @@ public partial class DashboardChartsViewModel : ObservableObject
                     MinLimit = 0,  // Start at 0 baseline
                     TextSize = 9,
                     NameTextSize = 9,
-                    NamePaint = new SolidColorPaint(SKColor.Parse("#F85149")),  // Red to match series
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse("#F85149"))
+                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorDanger", "#F85149"))),  // Red to match series
+                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorDanger", "#F85149")))
                 },
                 new Axis
                 {
@@ -184,8 +189,8 @@ public partial class DashboardChartsViewModel : ObservableObject
                     MinLimit = 0,  // Start at 0 baseline
                     TextSize = 9,
                     NameTextSize = 9,
-                    NamePaint = new SolidColorPaint(SKColor.Parse("#A855F7")),  // Purple to differentiate from red anomalies
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse("#A855F7"))
+                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentPurple", "#A855F7"))),  // Purple to differentiate from red anomalies
+                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentPurple", "#A855F7")))
                 }
             };
 
@@ -430,9 +435,9 @@ public partial class DashboardChartsViewModel : ObservableObject
             DebugLogger.Log($"[DashboardChartsViewModel] Updating throughput chart with {statistics.ThroughputTimeSeries?.Count ?? 0} data points");
 
             // Ensure we're on UI thread
-            if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+            if (!_dispatcher.CheckAccess())
             {
-                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => UpdateThroughputChart(statistics));
+                _dispatcher.InvokeAsync(() => UpdateThroughputChart(statistics));
                 return;
             }
 
@@ -476,16 +481,17 @@ public partial class DashboardChartsViewModel : ObservableObject
             YAxes[0].MaxLimit = maxThroughput * 1.05;
         }
 
+        var throughputColor = SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950"));
         newSeries.Add(new LineSeries<LiveChartsCore.Defaults.DateTimePoint>
         {
             Values = throughputValues,
             Name = "Throughput (MB/s)",
             GeometrySize = 4,
-            GeometryStroke = new SolidColorPaint(SKColor.Parse("#3FB950")) { StrokeThickness = 1.5f },
-            GeometryFill = new SolidColorPaint(SKColor.Parse("#3FB950")),
+            GeometryStroke = new SolidColorPaint(throughputColor) { StrokeThickness = 1.5f },
+            GeometryFill = new SolidColorPaint(throughputColor),
             LineSmoothness = 0,
-            Stroke = new SolidColorPaint(SKColor.Parse("#3FB950")) { StrokeThickness = 2.5f },
-            Fill = new SolidColorPaint(SKColor.Parse("#3FB950").WithAlpha(60)),
+            Stroke = new SolidColorPaint(throughputColor) { StrokeThickness = 2.5f },
+            Fill = new SolidColorPaint(throughputColor.WithAlpha(60)),
             ScalesYAt = 0,
             DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)
         });
@@ -513,16 +519,17 @@ public partial class DashboardChartsViewModel : ObservableObject
             YAxes[1].MaxLimit = maxPackets * 1.05;
         }
 
+        var packetsColor = SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"));
         newSeries.Add(new LineSeries<LiveChartsCore.Defaults.DateTimePoint>
         {
             Values = ppsValues,
             Name = "Packets/s",
             GeometrySize = 4,
-            GeometryStroke = new SolidColorPaint(SKColor.Parse("#58A6FF")) { StrokeThickness = 1.5f },
-            GeometryFill = new SolidColorPaint(SKColor.Parse("#58A6FF")),
+            GeometryStroke = new SolidColorPaint(packetsColor) { StrokeThickness = 1.5f },
+            GeometryFill = new SolidColorPaint(packetsColor),
             LineSmoothness = 0,
-            Stroke = new SolidColorPaint(SKColor.Parse("#58A6FF")) { StrokeThickness = 2.5f },
-            Fill = new SolidColorPaint(SKColor.Parse("#58A6FF").WithAlpha(60)),
+            Stroke = new SolidColorPaint(packetsColor) { StrokeThickness = 2.5f },
+            Fill = new SolidColorPaint(packetsColor.WithAlpha(60)),
             ScalesYAt = 1,
             DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)
         });
@@ -553,16 +560,17 @@ public partial class DashboardChartsViewModel : ObservableObject
             YAxes[2].MaxLimit = maxAnomalies * 1.05; // Fixed 5% padding
         }
 
+        var anomaliesColor = SKColor.Parse(ThemeColorHelper.GetColorHex("ColorDanger", "#F85149"));
         newSeries.Add(new LineSeries<LiveChartsCore.Defaults.DateTimePoint>
         {
             Values = anomaliesValues,
             Name = "Anomalies/s",
             GeometrySize = 5,
-            GeometryStroke = new SolidColorPaint(SKColor.Parse("#F85149")) { StrokeThickness = 2f },
-            GeometryFill = new SolidColorPaint(SKColor.Parse("#F85149")),
+            GeometryStroke = new SolidColorPaint(anomaliesColor) { StrokeThickness = 2f },
+            GeometryFill = new SolidColorPaint(anomaliesColor),
             LineSmoothness = 0,
-            Stroke = new SolidColorPaint(SKColor.Parse("#F85149")) { StrokeThickness = 3f },
-            Fill = new SolidColorPaint(SKColor.Parse("#F85149").WithAlpha(80)),
+            Stroke = new SolidColorPaint(anomaliesColor) { StrokeThickness = 3f },
+            Fill = new SolidColorPaint(anomaliesColor.WithAlpha(80)),
             ScalesYAt = 2,
             DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)
         });
@@ -595,16 +603,17 @@ public partial class DashboardChartsViewModel : ObservableObject
             YAxes[3].MaxLimit = maxThreats * 1.05; // Fixed 5% padding
         }
 
+        var threatsColor = SKColor.Parse(ThemeColorHelper.GetColorHex("AccentPurple", "#A855F7"));
         newSeries.Add(new LineSeries<LiveChartsCore.Defaults.DateTimePoint>
         {
             Values = threatsValues,
             Name = "Threats/s",
             GeometrySize = 5,
-            GeometryStroke = new SolidColorPaint(SKColor.Parse("#A855F7")) { StrokeThickness = 2f },  // Purple
-            GeometryFill = new SolidColorPaint(SKColor.Parse("#A855F7")),
+            GeometryStroke = new SolidColorPaint(threatsColor) { StrokeThickness = 2f },  // Purple
+            GeometryFill = new SolidColorPaint(threatsColor),
             LineSmoothness = 0,
-            Stroke = new SolidColorPaint(SKColor.Parse("#A855F7")) { StrokeThickness = 3f },
-            Fill = new SolidColorPaint(SKColor.Parse("#A855F7").WithAlpha(60)),
+            Stroke = new SolidColorPaint(threatsColor) { StrokeThickness = 3f },
+            Fill = new SolidColorPaint(threatsColor.WithAlpha(60)),
             ScalesYAt = 3,  // 4th Y-axis (index 3)
             DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0)
         });
@@ -662,9 +671,9 @@ public partial class DashboardChartsViewModel : ObservableObject
                 return;
             }
 
-            if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+            if (!_dispatcher.CheckAccess())
             {
-                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => UpdateProtocolChart(statistics));
+                _dispatcher.InvokeAsync(() => UpdateProtocolChart(statistics));
                 return;
             }
 
@@ -709,9 +718,9 @@ public partial class DashboardChartsViewModel : ObservableObject
                 return;
             }
 
-            if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+            if (!_dispatcher.CheckAccess())
             {
-                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => UpdatePortChart(statistics));
+                _dispatcher.InvokeAsync(() => UpdatePortChart(statistics));
                 return;
             }
 
@@ -735,7 +744,7 @@ public partial class DashboardChartsViewModel : ObservableObject
                 {
                     Values = topByBytes.Select(p => p.ByteCount / 1024.0 / 1024.0).ToArray(),
                     Name = "Traffic (MB)",
-                    Fill = new SolidColorPaint(SKColor.Parse("#8B5CF6")),
+                    Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6"))),
                     MaxBarWidth = 40
                 };
 
@@ -759,7 +768,7 @@ public partial class DashboardChartsViewModel : ObservableObject
                 {
                     Values = topByPackets.Select(p => (double)p.PacketCount).ToArray(),
                     Name = "Packets",
-                    Fill = new SolidColorPaint(SKColor.Parse("#10B981")),
+                    Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"))),
                     MaxBarWidth = 40
                 };
 
@@ -798,9 +807,9 @@ public partial class DashboardChartsViewModel : ObservableObject
                 return;
             }
 
-            if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+            if (!_dispatcher.CheckAccess())
             {
-                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => UpdateProtocolPortChart(statistics));
+                _dispatcher.InvokeAsync(() => UpdateProtocolPortChart(statistics));
                 return;
             }
 
@@ -830,9 +839,9 @@ public partial class DashboardChartsViewModel : ObservableObject
                 return;
             }
 
-            if (!Avalonia.Threading.Dispatcher.UIThread.CheckAccess())
+            if (!_dispatcher.CheckAccess())
             {
-                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => UpdatePacketSizeChart(statistics));
+                _dispatcher.InvokeAsync(() => UpdatePacketSizeChart(statistics));
                 return;
             }
 
@@ -882,7 +891,7 @@ public partial class DashboardChartsViewModel : ObservableObject
             {
                 Values = buckets.Select(b => (double)b.PacketCount).ToArray(),
                 Name = "Packet Count",
-                Fill = new SolidColorPaint(SKColor.Parse("#3FB950")),
+                Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950"))),
                 MaxBarWidth = 50,
                 DataLabelsPaint = new SolidColorPaint(SKColors.White),
                 DataLabelsSize = 10,

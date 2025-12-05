@@ -11,44 +11,48 @@
     </UserControl.Resources>
 
     <UserControl.Styles>
+        <!-- ═══════════════════════════════════════════════════════════════
+             SLACK-STYLE OVERRIDES FOR FILE MANAGER VIEW
+             ═══════════════════════════════════════════════════════════════ -->
+
         <!-- Section Header Styles -->
         <Style Selector="TextBlock.SectionHeader">
-            <Setter Property="FontSize" Value="18"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="Margin" Value="0,0,0,12"/>
         </Style>
 
-        <!-- Card Container Styles -->
+        <!-- Card Container Styles - SLACK STYLE (neutral borders) -->
         <Style Selector="Border.Card">
-            <Setter Property="Background" Value="#161B22"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundPanel}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BackgroundElevated}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="CornerRadius" Value="12"/>
             <Setter Property="Padding" Value="20"/>
-            <Setter Property="BoxShadow" Value="0 2 8 2 #00000040"/>
+            <Setter Property="BoxShadow" Value="0 2 8 0 #00000026"/>
         </Style>
 
         <!-- Info Label Styles -->
         <Style Selector="TextBlock.InfoLabel">
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="Medium"/>
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
             <Setter Property="Margin" Value="0,0,0,4"/>
         </Style>
 
         <!-- Info Value Styles -->
         <Style Selector="TextBlock.InfoValue">
             <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Foreground" Value="#C9D1D9"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         </Style>
 
-        <!-- Stat Card Styles -->
+        <!-- Stat Card Styles - SLACK STYLE (neutral borders, no colored borders) -->
         <Style Selector="Border.StatCard">
-            <Setter Property="Background" Value="#0D1117"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
+            <Setter Property="Background" Value="{DynamicResource BackgroundCard}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BackgroundElevated}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="Padding" Value="16"/>
             <Setter Property="MinWidth" Value="150"/>
         </Style>
@@ -63,91 +67,89 @@
         <!-- Stat Value Styles -->
         <Style Selector="TextBlock.StatValue">
             <Setter Property="FontSize" Value="20"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#F0F6FC"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
         </Style>
 
         <!-- Stat Label Styles -->
         <Style Selector="TextBlock.StatLabel">
             <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,4,0,0"/>
         </Style>
 
-        <!-- Action Button Styles -->
+        <!-- Action Button Styles - SLACK STYLE (no scale, blue primary) -->
         <Style Selector="Button.ActionButton">
             <Setter Property="Height" Value="36"/>
             <Setter Property="Padding" Value="16,8"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="Medium"/>
             <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Transitions">
                 <Transitions>
                     <BrushTransition Property="Background" Duration="0:0:0.15"/>
                     <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
-                    <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
                 </Transitions>
             </Setter>
         </Style>
 
+        <!-- No scale on hover - Slack style -->
         <Style Selector="Button.ActionButton:pointerover">
-            <Setter Property="RenderTransform" Value="scale(1.02)"/>
+            <!-- intentionally no scale transform -->
         </Style>
 
         <Style Selector="Button.ActionButton.Primary">
-            <Setter Property="Background" Value="#238636"/>
-            <Setter Property="BorderBrush" Value="#2EA043"/>
+            <Setter Property="Background" Value="{DynamicResource AccentPrimary}"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
 
         <Style Selector="Button.ActionButton.Primary:pointerover">
-            <Setter Property="Background" Value="#2EA043"/>
-            <Setter Property="BorderBrush" Value="#3FB950"/>
+            <Setter Property="Background" Value="{StaticResource AccentPrimary}"/>
         </Style>
 
         <Style Selector="Button.ActionButton.Secondary">
-            <Setter Property="Background" Value="#21262D"/>
-            <Setter Property="BorderBrush" Value="#30363D"/>
-            <Setter Property="Foreground" Value="#C9D1D9"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         </Style>
 
         <Style Selector="Button.ActionButton.Secondary:pointerover">
-            <Setter Property="Background" Value="#30363D"/>
-            <Setter Property="BorderBrush" Value="#484F58"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderStrongBrush}"/>
         </Style>
 
         <Style Selector="Button.ActionButton.Danger">
-            <Setter Property="Background" Value="#DA3633"/>
-            <Setter Property="BorderBrush" Value="#F85149"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource SlackDanger}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource SlackDanger}"/>
         </Style>
 
         <Style Selector="Button.ActionButton.Danger:pointerover">
-            <Setter Property="Background" Value="#F85149"/>
-            <Setter Property="BorderBrush" Value="#FF7B72"/>
+            <Setter Property="Background" Value="{StaticResource SlackDanger}"/>
+            <Setter Property="Foreground" Value="White"/>
         </Style>
 
-        <!-- Status Badge Styles -->
+        <!-- Status Badge Styles - SLACK STYLE -->
         <Style Selector="Border.StatusBadge">
-            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="8,4"/>
             <Setter Property="HorizontalAlignment" Value="Left"/>
         </Style>
 
         <Style Selector="Border.StatusBadge.Success">
-            <Setter Property="Background" Value="#238636"/>
-            <Setter Property="BorderBrush" Value="#2EA043"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="{DynamicResource SlackSuccess}"/>
+            <Setter Property="BorderThickness" Value="0"/>
         </Style>
 
         <Style Selector="Border.StatusBadge.Info">
-            <Setter Property="Background" Value="#1F4788"/>
-            <Setter Property="BorderBrush" Value="#58A6FF"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Background" Value="{DynamicResource AccentPrimary}"/>
+            <Setter Property="BorderThickness" Value="0"/>
         </Style>
 
         <!-- Progress Panel Animations -->
@@ -198,7 +200,7 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled"
-                  Background="#0D1117">
+                  Background="{DynamicResource BackgroundDark}">
         <StackPanel Margin="24" Spacing="24">
 
             <!-- File Upload Section (Full Width & Clickable) -->
@@ -224,20 +226,17 @@
                             <Style Selector="Button">
                                 <Setter Property="Transitions">
                                     <Transitions>
-                                        <BrushTransition Property="Background" Duration="0:0:0.25"/>
-                                        <BrushTransition Property="BorderBrush" Duration="0:0:0.25"/>
-                                        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15"/>
+                                        <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                                        <BrushTransition Property="BorderBrush" Duration="0:0:0.15"/>
                                     </Transitions>
                                 </Setter>
                             </Style>
                             <Style Selector="Button:pointerover">
-                                <Setter Property="Background" Value="#161B22"/>
-                                <Setter Property="BorderBrush" Value="#79C0FF"/>
-                                <Setter Property="RenderTransform" Value="scale(1.01)"/>
+                                <Setter Property="Background" Value="{StaticResource BackgroundCard}"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource AccentPrimary}"/>
                             </Style>
                             <Style Selector="Button:pressed">
-                                <Setter Property="Background" Value="#0D1117"/>
-                                <Setter Property="RenderTransform" Value="scale(0.99)"/>
+                                <Setter Property="Background" Value="{StaticResource BackgroundPanel}"/>
                             </Style>
                         </Button.Styles>
 
@@ -274,13 +273,13 @@
                                     </TextBlock.Styles>
                                 </TextBlock>
                                 <TextBlock Text="Starting analysis..."
-                                          FontSize="16"
+                                          FontSize="{StaticResource FontSizeLarge}"
                                           FontWeight="SemiBold"
-                                          Foreground="#FFC9C9"
+                                          Foreground="{DynamicResource SlackDanger}"
                                           HorizontalAlignment="Center"/>
                                 <TextBlock Text="Click anywhere to cancel"
-                                          FontSize="12"
-                                          Foreground="#FF9999"
+                                          FontSize="{StaticResource FontSizeBase}"
+                                          Foreground="{DynamicResource SlackDanger}"
                                           HorizontalAlignment="Center"
                                           Margin="0,8,0,0"/>
                             </StackPanel>
@@ -291,17 +290,17 @@
                                        HorizontalAlignment="Center"
                                        IsVisible="{Binding ShowBrowseMessage}">
                                 <TextBlock Text="📁"
-                                          FontSize="48"
+                                          FontSize="{StaticResource FontSizeDisplay}"
                                           HorizontalAlignment="Center"
                                           Opacity="0.8"/>
                                 <TextBlock Text="Click to browse or drag &amp; drop PCAP file"
-                                          FontSize="16"
+                                          FontSize="{StaticResource FontSizeLarge}"
                                           FontWeight="Medium"
-                                          Foreground="#58A6FF"
+                                          Foreground="{DynamicResource SlackInfo}"
                                           HorizontalAlignment="Center"/>
                                 <TextBlock Text="Supported formats: .pcap, .pcapng, .cap"
-                                          FontSize="12"
-                                          Foreground="#8B949E"
+                                          FontSize="{StaticResource FontSizeBase}"
+                                          Foreground="{DynamicResource TextMutedBrush}"
                                           HorizontalAlignment="Center"/>
                             </StackPanel>
 
@@ -318,12 +317,12 @@
                                             Spacing="12"
                                             Margin="0,0,0,16">
                                     <TextBlock Text="📄"
-                                              FontSize="24"
+                                              FontSize="{StaticResource FontSizeHeading}"
                                               VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding FileName}"
-                                              FontSize="18"
-                                              FontWeight="Bold"
-                                              Foreground="#F0F6FC"
+                                              FontSize="{StaticResource FontSizeXL}"
+                                              FontWeight="SemiBold"
+                                              Foreground="{DynamicResource TextPrimaryBrush}"
                                               VerticalAlignment="Center"/>
                                 </StackPanel>
 
@@ -331,23 +330,23 @@
                                 <TextBlock HorizontalAlignment="Center"
                                           Margin="0,0,0,8">
                                     <Run Text="💾"
-                                         FontSize="14"/>
+                                         FontSize="{StaticResource FontSizeInput}"/>
                                     <Run Text="{Binding FileSizeFormatted}"
                                          FontSize="15"
                                          FontWeight="SemiBold"
-                                         Foreground="#58A6FF"/>
+                                         Foreground="{DynamicResource SlackInfo}"/>
                                 </TextBlock>
 
                                 <!-- Capture Time Range (prominent, own line) -->
                                 <TextBlock HorizontalAlignment="Center"
                                           Margin="0,0,0,12"
                                           IsVisible="{Binding CaptureTimeRange, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                                    <Run Text="📡" FontSize="16"/>
+                                    <Run Text="📡" FontSize="{StaticResource FontSizeLarge}"/>
                                     <Run Text=" "/>
                                     <Run Text="{Binding CaptureTimeRange}"
-                                         FontSize="16"
+                                         FontSize="{StaticResource FontSizeLarge}"
                                          FontWeight="SemiBold"
-                                         Foreground="#58A6FF"/>
+                                         Foreground="{DynamicResource SlackInfo}"/>
                                 </TextBlock>
 
                                 <!-- Tertiary: Metadata row (file timestamps) -->
@@ -359,15 +358,15 @@
                                     <StackPanel Orientation="Horizontal"
                                                 Spacing="6">
                                         <TextBlock Text="📅"
-                                                  FontSize="12"
-                                                  Foreground="#2EA043"
+                                                  FontSize="{StaticResource FontSizeBase}"
+                                                  Foreground="{DynamicResource SlackSuccess}"
                                                   VerticalAlignment="Center"/>
-                                        <TextBlock FontSize="12"
-                                                  Foreground="#8B949E"
+                                        <TextBlock FontSize="{StaticResource FontSizeBase}"
+                                                  Foreground="{DynamicResource TextSecondaryBrush}"
                                                   VerticalAlignment="Center">
                                             <Run Text="Created:"/>
-                                            <Run Text="{Binding FileCreatedDate, StringFormat='{}{0:dd.MM.yyyy HH:mm:ss}'}"
-                                                 Foreground="#2EA043"
+                                            <Run Text="{Binding FileCreatedDate, StringFormat='{}{0:dd.MM.yyyy HH:mm:ss}', Mode=OneWay}"
+                                                 Foreground="{DynamicResource SlackSuccess}"
                                                  FontWeight="Medium"/>
                                         </TextBlock>
                                     </StackPanel>
@@ -376,15 +375,15 @@
                                     <StackPanel Orientation="Horizontal"
                                                 Spacing="6">
                                         <TextBlock Text="🕐"
-                                                  FontSize="12"
-                                                  Foreground="#F78166"
+                                                  FontSize="{StaticResource FontSizeBase}"
+                                                  Foreground="{DynamicResource SlackDanger}"
                                                   VerticalAlignment="Center"/>
-                                        <TextBlock FontSize="12"
-                                                  Foreground="#8B949E"
+                                        <TextBlock FontSize="{StaticResource FontSizeBase}"
+                                                  Foreground="{DynamicResource TextSecondaryBrush}"
                                                   VerticalAlignment="Center">
                                             <Run Text="Modified:"/>
-                                            <Run Text="{Binding FileModifiedDate, StringFormat='{}{0:dd.MM.yyyy HH:mm:ss}'}"
-                                                 Foreground="#F78166"
+                                            <Run Text="{Binding FileModifiedDate, StringFormat='{}{0:dd.MM.yyyy HH:mm:ss}', Mode=OneWay}"
+                                                 Foreground="{DynamicResource SlackDanger}"
                                                  FontWeight="Medium"/>
                                         </TextBlock>
                                     </StackPanel>
@@ -395,7 +394,7 @@
                                             Classes.Info="{Binding !IsAnalysisComplete}"
                                             VerticalAlignment="Center">
                                         <TextBlock Text="{Binding StatusText}"
-                                                  FontSize="11"
+                                                  FontSize="{StaticResource FontSizeSmall}"
                                                   FontWeight="SemiBold"
                                                   Foreground="White"/>
                                     </Border>
@@ -403,8 +402,8 @@
 
                                 <!-- Quaternary: Full path (subtle, truncated) -->
                                 <TextBlock Text="{Binding FilePath}"
-                                          FontSize="11"
-                                          Foreground="#6E7681"
+                                          FontSize="{StaticResource FontSizeSmall}"
+                                          Foreground="{DynamicResource TextMutedBrush}"
                                           HorizontalAlignment="Center"
                                           TextTrimming="CharacterEllipsis"
                                           MaxWidth="650"
@@ -435,8 +434,8 @@
 
                     <!-- Last Analysis Info -->
                     <TextBlock Text="{Binding LastAnalysisText}"
-                              FontSize="12"
-                              Foreground="#8B949E"
+                              FontSize="{StaticResource FontSizeBase}"
+                              Foreground="{DynamicResource TextSecondaryBrush}"
                               HorizontalAlignment="Center"
                               IsVisible="{Binding IsAnalysisComplete}"/>
                 </StackPanel>
@@ -448,45 +447,45 @@
                     <TextBlock Text="⚡ Analysis Progress" Classes="SectionHeader"/>
 
                     <!-- Overall Progress Bar -->
-                    <Border Background="#0D1117"
-                            BorderBrush="#30363D"
+                    <Border Background="{DynamicResource BackgroundCard}"
+                            BorderBrush="{DynamicResource BackgroundElevated}"
                             BorderThickness="1"
-                            CornerRadius="6"
+                            CornerRadius="8"
                             Padding="16">
                         <StackPanel Spacing="12">
                             <!-- Progress Header -->
                             <Grid ColumnDefinitions="*,Auto">
                                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
                                     <TextBlock Text="{Binding CurrentPhase}"
-                                              FontSize="14"
+                                              FontSize="{StaticResource FontSizeInput}"
                                               FontWeight="SemiBold"
-                                              Foreground="#58A6FF"
+                                              Foreground="{DynamicResource SlackInfo}"
                                               VerticalAlignment="Center"/>
                                     <TextBlock Text="{Binding AnalysisProgress, StringFormat='{}{0:F1}%'}"
-                                              FontSize="18"
-                                              FontWeight="Bold"
-                                              Foreground="#F0F6FC"
+                                              FontSize="{StaticResource FontSizeXL}"
+                                              FontWeight="SemiBold"
+                                              Foreground="{DynamicResource TextPrimaryBrush}"
                                               VerticalAlignment="Center"/>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16">
                                     <StackPanel Spacing="2">
-                                        <TextBlock Text="Elapsed" FontSize="10" Foreground="#8B949E" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Elapsed" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
                                         <TextBlock Text="{Binding ElapsedTimeFormatted}"
-                                                  FontSize="12"
+                                                  FontSize="{StaticResource FontSizeBase}"
                                                   FontWeight="Medium"
-                                                  Foreground="#C9D1D9"
+                                                  Foreground="{DynamicResource TextPrimaryBrush}"
                                                   HorizontalAlignment="Center"/>
                                     </StackPanel>
 
-                                    <TextBlock Text="•" Foreground="#8B949E" VerticalAlignment="Center"/>
+                                    <TextBlock Text="•" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
 
                                     <StackPanel Spacing="2">
-                                        <TextBlock Text="Rate" FontSize="10" Foreground="#8B949E" HorizontalAlignment="Center"/>
+                                        <TextBlock Text="Rate" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center"/>
                                         <TextBlock Text="{Binding ProcessingRateFormatted}"
-                                                  FontSize="12"
+                                                  FontSize="{StaticResource FontSizeBase}"
                                                   FontWeight="Medium"
-                                                  Foreground="#C9D1D9"
+                                                  Foreground="{DynamicResource TextPrimaryBrush}"
                                                   HorizontalAlignment="Center"/>
                                     </StackPanel>
                                 </StackPanel>
@@ -498,12 +497,12 @@
                                         Maximum="100"
                                         Height="8"
                                         CornerRadius="4"
-                                        Background="#161B22"
-                                        Foreground="#58A6FF"/>
+                                        Background="{DynamicResource BackgroundElevated}"
+                                        Foreground="{DynamicResource AccentPrimary}"/>
 
                             <!-- Current Packet Count -->
-                            <TextBlock FontSize="12"
-                                      Foreground="#8B949E"
+                            <TextBlock FontSize="{StaticResource FontSizeBase}"
+                                      Foreground="{DynamicResource TextMutedBrush}"
                                       HorizontalAlignment="Center">
                                 <Run Text="{Binding CurrentPacketCount, StringFormat='{}{0:N0}'}"/>
                                 <Run Text="packets processed"/>
@@ -525,54 +524,54 @@
                         <!-- Packet Count -->
                         <Border Grid.Row="0" Grid.Column="0" Classes="StatCard">
                             <StackPanel>
-                                <TextBlock Text="📦" Classes="StatIcon" Foreground="#58A6FF"/>
-                                <TextBlock Text="{Binding PacketCount}" Classes="StatValue" Foreground="#F0F6FC"/>
-                                <TextBlock Text="total packets" Classes="StatLabel" Foreground="#8B949E"/>
+                                <TextBlock Text="📦" Classes="StatIcon" Foreground="{DynamicResource SlackInfo}"/>
+                                <TextBlock Text="{Binding PacketCount}" Classes="StatValue" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                <TextBlock Text="total packets" Classes="StatLabel" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </StackPanel>
                         </Border>
 
                         <!-- File Size -->
                         <Border Grid.Row="0" Grid.Column="1" Classes="StatCard">
                             <StackPanel>
-                                <TextBlock Text="💾" Classes="StatIcon" Foreground="#58A6FF"/>
-                                <TextBlock Text="{Binding CaptureFileSize}" Classes="StatValue" Foreground="#58A6FF"/>
-                                <TextBlock Text="file size" Classes="StatLabel" Foreground="#8B949E"/>
+                                <TextBlock Text="💾" Classes="StatIcon" Foreground="{DynamicResource SlackInfo}"/>
+                                <TextBlock Text="{Binding CaptureFileSize}" Classes="StatValue" Foreground="{DynamicResource SlackInfo}"/>
+                                <TextBlock Text="file size" Classes="StatLabel" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Capture Duration -->
                         <Border Grid.Row="0" Grid.Column="2" Classes="StatCard">
                             <StackPanel>
-                                <TextBlock Text="⏱️" Classes="StatIcon" Foreground="#F78166"/>
-                                <TextBlock Text="{Binding Duration}" Classes="StatValue" Foreground="#F78166"/>
-                                <TextBlock Text="capture duration" Classes="StatLabel" Foreground="#8B949E"/>
+                                <TextBlock Text="⏱️" Classes="StatIcon" Foreground="{DynamicResource SlackDanger}"/>
+                                <TextBlock Text="{Binding Duration}" Classes="StatValue" Foreground="{DynamicResource SlackDanger}"/>
+                                <TextBlock Text="capture duration" Classes="StatLabel" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Processing Rate -->
                         <Border Grid.Row="1" Grid.Column="0" Classes="StatCard">
                             <StackPanel>
-                                <TextBlock Text="⚡" Classes="StatIcon" Foreground="#F0E68C"/>
-                                <TextBlock Text="{Binding ProcessingRate}" Classes="StatValue" Foreground="#F0E68C"/>
-                                <TextBlock Text="pkts/sec rate" Classes="StatLabel" Foreground="#8B949E"/>
+                                <TextBlock Text="⚡" Classes="StatIcon" Foreground="{DynamicResource SlackWarning}"/>
+                                <TextBlock Text="{Binding ProcessingRate}" Classes="StatValue" Foreground="{DynamicResource SlackWarning}"/>
+                                <TextBlock Text="pkts/sec rate" Classes="StatLabel" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Analysis Time -->
                         <Border Grid.Row="1" Grid.Column="1" Classes="StatCard">
                             <StackPanel>
-                                <TextBlock Text="⏲️" Classes="StatIcon" Foreground="#2EA043"/>
-                                <TextBlock Text="{Binding AnalysisTime}" Classes="StatValue" Foreground="#2EA043"/>
-                                <TextBlock Text="analysis time" Classes="StatLabel" Foreground="#8B949E"/>
+                                <TextBlock Text="⏲️" Classes="StatIcon" Foreground="{DynamicResource SlackSuccess}"/>
+                                <TextBlock Text="{Binding AnalysisTime}" Classes="StatValue" Foreground="{DynamicResource SlackSuccess}"/>
+                                <TextBlock Text="analysis time" Classes="StatLabel" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </StackPanel>
                         </Border>
 
                         <!-- Completion Status -->
                         <Border Grid.Row="1" Grid.Column="2" Classes="StatCard">
                             <StackPanel>
-                                <TextBlock Text="✅" Classes="StatIcon" Foreground="#2EA043"/>
-                                <TextBlock Text="Complete" Classes="StatValue" FontSize="18" Foreground="#2EA043"/>
-                                <TextBlock Text="analysis status" Classes="StatLabel" Foreground="#8B949E"/>
+                                <TextBlock Text="✅" Classes="StatIcon" Foreground="{DynamicResource SlackSuccess}"/>
+                                <TextBlock Text="Complete" Classes="StatValue" FontSize="{StaticResource FontSizeXL}" Foreground="{DynamicResource SlackSuccess}"/>
+                                <TextBlock Text="analysis status" Classes="StatLabel" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -591,12 +590,12 @@
                                   IsVisible="{Binding CaptureTimeRange, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
                                   VerticalAlignment="Center"
                                   Margin="0,0,0,12">
-                            <Run Text="📡" FontSize="14"/>
+                            <Run Text="📡" FontSize="{StaticResource FontSizeInput}"/>
                             <Run Text=" "/>
                             <Run Text="{Binding CaptureTimeRange}"
-                                 FontSize="14"
+                                 FontSize="{StaticResource FontSizeInput}"
                                  FontWeight="SemiBold"
-                                 Foreground="#58A6FF"/>
+                                 Foreground="{DynamicResource SlackInfo}"/>
                         </TextBlock>
                     </Grid>
 
@@ -613,11 +612,11 @@
                             </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="local:AnalysisProgressStage">
-                                <!-- ✅ ENHANCED Stage Card: 75px height with 2 separate text rows -->
-                                <Border Background="#0D1117"
-                                        BorderBrush="#30363D"
+                                <!-- ✅ SLACK-STYLE Stage Card -->
+                                <Border Background="{DynamicResource BackgroundCard}"
+                                        BorderBrush="{DynamicResource BackgroundElevated}"
                                         BorderThickness="1"
-                                        CornerRadius="4"
+                                        CornerRadius="8"
                                         Padding="12,10"
                                         Margin="0,0,12,10"
                                         MinHeight="75">
@@ -626,7 +625,7 @@
                                         <!-- Icon with pulsing animation for active stages -->
                                         <TextBlock Grid.Column="0"
                                                   Text="{Binding StateIcon}"
-                                                  FontSize="18"
+                                                  FontSize="{StaticResource FontSizeXL}"
                                                   Foreground="{Binding StateColor}"
                                                   Classes="StageIcon"
                                                   Classes.ActiveStageIcon="{Binding State, Converter={StaticResource EnumEqualsConverter}, ConverterParameter={x:Static local:AnalysisStageState.Active}}"
@@ -638,9 +637,9 @@
                                             <!-- Row 1: Stage Name -->
                                             <TextBlock Grid.Row="0"
                                                       Text="{Binding Name}"
-                                                      FontSize="13"
+                                                      FontSize="{StaticResource FontSizeMedium}"
                                                       FontWeight="SemiBold"
-                                                      Foreground="#F0F6FC"
+                                                      Foreground="{DynamicResource TextPrimaryBrush}"
                                                       TextWrapping="NoWrap"
                                                       TextTrimming="None"
                                                       Margin="0,0,0,4"/>
@@ -648,8 +647,8 @@
                                             <!-- Row 2: Stage Detail/Description (shows "Waiting..." for pending) -->
                                             <TextBlock Grid.Row="1"
                                                       Text="{Binding DisplayDetail}"
-                                                      FontSize="11"
-                                                      Foreground="#8B949E"
+                                                      FontSize="{StaticResource FontSizeSmall}"
+                                                      Foreground="{DynamicResource TextMutedBrush}"
                                                       TextWrapping="Wrap"
                                                       TextTrimming="CharacterEllipsis"
                                                       MaxLines="2"/>
@@ -663,9 +662,9 @@
                                                    MinWidth="80">
                                             <!-- Elapsed Time (bold, visible always) -->
                                             <TextBlock Text="{Binding ElapsedTime}"
-                                                      FontSize="12"
-                                                      FontWeight="Bold"
-                                                      Foreground="#58A6FF"
+                                                      FontSize="{StaticResource FontSizeBase}"
+                                                      FontWeight="SemiBold"
+                                                      Foreground="{DynamicResource SlackInfo}"
                                                       HorizontalAlignment="Right"/>
 
                                             <!-- Mini Progress Bar (only during analysis) -->
@@ -674,7 +673,7 @@
                                                         Maximum="100"
                                                         Height="5"
                                                         CornerRadius="2"
-                                                        Background="#161B22"
+                                                        Background="{DynamicResource BackgroundElevated}"
                                                         Foreground="{Binding StateColor}"
                                                         IsVisible="{Binding ShowProgressBar}"/>
                                         </StackPanel>
@@ -691,18 +690,18 @@
             <Border Classes="Card" IsVisible="{Binding !HasFile}">
                 <StackPanel Spacing="12">
                     <TextBlock Text="Getting Started"
-                              FontSize="16"
+                              FontSize="{StaticResource FontSizeLarge}"
                               FontWeight="SemiBold"
-                              Foreground="#58A6FF"/>
+                              Foreground="{DynamicResource SlackInfo}"/>
                     <TextBlock TextWrapping="Wrap"
-                              Foreground="#8B949E"
+                              Foreground="{DynamicResource TextSecondaryBrush}"
                               LineHeight="20">
                         <Run Text="1. Click "/>
-                        <Run Text="Browse" FontWeight="Bold"/>
+                        <Run Text="Browse" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                         <Run Text=" to select a PCAP file (.pcap, .pcapng, .cap)"/>
                         <LineBreak/>
                         <Run Text="2. Click "/>
-                        <Run Text="Analyze" FontWeight="Bold"/>
+                        <Run Text="Analyze" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                         <Run Text=" to start processing the file"/>
                         <LineBreak/>
                         <Run Text="3. View results in other tabs: Dashboard, Security Threats, etc."/>

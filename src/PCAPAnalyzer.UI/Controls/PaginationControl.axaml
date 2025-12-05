@@ -19,13 +19,13 @@
             <!-- Page Size Selector -->
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
                 <TextBlock Text="Page Size:"
-                          FontSize="12"
+                          FontSize="{StaticResource FontSizeBase}"
                           Foreground="#8B949E"
                           VerticalAlignment="Center"/>
                 <ComboBox ItemsSource="{Binding PageSizeOptions}"
                          SelectedItem="{Binding PageSize}"
                          Width="80"
-                         FontSize="12"/>
+                         FontSize="{StaticResource FontSizeBase}"/>
             </StackPanel>
 
             <!-- Page Info (center) -->

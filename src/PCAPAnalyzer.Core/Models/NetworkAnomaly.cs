@@ -5,7 +5,6 @@ namespace PCAPAnalyzer.Core.Models;
 
 /// <summary>
 /// Unified anomaly model for all network anomalies.
-/// Replaces SecurityAnomaly, TCPAnomaly, and SpecializedAnomaly.
 /// </summary>
 public class NetworkAnomaly
 {

@@ -45,7 +45,7 @@ namespace PCAPAnalyzer.UI.Views
         private void OnPredefinedFilterToggled(object? sender, RoutedEventArgs e)
         {
             if (sender is not ToggleButton toggleButton) return;
-            if (DataContext is not EnhancedFilterViewModel viewModel) return;
+            if (DataContext is not PacketFilterViewModel viewModel) return;
             
             // Determine which filter was toggled based on the toggle button's name
             var filterName = toggleButton.Name?.Replace("Toggle", "", StringComparison.Ordinal) ?? "";
@@ -64,7 +64,7 @@ namespace PCAPAnalyzer.UI.Views
         {
             if (sender is not ComboBox comboBox) return;
             if (comboBox.SelectedItem is not ComboBoxItem item) return;
-            if (DataContext is not EnhancedFilterViewModel viewModel) return;
+            if (DataContext is not PacketFilterViewModel viewModel) return;
             
             var filterTag = item.Tag as string;
             if (string.IsNullOrEmpty(filterTag)) return;

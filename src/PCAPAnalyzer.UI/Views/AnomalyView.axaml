@@ -6,17 +6,17 @@
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="PCAPAnalyzer.UI.Views.AnomalyView"
              x:DataType="vm:AnomalyViewModel"
-             Background="#0D1117">
+             Background="{DynamicResource BackgroundDark}">
 
     <Grid RowDefinitions="Auto,*">
         <!-- Header -->
-        <Border Grid.Row="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,0,1" Padding="24,16">
+        <Border Grid.Row="0" Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource BackgroundElevated}" BorderThickness="0,0,0,1" Padding="24,16">
             <Grid ColumnDefinitions="*,Auto">
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16">
-                    <TextBlock Text="&#x1F52C;" FontSize="24"/>
+                    <TextBlock Text="&#x1F52C;" FontSize="{StaticResource FontSizeHeading}"/>
                     <StackPanel>
-                        <TextBlock Text="Anomaly Analysis" FontSize="18" FontWeight="SemiBold" Foreground="#F0F6FC"/>
-                        <TextBlock FontSize="12" Foreground="#8B949E">
+                        <TextBlock Text="Anomaly Analysis" FontSize="{StaticResource FontSizeXL}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}">
                             <TextBlock.Text>
                                 <MultiBinding StringFormat="Showing {0} of {1} anomalies">
                                     <Binding Path="FilteredCount"/>
@@ -27,13 +27,13 @@
                     </StackPanel>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-                    <Button Command="{Binding ClearFiltersCommand}" Background="#21262D" BorderBrush="#30363D" Padding="12,8">
-                        <TextBlock Text="Clear Filters" FontSize="12" Foreground="#8B949E"/>
+                    <Button Command="{Binding ClearFiltersCommand}" Background="{DynamicResource BackgroundElevated}" BorderBrush="{DynamicResource BorderStrongBrush}" Padding="12,8">
+                        <TextBlock Text="Clear Filters" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}"/>
                     </Button>
-                    <Button Command="{Binding ExportToCsvCommand}" Background="#238636" BorderBrush="#2EA043" Padding="12,8">
+                    <Button Command="{Binding ExportToCsvCommand}" Background="{DynamicResource AccentPrimary}" BorderBrush="{DynamicResource AccentPrimary}" Padding="12,8">
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="&#x1F4CA;" FontSize="14"/>
-                            <TextBlock Text="Export CSV" FontSize="12" Foreground="#FFFFFF"/>
+                            <TextBlock Text="&#x1F4CA;" FontSize="{StaticResource FontSizeInput}"/>
+                            <TextBlock Text="Export CSV" FontSize="{StaticResource FontSizeBase}" Foreground="White"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
@@ -42,39 +42,39 @@
 
         <Grid Grid.Row="1" ColumnDefinitions="280,*">
             <!-- Left Sidebar: Filters -->
-            <Border Grid.Column="0" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,0,1,0" Padding="16">
+            <Border Grid.Column="0" Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource BackgroundElevated}" BorderThickness="0,0,1,0" Padding="16">
                 <ScrollViewer VerticalScrollBarVisibility="Auto">
                     <StackPanel Spacing="20">
                         <!-- Severity Section -->
                         <StackPanel Spacing="8">
-                            <TextBlock Text="SEVERITY" FontSize="11" FontWeight="Bold" Foreground="#8B949E"/>
+                            <TextBlock Text="SEVERITY" FontSize="{StaticResource FontSizeSmall}" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <StackPanel Spacing="4">
                                 <CheckBox IsChecked="{Binding ShowCritical}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="&#x1F534;" FontSize="12"/>
-                                        <TextBlock Text="Critical" Foreground="#F85149"/>
-                                        <TextBlock Text="{Binding CriticalCount, StringFormat='({0})'}" Foreground="#8B949E" FontSize="11"/>
+                                        <TextBlock Text="&#x1F534;" FontSize="{StaticResource FontSizeBase}"/>
+                                        <TextBlock Text="Critical" Foreground="{DynamicResource SlackDanger}"/>
+                                        <TextBlock Text="{Binding CriticalCount, StringFormat='({0})'}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{StaticResource FontSizeSmall}"/>
                                     </StackPanel>
                                 </CheckBox>
                                 <CheckBox IsChecked="{Binding ShowHigh}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="&#x1F7E0;" FontSize="12"/>
-                                        <TextBlock Text="High" Foreground="#F0883E"/>
-                                        <TextBlock Text="{Binding HighCount, StringFormat='({0})'}" Foreground="#8B949E" FontSize="11"/>
+                                        <TextBlock Text="&#x1F7E0;" FontSize="{StaticResource FontSizeBase}"/>
+                                        <TextBlock Text="High" Foreground="{DynamicResource SlackWarning}"/>
+                                        <TextBlock Text="{Binding HighCount, StringFormat='({0})'}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{StaticResource FontSizeSmall}"/>
                                     </StackPanel>
                                 </CheckBox>
                                 <CheckBox IsChecked="{Binding ShowMedium}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="&#x1F7E1;" FontSize="12"/>
-                                        <TextBlock Text="Medium" Foreground="#D29922"/>
-                                        <TextBlock Text="{Binding MediumCount, StringFormat='({0})'}" Foreground="#8B949E" FontSize="11"/>
+                                        <TextBlock Text="&#x1F7E1;" FontSize="{StaticResource FontSizeBase}"/>
+                                        <TextBlock Text="Medium" Foreground="{DynamicResource SlackInfo}"/>
+                                        <TextBlock Text="{Binding MediumCount, StringFormat='({0})'}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{StaticResource FontSizeSmall}"/>
                                     </StackPanel>
                                 </CheckBox>
                                 <CheckBox IsChecked="{Binding ShowLow}">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="&#x1F535;" FontSize="12"/>
-                                        <TextBlock Text="Low" Foreground="#58A6FF"/>
-                                        <TextBlock Text="{Binding LowCount, StringFormat='({0})'}" Foreground="#8B949E" FontSize="11"/>
+                                        <TextBlock Text="&#x1F535;" FontSize="{StaticResource FontSizeBase}"/>
+                                        <TextBlock Text="Low" Foreground="{DynamicResource SlackSuccess}"/>
+                                        <TextBlock Text="{Binding LowCount, StringFormat='({0})'}" Foreground="{DynamicResource TextSecondaryBrush}" FontSize="{StaticResource FontSizeSmall}"/>
                                     </StackPanel>
                                 </CheckBox>
                             </StackPanel>
@@ -82,37 +82,37 @@
 
                         <!-- Category Section -->
                         <StackPanel Spacing="8">
-                            <TextBlock Text="CATEGORY" FontSize="11" FontWeight="Bold" Foreground="#8B949E"/>
+                            <TextBlock Text="CATEGORY" FontSize="{StaticResource FontSizeSmall}" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <StackPanel Spacing="4">
                                 <CheckBox IsChecked="{Binding FilterNetwork}">
-                                    <TextBlock Text="&#x1F310; Network" Foreground="#C9D1D9"/>
+                                    <TextBlock Text="&#x1F310; Network" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </CheckBox>
                                 <CheckBox IsChecked="{Binding FilterTcp}">
-                                    <TextBlock Text="&#x1F517; TCP" Foreground="#C9D1D9"/>
+                                    <TextBlock Text="&#x1F517; TCP" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </CheckBox>
                                 <CheckBox IsChecked="{Binding FilterApplication}">
-                                    <TextBlock Text="&#x1F4F1; Application" Foreground="#C9D1D9"/>
+                                    <TextBlock Text="&#x1F4F1; Application" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </CheckBox>
                                 <CheckBox IsChecked="{Binding FilterVoip}">
-                                    <TextBlock Text="&#x1F4DE; VoIP" Foreground="#C9D1D9"/>
+                                    <TextBlock Text="&#x1F4DE; VoIP" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </CheckBox>
                                 <CheckBox IsChecked="{Binding FilterIot}">
-                                    <TextBlock Text="&#x1F50C; IoT" Foreground="#C9D1D9"/>
+                                    <TextBlock Text="&#x1F50C; IoT" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </CheckBox>
                                 <CheckBox IsChecked="{Binding FilterSecurity}">
-                                    <TextBlock Text="&#x26A0; Security" Foreground="#C9D1D9"/>
+                                    <TextBlock Text="&#x26A0; Security" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </CheckBox>
                                 <CheckBox IsChecked="{Binding FilterMalformed}">
-                                    <TextBlock Text="&#x2753; Malformed" Foreground="#C9D1D9"/>
+                                    <TextBlock Text="&#x2753; Malformed" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 </CheckBox>
                             </StackPanel>
                         </StackPanel>
 
                         <!-- Search -->
                         <StackPanel Spacing="8">
-                            <TextBlock Text="SEARCH" FontSize="11" FontWeight="Bold" Foreground="#8B949E"/>
+                            <TextBlock Text="SEARCH" FontSize="{StaticResource FontSizeSmall}" FontWeight="Bold" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             <TextBox Text="{Binding SearchText}" Watermark="Search anomalies..."
-                                     Background="#0D1117" BorderBrush="#30363D" Foreground="#F0F6FC"/>
+                                     Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource BackgroundElevated}" Foreground="{DynamicResource TextPrimaryBrush}"/>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
@@ -124,7 +124,7 @@
                 <DataGrid Grid.Row="0" ItemsSource="{Binding FilteredAnomalies}"
                           SelectedItem="{Binding SelectedAnomaly}"
                           AutoGenerateColumns="False" IsReadOnly="True"
-                          Background="#0D1117" Foreground="#F0F6FC"
+                          Background="{DynamicResource BackgroundDark}" Foreground="{DynamicResource TextPrimaryBrush}"
                           GridLinesVisibility="Horizontal"
                           HeadersVisibility="Column">
                     <DataGrid.Columns>
@@ -139,36 +139,36 @@
                 </DataGrid>
 
                 <!-- Detail Panel -->
-                <Border Grid.Row="1" Background="#161B22" BorderBrush="#30363D" BorderThickness="0,1,0,0"
+                <Border Grid.Row="1" Background="{DynamicResource BackgroundPanel}" BorderBrush="{DynamicResource BackgroundElevated}" BorderThickness="0,1,0,0"
                         Padding="24,16" MinHeight="150" IsVisible="{Binding SelectedAnomaly, Converter={x:Static ObjectConverters.IsNotNull}}">
                     <Grid ColumnDefinitions="*,Auto">
                         <StackPanel Grid.Column="0" Spacing="8">
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="{Binding SelectedAnomaly.SeverityIcon}" FontSize="20"/>
-                                <TextBlock Text="{Binding SelectedAnomaly.Type}" FontSize="16" FontWeight="SemiBold" Foreground="#F0F6FC"/>
+                                <TextBlock Text="{Binding SelectedAnomaly.SeverityIcon}" FontSize="{StaticResource FontSizeXL}"/>
+                                <TextBlock Text="{Binding SelectedAnomaly.Type}" FontSize="{StaticResource FontSizeLarge}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
                                 <Border Background="{Binding SelectedAnomaly.SeverityColor}" CornerRadius="4" Padding="8,2">
-                                    <TextBlock Text="{Binding SelectedAnomaly.Severity}" FontSize="11" Foreground="#FFFFFF"/>
+                                    <TextBlock Text="{Binding SelectedAnomaly.Severity}" FontSize="{StaticResource FontSizeSmall}" Foreground="White"/>
                                 </Border>
                             </StackPanel>
-                            <TextBlock Text="{Binding SelectedAnomaly.Description}" Foreground="#8B949E" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding SelectedAnomaly.Description}" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
                             <StackPanel Orientation="Horizontal" Spacing="24">
                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <TextBlock Text="Connection:" Foreground="#6E7681" FontSize="12"/>
-                                    <TextBlock Text="{Binding SelectedAnomaly.ConnectionInfo}" Foreground="#F0F6FC" FontSize="12"/>
+                                    <TextBlock Text="Connection:" Foreground="{DynamicResource TextMutedBrush}" FontSize="{StaticResource FontSizeBase}"/>
+                                    <TextBlock Text="{Binding SelectedAnomaly.ConnectionInfo}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="{StaticResource FontSizeBase}"/>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <TextBlock Text="Detected:" Foreground="#6E7681" FontSize="12"/>
-                                    <TextBlock Text="{Binding SelectedAnomaly.DetectedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" Foreground="#F0F6FC" FontSize="12"/>
+                                    <TextBlock Text="Detected:" Foreground="{DynamicResource TextMutedBrush}" FontSize="{StaticResource FontSizeBase}"/>
+                                    <TextBlock Text="{Binding SelectedAnomaly.DetectedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm:ss}'}" Foreground="{DynamicResource TextPrimaryBrush}" FontSize="{StaticResource FontSizeBase}"/>
                                 </StackPanel>
                             </StackPanel>
                         </StackPanel>
                         <Button Grid.Column="1" Command="{Binding ViewPacketsCommand}"
-                                Background="#238636" BorderBrush="#2EA043" Padding="16,8"
+                                Background="{DynamicResource AccentPrimary}" BorderBrush="{DynamicResource AccentPrimary}" Padding="16,8"
                                 VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <TextBlock Text="&#x1F4E6;" FontSize="14"/>
-                                <TextBlock Text="View Packets" FontSize="12" Foreground="#FFFFFF"/>
-                                <TextBlock Text="&#x2192;" FontSize="12" Foreground="#FFFFFF"/>
+                                <TextBlock Text="&#x1F4E6;" FontSize="{StaticResource FontSizeInput}"/>
+                                <TextBlock Text="View Packets" FontSize="{StaticResource FontSizeBase}" Foreground="White"/>
+                                <TextBlock Text="&#x2192;" FontSize="{StaticResource FontSizeBase}" Foreground="White"/>
                             </StackPanel>
                         </Button>
                     </Grid>
@@ -177,26 +177,27 @@
         </Grid>
     </Grid>
 
+    <!-- SLACK STYLE -->
     <UserControl.Styles>
         <Style Selector="CheckBox">
-            <Setter Property="Foreground" Value="#C9D1D9"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
             <Setter Property="FontSize" Value="12"/>
         </Style>
         <Style Selector="DataGrid">
-            <Setter Property="RowBackground" Value="#0D1117"/>
+            <Setter Property="RowBackground" Value="{StaticResource BackgroundDark}"/>
         </Style>
         <Style Selector="DataGridRow:nth-child(even)">
-            <Setter Property="Background" Value="#161B22"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundPanel}"/>
         </Style>
         <Style Selector="DataGridColumnHeader">
-            <Setter Property="Background" Value="#21262D"/>
-            <Setter Property="Foreground" Value="#8B949E"/>
+            <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Padding" Value="12,8"/>
         </Style>
         <Style Selector="DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
-            <Setter Property="Fill" Value="#388BFD26"/>
+            <Setter Property="Fill" Value="{StaticResource ColorPrimaryTintLight}"/>
         </Style>
     </UserControl.Styles>
 </UserControl>

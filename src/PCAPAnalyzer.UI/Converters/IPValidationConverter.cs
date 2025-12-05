@@ -4,6 +4,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.Converters;
 
@@ -16,10 +17,9 @@ public partial class IPValidationConverter : IValueConverter
 {
     public static readonly IPValidationConverter Instance = new();
 
-    // Valid border (default dark)
-    private static readonly IBrush ValidBorder = new SolidColorBrush(Color.Parse("#30363D"));
-    // Invalid border (red)
-    private static readonly IBrush InvalidBorder = new SolidColorBrush(Color.Parse("#EF4444"));
+    // Valid/Invalid borders from theme
+    private static IBrush ValidBorder => ThemeColorHelper.ValidationValidBrush;
+    private static IBrush InvalidBorder => ThemeColorHelper.ValidationInvalidBrush;
 
     [GeneratedRegex(@"^(\d{1,3}\.){3}\d{1,3}$")]
     private static partial Regex IPv4Regex();
@@ -125,8 +125,8 @@ public partial class PortValidationConverter : IValueConverter
 {
     public static readonly PortValidationConverter Instance = new();
 
-    private static readonly IBrush ValidBorder = new SolidColorBrush(Color.Parse("#30363D"));
-    private static readonly IBrush InvalidBorder = new SolidColorBrush(Color.Parse("#EF4444"));
+    private static IBrush ValidBorder => ThemeColorHelper.ValidationValidBrush;
+    private static IBrush InvalidBorder => ThemeColorHelper.ValidationInvalidBrush;
 
     [GeneratedRegex(@"^\d+(-\d+)?$")]
     private static partial Regex PortRangeRegex();

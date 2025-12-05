@@ -8,12 +8,14 @@ using Avalonia.Data.Converters;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services.OsFingerprinting;
 using PCAPAnalyzer.Core.Utilities;
-using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.UI.Interfaces;
+using PCAPAnalyzer.UI.Services;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels;
 
@@ -23,6 +25,10 @@ namespace PCAPAnalyzer.UI.ViewModels;
 /// </summary>
 public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTarget
 {
+    private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+        ?? throw new InvalidOperationException("IDispatcherService not registered");
+    private IDispatcherService? _dispatcher;
+
     private readonly IOsFingerprintService? _fingerprintService;
     private IReadOnlyList<HostFingerprint>? _allHosts;
 
@@ -86,7 +92,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
             DebugLogger.Log($"[HostInventoryViewModel] Retrieved {_allHosts.Count} hosts from fingerprint service");
         });
 
-        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        await Dispatcher.InvokeAsync(() =>
         {
             RefreshHostList();
             UpdateStatistics();
@@ -315,9 +321,86 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     [RelayCommand]
     private async Task ExportToCsv()
     {
-        // TODO: Implement CSV export
-        await Task.CompletedTask;
-        DebugLogger.Log("[HostInventoryViewModel] Export to CSV not yet implemented");
+        if (!Hosts.Any())
+        {
+            DebugLogger.Log("[HostInventoryViewModel] No hosts to export");
+            return;
+        }
+
+        try
+        {
+            if (Avalonia.Application.Current?.ApplicationLifetime is not
+                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop ||
+                desktop.MainWindow == null)
+            {
+                return;
+            }
+
+            var topLevel = desktop.MainWindow;
+            var saveDialog = new Avalonia.Platform.Storage.FilePickerSaveOptions
+            {
+                Title = "Export Host Inventory to CSV",
+                DefaultExtension = "csv",
+                SuggestedFileName = $"HostInventory_{DateTime.Now:yyyyMMdd_HHmmss}.csv",
+                FileTypeChoices = new[]
+                {
+                    new Avalonia.Platform.Storage.FilePickerFileType("CSV Files") { Patterns = new[] { "*.csv" } }
+                }
+            };
+
+            var file = await topLevel.StorageProvider.SaveFilePickerAsync(saveDialog);
+            if (file == null) return;
+
+            await using var stream = await file.OpenWriteAsync();
+            await using var writer = new System.IO.StreamWriter(stream);
+
+            // Write header
+            await writer.WriteLineAsync("IP Address,MAC Address,MAC Vendor,Hostname,OS Family,OS Version,OS Display Name,Device Type,Confidence,Confidence Score,Detection Method,JA3 Verified,JA3 Hash,JA3 Application,TCP Fingerprint,Packet Count,First Seen,Last Seen,Open Ports,Server Banners");
+
+            // Write data
+            foreach (var item in Hosts)
+            {
+                var line = string.Join(",",
+                    EscapeCsv(item.IpAddress),
+                    EscapeCsv(item.MacAddress),
+                    EscapeCsv(item.MacVendor),
+                    EscapeCsv(item.Hostname),
+                    EscapeCsv(item.OsFamily),
+                    EscapeCsv(item.OsVersion),
+                    EscapeCsv(item.OsDisplayName),
+                    EscapeCsv(item.DeviceTypeDisplay),
+                    EscapeCsv(item.ConfidenceDisplay),
+                    item.ConfidenceScore.ToString("F2"),
+                    EscapeCsv(item.DetectionMethodDisplay),
+                    item.Ja3Verified.ToString(),
+                    EscapeCsv(item.Ja3Hash),
+                    EscapeCsv(item.Ja3Application),
+                    EscapeCsv(item.TcpFingerprint),
+                    item.PacketCount,
+                    item.FirstSeen.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                    item.LastSeen.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                    EscapeCsv(item.OpenPorts),
+                    EscapeCsv(item.ServerBanners)
+                );
+                await writer.WriteLineAsync(line);
+            }
+
+            DebugLogger.Log($"[HostInventoryViewModel] Exported {Hosts.Count} hosts to CSV");
+        }
+        catch (Exception ex)
+        {
+            DebugLogger.Log($"[HostInventoryViewModel] CSV export failed: {ex.Message}");
+        }
+    }
+
+    private static string EscapeCsv(string? value)
+    {
+        if (string.IsNullOrEmpty(value)) return "";
+        if (value.Contains(',', StringComparison.Ordinal) ||
+            value.Contains('"', StringComparison.Ordinal) ||
+            value.Contains('\n', StringComparison.Ordinal))
+            return $"\"{value.Replace("\"", "\"\"", StringComparison.Ordinal)}\"";
+        return value;
     }
 
     [RelayCommand]
@@ -421,14 +504,14 @@ public class ConfidenceToBrushConverter : IValueConverter
         {
             return level switch
             {
-                OsConfidenceLevel.VeryHigh => new SolidColorBrush(Color.Parse("#10B981")), // Green
-                OsConfidenceLevel.High => new SolidColorBrush(Color.Parse("#22C55E")),     // Light green
-                OsConfidenceLevel.Medium => new SolidColorBrush(Color.Parse("#F59E0B")),   // Orange
-                OsConfidenceLevel.Low => new SolidColorBrush(Color.Parse("#EF4444")),      // Red
-                _ => new SolidColorBrush(Color.Parse("#6B7280"))                           // Gray
+                OsConfidenceLevel.VeryHigh => new SolidColorBrush(ThemeColorHelper.GetColor("ColorSuccess", "#10B981")),
+                OsConfidenceLevel.High => new SolidColorBrush(ThemeColorHelper.GetColor("ColorSuccessLight", "#22C55E")),
+                OsConfidenceLevel.Medium => new SolidColorBrush(ThemeColorHelper.GetColor("ColorWarning", "#F59E0B")),
+                OsConfidenceLevel.Low => new SolidColorBrush(ThemeColorHelper.GetColor("ColorDanger", "#EF4444")),
+                _ => new SolidColorBrush(ThemeColorHelper.GetColor("TextMuted", "#6B7280"))
             };
         }
-        return new SolidColorBrush(Color.Parse("#6B7280"));
+        return new SolidColorBrush(ThemeColorHelper.GetColor("TextMuted", "#6B7280"));
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

@@ -8,7 +8,7 @@
     <Border Grid.Row="0" Background="#2D3748" Padding="10">
       <Grid ColumnDefinitions="*,Auto">
         <TextBlock Grid.Column="0" Text="Network Topology Graph"
-                   FontSize="16" FontWeight="Bold" Foreground="White"
+                   FontSize="{StaticResource FontSizeLarge}" FontWeight="Bold" Foreground="White"
                    VerticalAlignment="Center" />
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
           <TextBlock Text="Layout:" Foreground="White" VerticalAlignment="Center" />

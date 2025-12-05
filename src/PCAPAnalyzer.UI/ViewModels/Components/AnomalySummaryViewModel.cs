@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -119,10 +120,10 @@ public class AnomalySummaryItem
 
     public string SeverityColor => Severity switch
     {
-        AnomalySeverity.Critical => "#F85149",
-        AnomalySeverity.High => "#F0883E",
-        AnomalySeverity.Medium => "#D29922",
-        AnomalySeverity.Low => "#58A6FF",
-        _ => "#8B949E"
+        AnomalySeverity.Critical => ThemeColorHelper.GetColorHex("ColorDanger", "#F85149"),
+        AnomalySeverity.High => ThemeColorHelper.GetColorHex("ColorOrange", "#F0883E"),
+        AnomalySeverity.Medium => ThemeColorHelper.GetColorHex("ColorWarning", "#D29922"),
+        AnomalySeverity.Low => ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"),
+        _ => ThemeColorHelper.GetColorHex("TextMuted", "#8B949E")
     };
 }

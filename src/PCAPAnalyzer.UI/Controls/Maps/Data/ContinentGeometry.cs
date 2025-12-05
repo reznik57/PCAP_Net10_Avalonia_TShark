@@ -18,7 +18,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
 
         /// <summary>
         /// Returns cached StreamGeometry for North America (Canada, USA, Mexico)
-        /// Simplified angular design with 17 points - wide Canadian top narrowing to Central America
+        /// Smooth curved design - recognizable continental outline
         /// Coordinates in 800x400 canvas space
         /// </summary>
         public static StreamGeometry GetNorthAmericaGeometry()
@@ -29,23 +29,22 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
             var geometry = new StreamGeometry();
             using (var context = geometry.Open())
             {
-                // Angular North America - wide top (Alaska/Canada), narrow bottom (Central America)
-                context.BeginFigure(new Point(50, 100), true); // Alaska west
-                context.LineTo(new Point(80, 60));   // Alaska north
-                context.LineTo(new Point(160, 60));  // Canadian Arctic
-                context.LineTo(new Point(220, 80));  // Eastern Canada
-                context.LineTo(new Point(250, 100)); // Newfoundland
-                context.LineTo(new Point(245, 130)); // US East Coast
-                context.LineTo(new Point(230, 160)); // Florida
-                context.LineTo(new Point(200, 180)); // Gulf of Mexico
-                context.LineTo(new Point(170, 190)); // Central America
-                context.LineTo(new Point(150, 185)); // Central America west
-                context.LineTo(new Point(140, 170)); // Mexico west coast
-                context.LineTo(new Point(130, 150)); // California
-                context.LineTo(new Point(100, 140)); // Pacific Northwest
-                context.LineTo(new Point(70, 130));  // Alaska panhandle
-                context.LineTo(new Point(55, 120));  // Alaska southwest
-                context.LineTo(new Point(50, 110));  // Return to start area
+                // Smooth North America with realistic curves
+                context.BeginFigure(new Point(45, 95), true); // Alaska west
+                context.QuadraticBezierTo(new Point(50, 55), new Point(85, 50));    // Alaska curve
+                context.QuadraticBezierTo(new Point(120, 48), new Point(155, 55));  // Canadian Arctic
+                context.QuadraticBezierTo(new Point(190, 62), new Point(220, 72));  // Hudson Bay area
+                context.QuadraticBezierTo(new Point(245, 80), new Point(255, 95));  // Labrador
+                context.QuadraticBezierTo(new Point(260, 105), new Point(252, 120)); // East coast north
+                context.QuadraticBezierTo(new Point(245, 135), new Point(235, 150)); // East coast south
+                context.QuadraticBezierTo(new Point(228, 165), new Point(215, 175)); // Florida
+                context.QuadraticBezierTo(new Point(200, 185), new Point(180, 188)); // Gulf coast
+                context.QuadraticBezierTo(new Point(165, 190), new Point(155, 185)); // Central America
+                context.QuadraticBezierTo(new Point(145, 178), new Point(138, 168)); // Mexico west
+                context.QuadraticBezierTo(new Point(130, 155), new Point(125, 145)); // Baja California
+                context.QuadraticBezierTo(new Point(105, 140), new Point(85, 135));  // Pacific coast
+                context.QuadraticBezierTo(new Point(65, 125), new Point(52, 115));   // Alaska south
+                context.QuadraticBezierTo(new Point(45, 105), new Point(45, 95));    // Close
                 context.EndFigure(true);
             }
             _northAmericaGeometry = geometry;
@@ -54,7 +53,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
 
         /// <summary>
         /// Returns cached StreamGeometry for South America
-        /// Simplified angular design with 14 points - inverted triangle, wide north to narrow south
+        /// Smooth curved design - distinctive Brazilian bulge and southern tip
         /// Coordinates in 800x400 canvas space
         /// </summary>
         public static StreamGeometry GetSouthAmericaGeometry()
@@ -65,20 +64,19 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
             var geometry = new StreamGeometry();
             using (var context = geometry.Open())
             {
-                // Angular South America - inverted triangle shape
-                context.BeginFigure(new Point(170, 195), true); // Northwest Colombia/Panama
-                context.LineTo(new Point(210, 190)); // North Venezuela
-                context.LineTo(new Point(240, 200)); // Northeast Brazil
-                context.LineTo(new Point(238, 235)); // Eastern Brazil bulge
-                context.LineTo(new Point(230, 270)); // Southeast Brazil
-                context.LineTo(new Point(215, 295)); // Uruguay
-                context.LineTo(new Point(200, 315)); // Argentina south
-                context.LineTo(new Point(185, 312)); // Patagonia tip
-                context.LineTo(new Point(175, 300)); // Chile south
-                context.LineTo(new Point(170, 270)); // Central Chile
-                context.LineTo(new Point(168, 235)); // Peru
-                context.LineTo(new Point(172, 210)); // Ecuador/Colombia west
-                context.LineTo(new Point(170, 200)); // Return to start
+                // Smooth South America with realistic curves
+                context.BeginFigure(new Point(168, 195), true); // Colombia/Panama
+                context.QuadraticBezierTo(new Point(190, 188), new Point(210, 192)); // Venezuela coast
+                context.QuadraticBezierTo(new Point(230, 195), new Point(242, 205)); // Guyana
+                context.QuadraticBezierTo(new Point(250, 220), new Point(248, 240)); // Brazil bulge east
+                context.QuadraticBezierTo(new Point(245, 260), new Point(235, 278)); // Brazil south
+                context.QuadraticBezierTo(new Point(225, 292), new Point(212, 305)); // Uruguay
+                context.QuadraticBezierTo(new Point(200, 318), new Point(190, 325)); // Argentina east
+                context.QuadraticBezierTo(new Point(182, 330), new Point(178, 320)); // Tierra del Fuego
+                context.QuadraticBezierTo(new Point(175, 310), new Point(172, 295)); // Chile south
+                context.QuadraticBezierTo(new Point(168, 270), new Point(165, 245)); // Chile central
+                context.QuadraticBezierTo(new Point(162, 225), new Point(165, 210)); // Peru
+                context.QuadraticBezierTo(new Point(168, 200), new Point(168, 195)); // Ecuador
                 context.EndFigure(true);
             }
             _southAmericaGeometry = geometry;
@@ -87,7 +85,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
 
         /// <summary>
         /// Returns cached StreamGeometry for Europe
-        /// Simplified angular design with 14 points - Scandinavian peninsula with Mediterranean coast
+        /// Smooth curved design - Scandinavian peninsula, Mediterranean coast, British Isles
         /// Coordinates in 800x400 canvas space
         /// </summary>
         public static StreamGeometry GetEuropeGeometry()
@@ -98,20 +96,20 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
             var geometry = new StreamGeometry();
             using (var context = geometry.Open())
             {
-                // Angular Europe - Scandinavia north, compact Mediterranean south
-                context.BeginFigure(new Point(390, 80), true); // Norway west
-                context.LineTo(new Point(410, 60));  // Northern Scandinavia
-                context.LineTo(new Point(440, 65));  // Sweden/Finland
-                context.LineTo(new Point(470, 85));  // Russia northwest
-                context.LineTo(new Point(470, 110)); // Baltic states
-                context.LineTo(new Point(460, 135)); // Eastern Europe
-                context.LineTo(new Point(440, 150)); // Balkans
-                context.LineTo(new Point(410, 150)); // Greece/Mediterranean
-                context.LineTo(new Point(385, 145)); // Italy
-                context.LineTo(new Point(370, 135)); // Iberian Peninsula
-                context.LineTo(new Point(370, 115)); // France
-                context.LineTo(new Point(375, 95));  // British Isles
-                context.LineTo(new Point(385, 85));  // North Sea coast
+                // Smooth Europe with realistic curves
+                context.BeginFigure(new Point(385, 82), true); // Norway west coast
+                context.QuadraticBezierTo(new Point(395, 55), new Point(415, 52)); // Northern Norway
+                context.QuadraticBezierTo(new Point(435, 50), new Point(450, 60)); // Finland
+                context.QuadraticBezierTo(new Point(470, 70), new Point(478, 88)); // Russia border
+                context.QuadraticBezierTo(new Point(480, 105), new Point(475, 120)); // Baltic
+                context.QuadraticBezierTo(new Point(468, 135), new Point(455, 148)); // Eastern Europe
+                context.QuadraticBezierTo(new Point(440, 158), new Point(420, 155)); // Balkans
+                context.QuadraticBezierTo(new Point(405, 152), new Point(395, 148)); // Greece/Italy boot
+                context.QuadraticBezierTo(new Point(380, 145), new Point(368, 138)); // Italy
+                context.QuadraticBezierTo(new Point(358, 130), new Point(355, 118)); // Iberia
+                context.QuadraticBezierTo(new Point(355, 105), new Point(362, 95));  // France
+                context.QuadraticBezierTo(new Point(370, 85), new Point(378, 80));   // Britain/Ireland
+                context.QuadraticBezierTo(new Point(382, 80), new Point(385, 82));   // Close
                 context.EndFigure(true);
             }
             _europeGeometry = geometry;
@@ -120,7 +118,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
 
         /// <summary>
         /// Returns cached StreamGeometry for Africa
-        /// Simplified angular design with 16 points - rectangular north bulk with Horn protrusion, narrow south
+        /// Smooth curved design - distinctive Horn of Africa, Cape of Good Hope
         /// Coordinates in 800x400 canvas space
         /// </summary>
         public static StreamGeometry GetAfricaGeometry()
@@ -131,22 +129,20 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
             var geometry = new StreamGeometry();
             using (var context = geometry.Open())
             {
-                // Angular Africa - rectangular bulk with distinctive Horn of Africa
-                context.BeginFigure(new Point(410, 168), true); // Northwest Morocco
-                context.LineTo(new Point(480, 165)); // North coast Mediterranean
-                context.LineTo(new Point(510, 170)); // Egypt
-                context.LineTo(new Point(530, 185)); // Horn of Africa protrusion
-                context.LineTo(new Point(525, 210)); // Somalia
-                context.LineTo(new Point(520, 250)); // East Africa
-                context.LineTo(new Point(510, 295)); // Mozambique
-                context.LineTo(new Point(490, 330)); // South Africa east
-                context.LineTo(new Point(470, 340)); // Cape of Good Hope
-                context.LineTo(new Point(450, 335)); // South Africa west
-                context.LineTo(new Point(435, 310)); // Namibia
-                context.LineTo(new Point(430, 270)); // Angola
-                context.LineTo(new Point(420, 230)); // Congo
-                context.LineTo(new Point(410, 200)); // West Africa
-                context.LineTo(new Point(415, 180)); // Northwest coast
+                // Smooth Africa with realistic curves
+                context.BeginFigure(new Point(405, 168), true); // Morocco
+                context.QuadraticBezierTo(new Point(440, 162), new Point(475, 165)); // North coast
+                context.QuadraticBezierTo(new Point(500, 168), new Point(515, 175)); // Egypt/Sinai
+                context.QuadraticBezierTo(new Point(530, 180), new Point(538, 195)); // Horn of Africa
+                context.QuadraticBezierTo(new Point(535, 212), new Point(528, 230)); // Somalia coast
+                context.QuadraticBezierTo(new Point(522, 255), new Point(518, 280)); // East Africa
+                context.QuadraticBezierTo(new Point(512, 305), new Point(498, 325)); // Mozambique
+                context.QuadraticBezierTo(new Point(485, 340), new Point(468, 345)); // South Africa
+                context.QuadraticBezierTo(new Point(452, 342), new Point(440, 332)); // Cape
+                context.QuadraticBezierTo(new Point(428, 318), new Point(422, 295)); // Namibia
+                context.QuadraticBezierTo(new Point(418, 268), new Point(415, 240)); // Angola
+                context.QuadraticBezierTo(new Point(410, 215), new Point(405, 195)); // West Africa bulge
+                context.QuadraticBezierTo(new Point(402, 180), new Point(405, 168)); // Senegal
                 context.EndFigure(true);
             }
             _africaGeometry = geometry;
@@ -155,7 +151,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
 
         /// <summary>
         /// Returns cached StreamGeometry for Asia
-        /// Simplified angular design with 23 points - massive Siberian expanse, eastern peninsulas, Indian subcontinent
+        /// Smooth curved design - Siberia, Indian subcontinent, Southeast Asia
         /// Coordinates in 800x400 canvas space
         /// </summary>
         public static StreamGeometry GetAsiaGeometry()
@@ -166,29 +162,24 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
             var geometry = new StreamGeometry();
             using (var context = geometry.Open())
             {
-                // Angular Asia - largest continent with eastern complexity
-                context.BeginFigure(new Point(470, 85), true);  // Ural Mountains west
-                context.LineTo(new Point(530, 65));   // Western Siberia
-                context.LineTo(new Point(620, 60));   // Central Siberia
-                context.LineTo(new Point(710, 75));   // Eastern Siberia
-                context.LineTo(new Point(750, 100));  // Kamchatka
-                context.LineTo(new Point(748, 130));  // Sea of Okhotsk
-                context.LineTo(new Point(730, 150));  // Japan/Korea area
-                context.LineTo(new Point(710, 170));  // East China coast
-                context.LineTo(new Point(685, 200));  // Southeast coast
-                context.LineTo(new Point(672, 230));  // Indochina peninsula
-                context.LineTo(new Point(665, 240));  // Malaysia
-                context.LineTo(new Point(650, 230));  // Indonesia area
-                context.LineTo(new Point(630, 215));  // Bay of Bengal
-                context.LineTo(new Point(615, 190));  // Indian subcontinent east
-                context.LineTo(new Point(605, 165));  // India south tip
-                context.LineTo(new Point(600, 145));  // India west coast
-                context.LineTo(new Point(585, 140));  // Arabian Sea
-                context.LineTo(new Point(570, 135));  // Arabian Peninsula
-                context.LineTo(new Point(555, 125));  // Middle East
-                context.LineTo(new Point(535, 110));  // Turkey/Caucasus
-                context.LineTo(new Point(520, 100));  // Black Sea area
-                context.LineTo(new Point(480, 95));   // Eastern Europe border
+                // Smooth Asia with realistic curves - largest continent
+                context.BeginFigure(new Point(478, 88), true);  // Urals (connects to Europe)
+                context.QuadraticBezierTo(new Point(520, 60), new Point(580, 55)); // Western Siberia
+                context.QuadraticBezierTo(new Point(640, 52), new Point(700, 60)); // Central Siberia
+                context.QuadraticBezierTo(new Point(740, 70), new Point(758, 95)); // Eastern Siberia
+                context.QuadraticBezierTo(new Point(765, 115), new Point(755, 135)); // Kamchatka
+                context.QuadraticBezierTo(new Point(745, 152), new Point(725, 165)); // Sea of Okhotsk
+                context.QuadraticBezierTo(new Point(708, 178), new Point(690, 195)); // China coast
+                context.QuadraticBezierTo(new Point(678, 215), new Point(668, 235)); // Southeast Asia
+                context.QuadraticBezierTo(new Point(660, 248), new Point(648, 245)); // Malaysia
+                context.QuadraticBezierTo(new Point(632, 238), new Point(620, 225)); // Indonesia tip
+                context.QuadraticBezierTo(new Point(608, 210), new Point(598, 192)); // Bay of Bengal
+                context.QuadraticBezierTo(new Point(592, 175), new Point(590, 160)); // India south
+                context.QuadraticBezierTo(new Point(588, 148), new Point(580, 142)); // India west
+                context.QuadraticBezierTo(new Point(565, 138), new Point(550, 135)); // Arabian Peninsula
+                context.QuadraticBezierTo(new Point(530, 128), new Point(515, 118)); // Middle East
+                context.QuadraticBezierTo(new Point(500, 108), new Point(485, 95));  // Turkey/Caucasus
+                context.QuadraticBezierTo(new Point(480, 90), new Point(478, 88));   // Close
                 context.EndFigure(true);
             }
             _asiaGeometry = geometry;
@@ -197,7 +188,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
 
         /// <summary>
         /// Returns cached StreamGeometry for Oceania (Australia + New Zealand)
-        /// Simplified angular design with 12 points - simplified rectangular Australia with rounded corners
+        /// Smooth curved design - distinctive Australian coastline with Gulf of Carpentaria
         /// Coordinates in 800x400 canvas space
         /// </summary>
         public static StreamGeometry GetOceaniaGeometry()
@@ -208,18 +199,18 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
             var geometry = new StreamGeometry();
             using (var context = geometry.Open())
             {
-                // Angular Australia - simplified angular rectangle with corner variations
-                context.BeginFigure(new Point(660, 260), true); // North Queensland
-                context.LineTo(new Point(720, 250)); // Northern Territory
-                context.LineTo(new Point(755, 265)); // Northeast corner
-                context.LineTo(new Point(760, 300)); // East coast
-                context.LineTo(new Point(755, 335)); // Southeast corner (Victoria)
-                context.LineTo(new Point(720, 345)); // South coast
-                context.LineTo(new Point(670, 345)); // South Australia
-                context.LineTo(new Point(645, 335)); // Southwest corner
-                context.LineTo(new Point(640, 300)); // West coast
-                context.LineTo(new Point(642, 270)); // Northwest coast
-                context.LineTo(new Point(650, 260)); // Northern coast return
+                // Smooth Australia with realistic curves
+                context.BeginFigure(new Point(655, 262), true); // Cape York
+                context.QuadraticBezierTo(new Point(680, 255), new Point(705, 258)); // Gulf of Carpentaria
+                context.QuadraticBezierTo(new Point(728, 258), new Point(745, 268)); // Arnhem Land
+                context.QuadraticBezierTo(new Point(760, 278), new Point(765, 295)); // Queensland coast
+                context.QuadraticBezierTo(new Point(768, 315), new Point(760, 335)); // Great Barrier Reef
+                context.QuadraticBezierTo(new Point(750, 350), new Point(730, 355)); // NSW/Victoria
+                context.QuadraticBezierTo(new Point(705, 358), new Point(680, 355)); // South coast
+                context.QuadraticBezierTo(new Point(655, 350), new Point(638, 340)); // Great Australian Bight
+                context.QuadraticBezierTo(new Point(625, 325), new Point(625, 305)); // Western Australia south
+                context.QuadraticBezierTo(new Point(628, 285), new Point(638, 272)); // Western Australia north
+                context.QuadraticBezierTo(new Point(648, 262), new Point(655, 262)); // Kimberley
                 context.EndFigure(true);
             }
             _oceaniaGeometry = geometry;

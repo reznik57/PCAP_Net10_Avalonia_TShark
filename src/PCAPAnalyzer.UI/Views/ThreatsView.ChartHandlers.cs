@@ -5,6 +5,7 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
 using PCAPAnalyzer.UI.ViewModels;
+using PCAPAnalyzer.UI.Utilities;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Avalonia;
@@ -238,8 +239,8 @@ namespace PCAPAnalyzer.UI.Views
                     {
                         Values = new ObservableCollection<DateTimePoint> { new(timestamp, value) },
                         GeometrySize = 12,
-                        Fill = new SolidColorPaint(SKColor.Parse("#FFD700")),
-                        Stroke = new SolidColorPaint(SKColor.Parse("#FFA500")) { StrokeThickness = 2 },
+                        Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.HighlightYellowHex)),
+                        Stroke = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.HighlightOrangeHex)) { StrokeThickness = 2 },
                         Name = "Highlight",
                         IsVisibleAtLegend = false,
                         ZIndex = 1000,
@@ -261,7 +262,7 @@ namespace PCAPAnalyzer.UI.Views
                             new(timestamp, _cachedThreatMinY),
                             new(timestamp, _cachedThreatMaxY)
                         },
-                        Stroke = new SolidColorPaint(SKColor.Parse("#FFD700")) { StrokeThickness = 4f },
+                        Stroke = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.HighlightYellowHex)) { StrokeThickness = 4f },
                         Fill = null,
                         GeometrySize = 0,
                         LineSmoothness = 0,

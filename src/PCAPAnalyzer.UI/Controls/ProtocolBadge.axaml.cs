@@ -5,6 +5,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.UI.Services;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.Controls;
 
@@ -126,10 +127,11 @@ public class ProtocolBadge : TemplatedControl
         }
         catch
         {
-            // Fallback colors if parsing fails
-            SetValue(ForegroundProperty, Brushes.White);
-            SetValue(BackgroundProperty, new SolidColorBrush(Color.FromArgb(40, 107, 114, 128)));
-            SetValue(BorderBrushProperty, new SolidColorBrush(Color.FromRgb(107, 114, 128)));
+            // Fallback colors from theme if parsing fails
+            var fallbackColor = ThemeColorHelper.GetColor("ProtocolDefault", "#6B7280");
+            SetValue(ForegroundProperty, new SolidColorBrush(fallbackColor));
+            SetValue(BackgroundProperty, new SolidColorBrush(Color.FromArgb(40, fallbackColor.R, fallbackColor.G, fallbackColor.B)));
+            SetValue(BorderBrushProperty, new SolidColorBrush(fallbackColor));
             ProtocolDescription = Protocol;
         }
     }
@@ -150,7 +152,7 @@ public class ProtocolBadge : TemplatedControl
     public string GetCurrentColor()
     {
         if (_colorService == null || string.IsNullOrWhiteSpace(Protocol))
-            return "#6B7280";
+            return ThemeColorHelper.GetColorHex("ProtocolDefault", "#6B7280");
 
         return _colorService.GetProtocolColorHex(Protocol);
     }

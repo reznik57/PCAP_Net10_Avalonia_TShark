@@ -4,61 +4,85 @@ namespace PCAPAnalyzer.TShark.Configuration;
 
 /// <summary>
 /// Centralized TShark field definitions for packet analysis.
-/// Defines field layouts for streaming analysis, credential detection, and OS fingerprinting.
+/// Optimized for Wireshark 4.6.1+ with lean, security-focused field selection.
+///
+/// Design principles:
+/// 1. Every field MUST be parsed and used by the application
+/// 2. Favor native TShark fields over manual computation (JA3, SNI)
+/// 3. Remove duplicates and low-value fields
+/// 4. Balance security value vs. parsing overhead
+///
+/// Field layout (58 fields total):
+/// - Core (0-17): Frame metadata, IPs, ports, protocols, TCP details
+/// - Credentials (18-37): Cleartext auth detection
+/// - OS Fingerprint (38-55): TCP stack, TLS handshake, DHCP, SSH
+/// - Security (56-57): Native JA3 + SNI (high value, low cost)
 /// </summary>
 public static class TSharkFieldDefinitions
 {
     /// <summary>
-    /// Core packet analysis fields (0-18).
-    /// Includes frame metadata, IP addresses, ports, protocols, and TCP details.
+    /// Core packet analysis fields (0-17).
+    /// Essential frame metadata, IP addresses, ports, protocols, and TCP details.
+    /// Note: frame.time removed (duplicate of frame.time_epoch).
     /// </summary>
     public static readonly string CoreFields =
-        "-e frame.number -e frame.time -e frame.time_epoch -e frame.len " +
-        "-e ip.src -e ip.dst -e ipv6.src -e ipv6.dst " +
-        "-e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport " +
-        "-e _ws.col.Protocol -e frame.protocols -e _ws.col.Info " +
-        "-e tcp.flags -e tcp.seq -e tcp.ack -e tcp.window_size";
+        "-e frame.number -e frame.time_epoch -e frame.len " +              // 0-2: Frame number, epoch timestamp, length
+        "-e ip.src -e ip.dst -e ipv6.src -e ipv6.dst " +                   // 3-6: IP addresses
+        "-e tcp.srcport -e tcp.dstport -e udp.srcport -e udp.dstport " +   // 7-10: Ports
+        "-e _ws.col.Protocol -e frame.protocols -e _ws.col.Info " +        // 11-13: Protocol info
+        "-e tcp.flags -e tcp.seq -e tcp.ack -e tcp.window_size";           // 14-17: TCP details
 
     /// <summary>
-    /// Credential detection fields (19-38).
+    /// Credential detection fields (18-37).
     /// Captures cleartext credentials for HTTP, FTP, SMTP, IMAP, POP3, LDAP, SNMP, Kerberos, NTLM, MySQL, PostgreSQL.
+    /// Field names updated for Wireshark 4.6.1+ compatibility.
     /// </summary>
     public static readonly string CredentialFields =
-        "-e http.authorization -e http.authbasic " +                    // 19-20: HTTP Basic Auth
-        "-e ftp.request.command -e ftp.request.arg " +                  // 21-22: FTP USER/PASS
-        "-e smtp.req.command -e smtp.req.parameter " +                  // 23-24: SMTP AUTH
-        "-e imap.request " +                                            // 25: IMAP LOGIN
-        "-e pop.request.command -e pop.request.parameter " +            // 26-27: POP3 USER/PASS
-        "-e ldap.simple -e ldap.bindRequest.name " +                    // 28-29: LDAP Simple Bind
-        "-e snmp.community " +                                          // 30: SNMP Community
-        "-e kerberos.CNameString -e kerberos.realm " +                  // 31-32: Kerberos
-        "-e ntlmssp.auth.username -e ntlmssp.auth.domain " +            // 33-34: NTLM
-        "-e mysql.user -e mysql.passwd " +                              // 35-36: MySQL
-        "-e pgsql.user -e pgsql.password";                              // 37-38: PostgreSQL
+        "-e http.authorization -e http.authbasic " +                    // 18-19: HTTP Basic Auth
+        "-e ftp.request.command -e ftp.request.arg " +                  // 20-21: FTP USER/PASS
+        "-e smtp.req.command -e smtp.req.parameter " +                  // 22-23: SMTP AUTH
+        "-e imap.request " +                                            // 24: IMAP LOGIN
+        "-e pop.request.command -e pop.request.parameter " +            // 25-26: POP3 USER/PASS
+        "-e ldap.simple -e ldap.name " +                                // 27-28: LDAP Simple Bind
+        "-e snmp.community " +                                          // 29: SNMP Community
+        "-e kerberos.CNameString -e kerberos.realm " +                  // 30-31: Kerberos
+        "-e ntlmssp.auth.username -e ntlmssp.auth.domain " +            // 32-33: NTLM
+        "-e mysql.user -e mysql.passwd " +                              // 34-35: MySQL
+        "-e pgsql.parameter_name -e pgsql.password";                    // 36-37: PostgreSQL
 
     /// <summary>
-    /// OS fingerprinting fields (39-59).
-    /// Captures TCP/IP stack characteristics, TLS JA3 data, DHCP options, SSH banners, HTTP server headers.
+    /// OS fingerprinting fields (38-54).
+    /// Essential TCP/IP stack characteristics for host identification.
+    /// Removed low-value fields: tcp.options (raw hex), tcp.options.sack_perm, tcp.options.timestamp.tsval.
+    /// Field names updated for Wireshark 4.6.1+ compatibility.
     /// </summary>
     public static readonly string OsFingerprintFields =
-        "-e ip.ttl -e ip.flags.df " +                                   // 39-40: TTL, DF flag
-        "-e eth.src " +                                                 // 41: MAC address
-        "-e tcp.options -e tcp.options.mss_val " +                      // 42-43: TCP options, MSS
-        "-e tcp.options.wscale -e tcp.options.sack_perm " +             // 44-45: Window scale, SACK
-        "-e tcp.options.timestamp.tsval " +                             // 46: TCP timestamp
-        "-e tcp.window_size_value " +                                   // 47: Initial window size
-        "-e tls.handshake.type -e tls.handshake.version " +             // 48-49: TLS handshake info
-        "-e tls.handshake.ciphersuite " +                               // 50: Cipher suites (JA3)
-        "-e tls.handshake.extension.type " +                            // 51: Extensions (JA3)
-        "-e tls.handshake.extensions_elliptic_curves " +                // 52: Elliptic curves (JA3)
-        "-e tls.handshake.extensions_ec_point_formats " +               // 53: EC point formats (JA3)
-        "-e dhcp.option.dhcp -e dhcp.option.request_list " +            // 54-55: DHCP options
-        "-e dhcp.option.vendor_class_id -e dhcp.option.hostname " +     // 56-57: DHCP vendor/hostname
-        "-e ssh.protocol -e http.server";                               // 58-59: SSH banner, HTTP server
+        "-e ip.ttl -e ip.flags.df " +                                   // 38-39: TTL, DF flag
+        "-e eth.src " +                                                 // 40: MAC address
+        "-e tcp.options.mss_val -e tcp.options.wscale " +               // 41-42: MSS, Window scale (key fingerprint values)
+        "-e tcp.window_size_value " +                                   // 43: Initial window size
+        "-e tls.handshake.type -e tls.handshake.version " +             // 44-45: TLS handshake info
+        "-e tls.handshake.ciphersuite " +                               // 46: Cipher suites
+        "-e tls.handshake.extension.type " +                            // 47: Extensions
+        "-e tls.handshake.extensions_supported_groups " +               // 48: Supported groups (was elliptic_curves)
+        "-e tls.handshake.extensions_ec_point_formats " +               // 49: EC point formats
+        "-e dhcp.option.dhcp -e dhcp.option.request_list_item " +       // 50-51: DHCP message type, options
+        "-e dhcp.option.vendor_class_id -e dhcp.option.hostname " +     // 52-53: DHCP vendor/hostname
+        "-e ssh.protocol -e http.server";                               // 54-55: SSH banner, HTTP server
+
+    /// <summary>
+    /// Security analysis fields (56-57).
+    /// High-value native TShark fields that eliminate manual computation.
+    /// JA3 hash: Identifies client/malware by TLS fingerprint.
+    /// SNI: Target domain even for encrypted traffic.
+    /// </summary>
+    public static readonly string SecurityFields =
+        "-e tls.handshake.ja3 " +                                       // 56: Native JA3 hash (replaces manual computation)
+        "-e tls.handshake.extensions_server_name";                      // 57: SNI - target domain for encrypted traffic
 
     /// <summary>
     /// Builds complete TShark arguments for streaming packet analysis.
-    /// Includes all field categories: core, credentials, and OS fingerprinting.
+    /// Includes all field categories: core, credentials, OS fingerprinting, and security.
     /// </summary>
     /// <param name="pcapPath">Path to PCAP file (will be quoted)</param>
     /// <returns>Complete TShark command arguments</returns>
@@ -68,6 +92,7 @@ public static class TSharkFieldDefinitions
                $"{CoreFields} " +
                $"{CredentialFields} " +
                $"{OsFingerprintFields} " +
+               $"{SecurityFields} " +
                "-E occurrence=f";
     }
 
@@ -107,6 +132,7 @@ public static class TSharkFieldDefinitions
     /// <summary>
     /// Total number of fields in streaming output.
     /// Must match MAX_TSHARK_FIELDS in TSharkParserOptimized.
+    /// Core (18) + Credentials (20) + OS Fingerprint (18) + Security (2) = 58 fields
     /// </summary>
-    public const int TotalFieldCount = 60;
+    public const int TotalFieldCount = 58;
 }

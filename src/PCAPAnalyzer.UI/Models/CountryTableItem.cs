@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.Core.Utilities;
@@ -17,6 +18,12 @@ namespace PCAPAnalyzer.UI.Models
         [ObservableProperty] private double _bytePercentage;
         [ObservableProperty] private bool _isHighRisk;
         [ObservableProperty] private CountryTableContext _context = CountryTableContext.Aggregated;
+
+        /// <summary>
+        /// Timeline data for sparkline visualization.
+        /// Contains packet counts bucketed over time (20 buckets across capture duration).
+        /// </summary>
+        [ObservableProperty] private IReadOnlyList<double>? _timelineBuckets;
 
         // Additional properties for display
         public long PacketCount => TotalPackets;

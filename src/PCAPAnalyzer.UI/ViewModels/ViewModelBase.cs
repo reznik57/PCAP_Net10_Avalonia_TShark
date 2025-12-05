@@ -2,9 +2,10 @@ using System;
 using System.Reactive.Concurrency;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
+using PCAPAnalyzer.UI.Services;
 using ReactiveUI;
 
 namespace PCAPAnalyzer.UI.ViewModels
@@ -15,20 +16,28 @@ namespace PCAPAnalyzer.UI.ViewModels
     public abstract class ViewModelBase : ObservableObject
     {
         /// <summary>
+        /// Gets the dispatcher service for UI thread marshalling.
+        /// Lazily initialized from DI container.
+        /// </summary>
+        protected IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
+            ?? throw new InvalidOperationException("IDispatcherService not registered");
+        private IDispatcherService? _dispatcher;
+
+        /// <summary>
         /// Thread-safe property update that ensures UI thread execution (fire-and-forget, non-blocking)
         /// Usage: SetPropertyThreadSafe(() => MyProperty = value);
         /// </summary>
         protected void SetPropertyThreadSafe(Action propertyUpdate)
         {
             // If we're on UI thread, proceed normally
-            if (Dispatcher.UIThread.CheckAccess())
+            if (Dispatcher.CheckAccess())
             {
                 propertyUpdate();
                 return;
             }
 
             // If not on UI thread, marshal to UI thread (non-blocking)
-            Dispatcher.UIThread.Post(propertyUpdate);
+            Dispatcher.Post(propertyUpdate);
         }
 
         /// <summary>
@@ -38,14 +47,14 @@ namespace PCAPAnalyzer.UI.ViewModels
         protected async Task SetPropertyThreadSafeAsync(Action propertyUpdate)
         {
             // If we're on UI thread, proceed normally
-            if (Dispatcher.UIThread.CheckAccess())
+            if (Dispatcher.CheckAccess())
             {
                 propertyUpdate();
                 return;
             }
 
             // If not on UI thread, marshal to UI thread and await
-            await Dispatcher.UIThread.InvokeAsync(propertyUpdate);
+            await Dispatcher.InvokeAsync(propertyUpdate);
         }
         
         /// <summary>
@@ -53,13 +62,13 @@ namespace PCAPAnalyzer.UI.ViewModels
         /// </summary>
         protected void RunOnUIThread(Action action)
         {
-            if (Dispatcher.UIThread.CheckAccess())
+            if (Dispatcher.CheckAccess())
             {
                 action();
             }
             else
             {
-                Dispatcher.UIThread.InvokeAsync(action);
+                Dispatcher.InvokeAsync(action);
             }
         }
         
@@ -68,13 +77,13 @@ namespace PCAPAnalyzer.UI.ViewModels
         /// </summary>
         protected void RunOnUIThreadSync(Action action)
         {
-            if (Dispatcher.UIThread.CheckAccess())
+            if (Dispatcher.CheckAccess())
             {
                 action();
             }
             else
             {
-                Dispatcher.UIThread.Post(action);
+                Dispatcher.Post(action);
             }
         }
 
@@ -83,13 +92,13 @@ namespace PCAPAnalyzer.UI.ViewModels
         /// </summary>
         protected async Task RunOnUIThreadSyncAsync(Action action)
         {
-            if (Dispatcher.UIThread.CheckAccess())
+            if (Dispatcher.CheckAccess())
             {
                 action();
             }
             else
             {
-                await Dispatcher.UIThread.InvokeAsync(action);
+                await Dispatcher.InvokeAsync(action);
             }
         }
         
@@ -113,10 +122,11 @@ namespace PCAPAnalyzer.UI.ViewModels
         {
             return new AsyncRelayCommand(async () =>
             {
+                var dispatcher = App.Services?.GetService<IDispatcherService>();
                 // Ensure we start on UI thread
-                if (!Dispatcher.UIThread.CheckAccess())
+                if (dispatcher != null && !dispatcher.CheckAccess())
                 {
-                    await Dispatcher.UIThread.InvokeAsync(async () => await execute());
+                    await dispatcher.InvokeAsync(async () => await execute());
                 }
                 else
                 {
@@ -124,7 +134,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 }
             });
         }
-        
+
         /// <summary>
         /// Creates an AsyncRelayCommand with parameter that ensures UI thread safety
         /// </summary>
@@ -132,10 +142,11 @@ namespace PCAPAnalyzer.UI.ViewModels
         {
             return new AsyncRelayCommand<T?>(async (param) =>
             {
+                var dispatcher = App.Services?.GetService<IDispatcherService>();
                 // Ensure we start on UI thread
-                if (!Dispatcher.UIThread.CheckAccess())
+                if (dispatcher != null && !dispatcher.CheckAccess())
                 {
-                    await Dispatcher.UIThread.InvokeAsync(async () => await execute(param));
+                    await dispatcher.InvokeAsync(async () => await execute(param));
                 }
                 else
                 {
