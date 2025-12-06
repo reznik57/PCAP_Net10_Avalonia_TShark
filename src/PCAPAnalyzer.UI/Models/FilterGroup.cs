@@ -54,6 +54,11 @@ public partial class FilterGroup : ObservableObject
     [ObservableProperty] private List<string>? _directions;
     [ObservableProperty] private List<string>? _regions;
 
+    // ==================== HOST INVENTORY TAB CRITERIA ====================
+    [ObservableProperty] private List<string>? _osTypes;
+    [ObservableProperty] private List<string>? _deviceTypes;
+    [ObservableProperty] private List<string>? _hostRoles;
+
     /// <summary>Command to remove this entire filter group</summary>
     public IRelayCommand? RemoveCommand { get; set; }
 
@@ -74,7 +79,7 @@ public partial class FilterGroup : ObservableObject
     /// </summary>
     public bool HasCriteria() =>
         HasGeneralCriteria() || HasThreatsCriteria() || HasAnomaliesCriteria() ||
-        HasVoiceQoSCriteria() || HasCountryCriteria();
+        HasVoiceQoSCriteria() || HasCountryCriteria() || HasHostInventoryCriteria();
 
     private bool HasGeneralCriteria() =>
         !string.IsNullOrWhiteSpace(SourceIP) || !string.IsNullOrWhiteSpace(DestinationIP) ||
@@ -94,6 +99,9 @@ public partial class FilterGroup : ObservableObject
     private bool HasCountryCriteria() =>
         (Countries?.Count > 0) || (Directions?.Count > 0) || (Regions?.Count > 0);
 
+    private bool HasHostInventoryCriteria() =>
+        (OsTypes?.Count > 0) || (DeviceTypes?.Count > 0) || (HostRoles?.Count > 0);
+
     /// <summary>
     /// Gets a list of all non-empty field descriptions for this group
     /// </summary>
@@ -105,6 +113,7 @@ public partial class FilterGroup : ObservableObject
         AddAnomaliesDescriptions(descriptions);
         AddVoiceQoSDescriptions(descriptions);
         AddCountryDescriptions(descriptions);
+        AddHostInventoryDescriptions(descriptions);
         return descriptions;
     }
 
@@ -144,6 +153,13 @@ public partial class FilterGroup : ObservableObject
         if (Countries?.Count > 0) descriptions.AddRange(Countries.Select(c => $"Country: {c}"));
         if (Directions?.Count > 0) descriptions.AddRange(Directions.Select(d => $"Direction: {d}"));
         if (Regions?.Count > 0) descriptions.AddRange(Regions.Select(r => $"Region: {r}"));
+    }
+
+    private void AddHostInventoryDescriptions(List<string> descriptions)
+    {
+        if (OsTypes?.Count > 0) descriptions.AddRange(OsTypes.Select(o => $"OS: {o}"));
+        if (DeviceTypes?.Count > 0) descriptions.AddRange(DeviceTypes.Select(d => $"Device: {d}"));
+        if (HostRoles?.Count > 0) descriptions.AddRange(HostRoles.Select(r => $"Role: {r}"));
     }
 
     /// <summary>

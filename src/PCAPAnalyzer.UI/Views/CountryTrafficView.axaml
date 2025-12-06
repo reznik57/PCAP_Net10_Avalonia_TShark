@@ -113,8 +113,8 @@
        <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
            <Grid Margin="24" RowDefinitions="Auto,Auto,Auto,Auto,*">
 
-               <!-- UnifiedFilterPanelControl (Dashboard pattern) -->
-               <ctrl:UnifiedFilterPanelControl Grid.Row="0" Margin="0,0,0,10" />
+               <!-- UnifiedFilterPanelControl with Country tab auto-selected (index 1) -->
+               <ctrl:UnifiedFilterPanelControl Grid.Row="0" DefaultTabIndex="1" Margin="0,0,0,10" />
 
                <!-- Geographic Statistics -->
                <Border Grid.Row="2" Classes="modern-card-unified" Padding="20" Margin="0,0,0,20">
@@ -142,14 +142,35 @@
                        </Border>
                        <Border Grid.Row="4" Grid.Column="1" Classes="stat-card-modern" Margin="4,0">
                            <StackPanel>
-                               <TextBlock Text="TOTAL PACKETS" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,8"/>
-                               <TextBlock Text="{Binding TotalPackets, StringFormat='{}{0:N0}'}" FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" Foreground="{DynamicResource SlackSuccess}"/>
+                               <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                   <TextBlock Text="TOTAL PACKETS" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}"/>
+                                   <TextBlock Text=" (filtered)" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource SlackSuccess}" IsVisible="{Binding IsGlobalFilterActive}"/>
+                               </StackPanel>
+                               <!-- Filtered count (when filters active) -->
+                               <TextBlock Text="{Binding FilteredTotalPackets, StringFormat='{}{0:N0}'}" FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" Foreground="{DynamicResource SlackSuccess}" IsVisible="{Binding IsGlobalFilterActive}"/>
+                               <!-- Total count (when no filters) -->
+                               <TextBlock Text="{Binding TotalPackets, StringFormat='{}{0:N0}'}" FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" Foreground="{DynamicResource SlackSuccess}" IsVisible="{Binding !IsGlobalFilterActive}"/>
+                               <!-- Show "of X total" when filtering -->
+                               <TextBlock FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,4,0,0" IsVisible="{Binding IsGlobalFilterActive}">
+                                   <TextBlock.Text>
+                                       <MultiBinding StringFormat="{}of {0:N0} ({1:F1}%)">
+                                           <Binding Path="TotalPackets"/>
+                                           <Binding Path="FilteredPacketsPercentage"/>
+                                       </MultiBinding>
+                                   </TextBlock.Text>
+                               </TextBlock>
                            </StackPanel>
                        </Border>
                        <Border Grid.Row="4" Grid.Column="2" Classes="stat-card-modern" Margin="4,0">
                            <StackPanel>
-                               <TextBlock Text="TOTAL BYTES" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,8"/>
-                               <TextBlock Text="{Binding TotalBytes, Converter={StaticResource ByteFormatConverter}}" FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" Foreground="{DynamicResource SlackWarning}"/>
+                               <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                   <TextBlock Text="TOTAL BYTES" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}"/>
+                                   <TextBlock Text=" (filtered)" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource SlackWarning}" IsVisible="{Binding IsGlobalFilterActive}"/>
+                               </StackPanel>
+                               <!-- Filtered bytes (when filters active) -->
+                               <TextBlock Text="{Binding FilteredTotalBytesFormatted}" FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" Foreground="{DynamicResource SlackWarning}" IsVisible="{Binding IsGlobalFilterActive}"/>
+                               <!-- Total bytes (when no filters) -->
+                               <TextBlock Text="{Binding TotalBytes, Converter={StaticResource ByteFormatConverter}}" FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" Foreground="{DynamicResource SlackWarning}" IsVisible="{Binding !IsGlobalFilterActive}"/>
                            </StackPanel>
                        </Border>
                        <Border Grid.Row="4" Grid.Column="3" Classes="stat-card-modern" Margin="4,0">

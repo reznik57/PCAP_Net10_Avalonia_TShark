@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.UI.Models;
@@ -16,8 +17,10 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
     public AnomaliesFilterTabViewModel AnomaliesTab { get; }
     public VoiceQoSFilterTabViewModel VoiceQoSTab { get; }
     public CountryFilterTabViewModel CountryTab { get; }
+    public HostInventoryFilterTabViewModel HostInventoryTab { get; }
 
-    [ObservableProperty] private int _selectedTabIndex;
+    // Initialize to -1 so the first real value (even 0) triggers a property change notification
+    [ObservableProperty] private int _selectedTabIndex = -1;
 
     // Global IP/Port inputs (moved from GeneralTab - apply to all tabs)
     [ObservableProperty] private string _sourceIPInput = "";
@@ -26,20 +29,43 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
 
     /// <summary>
     /// Indicates that filter application is in progress.
-    /// Set by the View when filter operation starts/completes.
+    /// Delegates to GlobalFilterState for cross-tab visibility.
     /// </summary>
-    [ObservableProperty] private bool _isApplyingFilter;
+    public bool IsApplyingFilter
+    {
+        get => _filterState.IsFilteringInProgress;
+        set
+        {
+            if (_filterState.IsFilteringInProgress != value)
+            {
+                _filterState.IsFilteringInProgress = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     /// <summary>
     /// Filter progress (0.0 to 1.0) during application.
+    /// Delegates to GlobalFilterState for cross-tab visibility.
     /// </summary>
-    [ObservableProperty] private double _filterProgress;
+    public double FilterProgress
+    {
+        get => _filterState.FilterProgress;
+        set
+        {
+            if (Math.Abs(_filterState.FilterProgress - value) > 0.001)
+            {
+                _filterState.FilterProgress = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
     /// <summary>
     /// Controls whether the filter panel is expanded or collapsed.
     /// Collapsed state shows only summary chips and Apply/Clear buttons.
     /// </summary>
-    [ObservableProperty] private bool _isExpanded = false;
+    [ObservableProperty] private bool _isExpanded = true;
 
     /// <summary>
     /// Chevron icon for expand/collapse toggle.
@@ -86,6 +112,10 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         g.Countries?.Count > 0 || g.Directions?.Count > 0 || g.Regions?.Count > 0);
     public bool CountryHasExcludeFilters => _filterState.ExcludeGroups.Any(g =>
         g.Countries?.Count > 0 || g.Directions?.Count > 0 || g.Regions?.Count > 0);
+    public bool HostInventoryHasIncludeFilters => _filterState.IncludeGroups.Any(g =>
+        g.OsTypes?.Count > 0 || g.DeviceTypes?.Count > 0 || g.HostRoles?.Count > 0);
+    public bool HostInventoryHasExcludeFilters => _filterState.ExcludeGroups.Any(g =>
+        g.OsTypes?.Count > 0 || g.DeviceTypes?.Count > 0 || g.HostRoles?.Count > 0);
 
     public event Action? ApplyFiltersRequested;
 
@@ -100,6 +130,19 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         AnomaliesTab = new AnomaliesFilterTabViewModel();
         VoiceQoSTab = new VoiceQoSFilterTabViewModel();
         CountryTab = new CountryFilterTabViewModel();
+        HostInventoryTab = new HostInventoryFilterTabViewModel();
+
+        // Subscribe to GlobalFilterState changes for progress state forwarding
+        _filterState.PropertyChanged += OnFilterStatePropertyChanged;
+    }
+
+    private void OnFilterStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // Forward progress state changes to trigger UI updates
+        if (e.PropertyName == nameof(GlobalFilterState.IsFilteringInProgress))
+            OnPropertyChanged(nameof(IsApplyingFilter));
+        else if (e.PropertyName == nameof(GlobalFilterState.FilterProgress))
+            OnPropertyChanged(nameof(FilterProgress));
     }
 
     [RelayCommand]
@@ -118,6 +161,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         AnomaliesTab.SetMode(_currentMode);
         VoiceQoSTab.SetMode(_currentMode);
         CountryTab.SetMode(_currentMode);
+        HostInventoryTab.SetMode(_currentMode);
         NotifyModeChanged();
     }
 
@@ -130,6 +174,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         AnomaliesTab.SetMode(_currentMode);
         VoiceQoSTab.SetMode(_currentMode);
         CountryTab.SetMode(_currentMode);
+        HostInventoryTab.SetMode(_currentMode);
         NotifyModeChanged();
     }
 
@@ -154,13 +199,15 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         OnPropertyChanged(nameof(VoiceQoSHasExcludeFilters));
         OnPropertyChanged(nameof(CountryHasIncludeFilters));
         OnPropertyChanged(nameof(CountryHasExcludeFilters));
+        OnPropertyChanged(nameof(HostInventoryHasIncludeFilters));
+        OnPropertyChanged(nameof(HostInventoryHasExcludeFilters));
     }
 
     [RelayCommand]
     private void ApplyFilters()
     {
-        // NOTE: Do NOT clear GlobalFilterState - new groups are OR'd with existing groups
-        // User can click Clear to remove all groups
+        // NOTE: Progress bar is now controlled by GlobalFilterState via OnGlobalFilterStateChanged handlers.
+        // This method just builds the filter group and fires the event.
 
         // Collect all pending filters from all tabs
         var general = GeneralTab.GetPendingFilters();
@@ -168,6 +215,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         var anomalies = AnomaliesTab.GetPendingFilters();
         var voip = VoiceQoSTab.GetPendingFilters();
         var country = CountryTab.GetPendingFilters();
+        var hostInventory = HostInventoryTab.GetPendingFilters();
 
         // Build a single FilterGroup with ALL criteria populated
         var group = new Models.FilterGroup
@@ -198,7 +246,12 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
             // Country tab
             Countries = country.Countries.Count > 0 ? country.Countries : null,
             Directions = country.Directions.Count > 0 ? country.Directions : null,
-            Regions = country.Regions.Count > 0 ? country.Regions : null
+            Regions = country.Regions.Count > 0 ? country.Regions : null,
+
+            // Host Inventory tab
+            OsTypes = hostInventory.OsTypes.Count > 0 ? hostInventory.OsTypes : null,
+            DeviceTypes = hostInventory.DeviceTypes.Count > 0 ? hostInventory.DeviceTypes : null,
+            HostRoles = hostInventory.HostRoles.Count > 0 ? hostInventory.HostRoles : null
         };
 
         // Only create group if there's something to filter
@@ -209,7 +262,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
             group.IsAndGroup = true;
             group.IsExcludeGroup = _currentMode == FilterChipMode.Exclude;
 
-            // Add the group to GlobalFilterState
+            // Add the group to GlobalFilterState (this triggers OnFilterChanged -> progress bar)
             if (_currentMode == FilterChipMode.Include)
                 _filterState.AddIncludeGroup(group);
             else
@@ -224,12 +277,13 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
             AnomaliesTab.Reset();
             VoiceQoSTab.Reset();
             CountryTab.Reset();
+            HostInventoryTab.Reset();
         }
 
         // Update tab indicators
         NotifyTabIndicatorsChanged();
 
-        // Fire event to trigger filter execution
+        // Fire event to trigger filter execution (handlers will set progress)
         ApplyFiltersRequested?.Invoke();
     }
 
@@ -247,6 +301,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         AnomaliesTab.Reset();
         VoiceQoSTab.Reset();
         CountryTab.Reset();
+        HostInventoryTab.Reset();
 
         // Clear GlobalFilterState
         _filterState.Clear();

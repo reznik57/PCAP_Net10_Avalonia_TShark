@@ -75,6 +75,7 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
         // Subscribe to filter changes
         Filters.FiltersChanged += OnFiltersChanged;
         _globalFilterState.PropertyChanged += OnGlobalFilterStateChanged;
+        _globalFilterState.OnFilterChanged += OnGlobalFilterGroupsChanged;
     }
 
     /// <summary>
@@ -391,6 +392,15 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
         }
     }
 
+    /// <summary>
+    /// Handles GlobalFilterState.OnFilterChanged - when filter groups are added/removed from UnifiedFilterPanel.
+    /// </summary>
+    private void OnGlobalFilterGroupsChanged()
+    {
+        _logger.LogDebug("[AnomaliesViewModel] GlobalFilterState groups changed - reapplying filters");
+        _ = ApplyFiltersAsync();
+    }
+
     [RelayCommand]
     private async Task ApplyFiltersAsync()
     {
@@ -427,6 +437,18 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
                         !_globalFilterState.ExcludeFilters.IPs.Contains(a.DestinationIP));
                 }
 
+                // Apply FilterGroups from UnifiedFilterPanel (Include groups - OR'd together)
+                if (_globalFilterState.IncludeGroups.Count > 0)
+                {
+                    filtered = filtered.Where(a => MatchesAnyIncludeGroup(a));
+                }
+
+                // Apply FilterGroups from UnifiedFilterPanel (Exclude groups - packets NOT matching)
+                if (_globalFilterState.ExcludeGroups.Count > 0)
+                {
+                    filtered = filtered.Where(a => !MatchesAnyExcludeGroup(a));
+                }
+
                 return filtered.ToList();
             }, token);
 
@@ -450,6 +472,116 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
         {
             IsFiltering = false;
         }
+    }
+
+    /// <summary>
+    /// Checks if an anomaly matches ANY of the include groups (OR logic between groups).
+    /// </summary>
+    private bool MatchesAnyIncludeGroup(NetworkAnomaly anomaly)
+    {
+        foreach (var group in _globalFilterState.IncludeGroups)
+        {
+            if (MatchesFilterGroup(anomaly, group))
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Checks if an anomaly matches ANY of the exclude groups (OR logic between groups).
+    /// </summary>
+    private bool MatchesAnyExcludeGroup(NetworkAnomaly anomaly)
+    {
+        foreach (var group in _globalFilterState.ExcludeGroups)
+        {
+            if (MatchesFilterGroup(anomaly, group))
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Checks if an anomaly matches ALL criteria in a filter group (AND logic within group).
+    /// </summary>
+    private static bool MatchesFilterGroup(NetworkAnomaly anomaly, FilterGroup group)
+    {
+        // Source IP filter
+        if (!string.IsNullOrWhiteSpace(group.SourceIP))
+        {
+            if (!Core.Services.NetworkHelper.MatchesIpPattern(anomaly.SourceIP, group.SourceIP))
+                return false;
+        }
+
+        // Destination IP filter
+        if (!string.IsNullOrWhiteSpace(group.DestinationIP))
+        {
+            if (!Core.Services.NetworkHelper.MatchesIpPattern(anomaly.DestinationIP, group.DestinationIP))
+                return false;
+        }
+
+        // Port range filter
+        if (!string.IsNullOrWhiteSpace(group.PortRange))
+        {
+            if (!MatchesPortRange(anomaly.SourcePort, anomaly.DestinationPort, group.PortRange))
+                return false;
+        }
+
+        // Protocol filter (comma-separated list)
+        if (!string.IsNullOrWhiteSpace(group.Protocol))
+        {
+            var protocols = group.Protocol.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            var anomalyProtocol = anomaly.Protocol ?? "";
+            if (!protocols.Any(p => anomalyProtocol.Equals(p.Trim(), StringComparison.OrdinalIgnoreCase)))
+                return false;
+        }
+
+        // Anomaly severity filter (from Anomalies filter tab)
+        if (group.AnomalySeverities?.Count > 0)
+        {
+            var severityStr = anomaly.Severity.ToString();
+            if (!group.AnomalySeverities.Any(s => s.Equals(severityStr, StringComparison.OrdinalIgnoreCase)))
+                return false;
+        }
+
+        // Anomaly category filter (from Anomalies filter tab)
+        if (group.AnomalyCategories?.Count > 0)
+        {
+            var categoryStr = anomaly.Category.ToString();
+            if (!group.AnomalyCategories.Any(c => c.Equals(categoryStr, StringComparison.OrdinalIgnoreCase)))
+                return false;
+        }
+
+        // Anomaly detector filter (from Anomalies filter tab)
+        if (group.AnomalyDetectors?.Count > 0)
+        {
+            if (!group.AnomalyDetectors.Contains(anomaly.DetectorName))
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Checks if source or destination port matches a port range (e.g., "80", "80-443").
+    /// </summary>
+    private static bool MatchesPortRange(int sourcePort, int destPort, string portRange)
+    {
+        if (int.TryParse(portRange, out var singlePort))
+        {
+            return sourcePort == singlePort || destPort == singlePort;
+        }
+
+        if (portRange.Contains('-', StringComparison.Ordinal))
+        {
+            var parts = portRange.Split('-');
+            if (parts.Length == 2 && int.TryParse(parts[0], out var start) && int.TryParse(parts[1], out var end))
+            {
+                return (sourcePort >= start && sourcePort <= end) ||
+                       (destPort >= start && destPort <= end);
+            }
+        }
+
+        return true; // If port range is invalid, don't filter
     }
 
     [RelayCommand]
@@ -544,6 +676,7 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
 
         Filters.FiltersChanged -= OnFiltersChanged;
         _globalFilterState.PropertyChanged -= OnGlobalFilterStateChanged;
+        _globalFilterState.OnFilterChanged -= OnGlobalFilterGroupsChanged;
         _filterCts?.Cancel();
         _filterCts?.Dispose();
     }

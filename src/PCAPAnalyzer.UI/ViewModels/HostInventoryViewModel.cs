@@ -14,6 +14,7 @@ using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services.OsFingerprinting;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Interfaces;
+using PCAPAnalyzer.UI.Models;
 using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.Utilities;
 
@@ -23,14 +24,16 @@ namespace PCAPAnalyzer.UI.ViewModels;
 /// ViewModel for Host Inventory tab - displays OS fingerprinting results.
 /// Shows detected hosts with their OS, MAC vendor, JA3 verification, and other metadata.
 /// </summary>
-public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTarget
+public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTarget, IDisposable
 {
     private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
         ?? throw new InvalidOperationException("IDispatcherService not registered");
     private IDispatcherService? _dispatcher;
 
     private readonly IOsFingerprintService? _fingerprintService;
+    private readonly GlobalFilterState? _globalFilterState;
     private IReadOnlyList<HostFingerprint>? _allHosts;
+    private bool _disposed;
 
     // ==================== ITabPopulationTarget ====================
 
@@ -71,9 +74,17 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     {
     }
 
-    public HostInventoryViewModel(IOsFingerprintService? fingerprintService)
+    public HostInventoryViewModel(IOsFingerprintService? fingerprintService, GlobalFilterState? globalFilterState = null)
     {
         _fingerprintService = fingerprintService;
+        _globalFilterState = globalFilterState;
+
+        // Subscribe to GlobalFilterState changes for IP-based filtering
+        if (_globalFilterState != null)
+        {
+            _globalFilterState.OnFilterChanged += OnGlobalFilterChanged;
+            DebugLogger.Log("[HostInventoryViewModel] Subscribed to GlobalFilterState.OnFilterChanged");
+        }
     }
 
     // ==================== PUBLIC METHODS ====================
@@ -124,6 +135,9 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
             return;
 
         var filtered = _allHosts.AsEnumerable();
+
+        // Apply GlobalFilterState IP filters (from UnifiedFilterPanel)
+        filtered = ApplyGlobalFilterStateFilters(filtered);
 
         // Apply search filter
         if (!string.IsNullOrWhiteSpace(SearchFilter))
@@ -177,6 +191,219 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
         }
 
         DebugLogger.Log($"[HostInventoryViewModel] Refreshed host list: {Hosts.Count} hosts displayed");
+    }
+
+    /// <summary>
+    /// Applies GlobalFilterState IP/host-specific filters to the host list.
+    /// Hosts are filtered by IP address matching SourceIP/DestinationIP from FilterGroups.
+    /// </summary>
+    private IEnumerable<HostFingerprint> ApplyGlobalFilterStateFilters(IEnumerable<HostFingerprint> hosts)
+    {
+        if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+            return hosts;
+
+        // Apply include groups (host must match ANY include group)
+        if (_globalFilterState.IncludeGroups.Count > 0)
+        {
+            hosts = hosts.Where(h => MatchesAnyIncludeGroup(h));
+        }
+
+        // Apply exclude groups (host must NOT match ANY exclude group)
+        if (_globalFilterState.ExcludeGroups.Count > 0)
+        {
+            hosts = hosts.Where(h => !MatchesAnyExcludeGroup(h));
+        }
+
+        return hosts;
+    }
+
+    /// <summary>
+    /// Checks if host matches ANY include group (OR logic between groups).
+    /// </summary>
+    private bool MatchesAnyIncludeGroup(HostFingerprint host)
+    {
+        foreach (var group in _globalFilterState!.IncludeGroups)
+        {
+            if (MatchesFilterGroup(host, group))
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Checks if host matches ANY exclude group (OR logic between groups).
+    /// </summary>
+    private bool MatchesAnyExcludeGroup(HostFingerprint host)
+    {
+        foreach (var group in _globalFilterState!.ExcludeGroups)
+        {
+            if (MatchesFilterGroup(host, group))
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Checks if host matches ALL criteria within a FilterGroup (AND logic within group).
+    /// For hosts, we match against IP address, OS types, device types, and host roles.
+    /// </summary>
+    private static bool MatchesFilterGroup(HostFingerprint host, FilterGroup group)
+    {
+        // IP filters - host IP must match SourceIP OR DestinationIP
+        if (!string.IsNullOrEmpty(group.SourceIP) || !string.IsNullOrEmpty(group.DestinationIP))
+        {
+            bool ipMatch = false;
+
+            if (!string.IsNullOrEmpty(group.SourceIP))
+            {
+                if (MatchesIpFilter(host.IpAddress, group.SourceIP))
+                    ipMatch = true;
+            }
+
+            if (!string.IsNullOrEmpty(group.DestinationIP))
+            {
+                if (MatchesIpFilter(host.IpAddress, group.DestinationIP))
+                    ipMatch = true;
+            }
+
+            if (!ipMatch)
+                return false;
+        }
+
+        // OS type filter
+        if (group.OsTypes?.Count > 0)
+        {
+            var hostOsFamily = host.OsDetection?.OsFamily?.ToLowerInvariant() ?? "unknown";
+            if (!group.OsTypes.Any(os => hostOsFamily.Contains(os.ToLowerInvariant(), StringComparison.Ordinal)))
+                return false;
+        }
+
+        // Device type filter
+        if (group.DeviceTypes?.Count > 0)
+        {
+            var hostDeviceType = host.OsDetection?.DeviceType ?? DeviceType.Unknown;
+            var hostDeviceTypeName = hostDeviceType.ToString().ToLowerInvariant();
+            if (!group.DeviceTypes.Any(dt => dt.ToLowerInvariant() == hostDeviceTypeName))
+                return false;
+        }
+
+        // Host role filter (based on open ports - server if has server ports, client otherwise)
+        if (group.HostRoles?.Count > 0)
+        {
+            var hasServerPorts = host.OpenPorts.Any(p => p < 1024 || IsCommonServerPort(p));
+            var hostRole = hasServerPorts ? "server" : "client";
+            if (!group.HostRoles.Any(r => r.ToLowerInvariant() == hostRole))
+                return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Matches an IP address against a filter pattern (exact, prefix, or CIDR).
+    /// </summary>
+    private static bool MatchesIpFilter(string hostIp, string filterPattern)
+    {
+        if (string.IsNullOrEmpty(hostIp) || string.IsNullOrEmpty(filterPattern))
+            return false;
+
+        var pattern = filterPattern.Trim();
+
+        // Exact match
+        if (hostIp.Equals(pattern, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Prefix match (e.g., "192.168." matches all 192.168.x.x)
+        if (pattern.EndsWith('.') && hostIp.StartsWith(pattern, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Partial prefix (e.g., "192.168" without trailing dot)
+        if (!pattern.Contains('/', StringComparison.Ordinal) && hostIp.StartsWith(pattern + ".", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // CIDR notation (e.g., "192.168.1.0/24")
+        if (pattern.Contains('/', StringComparison.Ordinal))
+        {
+            return MatchesCidr(hostIp, pattern);
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Matches an IP against CIDR notation.
+    /// </summary>
+    private static bool MatchesCidr(string ip, string cidr)
+    {
+        try
+        {
+            var parts = cidr.Split('/');
+            if (parts.Length != 2 || !int.TryParse(parts[1], out var prefixLength))
+                return false;
+
+            if (!System.Net.IPAddress.TryParse(ip, out var ipAddr) ||
+                !System.Net.IPAddress.TryParse(parts[0], out var networkAddr))
+                return false;
+
+            var ipBytes = ipAddr.GetAddressBytes();
+            var networkBytes = networkAddr.GetAddressBytes();
+
+            if (ipBytes.Length != networkBytes.Length)
+                return false;
+
+            var mask = new byte[ipBytes.Length];
+            for (int i = 0; i < mask.Length; i++)
+            {
+                if (prefixLength >= 8)
+                {
+                    mask[i] = 0xFF;
+                    prefixLength -= 8;
+                }
+                else if (prefixLength > 0)
+                {
+                    mask[i] = (byte)(0xFF << (8 - prefixLength));
+                    prefixLength = 0;
+                }
+            }
+
+            for (int i = 0; i < ipBytes.Length; i++)
+            {
+                if ((ipBytes[i] & mask[i]) != (networkBytes[i] & mask[i]))
+                    return false;
+            }
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Checks if a port is a common server port.
+    /// </summary>
+    private static bool IsCommonServerPort(int port)
+    {
+        return port switch
+        {
+            80 or 443 or 8080 or 8443 => true,  // HTTP/HTTPS
+            21 or 22 or 23 => true,              // FTP, SSH, Telnet
+            25 or 110 or 143 or 465 or 587 or 993 or 995 => true,  // Mail
+            53 => true,                           // DNS
+            3306 or 5432 or 1433 or 1521 or 27017 => true,  // Databases
+            3389 or 5900 => true,                 // Remote desktop
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Handles GlobalFilterState changes - re-applies filters to host list.
+    /// </summary>
+    private void OnGlobalFilterChanged()
+    {
+        DebugLogger.Log("[HostInventoryViewModel] GlobalFilterState changed - refreshing host list");
+        Dispatcher.InvokeAsync(RefreshHostList);
     }
 
     private static HostInventoryItem CreateHostItem(HostFingerprint host)
@@ -438,6 +665,29 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     {
         DebugLogger.Log("[HostInventoryViewModel] PopulateFromCacheAsync called");
         await UpdateHostsAsync();
+    }
+
+    // ==================== IDisposable ====================
+
+    /// <summary>
+    /// Disposes managed resources including GlobalFilterState event subscription.
+    /// Prevents memory leaks from event handlers.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+
+        _disposed = true;
+
+        // Unsubscribe from GlobalFilterState to prevent memory leaks
+        if (_globalFilterState != null)
+        {
+            _globalFilterState.OnFilterChanged -= OnGlobalFilterChanged;
+            DebugLogger.Log("[HostInventoryViewModel] Unsubscribed from GlobalFilterState.OnFilterChanged");
+        }
+
+        GC.SuppressFinalize(this);
     }
 }
 

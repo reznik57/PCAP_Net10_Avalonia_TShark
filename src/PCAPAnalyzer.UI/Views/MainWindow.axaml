@@ -152,6 +152,8 @@
                     <Setter Property="Foreground" Value="{DynamicResource TextDisabled}" />
                     <Setter Property="Opacity" Value="0.5" />
                 </Style>
+
+                <!-- Tab content transition handled in code-behind via OnTabSelectionChanged -->
             </TabControl.Styles>
 
             <!-- File Manager Tab (FIRST TAB) -->
@@ -173,7 +175,7 @@
                         <TextBlock Text="📦 Packet Analysis" FontSize="{StaticResource FontSizeMedium}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="{DynamicResource BackgroundDarkest}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="{DynamicResource BackgroundDarkest}" BringIntoViewOnFocusChange="False">
                     <Grid Margin="24" RowDefinitions="Auto,16,Auto,16,Auto,16,Auto,16,Auto">
                         <!-- ✅ CLEANUP: FileSelectionControl removed (now in File Manager tab with awesome progress panel) -->
 

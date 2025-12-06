@@ -796,12 +796,12 @@ namespace PCAPAnalyzer.UI.ViewModels
                     DataContext = viewModel
                 };
                 
-                // Show as dialog
+                // Show as dialog with animation
                 if (Avalonia.Application.Current?.ApplicationLifetime is
                     Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
                     desktop.MainWindow != null)
                 {
-                    await window.ShowDialog(desktop.MainWindow);
+                    await window.ShowDialogWithAnimation(desktop.MainWindow);
                 }
             }
             catch (Exception ex)

@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:PCAPAnalyzer.UI.ViewModels.Components"
+             xmlns:conv="using:PCAPAnalyzer.UI.Converters"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="300"
              x:Class="PCAPAnalyzer.UI.Views.Controls.UnifiedFilterPanelControl"
              x:DataType="vm:UnifiedFilterPanelViewModel">
@@ -72,53 +73,8 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Active Filter Chips (inline summary in collapsed state) -->
-                    <ScrollViewer Grid.Column="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="12,0">
-                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                            <!-- Include chips -->
-                            <ItemsControl ItemsSource="{Binding Summary.IncludeChips}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="4"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{DynamicResource SlackSuccess}" CornerRadius="12" Padding="8,4">
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <TextBlock Text="{Binding TypedLabel}" FontSize="{StaticResource FontSizeSmall}" Foreground="White" VerticalAlignment="Center"/>
-                                                <Button Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
-                                                        Command="{Binding RemoveCommand}" VerticalAlignment="Center">
-                                                    <TextBlock Text="×" Foreground="White" FontSize="{StaticResource FontSizeBase}" Opacity="0.8"/>
-                                                </Button>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                            <!-- Exclude chips -->
-                            <ItemsControl ItemsSource="{Binding Summary.ExcludeChips}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="4"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border Background="{DynamicResource SlackDanger}" CornerRadius="12" Padding="8,4">
-                                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                                <TextBlock Text="{Binding TypedLabel}" FontSize="{StaticResource FontSizeSmall}" Foreground="White" VerticalAlignment="Center"/>
-                                                <Button Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
-                                                        Command="{Binding RemoveCommand}" VerticalAlignment="Center">
-                                                    <TextBlock Text="×" Foreground="White" FontSize="{StaticResource FontSizeBase}" Opacity="0.8"/>
-                                                </Button>
-                                            </StackPanel>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </ScrollViewer>
+                    <!-- Spacer -->
+                    <Border Grid.Column="2"/>
 
                     <!-- Apply Button -->
                     <Button Grid.Column="3"
@@ -156,6 +112,77 @@
                         <TextBlock Text="Clear" FontSize="{StaticResource FontSizeBase}"/>
                     </Button>
                 </Grid>
+            </Border>
+
+            <!-- ═══ ACTIVE FILTER CHIPS (below header, visible only when active) ═══ -->
+            <!-- INCLUDE Filters Row -->
+            <Border Background="{DynamicResource BackgroundCard}" Padding="16,10"
+                    IsVisible="{Binding Summary.HasIncludeFilters}"
+                    BorderBrush="{DynamicResource BackgroundElevated}" BorderThickness="0,0,0,1">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="INCLUDE" FontSize="{StaticResource FontSizeXS}" FontWeight="Bold"
+                                   Foreground="{DynamicResource SlackSuccess}" VerticalAlignment="Center"/>
+                        <TextBlock Text="(" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Summary.IncludeChips.Count}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="groups)" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="-4,0,0,0"/>
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Summary.IncludeChips}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource SlackSuccess}" CornerRadius="14" Padding="10,5" Margin="0,0,8,8">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{Binding TypedLabel}" FontSize="{StaticResource FontSizeSmall}" Foreground="White" VerticalAlignment="Center"/>
+                                        <Button Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                                                Command="{Binding RemoveCommand}" VerticalAlignment="Center">
+                                            <TextBlock Text="×" Foreground="White" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold" Opacity="0.8"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- EXCLUDE Filters Row -->
+            <Border Background="{DynamicResource BackgroundCard}" Padding="16,10"
+                    IsVisible="{Binding Summary.HasExcludeFilters}"
+                    BorderBrush="{DynamicResource BackgroundElevated}" BorderThickness="0,0,0,1">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="EXCLUDE" FontSize="{StaticResource FontSizeXS}" FontWeight="Bold"
+                                   Foreground="{DynamicResource SlackDanger}" VerticalAlignment="Center"/>
+                        <TextBlock Text="(" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="{Binding Summary.ExcludeChips.Count}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                        <TextBlock Text="groups)" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="-4,0,0,0"/>
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{Binding Summary.ExcludeChips}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="{DynamicResource SlackDanger}" CornerRadius="14" Padding="10,5" Margin="0,0,8,8">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{Binding TypedLabel}" FontSize="{StaticResource FontSizeSmall}" Foreground="White" VerticalAlignment="Center"/>
+                                        <Button Background="Transparent" BorderThickness="0" Padding="0" Cursor="Hand"
+                                                Command="{Binding RemoveCommand}" VerticalAlignment="Center">
+                                            <TextBlock Text="×" Foreground="White" FontSize="{StaticResource FontSizeBase}" FontWeight="Bold" Opacity="0.8"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
             </Border>
 
             <!-- Progress Bar (visible during filtering) -->
@@ -197,10 +224,13 @@
                         </StackPanel>
                     </Grid>
 
-                    <!-- Category Segmented Control (replaces nested tabs) -->
+                    <!-- Category Segmented Control - Order matches main tabs -->
+                    <!-- 0=General, 1=Country, 2=VoiceQoS, 3=Threats, 4=Anomalies, 5=Hosts -->
                     <Border Background="{DynamicResource BackgroundCard}" CornerRadius="8" Padding="4">
                         <StackPanel Orientation="Horizontal" Spacing="2">
-                            <RadioButton GroupName="FilterTabs" IsChecked="{Binding SelectedTabIndex, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=0}"
+                            <!-- General (0) - Packet Analysis, Dashboard, Compare -->
+                            <RadioButton GroupName="FilterTabs"
+                                    IsChecked="{Binding SelectedTabIndex, Mode=TwoWay, Converter={x:Static conv:IndexToBoolConverter.Instance}, ConverterParameter=0}"
                                     Padding="14,8" CornerRadius="6" BorderThickness="0" Cursor="Hand"
                                     Classes="segment-radio">
                                 <StackPanel Orientation="Horizontal" Spacing="4">
@@ -209,34 +239,9 @@
                                     <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackDanger}" IsVisible="{Binding GeneralHasExcludeFilters}"/>
                                 </StackPanel>
                             </RadioButton>
-                            <RadioButton GroupName="FilterTabs" IsChecked="{Binding SelectedTabIndex, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=1}"
-                                    Padding="14,8" CornerRadius="6" BorderThickness="0" Cursor="Hand"
-                                    Classes="segment-radio">
-                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <TextBlock Text="Threats" FontSize="{StaticResource FontSizeBase}"/>
-                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackSuccess}" IsVisible="{Binding ThreatsHasIncludeFilters}"/>
-                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackDanger}" IsVisible="{Binding ThreatsHasExcludeFilters}"/>
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton GroupName="FilterTabs" IsChecked="{Binding SelectedTabIndex, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=2}"
-                                    Padding="14,8" CornerRadius="6" BorderThickness="0" Cursor="Hand"
-                                    Classes="segment-radio">
-                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <TextBlock Text="Anomalies" FontSize="{StaticResource FontSizeBase}"/>
-                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackSuccess}" IsVisible="{Binding AnomaliesHasIncludeFilters}"/>
-                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackDanger}" IsVisible="{Binding AnomaliesHasExcludeFilters}"/>
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton GroupName="FilterTabs" IsChecked="{Binding SelectedTabIndex, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=3}"
-                                    Padding="14,8" CornerRadius="6" BorderThickness="0" Cursor="Hand"
-                                    Classes="segment-radio">
-                                <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <TextBlock Text="VoiceQoS" FontSize="{StaticResource FontSizeBase}"/>
-                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackSuccess}" IsVisible="{Binding VoiceQoSHasIncludeFilters}"/>
-                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackDanger}" IsVisible="{Binding VoiceQoSHasExcludeFilters}"/>
-                                </StackPanel>
-                            </RadioButton>
-                            <RadioButton GroupName="FilterTabs" IsChecked="{Binding SelectedTabIndex, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=4}"
+                            <!-- Country (1) - Country Traffic -->
+                            <RadioButton GroupName="FilterTabs"
+                                    IsChecked="{Binding SelectedTabIndex, Mode=TwoWay, Converter={x:Static conv:IndexToBoolConverter.Instance}, ConverterParameter=1}"
                                     Padding="14,8" CornerRadius="6" BorderThickness="0" Cursor="Hand"
                                     Classes="segment-radio">
                                 <StackPanel Orientation="Horizontal" Spacing="4">
@@ -245,11 +250,56 @@
                                     <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackDanger}" IsVisible="{Binding CountryHasExcludeFilters}"/>
                                 </StackPanel>
                             </RadioButton>
+                            <!-- VoiceQoS (2) - Voice/QoS -->
+                            <RadioButton GroupName="FilterTabs"
+                                    IsChecked="{Binding SelectedTabIndex, Mode=TwoWay, Converter={x:Static conv:IndexToBoolConverter.Instance}, ConverterParameter=2}"
+                                    Padding="14,8" CornerRadius="6" BorderThickness="0" Cursor="Hand"
+                                    Classes="segment-radio">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="VoiceQoS" FontSize="{StaticResource FontSizeBase}"/>
+                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackSuccess}" IsVisible="{Binding VoiceQoSHasIncludeFilters}"/>
+                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackDanger}" IsVisible="{Binding VoiceQoSHasExcludeFilters}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <!-- Threats (3) - Security Threats -->
+                            <RadioButton GroupName="FilterTabs"
+                                    IsChecked="{Binding SelectedTabIndex, Mode=TwoWay, Converter={x:Static conv:IndexToBoolConverter.Instance}, ConverterParameter=3}"
+                                    Padding="14,8" CornerRadius="6" BorderThickness="0" Cursor="Hand"
+                                    Classes="segment-radio">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="Threats" FontSize="{StaticResource FontSizeBase}"/>
+                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackSuccess}" IsVisible="{Binding ThreatsHasIncludeFilters}"/>
+                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackDanger}" IsVisible="{Binding ThreatsHasExcludeFilters}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <!-- Anomalies (4) - Anomalies -->
+                            <RadioButton GroupName="FilterTabs"
+                                    IsChecked="{Binding SelectedTabIndex, Mode=TwoWay, Converter={x:Static conv:IndexToBoolConverter.Instance}, ConverterParameter=4}"
+                                    Padding="14,8" CornerRadius="6" BorderThickness="0" Cursor="Hand"
+                                    Classes="segment-radio">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="Anomalies" FontSize="{StaticResource FontSizeBase}"/>
+                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackSuccess}" IsVisible="{Binding AnomaliesHasIncludeFilters}"/>
+                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackDanger}" IsVisible="{Binding AnomaliesHasExcludeFilters}"/>
+                                </StackPanel>
+                            </RadioButton>
+                            <!-- Hosts (5) - Host Inventory -->
+                            <RadioButton GroupName="FilterTabs"
+                                    IsChecked="{Binding SelectedTabIndex, Mode=TwoWay, Converter={x:Static conv:IndexToBoolConverter.Instance}, ConverterParameter=5}"
+                                    Padding="14,8" CornerRadius="6" BorderThickness="0" Cursor="Hand"
+                                    Classes="segment-radio">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <TextBlock Text="Hosts" FontSize="{StaticResource FontSizeBase}"/>
+                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackSuccess}" IsVisible="{Binding HostInventoryHasIncludeFilters}"/>
+                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource SlackDanger}" IsVisible="{Binding HostInventoryHasExcludeFilters}"/>
+                                </StackPanel>
+                            </RadioButton>
                         </StackPanel>
                     </Border>
 
                     <!-- Tab Content (using existing TabControl but hidden chrome) -->
-                    <TabControl SelectedIndex="{Binding SelectedTabIndex}" Background="Transparent">
+                    <!-- Order: 0=General, 1=Country, 2=VoiceQoS, 3=Threats, 4=Anomalies, 5=Hosts -->
+                    <TabControl SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}" Background="Transparent">
                         <TabControl.Styles>
                             <!-- Hide tab strip, we use custom segmented control above -->
                             <Style Selector="TabControl > TabItem">
@@ -257,7 +307,7 @@
                             </Style>
                         </TabControl.Styles>
 
-                        <!-- General Tab Content -->
+                        <!-- 0: General Tab Content -->
                         <TabItem>
                             <StackPanel Spacing="16" DataContext="{Binding GeneralTab}">
                                 <StackPanel Spacing="8">
@@ -295,12 +345,12 @@
                             </StackPanel>
                         </TabItem>
 
-                        <!-- Threats Tab Content -->
+                        <!-- 1: Country Tab Content -->
                         <TabItem>
-                            <StackPanel Spacing="16" DataContext="{Binding ThreatsTab}">
+                            <StackPanel Spacing="16" DataContext="{Binding CountryTab}">
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="SEVERITY" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
-                                    <ItemsControl ItemsSource="{Binding SeverityChips}">
+                                    <TextBlock Text="DIRECTION" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding DirectionChips}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
@@ -315,7 +365,163 @@
                                     </ItemsControl>
                                 </StackPanel>
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="CATEGORY" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <TextBlock Text="REGIONS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding RegionChips}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                        Classes="filter-chip-slack"
+                                                        Classes.included="{Binding IsIncluded}"
+                                                        Classes.excluded="{Binding IsExcluded}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </StackPanel>
+                        </TabItem>
+
+                        <!-- 2: VoiceQoS Tab Content -->
+                        <TabItem>
+                            <StackPanel Spacing="16" DataContext="{Binding VoiceQoSTab}">
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="CODECS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding CodecChips}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                        Classes="filter-chip-slack"
+                                                        Classes.included="{Binding IsIncluded}"
+                                                        Classes.excluded="{Binding IsExcluded}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="QUALITY" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding QualityChips}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                        Classes="filter-chip-slack"
+                                                        Classes.included="{Binding IsIncluded}"
+                                                        Classes.excluded="{Binding IsExcluded}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </StackPanel>
+                        </TabItem>
+
+                        <!-- 3: Threats Tab Content -->
+                        <TabItem>
+                            <StackPanel Spacing="16" DataContext="{Binding ThreatsTab}">
+                                <!-- Search & Dropdowns Row -->
+                                <Grid ColumnDefinitions="180,16,200,16,*">
+                                    <StackPanel Grid.Column="0" Spacing="4">
+                                        <TextBlock Text="CATEGORY" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                        <ComboBox SelectedItem="{Binding SelectedCategory}" ItemsSource="{Binding Categories}" Width="180" FontSize="{StaticResource FontSizeBase}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Spacing="4">
+                                        <TextBlock Text="THREAT TYPE" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                        <ComboBox SelectedItem="{Binding SelectedThreatType}" ItemsSource="{Binding ThreatTypes}" Width="200" FontSize="{StaticResource FontSizeBase}"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="4" Spacing="4">
+                                        <TextBlock Text="SEARCH THREATS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                        <TextBox Text="{Binding SearchInput}" Watermark="Search threat names, IPs, ports..." FontSize="{StaticResource FontSizeBase}"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <!-- Quick Filter Toggles (OR logic) -->
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="QUICK FILTERS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                        <Border Background="{DynamicResource BackgroundCard}" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
+                                            <TextBlock Text="OR logic - matches any" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource AccentPurpleBrush}"/>
+                                        </Border>
+                                        <Button Command="{Binding ClearQuickFiltersCommand}" Background="Transparent" BorderThickness="0" Padding="4,2" Cursor="Hand"
+                                                IsVisible="{Binding HasActiveQuickFilters}" VerticalAlignment="Center">
+                                            <TextBlock Text="Clear all" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource SlackDanger}"/>
+                                        </Button>
+                                    </StackPanel>
+                                    <WrapPanel>
+                                        <ToggleButton IsChecked="{Binding ShowCriticalOnly}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="Critical severity only">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="🔴" FontSize="{StaticResource FontSizeXS}"/>
+                                                <TextBlock Text="Critical" FontSize="{StaticResource FontSizeSmall}"/>
+                                            </StackPanel>
+                                        </ToggleButton>
+                                        <ToggleButton IsChecked="{Binding ShowHighOnly}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="High+ severity">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="🟠" FontSize="{StaticResource FontSizeXS}"/>
+                                                <TextBlock Text="High+" FontSize="{StaticResource FontSizeSmall}"/>
+                                            </StackPanel>
+                                        </ToggleButton>
+                                        <ToggleButton IsChecked="{Binding IsInsecureProtocolFilterActive}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="Insecure protocol usage (HTTP, Telnet, FTP)">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="🔓" FontSize="{StaticResource FontSizeXS}"/>
+                                                <TextBlock Text="Insecure" FontSize="{StaticResource FontSizeSmall}"/>
+                                            </StackPanel>
+                                        </ToggleButton>
+                                        <ToggleButton IsChecked="{Binding IsKnownCVEFilterActive}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="Known CVE vulnerabilities">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="🛡️" FontSize="{StaticResource FontSizeXS}"/>
+                                                <TextBlock Text="CVEs" FontSize="{StaticResource FontSizeSmall}"/>
+                                            </StackPanel>
+                                        </ToggleButton>
+                                        <ToggleButton IsChecked="{Binding IsWeakEncryptionFilterActive}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="Weak encryption (SSL, RC4, DES)">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="🔐" FontSize="{StaticResource FontSizeXS}"/>
+                                                <TextBlock Text="Weak Crypto" FontSize="{StaticResource FontSizeSmall}"/>
+                                            </StackPanel>
+                                        </ToggleButton>
+                                        <ToggleButton IsChecked="{Binding IsAuthIssuesFilterActive}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="Authentication issues">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="🔑" FontSize="{StaticResource FontSizeXS}"/>
+                                                <TextBlock Text="Auth" FontSize="{StaticResource FontSizeSmall}"/>
+                                            </StackPanel>
+                                        </ToggleButton>
+                                        <ToggleButton IsChecked="{Binding IsCleartextFilterActive}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="Cleartext/unencrypted data">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <TextBlock Text="📝" FontSize="{StaticResource FontSizeXS}"/>
+                                                <TextBlock Text="Cleartext" FontSize="{StaticResource FontSizeSmall}"/>
+                                            </StackPanel>
+                                        </ToggleButton>
+                                    </WrapPanel>
+                                </StackPanel>
+
+                                <!-- Divider -->
+                                <Border Height="1" Background="{DynamicResource BackgroundElevated}" Margin="0,4"/>
+
+                                <!-- Severity Chips -->
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="SEVERITY FILTER" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding SeverityChips}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                        Classes="filter-chip-slack"
+                                                        Classes.included="{Binding IsIncluded}"
+                                                        Classes.excluded="{Binding IsExcluded}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+
+                                <!-- Category Chips -->
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="THREAT CATEGORY" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
                                     <ItemsControl ItemsSource="{Binding ThreatCategoryChips}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
@@ -333,7 +539,7 @@
                             </StackPanel>
                         </TabItem>
 
-                        <!-- Anomalies Tab Content -->
+                        <!-- 4: Anomalies Tab Content -->
                         <TabItem>
                             <StackPanel Spacing="16" DataContext="{Binding AnomaliesTab}">
                                 <StackPanel Spacing="8">
@@ -387,12 +593,12 @@
                             </StackPanel>
                         </TabItem>
 
-                        <!-- VoiceQoS Tab Content -->
+                        <!-- 5: Host Inventory Tab Content -->
                         <TabItem>
-                            <StackPanel Spacing="16" DataContext="{Binding VoiceQoSTab}">
+                            <StackPanel Spacing="16" DataContext="{Binding HostInventoryTab}">
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="CODECS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
-                                    <ItemsControl ItemsSource="{Binding CodecChips}">
+                                    <TextBlock Text="OS TYPE" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding OsTypeChips}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
@@ -407,30 +613,8 @@
                                     </ItemsControl>
                                 </StackPanel>
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="QUALITY" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
-                                    <ItemsControl ItemsSource="{Binding QualityChips}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
-                                                        Classes="filter-chip-slack"
-                                                        Classes.included="{Binding IsIncluded}"
-                                                        Classes.excluded="{Binding IsExcluded}"/>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                            </StackPanel>
-                        </TabItem>
-
-                        <!-- Country Tab Content -->
-                        <TabItem>
-                            <StackPanel Spacing="16" DataContext="{Binding CountryTab}">
-                                <StackPanel Spacing="8">
-                                    <TextBlock Text="DIRECTION" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
-                                    <ItemsControl ItemsSource="{Binding DirectionChips}">
+                                    <TextBlock Text="DEVICE TYPE" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding DeviceTypeChips}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
@@ -445,8 +629,8 @@
                                     </ItemsControl>
                                 </StackPanel>
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="REGIONS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
-                                    <ItemsControl ItemsSource="{Binding RegionChips}">
+                                    <TextBlock Text="HOST ROLE" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding HostRoleChips}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
                                         </ItemsControl.ItemsPanel>
@@ -523,41 +707,63 @@
             <Setter Property="Background" Value="{StaticResource SlackDanger}"/>
         </Style>
 
-        <!-- Segment radio button styles (for tab switching) -->
+        <!-- Quick filter chip toggle button styles (purple theme for OR logic) -->
+        <Style Selector="ToggleButton.quick-filter-chip">
+            <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BackgroundElevated}"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="ToggleButton.quick-filter-chip:pointerover">
+            <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentPurpleLight}"/>
+        </Style>
+        <Style Selector="ToggleButton.quick-filter-chip:checked">
+            <Setter Property="Background" Value="{StaticResource AccentPurpleDark}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentPurpleLight}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="ToggleButton.quick-filter-chip:checked:pointerover">
+            <Setter Property="Background" Value="{StaticResource AccentPurpleMedium}"/>
+        </Style>
+
+        <!-- Segment radio button styles (for tab switching) - underline style like main tabs -->
         <Style Selector="RadioButton.segment-radio">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
             <Setter Property="FontWeight" Value="Normal"/>
-            <Setter Property="Padding" Value="14,8"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,8,12,6"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <ControlTemplate>
-                    <Border Background="{TemplateBinding Background}"
-                            CornerRadius="{TemplateBinding CornerRadius}"
-                            Padding="{TemplateBinding Padding}">
-                        <ContentPresenter Content="{TemplateBinding Content}"/>
-                    </Border>
+                    <Grid RowDefinitions="*,3">
+                        <ContentPresenter Grid.Row="0" Content="{TemplateBinding Content}"
+                                          Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Center"/>
+                        <Border x:Name="Underline" Grid.Row="1" Height="3" CornerRadius="1.5"
+                                Background="Transparent" Margin="4,0"/>
+                    </Grid>
                 </ControlTemplate>
-            </Setter>
-            <Setter Property="Transitions">
-                <Transitions>
-                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
-                </Transitions>
             </Setter>
         </Style>
         <Style Selector="RadioButton.segment-radio:pointerover">
-            <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
         </Style>
-        <Style Selector="RadioButton.segment-radio:checked">
+        <Style Selector="RadioButton.segment-radio:pointerover /template/ Border#Underline">
             <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="FontWeight" Value="Medium"/>
         </Style>
-        <Style Selector="RadioButton.segment-radio:checked:pointerover">
-            <Setter Property="Background" Value="{StaticResource BorderPrimary}"/>
+        <Style Selector="RadioButton.segment-radio:checked">
+            <Setter Property="Foreground" Value="{StaticResource AccentCyan}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="RadioButton.segment-radio:checked /template/ Border#Underline">
+            <Setter Property="Background" Value="{StaticResource AccentCyan}"/>
+        </Style>
+        <Style Selector="RadioButton.segment-radio:checked:pointerover /template/ Border#Underline">
+            <Setter Property="Background" Value="{StaticResource AccentBlueLight}"/>
         </Style>
     </UserControl.Styles>
 </UserControl>

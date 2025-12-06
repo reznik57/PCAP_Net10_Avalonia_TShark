@@ -14,6 +14,7 @@ using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.UI.Views;
 using PCAPAnalyzer.UI;
 using PCAPAnalyzer.Core.Utilities;
+using WindowAnimations = PCAPAnalyzer.UI.Utilities.WindowAnimations;
 
 namespace PCAPAnalyzer.UI.ViewModels
 {
@@ -393,11 +394,11 @@ namespace PCAPAnalyzer.UI.ViewModels
                     _anomalyService)
             };
 
-            if (Avalonia.Application.Current?.ApplicationLifetime is 
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && 
+            if (Avalonia.Application.Current?.ApplicationLifetime is
+                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
                 desktop.MainWindow != null)
             {
-                detailWindow.ShowDialog(desktop.MainWindow);
+                WindowAnimations.ShowWithAnimation(detailWindow, desktop.MainWindow);
             }
         }
 
@@ -418,11 +419,11 @@ namespace PCAPAnalyzer.UI.ViewModels
                     _anomalyService)
             };
 
-            if (Avalonia.Application.Current?.ApplicationLifetime is 
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && 
+            if (Avalonia.Application.Current?.ApplicationLifetime is
+                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
                 desktop.MainWindow != null)
             {
-                detailWindow.ShowDialog(desktop.MainWindow);
+                WindowAnimations.ShowWithAnimation(detailWindow, desktop.MainWindow);
             }
         }
 
@@ -440,11 +441,11 @@ namespace PCAPAnalyzer.UI.ViewModels
                     _anomalyService)
             };
 
-            if (Avalonia.Application.Current?.ApplicationLifetime is 
-                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop && 
+            if (Avalonia.Application.Current?.ApplicationLifetime is
+                Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
                 desktop.MainWindow != null)
             {
-                detailWindow.ShowDialog(desktop.MainWindow);
+                WindowAnimations.ShowWithAnimation(detailWindow, desktop.MainWindow);
             }
         }
 

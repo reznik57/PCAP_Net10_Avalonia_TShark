@@ -62,6 +62,39 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     // Top countries list (for legacy compatibility)
     [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<CountryItemViewModel> _topCountries = new();
 
+    // ==================== FILTERED STATISTICS (from GlobalFilterState) ====================
+
+    /// <summary>
+    /// Filtered packet count (sum of filtered countries' packets)
+    /// </summary>
+    [ObservableProperty] private long _filteredTotalPackets;
+
+    /// <summary>
+    /// Filtered bytes count (sum of filtered countries' bytes)
+    /// </summary>
+    [ObservableProperty] private long _filteredTotalBytes;
+
+    /// <summary>
+    /// Number of countries after filtering
+    /// </summary>
+    [ObservableProperty] private int _filteredCountryCount;
+
+    /// <summary>
+    /// Indicates if GlobalFilterState has active filters affecting this tab
+    /// </summary>
+    public bool IsGlobalFilterActive => _globalFilterState?.HasActiveFilters == true &&
+        GlobalFilterStateHelper.HasCountryCriteria(_globalFilterState);
+
+    /// <summary>
+    /// Percentage of packets shown after filtering
+    /// </summary>
+    public double FilteredPacketsPercentage => TotalPackets > 0 ? (double)FilteredTotalPackets / TotalPackets * 100 : 100;
+
+    /// <summary>
+    /// Formatted filtered bytes
+    /// </summary>
+    public string FilteredTotalBytesFormatted => NumberFormatter.FormatBytes(FilteredTotalBytes);
+
     // ==================== FILTERABLE TAB IMPLEMENTATION ====================
 
     /// <summary>
@@ -283,6 +316,9 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         if (_currentStatistics?.CountryStatistics == null)
         {
             TopCountries.Clear();
+            FilteredTotalPackets = 0;
+            FilteredTotalBytes = 0;
+            FilteredCountryCount = 0;
             return;
         }
 
@@ -291,13 +327,26 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         // Apply GlobalFilterState country/region filters (from UnifiedFilterPanel)
         countries = ApplyGlobalFilterStateCriteria(countries);
 
+        // Materialize to calculate filtered stats
+        var filteredCountries = countries.ToList();
+
+        // Calculate filtered statistics from filtered countries
+        FilteredTotalPackets = filteredCountries.Sum(c => c.TotalPackets);
+        FilteredTotalBytes = filteredCountries.Sum(c => c.TotalBytes);
+        FilteredCountryCount = filteredCountries.Count;
+
+        // Notify dependent properties
+        OnPropertyChanged(nameof(IsGlobalFilterActive));
+        OnPropertyChanged(nameof(FilteredPacketsPercentage));
+        OnPropertyChanged(nameof(FilteredTotalBytesFormatted));
+
         // Apply sorting based on filter
         var sorted = Filter.SortMode switch
         {
-            0 => countries.OrderByDescending(c => c.TotalPackets), // By Traffic
-            1 => countries.OrderByDescending(c => c.IsHighRisk).ThenByDescending(c => c.TotalPackets), // By Risk
-            2 => countries.OrderBy(c => c.CountryName), // By Name
-            _ => countries.OrderByDescending(c => c.TotalPackets)
+            0 => filteredCountries.OrderByDescending(c => c.TotalPackets), // By Traffic
+            1 => filteredCountries.OrderByDescending(c => c.IsHighRisk).ThenByDescending(c => c.TotalPackets), // By Risk
+            2 => filteredCountries.OrderBy(c => c.CountryName), // By Name
+            _ => filteredCountries.OrderByDescending(c => c.TotalPackets)
         };
 
         // Filter excluded countries
@@ -320,7 +369,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
             });
         }
 
-        DebugLogger.Log($"[CountryTrafficViewModel] Updated TopCountries with {TopCountries.Count} items");
+        DebugLogger.Log($"[CountryTrafficViewModel] Updated TopCountries with {TopCountries.Count} items, filtered stats: {FilteredTotalPackets:N0} packets, {FilteredCountryCount} countries");
     }
 
     /// <summary>

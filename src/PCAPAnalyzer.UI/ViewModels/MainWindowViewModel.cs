@@ -87,6 +87,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     private readonly IPacketStatisticsCalculator _packetStatsCalculator;
     private readonly ISessionAnalysisCache _sessionCache;
     private readonly DispatcherTimer _updateTimer;
+    private readonly GlobalFilterState? _globalFilterState;
 
     // REMOVED: Eager preload mechanism (_preloadComplete, _preloadGate) - eliminated dual-analysis paths
 
@@ -267,16 +268,23 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             FileManagerViewModel = new FileManagerViewModel(FileAnalysisViewModel ?? throw new InvalidOperationException("FileAnalysisViewModel is required"));
         }
 
-        var globalFilterState = App.Services?.GetService<Models.GlobalFilterState>();
+        _globalFilterState = App.Services?.GetService<Models.GlobalFilterState>();
         var anomalyFrameIndexService = App.Services?.GetService<IAnomalyFrameIndexService>();
         DashboardViewModel = new DashboardViewModel(
             _dispatcher, _statisticsService, _anomalyService,
             filterService: _dashboardFilterService,
             dashboardFilterService: null, csvExportService: null, fileDialogService: null,
             filterBuilder: null, filterPresetService: null,
-            globalFilterState: globalFilterState,
+            globalFilterState: _globalFilterState,
             anomalyFrameIndexService: anomalyFrameIndexService,
             navigateToTab: HandleDashboardNavigation);
+
+        // Subscribe to GlobalFilterState changes to propagate filters to all tabs
+        if (_globalFilterState != null)
+        {
+            _globalFilterState.OnFilterChanged += OnGlobalFilterStateChanged;
+            DebugLogger.Log("[MainWindowViewModel] Subscribed to GlobalFilterState.OnFilterChanged");
+        }
 
         _suricataService = new SuricataService(
             System.IO.Path.Combine(Environment.CurrentDirectory, "tools", "suricata", "run-suricata.sh"),
@@ -672,6 +680,310 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     private void OnFilterServiceChanged(object? sender, FilterChangedEventArgs e)
     {
         PacketManager.ApplyFilter(e.Filter);
+    }
+
+    /// <summary>
+    /// Handles GlobalFilterState changes - propagates filters to Packet Analysis tab.
+    /// Dashboard handles its own via ApplyGlobalFilters() called from View code-behind.
+    /// </summary>
+    private async void OnGlobalFilterStateChanged()
+    {
+        if (_globalFilterState == null) return;
+
+        DebugLogger.Log("[MainWindowViewModel] GlobalFilterState changed - applying to Packet Analysis tab");
+
+        // Show progress bar during filtering
+        _globalFilterState.IsFilteringInProgress = true;
+        _globalFilterState.FilterProgress = 0.0;
+
+        try
+        {
+            // Build PacketFilter from GlobalFilterState using the same logic as DashboardViewModel
+            var filter = BuildPacketFilterFromGlobalState();
+            _globalFilterState.FilterProgress = 0.3;
+
+            // Apply to Packet Analysis tab
+            PacketManager.ApplyFilter(filter);
+            _globalFilterState.FilterProgress = 0.7;
+
+            // Ensure minimum visibility of progress bar for UX feedback
+            await Task.Delay(300);
+            _globalFilterState.FilterProgress = 1.0;
+
+            DebugLogger.Log($"[MainWindowViewModel] Applied global filters to PacketManager (IsEmpty={filter.IsEmpty})");
+        }
+        finally
+        {
+            // Give UI a moment to show 100% before hiding
+            await Task.Delay(100);
+            _globalFilterState.IsFilteringInProgress = false;
+        }
+    }
+
+    /// <summary>
+    /// Builds a PacketFilter from GlobalFilterState groups.
+    /// Simplified version of DashboardViewModel.ApplyGlobalFilters logic.
+    /// </summary>
+    private PacketFilter BuildPacketFilterFromGlobalState()
+    {
+        if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+            return new PacketFilter(); // Empty filter - show all
+
+        var includeFilters = new List<PacketFilter>();
+        var excludeFilters = new List<PacketFilter>();
+
+        // Process Include groups
+        foreach (var group in _globalFilterState.IncludeGroups)
+        {
+            var groupFilter = BuildFilterFromGroup(group);
+            if (groupFilter != null)
+                includeFilters.Add(groupFilter);
+        }
+
+        // Process Exclude groups
+        foreach (var group in _globalFilterState.ExcludeGroups)
+        {
+            var groupFilter = BuildFilterFromGroup(group);
+            if (groupFilter != null)
+                excludeFilters.Add(groupFilter);
+        }
+
+        // Combine include filters with OR
+        PacketFilter? includeFilter = includeFilters.Count switch
+        {
+            0 => null,
+            1 => includeFilters[0],
+            _ => new PacketFilter
+            {
+                CombinedFilters = includeFilters,
+                CombineMode = FilterCombineMode.Or,
+                Description = string.Join(" OR ", includeFilters.Select(f => f.Description))
+            }
+        };
+
+        // Combine exclude filters with OR, then invert
+        PacketFilter? excludeFilter = null;
+        if (excludeFilters.Count > 0)
+        {
+            var combinedExclude = excludeFilters.Count == 1 ? excludeFilters[0] : new PacketFilter
+            {
+                CombinedFilters = excludeFilters,
+                CombineMode = FilterCombineMode.Or,
+                Description = string.Join(" OR ", excludeFilters.Select(f => f.Description))
+            };
+            // Invert: packets must NOT match exclude criteria
+            excludeFilter = new PacketFilter
+            {
+                CustomPredicate = p => !combinedExclude.MatchesPacket(p),
+                Description = $"NOT({combinedExclude.Description})"
+            };
+        }
+
+        // Combine: INCLUDE AND NOT(EXCLUDE)
+        var finalFilters = new List<PacketFilter>();
+        if (includeFilter != null) finalFilters.Add(includeFilter);
+        if (excludeFilter != null) finalFilters.Add(excludeFilter);
+
+        if (finalFilters.Count == 0)
+            return new PacketFilter();
+        if (finalFilters.Count == 1)
+            return finalFilters[0];
+
+        return new PacketFilter
+        {
+            CombinedFilters = finalFilters,
+            CombineMode = FilterCombineMode.And,
+            Description = string.Join(" AND ", finalFilters.Select(f => f.Description))
+        };
+    }
+
+    /// <summary>
+    /// Builds a PacketFilter from a FilterGroup (all criteria AND'd together).
+    /// </summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "CA1502:Avoid excessive class coupling", Justification = "Filter builder with multiple criteria types")]
+    private PacketFilter? BuildFilterFromGroup(FilterGroup group)
+    {
+        var groupFilters = new List<PacketFilter>();
+
+        AddIpFilters(groupFilters, group);
+        AddPortFilter(groupFilters, group);
+        AddProtocolFilter(groupFilters, group);
+        AddDirectionFilter(groupFilters, group);
+        AddQuickFilters(groupFilters, group);
+
+        return CombineGroupFilters(groupFilters, group.DisplayLabel);
+    }
+
+    private static void AddIpFilters(List<PacketFilter> filters, FilterGroup group)
+    {
+        if (!string.IsNullOrWhiteSpace(group.SourceIP))
+        {
+            var srcIp = group.SourceIP;
+            filters.Add(new PacketFilter
+            {
+                CustomPredicate = p => Core.Services.NetworkHelper.MatchesIpPattern(p.SourceIP, srcIp),
+                Description = $"Src IP: {srcIp}"
+            });
+        }
+
+        if (!string.IsNullOrWhiteSpace(group.DestinationIP))
+        {
+            var destIp = group.DestinationIP;
+            filters.Add(new PacketFilter
+            {
+                CustomPredicate = p => Core.Services.NetworkHelper.MatchesIpPattern(p.DestinationIP, destIp),
+                Description = $"Dest IP: {destIp}"
+            });
+        }
+    }
+
+    private static void AddPortFilter(List<PacketFilter> filters, FilterGroup group)
+    {
+        if (!string.IsNullOrWhiteSpace(group.PortRange) && TryParsePortOrRange(group.PortRange, out var portPredicate))
+        {
+            filters.Add(new PacketFilter
+            {
+                CustomPredicate = portPredicate,
+                Description = $"Port: {group.PortRange}"
+            });
+        }
+    }
+
+    private static void AddProtocolFilter(List<PacketFilter> filters, FilterGroup group)
+    {
+        if (string.IsNullOrWhiteSpace(group.Protocol)) return;
+
+        var protocols = group.Protocol.Split(',', StringSplitOptions.RemoveEmptyEntries);
+        var protocolFilters = protocols.Select(proto =>
+        {
+            var p = proto.Trim();
+            return new PacketFilter
+            {
+                CustomPredicate = pkt => pkt.Protocol.ToString().Equals(p, StringComparison.OrdinalIgnoreCase) ||
+                                         (pkt.L7Protocol?.Equals(p, StringComparison.OrdinalIgnoreCase) ?? false),
+                Description = $"Protocol: {p}"
+            };
+        }).ToList();
+
+        if (protocolFilters.Count == 1)
+            filters.Add(protocolFilters[0]);
+        else if (protocolFilters.Count > 1)
+            filters.Add(new PacketFilter
+            {
+                CombinedFilters = protocolFilters,
+                CombineMode = FilterCombineMode.Or,
+                Description = $"Protocol: ({string.Join("|", protocols)})"
+            });
+    }
+
+    private static void AddDirectionFilter(List<PacketFilter> filters, FilterGroup group)
+    {
+        if (group.Directions?.Count == 0) return;
+        if (group.Directions == null) return;
+
+        var directions = group.Directions;
+        filters.Add(new PacketFilter
+        {
+            CustomPredicate = p => MatchesDirection(p, directions),
+            Description = $"Direction: {string.Join("|", directions)}"
+        });
+    }
+
+    private static bool MatchesDirection(PacketInfo p, List<string> directions)
+    {
+        var srcPrivate = NetworkFilterHelper.IsRFC1918(p.SourceIP) || NetworkFilterHelper.IsLoopback(p.SourceIP);
+        var dstPrivate = NetworkFilterHelper.IsRFC1918(p.DestinationIP) || NetworkFilterHelper.IsLoopback(p.DestinationIP);
+
+        foreach (var dir in directions)
+        {
+            var match = dir.ToUpperInvariant() switch
+            {
+                "INBOUND" => !srcPrivate && dstPrivate,
+                "OUTBOUND" => srcPrivate && !dstPrivate,
+                "INTERNAL" => srcPrivate && dstPrivate,
+                _ => false
+            };
+            if (match) return true;
+        }
+        return false;
+    }
+
+    private void AddQuickFilters(List<PacketFilter> filters, FilterGroup group)
+    {
+        if (group.QuickFilters?.Count == 0) return;
+        if (group.QuickFilters == null) return;
+
+        foreach (var qf in group.QuickFilters)
+        {
+            var pred = BuildQuickFilterPredicate(qf);
+            if (pred != null)
+            {
+                filters.Add(new PacketFilter
+                {
+                    CustomPredicate = pred,
+                    Description = qf
+                });
+            }
+        }
+    }
+
+    private static PacketFilter? CombineGroupFilters(List<PacketFilter> groupFilters, string? displayLabel)
+    {
+        if (groupFilters.Count == 0)
+            return null;
+
+        if (groupFilters.Count == 1)
+        {
+            groupFilters[0].Description = displayLabel ?? groupFilters[0].Description;
+            return groupFilters[0];
+        }
+
+        return new PacketFilter
+        {
+            CombinedFilters = groupFilters,
+            CombineMode = FilterCombineMode.And,
+            Description = displayLabel ?? string.Join(" AND ", groupFilters.Select(f => f.Description))
+        };
+    }
+
+    private static bool TryParsePortOrRange(string portString, out Func<PacketInfo, bool> predicate)
+    {
+        predicate = null!;
+        if (string.IsNullOrWhiteSpace(portString))
+            return false;
+
+        if (int.TryParse(portString, out var singlePort))
+        {
+            predicate = p => p.SourcePort == singlePort || p.DestinationPort == singlePort;
+            return true;
+        }
+
+        if (portString.Contains('-', StringComparison.Ordinal))
+        {
+            var parts = portString.Split('-');
+            if (parts.Length == 2 && int.TryParse(parts[0], out var start) && int.TryParse(parts[1], out var end))
+            {
+                predicate = p => (p.SourcePort >= start && p.SourcePort <= end) ||
+                                (p.DestinationPort >= start && p.DestinationPort <= end);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static Func<PacketInfo, bool>? BuildQuickFilterPredicate(string quickFilter)
+    {
+        return quickFilter.ToUpperInvariant() switch
+        {
+            "TCP" => p => p.Protocol == Protocol.TCP,
+            "UDP" => p => p.Protocol == Protocol.UDP,
+            "ICMP" => p => p.Protocol == Protocol.ICMP,
+            "INSECURE" => p => NetworkFilterHelper.IsInsecureProtocol(p.L7Protocol ?? p.Protocol.ToString()),
+            // Note: ANOMALIES, SUSPICIOUS, TCP ISSUES require threat/anomaly analysis data
+            // which is stored separately in AnalysisResult, not in PacketInfo
+            _ => null
+        };
     }
 
     private void OnFilteredPacketsChanged(object? sender, int filteredCount)

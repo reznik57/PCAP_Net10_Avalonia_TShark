@@ -113,8 +113,8 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- UnifiedFilterPanelControl (Dashboard pattern) -->
-                <ctrl:UnifiedFilterPanelControl Margin="0,0,0,10" />
+                <!-- UnifiedFilterPanelControl - HostInventory tab (index 5) -->
+                <ctrl:UnifiedFilterPanelControl DefaultTabIndex="5" Margin="0,0,0,10" />
 
                 <!-- Statistics Cards -->
                 <Grid ColumnDefinitions="*,*,*,*,*,*,*">

@@ -56,8 +56,8 @@
                       VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="24" Spacing="24">
 
-                <!-- UnifiedFilterPanelControl for sophisticated filtering -->
-                <ctrl:UnifiedFilterPanelControl x:Name="UnifiedFilterPanel" Margin="0,0,0,10" />
+                <!-- UnifiedFilterPanelControl with Anomalies tab auto-selected (index 4) -->
+                <ctrl:UnifiedFilterPanelControl x:Name="UnifiedFilterPanel" DefaultTabIndex="4" Margin="0,0,0,10" />
 
                 <!-- Filter Progress Bar -->
                 <ProgressBar IsVisible="{Binding IsFiltering}"

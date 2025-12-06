@@ -37,6 +37,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         private readonly PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService? _cacheService;
         private readonly FilterCopyService? _filterCopyService;
         private readonly GlobalFilterState? _globalFilterState;
+        private readonly Components.UnifiedFilterPanelViewModel? _unifiedFilterPanel;
         private bool _disposed;
     private List<EnhancedSecurityThreat> _allThreats = new();
     private List<SuricataAlert> _suricataAlerts = new();
@@ -256,7 +257,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                 new TabFilterService("Security Threats", new FilterServiceCore()),
                 App.Services?.GetService<PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService>(),
                 App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService(),
-                App.Services?.GetService<GlobalFilterState>())
+                App.Services?.GetService<GlobalFilterState>(),
+                App.Services?.GetService<Components.UnifiedFilterPanelViewModel>())
         {
         }
 
@@ -268,7 +270,8 @@ namespace PCAPAnalyzer.UI.ViewModels
             ITabFilterService? filterService,
             PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService? cacheService = null,
             ISmartFilterBuilder? filterBuilder = null,
-            GlobalFilterState? globalFilterState = null)
+            GlobalFilterState? globalFilterState = null,
+            Components.UnifiedFilterPanelViewModel? unifiedFilterPanel = null)
             : base(filterBuilder ?? new SmartFilterBuilderService())
         {
             _dispatcher = dispatcherService ?? throw new ArgumentNullException(nameof(dispatcherService));
@@ -279,6 +282,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             _cacheService = cacheService;
             _filterCopyService = App.Services?.GetService<FilterCopyService>();
             _globalFilterState = globalFilterState;
+            _unifiedFilterPanel = unifiedFilterPanel;
 
             // Initialize component ViewModels (Dashboard composition pattern)
             Charts = new ThreatsChartsViewModel(insecurePortDetector);
@@ -288,8 +292,15 @@ namespace PCAPAnalyzer.UI.ViewModels
             // Wire up Analysis completion event
             Analysis.AnalysisCompleted += OnAnalysisCompleted;
 
-            // Wire up QuickFilters change event
+            // Wire up QuickFilters change event (legacy - kept for backward compatibility)
             QuickFilters.FiltersChanged += () => UpdateThreatsList();
+
+            // Wire up UnifiedFilterPanel's ThreatsTab change event
+            if (_unifiedFilterPanel != null)
+            {
+                _unifiedFilterPanel.ThreatsTab.FiltersChanged += OnUnifiedFilterChanged;
+                _unifiedFilterPanel.ApplyFiltersRequested += OnUnifiedFilterApplied;
+            }
 
             // Wire up Statistics sort change event
             Statistics.SortChanged += () => UpdateThreatsList();
@@ -325,6 +336,18 @@ namespace PCAPAnalyzer.UI.ViewModels
             DrillDown.ViewInPacketAnalysisRequested += OnDrillDownNavigationRequested;
 
             DebugLogger.Log("[ThreatsViewModel] Initialized with component ViewModels (Charts, DrillDown, ReportExport)");
+        }
+
+        private void OnUnifiedFilterChanged()
+        {
+            // Quick filters changed in UnifiedFilterPanel - trigger immediate update
+            UpdateThreatsList();
+        }
+
+        private void OnUnifiedFilterApplied()
+        {
+            // Apply button pressed in UnifiedFilterPanel - trigger update
+            UpdateThreatsList();
         }
         
         private void OnFilterServiceChanged(object? sender, FilterChangedEventArgs e)
@@ -580,22 +603,33 @@ namespace PCAPAnalyzer.UI.ViewModels
             Statistics.UpdateTableData(_allThreats);
         }
 
-        private bool CheckIfFiltersApplied() =>
-            CommonFilters.HasActiveFilters ||
-            ShowCriticalOnly || ShowHighOnly ||
-            SeverityFilter != "All" ||
-            SelectedCategory != "All" ||
-            SelectedThreatType != "All" ||
-            !string.IsNullOrWhiteSpace(SearchFilter) ||
-            !string.IsNullOrWhiteSpace(PortFilter) ||
-            IsInsecureProtocolFilterActive || IsKnownCVEFilterActive ||
-            IsWeakEncryptionFilterActive || IsAuthIssuesFilterActive ||
-            IsCleartextFilterActive;
+        private bool CheckIfFiltersApplied()
+        {
+            // Check unified panel filters first
+            var unifiedFilters = _unifiedFilterPanel?.ThreatsTab.GetQuickFilters();
+            if (unifiedFilters?.HasAnyFilter == true)
+                return true;
+
+            // Fallback to legacy filters
+            return CommonFilters.HasActiveFilters ||
+                ShowCriticalOnly || ShowHighOnly ||
+                SeverityFilter != "All" ||
+                SelectedCategory != "All" ||
+                SelectedThreatType != "All" ||
+                !string.IsNullOrWhiteSpace(SearchFilter) ||
+                !string.IsNullOrWhiteSpace(PortFilter) ||
+                IsInsecureProtocolFilterActive || IsKnownCVEFilterActive ||
+                IsWeakEncryptionFilterActive || IsAuthIssuesFilterActive ||
+                IsCleartextFilterActive;
+        }
 
         [SuppressMessage("Maintainability", "CA1502:Avoid excessive complexity", Justification = "Filter method with many filter conditions is inherently complex")]
         private List<EnhancedSecurityThreat> ApplyThreatFilters()
         {
             var filtered = _allThreats.AsEnumerable();
+
+            // Get filters from UnifiedFilterPanel if available, otherwise use legacy QuickFilters
+            var unifiedFilters = _unifiedFilterPanel?.ThreatsTab.GetQuickFilters();
 
             // Common filters
             if (!string.IsNullOrWhiteSpace(CommonFilters.ProtocolFilter))
@@ -607,34 +641,49 @@ namespace PCAPAnalyzer.UI.ViewModels
             if (!string.IsNullOrWhiteSpace(PortFilter))
                 filtered = filtered.Where(t => t.Port.ToString().Contains(PortFilter, StringComparison.OrdinalIgnoreCase));
 
-            // Severity filters
+            // Severity filters - prefer UnifiedFilterPanel, fallback to legacy
+            var showCritical = unifiedFilters?.ShowCriticalOnly ?? ShowCriticalOnly;
+            var showHigh = unifiedFilters?.ShowHighOnly ?? ShowHighOnly;
+
             if (SeverityFilter != "All")
                 filtered = filtered.Where(t => t.Severity == Enum.Parse<ThreatSeverity>(SeverityFilter));
-            else if (ShowCriticalOnly)
+            else if (showCritical)
                 filtered = filtered.Where(t => t.Severity == ThreatSeverity.Critical);
-            else if (ShowHighOnly)
+            else if (showHigh)
                 filtered = filtered.Where(t => t.Severity >= ThreatSeverity.High);
 
-            // Category/Type filters
-            if (SelectedCategory != "All")
-                filtered = filtered.Where(t => t.Category.ToString() == SelectedCategory);
-            if (SelectedThreatType != "All")
-                filtered = filtered.Where(t => t.ThreatName == SelectedThreatType);
-            if (!string.IsNullOrWhiteSpace(SearchFilter))
-                filtered = filtered.Where(t =>
-                    t.ThreatName.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase) ||
-                    t.Description.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase) ||
-                    t.Service.Contains(SearchFilter, StringComparison.OrdinalIgnoreCase));
+            // Category/Type filters - prefer UnifiedFilterPanel, fallback to legacy
+            var selectedCategory = unifiedFilters?.SelectedCategory ?? SelectedCategory;
+            var selectedThreatType = unifiedFilters?.SelectedThreatType ?? SelectedThreatType;
+            var searchFilter = unifiedFilters?.SearchInput ?? SearchFilter;
 
-            // Quick filter toggles
-            if (QuickFilters.HasActiveQuickFilters)
+            if (selectedCategory != "All" && !string.IsNullOrEmpty(selectedCategory))
+                filtered = filtered.Where(t => t.Category.ToString() == selectedCategory);
+            if (selectedThreatType != "All" && !string.IsNullOrEmpty(selectedThreatType))
+                filtered = filtered.Where(t => t.ThreatName == selectedThreatType);
+            if (!string.IsNullOrWhiteSpace(searchFilter))
+                filtered = filtered.Where(t =>
+                    t.ThreatName.Contains(searchFilter, StringComparison.OrdinalIgnoreCase) ||
+                    t.Description.Contains(searchFilter, StringComparison.OrdinalIgnoreCase) ||
+                    t.Service.Contains(searchFilter, StringComparison.OrdinalIgnoreCase));
+
+            // Quick filter toggles - prefer UnifiedFilterPanel, fallback to legacy
+            var insecureActive = unifiedFilters?.IsInsecureProtocolFilterActive ?? IsInsecureProtocolFilterActive;
+            var cveActive = unifiedFilters?.IsKnownCVEFilterActive ?? IsKnownCVEFilterActive;
+            var weakEncryptActive = unifiedFilters?.IsWeakEncryptionFilterActive ?? IsWeakEncryptionFilterActive;
+            var authActive = unifiedFilters?.IsAuthIssuesFilterActive ?? IsAuthIssuesFilterActive;
+            var cleartextActive = unifiedFilters?.IsCleartextFilterActive ?? IsCleartextFilterActive;
+
+            var hasQuickFilters = insecureActive || cveActive || weakEncryptActive || authActive || cleartextActive;
+
+            if (hasQuickFilters)
             {
                 filtered = filtered.Where(t =>
-                    (IsInsecureProtocolFilterActive && ThreatsFilterViewModel.IsInsecureProtocolThreat(t)) ||
-                    (IsKnownCVEFilterActive && ThreatsFilterViewModel.IsKnownCVEThreat(t)) ||
-                    (IsWeakEncryptionFilterActive && ThreatsFilterViewModel.IsWeakEncryptionThreat(t)) ||
-                    (IsAuthIssuesFilterActive && ThreatsFilterViewModel.IsAuthIssueThreat(t)) ||
-                    (IsCleartextFilterActive && ThreatsFilterViewModel.IsCleartextThreat(t)));
+                    (insecureActive && ThreatsFilterViewModel.IsInsecureProtocolThreat(t)) ||
+                    (cveActive && ThreatsFilterViewModel.IsKnownCVEThreat(t)) ||
+                    (weakEncryptActive && ThreatsFilterViewModel.IsWeakEncryptionThreat(t)) ||
+                    (authActive && ThreatsFilterViewModel.IsAuthIssueThreat(t)) ||
+                    (cleartextActive && ThreatsFilterViewModel.IsCleartextThreat(t)));
             }
 
             filtered = ApplyGlobalFilterStateCriteria(filtered);

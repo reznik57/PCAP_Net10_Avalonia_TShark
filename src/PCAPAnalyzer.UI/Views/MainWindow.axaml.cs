@@ -9,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using SkiaSharp;
 using PCAPAnalyzer.Core.Monitoring;
 using PCAPAnalyzer.UI.Utilities;
@@ -119,13 +120,22 @@ public partial class MainWindow : Window
         }
     }
     
-    private void OnTabSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private async void OnTabSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
         try
         {
             if (sender is TabControl tabControl && DataContext is MainWindowViewModel viewModel)
             {
                 var selectedTab = tabControl.SelectedItem as TabItem;
+
+                // Animate the tab content with fade-in effect
+                if (selectedTab?.Content is Control content)
+                {
+                    await AnimateTabContentFadeIn(content);
+                }
+
+                // Continue with original logic
+                selectedTab = tabControl.SelectedItem as TabItem;
                 if (selectedTab != null)
                 {
                     var header = selectedTab.Header?.ToString() ?? "";
@@ -205,6 +215,31 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
+    /// Animates tab content with a smooth fade-in effect.
+    /// </summary>
+    private static async Task AnimateTabContentFadeIn(Control content)
+    {
+        const int durationMs = 200;
+        const int steps = 16;
+        var stepDelay = durationMs / steps;
+
+        // Start from invisible
+        content.Opacity = 0;
+
+        for (int i = 1; i <= steps; i++)
+        {
+            var t = (double)i / steps;
+            // Ease-out cubic for smooth deceleration
+            var eased = 1 - Math.Pow(1 - t, 3);
+            content.Opacity = eased;
+            await Task.Delay(stepDelay);
+        }
+
+        // Ensure final state
+        content.Opacity = 1;
+    }
+
+    /// <summary>
     /// Handles Browse button click - opens file picker for PCAP files
     /// </summary>
     private async void BrowseButton_Click(object? sender, RoutedEventArgs e)
@@ -269,8 +304,8 @@ public partial class MainWindow : Window
                 {
                     DataContext = viewModel.FilterViewModel
                 };
-                
-                await filterDialog.ShowDialog(this);
+
+                await filterDialog.ShowDialogWithAnimation(this);
             }
         }
         catch (Exception ex)

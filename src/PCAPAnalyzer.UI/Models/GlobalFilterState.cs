@@ -15,6 +15,17 @@ public partial class GlobalFilterState : ObservableObject
     [ObservableProperty] private int _version;
     private int _nextGroupId = 1;
 
+    /// <summary>
+    /// Whether filtering is currently in progress (across any tab).
+    /// UI binds to this for progress bar visibility.
+    /// </summary>
+    [ObservableProperty] private bool _isFilteringInProgress;
+
+    /// <summary>
+    /// Current filter progress (0.0 to 1.0).
+    /// </summary>
+    [ObservableProperty] private double _filterProgress;
+
     public FilterCriteria IncludeFilters { get; } = new();
     public FilterCriteria ExcludeFilters { get; } = new();
 

@@ -144,4 +144,32 @@ public static class GlobalFilterStateHelper
 
         return (includeCountries, includeRegions, excludeCountries, excludeRegions);
     }
+
+    /// <summary>
+    /// Checks if GlobalFilterState has any country/region criteria (from groups or flat filters).
+    /// </summary>
+    public static bool HasCountryCriteria(GlobalFilterState state)
+    {
+        // Check flat filters
+        if (state.IncludeFilters.Countries.Count > 0 || state.IncludeFilters.Regions.Count > 0 ||
+            state.IncludeFilters.Directions.Count > 0 ||
+            state.ExcludeFilters.Countries.Count > 0 || state.ExcludeFilters.Regions.Count > 0 ||
+            state.ExcludeFilters.Directions.Count > 0)
+            return true;
+
+        // Check groups for country criteria
+        foreach (var group in state.IncludeGroups)
+        {
+            if (group.Countries?.Count > 0 || group.Regions?.Count > 0 || group.Directions?.Count > 0)
+                return true;
+        }
+
+        foreach (var group in state.ExcludeGroups)
+        {
+            if (group.Countries?.Count > 0 || group.Regions?.Count > 0 || group.Directions?.Count > 0)
+                return true;
+        }
+
+        return false;
+    }
 }

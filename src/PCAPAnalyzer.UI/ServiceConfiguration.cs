@@ -605,7 +605,8 @@ namespace PCAPAnalyzer.UI
             services.AddTransient<HostInventoryViewModel>(provider =>
             {
                 var fingerprintService = provider.GetRequiredService<IOsFingerprintService>();
-                return new HostInventoryViewModel(fingerprintService);
+                var globalFilterState = provider.GetService<GlobalFilterState>();
+                return new HostInventoryViewModel(fingerprintService, globalFilterState);
             });
 
             // Compare Tab Services

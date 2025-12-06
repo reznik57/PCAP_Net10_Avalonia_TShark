@@ -88,8 +88,8 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- UnifiedFilterPanelControl (Dashboard pattern) -->
-            <ctrl:UnifiedFilterPanelControl Grid.Row="0" Margin="0,0,0,10" />
+            <!-- UnifiedFilterPanelControl with VoiceQoS tab auto-selected (index 2) -->
+            <ctrl:UnifiedFilterPanelControl Grid.Row="0" DefaultTabIndex="2" Margin="0,0,0,10" />
 
             <!-- Quality Statistics - SLACK STYLE -->
             <Border Grid.Row="2" Classes="modern-card-unified" Padding="20" Margin="0,0,0,20">

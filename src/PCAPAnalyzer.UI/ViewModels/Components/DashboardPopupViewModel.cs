@@ -13,6 +13,7 @@ using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.UI.ViewModels;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Services;
+using WindowAnimations = PCAPAnalyzer.UI.Utilities.WindowAnimations;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
 
@@ -349,7 +350,7 @@ public partial class DashboardPopupViewModel : ObservableObject
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
                 desktop.MainWindow != null)
             {
-                await window.ShowDialog(desktop.MainWindow);
+                await WindowAnimations.ShowDialogWithAnimation(window, desktop.MainWindow);
             }
         }
     }
@@ -381,7 +382,7 @@ public partial class DashboardPopupViewModel : ObservableObject
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
                 desktop.MainWindow != null)
             {
-                await window.ShowDialog(desktop.MainWindow);
+                await WindowAnimations.ShowDialogWithAnimation(window, desktop.MainWindow);
             }
         }
     }
@@ -429,7 +430,7 @@ public partial class DashboardPopupViewModel : ObservableObject
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
                 desktop.MainWindow != null)
             {
-                await window.ShowDialog(desktop.MainWindow);
+                await WindowAnimations.ShowDialogWithAnimation(window, desktop.MainWindow);
             }
         }
     }

@@ -3,6 +3,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using PCAPAnalyzer.UI.ViewModels;
+using PCAPAnalyzer.UI.ViewModels.Components;
 using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.Constants;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,14 +14,41 @@ namespace PCAPAnalyzer.UI.Views
 {
     public partial class CountryTrafficView : UserControl
     {
+        private CountryTrafficViewModel? _viewModel;
+
         public CountryTrafficView()
         {
             InitializeComponent();
+            DataContextChanged += OnDataContextChanged;
         }
 
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
+        }
+
+        private void OnDataContextChanged(object? sender, EventArgs e)
+        {
+            _viewModel = DataContext as CountryTrafficViewModel;
+            WireUpFilterPanelEvents();
+        }
+
+        private void WireUpFilterPanelEvents()
+        {
+            var filterPanel = this.FindControl<Controls.UnifiedFilterPanelControl>("UnifiedFilterPanel");
+            if (filterPanel?.DataContext is UnifiedFilterPanelViewModel filterPanelVm)
+            {
+                filterPanelVm.ApplyFiltersRequested += OnFilterPanelApplyRequested;
+                DebugLogger.Log("[CountryTrafficView] Wired ApplyFiltersRequested event");
+            }
+        }
+
+        private void OnFilterPanelApplyRequested()
+        {
+            // Country Traffic view updates are already handled by GlobalFilterState.OnFilterChanged
+            // subscription in CountryTrafficViewModel, which triggers UpdateTopCountriesList()
+            // This event handler is here for consistency and potential future enhancements
+            DebugLogger.Log("[CountryTrafficView] ApplyFiltersRequested - filter update triggered");
         }
 
         /// <summary>
