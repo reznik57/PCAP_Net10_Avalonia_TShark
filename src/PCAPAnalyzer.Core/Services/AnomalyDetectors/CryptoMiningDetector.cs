@@ -207,9 +207,9 @@ public class CryptoMiningDetector : ISpecializedDetector
             foreach (var source in sourceGroups)
             {
                 var sourcePackets = source.ToList();
-                var subscribes = sourcePackets.Count(p => p.Info?.Contains("mining.subscribe", StringComparison.OrdinalIgnoreCase) == true);
-                var authorizes = sourcePackets.Count(p => p.Info?.Contains("mining.authorize", StringComparison.OrdinalIgnoreCase) == true);
-                var submits = sourcePackets.Count(p => p.Info?.Contains("mining.submit", StringComparison.OrdinalIgnoreCase) == true);
+                var subscribes = sourcePackets.Count(p => p.InfoContains("mining.subscribe"));
+                var authorizes = sourcePackets.Count(p => p.InfoContains("mining.authorize"));
+                var submits = sourcePackets.Count(p => p.InfoContains("mining.submit"));
 
                 if (subscribes > 0 || authorizes > 0 || submits > 0)
                 {

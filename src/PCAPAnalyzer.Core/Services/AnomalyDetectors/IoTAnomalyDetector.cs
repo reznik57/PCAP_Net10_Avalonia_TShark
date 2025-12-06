@@ -65,9 +65,9 @@ public class IoTAnomalyDetector : ISpecializedDetector
 
                 if (messagesPerSecond >= MQTT_MESSAGE_THRESHOLD)
                 {
-                    var publishCount = brokerPackets.Count(p => p.Info?.Contains("Publish", StringComparison.OrdinalIgnoreCase) == true);
-                    var subscribeCount = brokerPackets.Count(p => p.Info?.Contains("Subscribe", StringComparison.OrdinalIgnoreCase) == true);
-                    var connectCount = brokerPackets.Count(p => p.Info?.Contains("Connect", StringComparison.OrdinalIgnoreCase) == true);
+                    var publishCount = brokerPackets.Count(p => p.IsMqttPublish());
+                    var subscribeCount = brokerPackets.Count(p => p.IsMqttSubscribe());
+                    var connectCount = brokerPackets.Count(p => p.IsMqttConnect());
 
                     // Get the most active source (attacker)
                     var topSource = brokerPackets
@@ -247,8 +247,7 @@ public class IoTAnomalyDetector : ISpecializedDetector
 
         // Look for multiple connection attempts from the same source
         var connectionAttempts = iotPackets.Where(p =>
-            p.Info?.Contains("Connect", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("CON", StringComparison.OrdinalIgnoreCase) == true).ToList();
+            p.InfoContainsAny("Connect", "CON")).ToList();
 
         var sourceGroups = connectionAttempts.GroupBy(p => p.SourceIP);
 

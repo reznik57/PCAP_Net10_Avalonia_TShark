@@ -309,4 +309,50 @@ public static class PacketPredicateExtensions
         packet.Info?.Contains("encoding", StringComparison.OrdinalIgnoreCase) == true;
 
     #endregion
+
+    #region Generic Info Field Helpers
+
+    /// <summary>
+    /// Checks if packet Info field contains the specified text (case-insensitive).
+    /// </summary>
+    public static bool InfoContains(this PacketInfo packet, string text) =>
+        packet.Info?.Contains(text, StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>
+    /// Checks if packet Info field contains any of the specified texts (case-insensitive).
+    /// </summary>
+    public static bool InfoContainsAny(this PacketInfo packet, params string[] texts) =>
+        packet.Info is { } info &&
+        texts.Any(t => info.Contains(t, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Checks if packet Info field contains all of the specified texts (case-insensitive).
+    /// </summary>
+    public static bool InfoContainsAll(this PacketInfo packet, params string[] texts) =>
+        packet.Info is { } info &&
+        texts.All(t => info.Contains(t, StringComparison.OrdinalIgnoreCase));
+
+    #endregion
+
+    #region MQTT Message Types
+
+    /// <summary>
+    /// Checks if packet is an MQTT Publish message.
+    /// </summary>
+    public static bool IsMqttPublish(this PacketInfo packet) =>
+        packet.InfoContains("Publish");
+
+    /// <summary>
+    /// Checks if packet is an MQTT Subscribe message.
+    /// </summary>
+    public static bool IsMqttSubscribe(this PacketInfo packet) =>
+        packet.InfoContains("Subscribe");
+
+    /// <summary>
+    /// Checks if packet is an MQTT Connect message.
+    /// </summary>
+    public static bool IsMqttConnect(this PacketInfo packet) =>
+        packet.InfoContains("Connect");
+
+    #endregion
 }
