@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 
@@ -14,7 +15,6 @@ public class IoTAnomalyDetector : ISpecializedDetector
     private const int MQTT_PORT = 1883;
     private const int MQTT_SECURE_PORT = 8883;
     private const int COAP_PORT = 5683;
-    private const int COAP_SECURE_PORT = 5684;
     private const int MQTT_MESSAGE_THRESHOLD = 100; // Messages per second
     private const double COAP_AMPLIFICATION_RATIO = 10; // Response/Request size ratio
 
@@ -22,21 +22,8 @@ public class IoTAnomalyDetector : ISpecializedDetector
     public AnomalyCategory Category => AnomalyCategory.IoT;
     public int Priority => 4;
 
-    public bool CanDetect(IEnumerable<PacketInfo> packets)
-    {
-        // Only run if there's IoT traffic (MQTT or CoAP)
-        return packets.Any(p =>
-            p.DestinationPort == MQTT_PORT ||
-            p.SourcePort == MQTT_PORT ||
-            p.DestinationPort == MQTT_SECURE_PORT ||
-            p.SourcePort == MQTT_SECURE_PORT ||
-            p.DestinationPort == COAP_PORT ||
-            p.SourcePort == COAP_PORT ||
-            p.DestinationPort == COAP_SECURE_PORT ||
-            p.SourcePort == COAP_SECURE_PORT ||
-            p.Info?.Contains("MQTT", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("CoAP", StringComparison.OrdinalIgnoreCase) == true);
-    }
+    public bool CanDetect(IEnumerable<PacketInfo> packets) =>
+        packets.Any(p => p.IsIoTTraffic());
 
     public List<NetworkAnomaly> Detect(IEnumerable<PacketInfo> packets)
     {
@@ -57,12 +44,7 @@ public class IoTAnomalyDetector : ISpecializedDetector
     private List<NetworkAnomaly> DetectMQTTFlooding(List<PacketInfo> packets)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var mqttPackets = packets.Where(p =>
-            p.DestinationPort == MQTT_PORT ||
-            p.SourcePort == MQTT_PORT ||
-            p.DestinationPort == MQTT_SECURE_PORT ||
-            p.SourcePort == MQTT_SECURE_PORT ||
-            p.Info?.Contains("MQTT", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var mqttPackets = packets.Where(p => p.IsMqttTraffic()).ToList();
 
         if (!mqttPackets.Any())
             return anomalies;
@@ -129,9 +111,7 @@ public class IoTAnomalyDetector : ISpecializedDetector
     {
         var anomalies = new List<NetworkAnomaly>();
         var mqttPackets = packets.Where(p =>
-            p.DestinationPort == MQTT_PORT ||
-            p.DestinationPort == MQTT_SECURE_PORT ||
-            p.Info?.Contains("MQTT Connect", StringComparison.OrdinalIgnoreCase) == true).ToList();
+            p.IsMqttTraffic() && p.ToAnyPort(MQTT_PORT, MQTT_SECURE_PORT)).ToList();
 
         if (!mqttPackets.Any())
             return anomalies;
@@ -183,10 +163,7 @@ public class IoTAnomalyDetector : ISpecializedDetector
     private List<NetworkAnomaly> DetectCoAPAmplification(List<PacketInfo> packets)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var coapPackets = packets.Where(p =>
-            p.DestinationPort == COAP_PORT ||
-            p.SourcePort == COAP_PORT ||
-            p.Info?.Contains("CoAP", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var coapPackets = packets.Where(p => p.IsCoapTraffic()).ToList();
 
         if (coapPackets.Count < 10)
             return anomalies;
@@ -263,12 +240,7 @@ public class IoTAnomalyDetector : ISpecializedDetector
         var anomalies = new List<NetworkAnomaly>();
 
         // Look for failed authentication or connection attempts
-        var iotPackets = packets.Where(p =>
-            p.DestinationPort == MQTT_PORT ||
-            p.DestinationPort == MQTT_SECURE_PORT ||
-            p.DestinationPort == COAP_PORT ||
-            p.Info?.Contains("MQTT", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("CoAP", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var iotPackets = packets.Where(p => p.IsIoTTraffic()).ToList();
 
         if (!iotPackets.Any())
             return anomalies;

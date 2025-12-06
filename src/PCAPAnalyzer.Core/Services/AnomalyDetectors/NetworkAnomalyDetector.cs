@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 
@@ -35,14 +36,14 @@ public class NetworkAnomalyDetector : IAnomalyDetector
     private List<NetworkAnomaly> DetectSYNFloods(List<PacketInfo> packets)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var tcpPackets = packets.Where(p => p.Protocol == Protocol.TCP).ToList();
+        var tcpPackets = packets.Where(p => p.IsTcp()).ToList();
 
         if (!tcpPackets.Any())
             return anomalies;
 
         // Look for TCP SYN packets without corresponding ACKs
-        var synPackets = tcpPackets.Where(p => p.Info?.Contains("SYN", StringComparison.OrdinalIgnoreCase) == true && !p.Info.Contains("ACK", StringComparison.OrdinalIgnoreCase)).ToList();
-        var synAckPackets = tcpPackets.Where(p => p.Info?.Contains("SYN, ACK", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var synPackets = tcpPackets.Where(p => p.IsSynPacket()).ToList();
+        var synAckPackets = tcpPackets.Where(p => p.IsSynAckPacket()).ToList();
 
         // Group by destination to detect targets
         var targetGroups = synPackets.GroupBy(p => new { p.DestinationIP, p.DestinationPort });
@@ -108,7 +109,7 @@ public class NetworkAnomalyDetector : IAnomalyDetector
     private List<NetworkAnomaly> DetectARPSpoofing(List<PacketInfo> packets)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var arpPackets = packets.Where(p => p.Protocol == Protocol.ARP).ToList();
+        var arpPackets = packets.Where(p => p.IsArp()).ToList();
 
         if (!arpPackets.Any())
             return anomalies;
@@ -118,11 +119,11 @@ public class NetworkAnomalyDetector : IAnomalyDetector
 
         foreach (var packet in arpPackets)
         {
-            if (packet.Info?.Contains("is at", StringComparison.OrdinalIgnoreCase) == true)
+            if (packet.IsArpReply())
             {
                 // Extract IP and MAC from ARP reply (simplified)
                 var ip = packet.SourceIP;
-                var mac = ExtractMACFromInfo(packet.Info);
+                var mac = ExtractMACFromInfo(packet.Info ?? "");
 
                 if (!string.IsNullOrEmpty(ip) && !string.IsNullOrEmpty(mac))
                 {
@@ -174,7 +175,7 @@ public class NetworkAnomalyDetector : IAnomalyDetector
     private List<NetworkAnomaly> DetectICMPFloods(List<PacketInfo> packets)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var icmpPackets = packets.Where(p => p.Protocol == Protocol.ICMP).ToList();
+        var icmpPackets = packets.Where(p => p.IsIcmp()).ToList();
 
         if (!icmpPackets.Any())
             return anomalies;

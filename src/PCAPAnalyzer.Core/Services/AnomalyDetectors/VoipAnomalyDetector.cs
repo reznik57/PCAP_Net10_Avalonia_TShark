@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 
@@ -20,17 +21,8 @@ public class VoipAnomalyDetector : ISpecializedDetector
     public AnomalyCategory Category => AnomalyCategory.VoIP;
     public int Priority => 5;
 
-    public bool CanDetect(IEnumerable<PacketInfo> packets)
-    {
-        // Only run if there's VoIP traffic (SIP or RTP)
-        return packets.Any(p =>
-            p.DestinationPort == 5060 ||
-            p.SourcePort == 5060 ||
-            (p.DestinationPort >= 10000 && p.DestinationPort <= 20000) || // Common RTP port range
-            p.Info?.Contains("SIP", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("RTP", StringComparison.OrdinalIgnoreCase) == true ||
-            p.L7Protocol?.Contains("SIP", StringComparison.OrdinalIgnoreCase) == true);
-    }
+    public bool CanDetect(IEnumerable<PacketInfo> packets) =>
+        packets.Any(p => p.IsSipTraffic() || p.IsRtpTraffic());
 
     public List<NetworkAnomaly> Detect(IEnumerable<PacketInfo> packets)
     {
@@ -51,11 +43,7 @@ public class VoipAnomalyDetector : ISpecializedDetector
     private List<NetworkAnomaly> DetectSIPFlooding(List<PacketInfo> packets)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var sipPackets = packets.Where(p =>
-            p.DestinationPort == 5060 ||
-            p.SourcePort == 5060 ||
-            p.Info?.Contains("SIP", StringComparison.OrdinalIgnoreCase) == true ||
-            p.L7Protocol?.Contains("SIP", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var sipPackets = packets.Where(p => p.IsSipTraffic()).ToList();
 
         if (!sipPackets.Any())
             return anomalies;
@@ -75,8 +63,8 @@ public class VoipAnomalyDetector : ISpecializedDetector
                 if (sipPerSecond >= SIP_FLOOD_THRESHOLD)
                 {
                     // Count INVITE, REGISTER, and other SIP methods
-                    var invites = targetPackets.Count(p => p.Info?.Contains("INVITE", StringComparison.OrdinalIgnoreCase) == true);
-                    var registers = targetPackets.Count(p => p.Info?.Contains("REGISTER", StringComparison.OrdinalIgnoreCase) == true);
+                    var invites = targetPackets.Count(p => p.IsSipInvite());
+                    var registers = targetPackets.Count(p => p.IsSipRegister());
 
                     // Get the most active source (attacker)
                     var topSource = targetPackets
@@ -118,17 +106,14 @@ public class VoipAnomalyDetector : ISpecializedDetector
     private List<NetworkAnomaly> DetectGhostCalls(List<PacketInfo> packets)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var sipPackets = packets.Where(p =>
-            p.Info?.Contains("SIP", StringComparison.OrdinalIgnoreCase) == true ||
-            p.DestinationPort == 5060 ||
-            p.SourcePort == 5060).ToList();
+        var sipPackets = packets.Where(p => p.IsSipTraffic()).ToList();
 
         if (!sipPackets.Any())
             return anomalies;
 
         // Look for INVITE without corresponding 200 OK or ACK
-        var invites = sipPackets.Where(p => p.Info?.Contains("INVITE", StringComparison.OrdinalIgnoreCase) == true).ToList();
-        var oks = sipPackets.Where(p => p.Info?.Contains("200 OK", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var invites = sipPackets.Where(p => p.IsSipInvite()).ToList();
+        var oks = sipPackets.Where(p => p.IsSip200Ok()).ToList();
 
         // Group INVITEs by source
         var inviteGroups = invites.GroupBy(p => p.SourceIP);
@@ -186,10 +171,7 @@ public class VoipAnomalyDetector : ISpecializedDetector
 
         // RTP packets typically use UDP ports in the range 10000-20000
         var rtpPackets = packets.Where(p =>
-            p.Protocol == Protocol.UDP &&
-            ((p.DestinationPort >= 10000 && p.DestinationPort <= 20000) ||
-             (p.SourcePort >= 10000 && p.SourcePort <= 20000)) &&
-            p.Length >= 12 && p.Length <= 1500).ToList();
+            p.IsRtpTraffic() && p.Length >= 12 && p.Length <= 1500).ToList();
 
         if (rtpPackets.Count < 100) // Need sufficient packets for quality analysis
             return anomalies;
@@ -262,15 +244,13 @@ public class VoipAnomalyDetector : ISpecializedDetector
     private List<NetworkAnomaly> DetectTollFraud(List<PacketInfo> packets)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var sipPackets = packets.Where(p =>
-            p.Info?.Contains("SIP", StringComparison.OrdinalIgnoreCase) == true ||
-            p.DestinationPort == 5060).ToList();
+        var sipPackets = packets.Where(p => p.IsSipTraffic()).ToList();
 
         if (!sipPackets.Any())
             return anomalies;
 
         // Look for high-volume calling patterns to international or premium numbers
-        var invites = sipPackets.Where(p => p.Info?.Contains("INVITE", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var invites = sipPackets.Where(p => p.IsSipInvite()).ToList();
 
         // Group by source to identify potential fraud sources
         var sourceGroups = invites.GroupBy(p => p.SourceIP);

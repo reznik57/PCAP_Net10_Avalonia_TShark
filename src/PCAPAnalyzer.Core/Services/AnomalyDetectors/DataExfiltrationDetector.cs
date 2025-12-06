@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 
@@ -189,9 +190,7 @@ public class DataExfiltrationDetector : ISpecializedDetector
 
         // Look for patterns that suggest encoded data transfer
         var suspiciousPackets = packets.Where(p =>
-            p.Info?.Contains("base64", StringComparison.OrdinalIgnoreCase) == true ||
-            HasBase64Pattern(p.Info) ||
-            p.Info?.Contains("encoding", StringComparison.OrdinalIgnoreCase) == true).ToList();
+            p.HasEncodingIndicators() || HasBase64Pattern(p.Info)).ToList();
 
         if (suspiciousPackets.Count >= BASE64_PATTERN_THRESHOLD)
         {

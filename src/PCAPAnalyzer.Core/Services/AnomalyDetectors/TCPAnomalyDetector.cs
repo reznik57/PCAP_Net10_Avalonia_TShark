@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 
@@ -21,7 +22,7 @@ public class TCPAnomalyDetector : IAnomalyDetector
     public List<NetworkAnomaly> Detect(IEnumerable<PacketInfo> packets)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var tcpPackets = packets.Where(p => p.Protocol == Protocol.TCP).ToList();
+        var tcpPackets = packets.Where(p => p.IsTcp()).ToList();
 
         if (!tcpPackets.Any())
             return anomalies;
@@ -63,9 +64,7 @@ public class TCPAnomalyDetector : IAnomalyDetector
     private List<NetworkAnomaly> DetectRetransmissions(List<PacketInfo> packets, string streamId)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var retransmissions = packets.Where(p =>
-            p.Info?.Contains("[TCP Retransmission]", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("TCP Retransmission", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var retransmissions = packets.Where(p => p.IsTcpRetransmission()).ToList();
 
         if (retransmissions.Any())
         {
@@ -109,9 +108,7 @@ public class TCPAnomalyDetector : IAnomalyDetector
     private List<NetworkAnomaly> DetectDuplicateACKs(List<PacketInfo> packets, string streamId)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var dupAcks = packets.Where(p =>
-            p.Info?.Contains("[TCP Dup ACK", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("Dup ACK", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var dupAcks = packets.Where(p => p.IsTcpDuplicateAck()).ToList();
 
         if (dupAcks.Count >= DUP_ACK_THRESHOLD)
         {
@@ -145,9 +142,7 @@ public class TCPAnomalyDetector : IAnomalyDetector
     private List<NetworkAnomaly> DetectOutOfOrder(List<PacketInfo> packets, string streamId)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var outOfOrder = packets.Where(p =>
-            p.Info?.Contains("[TCP Out-Of-Order]", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("Out-Of-Order", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var outOfOrder = packets.Where(p => p.IsTcpOutOfOrder()).ToList();
 
         if (outOfOrder.Any())
         {
@@ -187,9 +182,7 @@ public class TCPAnomalyDetector : IAnomalyDetector
     private List<NetworkAnomaly> DetectZeroWindow(List<PacketInfo> packets, string streamId)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var zeroWindow = packets.Where(p =>
-            p.Info?.Contains("Win=0", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("[TCP ZeroWindow]", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var zeroWindow = packets.Where(p => p.IsTcpZeroWindow()).ToList();
 
         if (zeroWindow.Any())
         {

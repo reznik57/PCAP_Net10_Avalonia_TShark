@@ -165,4 +165,148 @@ public static class PacketPredicateExtensions
         !packet.IsSecureProtocol();
 
     #endregion
+
+    #region TCP Anomaly Detection
+
+    /// <summary>
+    /// Checks if packet is a TCP retransmission.
+    /// </summary>
+    public static bool IsTcpRetransmission(this PacketInfo packet) =>
+        packet.Info?.Contains("TCP Retransmission", StringComparison.OrdinalIgnoreCase) == true ||
+        packet.Info?.Contains("[TCP Retransmission]", StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>
+    /// Checks if packet is a TCP duplicate ACK.
+    /// </summary>
+    public static bool IsTcpDuplicateAck(this PacketInfo packet) =>
+        packet.Info?.Contains("Dup ACK", StringComparison.OrdinalIgnoreCase) == true ||
+        packet.Info?.Contains("[TCP Dup ACK", StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>
+    /// Checks if packet is TCP out-of-order.
+    /// </summary>
+    public static bool IsTcpOutOfOrder(this PacketInfo packet) =>
+        packet.Info?.Contains("Out-Of-Order", StringComparison.OrdinalIgnoreCase) == true ||
+        packet.Info?.Contains("[TCP Out-Of-Order]", StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>
+    /// Checks if packet has TCP zero window.
+    /// </summary>
+    public static bool IsTcpZeroWindow(this PacketInfo packet) =>
+        packet.Info?.Contains("Win=0", StringComparison.OrdinalIgnoreCase) == true ||
+        packet.Info?.Contains("[TCP ZeroWindow]", StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>
+    /// Checks if packet is a SYN packet (without ACK).
+    /// </summary>
+    public static bool IsSynPacket(this PacketInfo packet) =>
+        packet.Info?.Contains("SYN", StringComparison.OrdinalIgnoreCase) == true &&
+        packet.Info?.Contains("ACK", StringComparison.OrdinalIgnoreCase) != true;
+
+    /// <summary>
+    /// Checks if packet is a SYN-ACK packet.
+    /// </summary>
+    public static bool IsSynAckPacket(this PacketInfo packet) =>
+        packet.Info?.Contains("SYN, ACK", StringComparison.OrdinalIgnoreCase) == true;
+
+    #endregion
+
+    #region Protocol-Specific Detection
+
+    /// <summary>
+    /// Checks if packet is ARP protocol.
+    /// </summary>
+    public static bool IsArp(this PacketInfo packet) =>
+        packet.Protocol == Protocol.ARP;
+
+    /// <summary>
+    /// Checks if packet is ICMP protocol.
+    /// </summary>
+    public static bool IsIcmp(this PacketInfo packet) =>
+        packet.Protocol == Protocol.ICMP;
+
+    /// <summary>
+    /// Checks if packet is an ARP reply ("is at" pattern).
+    /// </summary>
+    public static bool IsArpReply(this PacketInfo packet) =>
+        packet.Protocol == Protocol.ARP &&
+        packet.Info?.Contains("is at", StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>
+    /// Checks if packet is SIP traffic.
+    /// </summary>
+    public static bool IsSipTraffic(this PacketInfo packet) =>
+        packet.DestinationPort == 5060 ||
+        packet.SourcePort == 5060 ||
+        packet.Info?.Contains("SIP", StringComparison.OrdinalIgnoreCase) == true ||
+        packet.L7Protocol?.Contains("SIP", StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>
+    /// Checks if packet is RTP traffic (UDP in common RTP port range).
+    /// </summary>
+    public static bool IsRtpTraffic(this PacketInfo packet) =>
+        packet.Protocol == Protocol.UDP &&
+        ((packet.DestinationPort >= 10000 && packet.DestinationPort <= 20000) ||
+         (packet.SourcePort >= 10000 && packet.SourcePort <= 20000));
+
+    /// <summary>
+    /// Checks if packet is MQTT traffic.
+    /// </summary>
+    public static bool IsMqttTraffic(this PacketInfo packet) =>
+        packet.DestinationPort == 1883 ||
+        packet.SourcePort == 1883 ||
+        packet.DestinationPort == 8883 ||
+        packet.SourcePort == 8883 ||
+        packet.Info?.Contains("MQTT", StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>
+    /// Checks if packet is CoAP traffic.
+    /// </summary>
+    public static bool IsCoapTraffic(this PacketInfo packet) =>
+        packet.DestinationPort == 5683 ||
+        packet.SourcePort == 5683 ||
+        packet.DestinationPort == 5684 ||
+        packet.SourcePort == 5684 ||
+        packet.Info?.Contains("CoAP", StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>
+    /// Checks if packet is IoT traffic (MQTT or CoAP).
+    /// </summary>
+    public static bool IsIoTTraffic(this PacketInfo packet) =>
+        packet.IsMqttTraffic() || packet.IsCoapTraffic();
+
+    #endregion
+
+    #region SIP Method Detection
+
+    /// <summary>
+    /// Checks if packet is a SIP INVITE.
+    /// </summary>
+    public static bool IsSipInvite(this PacketInfo packet) =>
+        packet.Info?.Contains("INVITE", StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>
+    /// Checks if packet is a SIP REGISTER.
+    /// </summary>
+    public static bool IsSipRegister(this PacketInfo packet) =>
+        packet.Info?.Contains("REGISTER", StringComparison.OrdinalIgnoreCase) == true;
+
+    /// <summary>
+    /// Checks if packet is a SIP 200 OK response.
+    /// </summary>
+    public static bool IsSip200Ok(this PacketInfo packet) =>
+        packet.Info?.Contains("200 OK", StringComparison.OrdinalIgnoreCase) == true;
+
+    #endregion
+
+    #region Data Exfiltration Detection
+
+    /// <summary>
+    /// Checks if packet info contains base64 or encoding indicators.
+    /// </summary>
+    public static bool HasEncodingIndicators(this PacketInfo packet) =>
+        packet.Info?.Contains("base64", StringComparison.OrdinalIgnoreCase) == true ||
+        packet.Info?.Contains("encoding", StringComparison.OrdinalIgnoreCase) == true;
+
+    #endregion
 }
