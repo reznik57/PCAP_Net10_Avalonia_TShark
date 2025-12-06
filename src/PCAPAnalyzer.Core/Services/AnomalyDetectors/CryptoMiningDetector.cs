@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 
@@ -24,15 +25,6 @@ public class CryptoMiningDetector : ISpecializedDetector
         9332, 9999, // Various pools
         14444, 14433, // Zcash
         45560, 45700 // Monero/XMR
-    };
-
-    // Known mining pool domains/IPs patterns (simplified - real implementation would have comprehensive list)
-    private static readonly string[] MiningPoolPatterns = new[]
-    {
-        "pool", "mining", "nicehash", "ethermine", "f2pool", "antpool",
-        "slushpool", "viaBTC", "btc.com", "poolin", "nanopool", "sparkpool",
-        "2miners", "hiveon", "ezil", "flexpool", "herominers", "moneroocean",
-        "supportxmr", "minexmr", "xmrpool", "hashvault", "miningpoolhub"
     };
 
     public string Name => "Cryptocurrency Mining Detector";
@@ -137,7 +129,7 @@ public class CryptoMiningDetector : ISpecializedDetector
         var anomalies = new List<NetworkAnomaly>();
 
         // Look for hosts with excessive outbound connections to same ports
-        var tcpPackets = packets.Where(p => p.Protocol == Protocol.TCP).ToList();
+        var tcpPackets = packets.Where(p => p.IsTcp()).ToList();
 
         if (!tcpPackets.Any())
             return anomalies;
@@ -198,19 +190,14 @@ public class CryptoMiningDetector : ISpecializedDetector
 
         // Stratum protocol is JSON-RPC based, look for characteristic patterns
         var tcpPackets = packets.Where(p =>
-            p.Protocol == Protocol.TCP &&
-            (MiningPorts.Contains(p.DestinationPort) || MiningPorts.Contains(p.SourcePort))).ToList();
+            p.IsTcp() &&
+            (p.ToAnyPort([.. MiningPorts]) || p.FromAnyPort([.. MiningPorts]))).ToList();
 
         if (!tcpPackets.Any())
             return anomalies;
 
         // Look for Stratum-related keywords in packet info
-        var stratumPackets = tcpPackets.Where(p =>
-            p.Info?.Contains("mining.subscribe", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("mining.authorize", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("mining.submit", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("stratum", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("\"method\":", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var stratumPackets = tcpPackets.Where(p => p.IsStratumProtocol()).ToList();
 
         if (stratumPackets.Any())
         {
@@ -267,32 +254,9 @@ public class CryptoMiningDetector : ISpecializedDetector
         return anomalies;
     }
 
-    private bool IsPotentialMiningTraffic(PacketInfo packet)
-    {
-        // Check if packet is to a known mining port
-        if (MiningPorts.Contains(packet.DestinationPort) || MiningPorts.Contains(packet.SourcePort))
-            return true;
-
-        // Check if packet info contains mining-related keywords
-        if (packet.Info != null)
-        {
-            foreach (var pattern in MiningPoolPatterns)
-            {
-                if (packet.Info.Contains(pattern, StringComparison.OrdinalIgnoreCase))
-                    return true;
-            }
-        }
-
-        // Check destination IP against mining pool patterns (simplified)
-        if (!string.IsNullOrEmpty(packet.DestinationIP))
-        {
-            foreach (var pattern in MiningPoolPatterns)
-            {
-                if (packet.DestinationIP.Contains(pattern, StringComparison.OrdinalIgnoreCase))
-                    return true;
-            }
-        }
-
-        return false;
-    }
+    private bool IsPotentialMiningTraffic(PacketInfo packet) =>
+        packet.ToAnyPort([.. MiningPorts]) ||
+        packet.FromAnyPort([.. MiningPorts]) ||
+        packet.HasMiningPoolKeywords() ||
+        packet.IsMiningPoolDestination();
 }

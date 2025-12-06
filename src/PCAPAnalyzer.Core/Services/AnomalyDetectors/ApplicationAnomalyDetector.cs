@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 
@@ -35,10 +36,7 @@ public class ApplicationAnomalyDetector : IAnomalyDetector
     private List<NetworkAnomaly> DetectDNSTunneling(List<PacketInfo> packets)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var dnsPackets = packets.Where(p =>
-            p.Protocol == Protocol.DNS ||
-            p.DestinationPort == 53 ||
-            p.SourcePort == 53).ToList();
+        var dnsPackets = packets.Where(p => p.IsDnsTraffic()).ToList();
 
         if (!dnsPackets.Any())
             return anomalies;
@@ -63,7 +61,7 @@ public class ApplicationAnomalyDetector : IAnomalyDetector
                 }
 
                 // Check for unusual TXT record queries
-                if (packet.Info.Contains("TXT", StringComparison.OrdinalIgnoreCase) && !IsKnownTXTQuery(packet.Info))
+                if (packet.IsTxtQuery() && !packet.IsKnownTxtQuery())
                 {
                     suspiciousQueries.Add(packet);
                 }
@@ -178,10 +176,7 @@ public class ApplicationAnomalyDetector : IAnomalyDetector
     private List<NetworkAnomaly> DetectMalformedPackets(List<PacketInfo> packets)
     {
         var anomalies = new List<NetworkAnomaly>();
-        var malformed = packets.Where(p =>
-            p.Info?.Contains("[Malformed", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("Bad", StringComparison.OrdinalIgnoreCase) == true ||
-            p.Info?.Contains("Invalid", StringComparison.OrdinalIgnoreCase) == true).ToList();
+        var malformed = packets.Where(p => p.IsMalformed()).ToList();
 
         if (malformed.Count >= 5)
         {
@@ -269,10 +264,4 @@ public class ApplicationAnomalyDetector : IAnomalyDetector
         return entropy > 3.5; // High entropy threshold
     }
 
-    private bool IsKnownTXTQuery(string info)
-    {
-        // Check for known legitimate TXT queries
-        var knownPatterns = new[] { "_dmarc", "_spf", "google", "microsoft", "cloudflare" };
-        return knownPatterns.Any(pattern => info.Contains(pattern, StringComparison.OrdinalIgnoreCase));
-    }
 }
