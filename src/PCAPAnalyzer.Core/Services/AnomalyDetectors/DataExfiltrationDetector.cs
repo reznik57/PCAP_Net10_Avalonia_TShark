@@ -90,7 +90,7 @@ public class DataExfiltrationDetector : ISpecializedDetector
                     Category = AnomalyCategory.Security,
                     Type = "Data Exfiltration",
                     Severity = severity,
-                    Description = $"Large data upload detected: {FormatBytes(outboundBytes)} from {flow.Key.SourceIP} to {flow.Key.DestinationIP}:{flow.Key.DestinationPort}",
+                    Description = $"Large data upload detected: {outboundBytes.ToFormattedBytes()} from {flow.Key.SourceIP} to {flow.Key.DestinationIP}:{flow.Key.DestinationPort}",
                     DetectedAt = flowPackets.First().Timestamp,
                     DetectorName = Name,
                     SourceIP = flow.Key.SourceIP ?? "",
@@ -157,7 +157,7 @@ public class DataExfiltrationDetector : ISpecializedDetector
                                 Category = AnomalyCategory.Security,
                                 Type = "Slow Data Exfiltration",
                                 Severity = AnomalySeverity.High,
-                                Description = $"Slow data exfiltration pattern: {FormatBytes(totalBytes)} over {timeWindow.TotalHours:F1} hours from {flow.Key.SourceIP}",
+                                Description = $"Slow data exfiltration pattern: {totalBytes.ToFormattedBytes()} over {timeWindow.TotalHours:F1} hours from {flow.Key.SourceIP}",
                                 DetectedAt = flowPackets.First().Timestamp,
                                 DetectorName = Name,
                                 SourceIP = flow.Key.SourceIP ?? "",
@@ -313,16 +313,4 @@ public class DataExfiltrationDetector : ISpecializedDetector
         return maxConsecutive >= 40;
     }
 
-    private string FormatBytes(long bytes)
-    {
-        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-        double len = bytes;
-        int order = 0;
-        while (len >= 1024 && order < sizes.Length - 1)
-        {
-            order++;
-            len = len / 1024;
-        }
-        return $"{len:F2} {sizes[order]}";
-    }
 }

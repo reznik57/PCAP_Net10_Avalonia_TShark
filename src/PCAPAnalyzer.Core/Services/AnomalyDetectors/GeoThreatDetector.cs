@@ -5,6 +5,7 @@ using System.Net;
 using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.Core.Utilities;
 
 namespace PCAPAnalyzer.Core.Services.AnomalyDetectors;
 
@@ -238,7 +239,7 @@ public class GeoThreatDetector : ISpecializedDetector
                 Category = AnomalyCategory.Security,
                 Type = "High-Risk Country Traffic",
                 Severity = severity,
-                Description = $"Traffic detected to/from high-risk country {country}: {FormatBytes(totalBytes)} ({direction}), {uniqueIPs.Count} unique IPs",
+                Description = $"Traffic detected to/from high-risk country {country}: {totalBytes.ToFormattedBytes()} ({direction}), {uniqueIPs.Count} unique IPs",
                 DetectedAt = countryPackets.First().Timestamp,
                 DetectorName = Name,
                 SourceIP = internalIPs.FirstOrDefault() ?? "",
@@ -351,7 +352,7 @@ public class GeoThreatDetector : ISpecializedDetector
                 Category = AnomalyCategory.Security,
                 Type = "Single-IP Country",
                 Severity = severity,
-                Description = $"Country {country} has only one communicating IP ({singleIP}): {countryPackets.Count} packets, {FormatBytes(totalBytes)}",
+                Description = $"Country {country} has only one communicating IP ({singleIP}): {countryPackets.Count} packets, {totalBytes.ToFormattedBytes()}",
                 DetectedAt = countryPackets.First().Timestamp,
                 DetectorName = Name,
                 SourceIP = singleIP,
@@ -432,8 +433,8 @@ public class GeoThreatDetector : ISpecializedDetector
                     severity = AnomalySeverity.High;
 
                 var description = inbound == 0
-                    ? $"Outbound-only traffic to {country}: {FormatBytes(outbound)} sent, no response traffic"
-                    : $"Heavily asymmetric traffic to {country}: {FormatBytes(outbound)} out vs {FormatBytes(inbound)} in ({outbound / Math.Max(inbound, 1)}:1 ratio)";
+                    ? $"Outbound-only traffic to {country}: {outbound.ToFormattedBytes()} sent, no response traffic"
+                    : $"Heavily asymmetric traffic to {country}: {outbound.ToFormattedBytes()} out vs {inbound.ToFormattedBytes()} in ({outbound / Math.Max(inbound, 1)}:1 ratio)";
 
                 anomalies.Add(new NetworkAnomaly
                 {
@@ -549,16 +550,4 @@ public class GeoThreatDetector : ISpecializedDetector
         }
     }
 
-    private static string FormatBytes(long bytes)
-    {
-        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-        double len = bytes;
-        int order = 0;
-        while (len >= 1024 && order < sizes.Length - 1)
-        {
-            order++;
-            len /= 1024;
-        }
-        return $"{len:F2} {sizes[order]}";
-    }
 }
