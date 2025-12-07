@@ -130,7 +130,7 @@ public sealed class TSharkService : ITSharkService
 
             if (!TryCreateTSharkProcessStartInfo(
                     pcapPath,
-                    BuildStreamingArguments,
+                    BuildStreamingArgumentsArray,
                     out var startInfo,
                     out var effectivePcapPath,
                     out var executionMode,
@@ -610,19 +610,27 @@ public sealed class TSharkService : ITSharkService
         }
     }
 
-    private static string BuildStreamingArguments(string tsharkPath)
+    /// <summary>
+    /// Builds streaming arguments array for secure process execution.
+    /// SECURITY: Returns array to prevent command injection.
+    /// </summary>
+    private static string[] BuildStreamingArgumentsArray(string pcapPath)
     {
-        return TSharkFieldDefinitions.BuildStreamingArguments(tsharkPath);
+        return TSharkFieldDefinitions.BuildStreamingArgumentsArray(pcapPath);
     }
 
-    private static string BuildCountArguments(string tsharkPath)
+    /// <summary>
+    /// Builds count arguments array for secure process execution.
+    /// SECURITY: Returns array to prevent command injection.
+    /// </summary>
+    private static string[] BuildCountArgumentsArray(string pcapPath)
     {
-        return TSharkFieldDefinitions.BuildCountArguments(tsharkPath);
+        return TSharkFieldDefinitions.BuildCountArgumentsArray(pcapPath);
     }
 
     private bool TryCreateTSharkProcessStartInfo(
         string originalPcapPath,
-        Func<string, string> argumentsBuilder,
+        Func<string, string[]> argumentsBuilder,
         out ProcessStartInfo startInfo,
         out string effectivePcapPath,
         out TSharkExecutionMode executionMode,
@@ -652,7 +660,7 @@ public sealed class TSharkService : ITSharkService
         // Convert path if using WSL
         effectivePcapPath = tsharkInfo.ConvertPathIfNeeded(originalPcapPath);
 
-        // Build arguments and create ProcessStartInfo
+        // SECURITY: Build arguments as array and create ProcessStartInfo with ArgumentList
         var arguments = argumentsBuilder(effectivePcapPath);
         startInfo = tsharkInfo.CreateProcessStartInfo(arguments);
 
@@ -724,8 +732,9 @@ public sealed class TSharkService : ITSharkService
         try
         {
             // ✅ FIX: Use -Mc for machine-readable output (exact count without k/M suffixes)
+            // SECURITY: Use array-based arguments to prevent command injection
             var convertedPath = capinfosInfo.ConvertPathIfNeeded(pcapPath);
-            var psi = capinfosInfo.CreateProcessStartInfo($"-Mc \"{convertedPath}\"");
+            var psi = capinfosInfo.CreateProcessStartInfo("-Mc", convertedPath);
 
             using var process = Process.Start(psi);
             if (process is null)
@@ -820,7 +829,7 @@ public sealed class TSharkService : ITSharkService
     {
         if (!TryCreateTSharkProcessStartInfo(
                 pcapPath,
-                BuildCountArguments,
+                BuildCountArgumentsArray,
                 out var startInfo,
                 out _,
                 out var executionMode,
@@ -936,7 +945,7 @@ public sealed class TSharkService : ITSharkService
         {
             if (!TryCreateTSharkProcessStartInfo(
                     pcapPath,
-                    TSharkFieldDefinitions.BuildFirstTimestampArguments,
+                    TSharkFieldDefinitions.BuildFirstTimestampArgumentsArray,
                     out var startInfo,
                     out _,
                     out _,
@@ -972,7 +981,7 @@ public sealed class TSharkService : ITSharkService
             // Read all timestamps and take the last one (expensive but accurate)
             if (!TryCreateTSharkProcessStartInfo(
                     pcapPath,
-                    TSharkFieldDefinitions.BuildAllTimestampsArguments,
+                    TSharkFieldDefinitions.BuildAllTimestampsArgumentsArray,
                     out var startInfo,
                     out _,
                     out _,

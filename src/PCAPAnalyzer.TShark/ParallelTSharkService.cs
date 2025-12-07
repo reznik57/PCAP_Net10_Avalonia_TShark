@@ -250,8 +250,8 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
         var effectiveInputPath = _editcapInfo.ConvertPathIfNeeded(inputPath);
         var effectiveOutputPath = _editcapInfo.ConvertPathIfNeeded(outputPattern);
 
-        var arguments = $"-c {_chunkSize} \"{effectiveInputPath}\" \"{effectiveOutputPath}\"";
-        var startInfo = _editcapInfo.CreateProcessStartInfo(arguments);
+        // SECURITY: Use array-based arguments to prevent command injection
+        var startInfo = _editcapInfo.CreateProcessStartInfo("-c", _chunkSize.ToString(), effectiveInputPath, effectiveOutputPath);
 
         _logger.LogDebug("Splitting PCAP: {Mode} editcap -c {ChunkSize} (input: {Input})",
             _editcapInfo.Mode, _chunkSize, Path.GetFileName(inputPath));
@@ -375,14 +375,15 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
     /// Builds TShark process start info for a chunk file.
     /// Uses centralized TSharkFieldDefinitions for all 60 fields (core + credentials + OS fingerprint).
     /// Supports WSL path conversion for Windows + WSL2 environments
+    /// SECURITY: Uses array-based arguments to prevent command injection.
     /// </summary>
     private ProcessStartInfo BuildTSharkProcessStartInfo(string chunkPath)
     {
         // Convert path for WSL if needed
         var effectiveChunkPath = _tsharkInfo.ConvertPathIfNeeded(chunkPath);
 
-        // Use centralized field definitions (same as TSharkService)
-        var arguments = TSharkFieldDefinitions.BuildStreamingArguments(effectiveChunkPath);
+        // SECURITY: Use array-based field definitions to prevent command injection
+        var arguments = TSharkFieldDefinitions.BuildStreamingArgumentsArray(effectiveChunkPath);
 
         return _tsharkInfo.CreateProcessStartInfo(arguments);
     }
@@ -485,7 +486,8 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
         {
             var convertedPath = capinfosInfo.ConvertPathIfNeeded(pcapPath);
             // ✅ FIX: Use -Mc for machine-readable output (exact count without k/M suffixes)
-            var psi = capinfosInfo.CreateProcessStartInfo($"-Mc \"{convertedPath}\"");
+            // SECURITY: Use array-based arguments to prevent command injection
+            var psi = capinfosInfo.CreateProcessStartInfo("-Mc", convertedPath);
 
             using var process = Process.Start(psi);
             if (process is null)
@@ -578,8 +580,8 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
     private async Task<long> GetPacketCountViaTSharkAsync(string pcapPath, PCAPAnalyzer.Core.Orchestration.ProgressCoordinator? progressCoordinator, Stopwatch sw)
     {
         var effectivePcapPath = _tsharkInfo.ConvertPathIfNeeded(pcapPath);
-        var arguments = $"-r \"{effectivePcapPath}\" -T fields -e frame.number";
-        var startInfo = _tsharkInfo.CreateProcessStartInfo(arguments);
+        // SECURITY: Use array-based arguments to prevent command injection
+        var startInfo = _tsharkInfo.CreateProcessStartInfo("-r", effectivePcapPath, "-T", "fields", "-e", "frame.number");
 
         using var process = Process.Start(startInfo)!;
 
@@ -668,8 +670,8 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
         try
         {
             var effectivePath = _tsharkInfo.ConvertPathIfNeeded(pcapPath);
-            var arguments = $"-r \"{effectivePath}\" -T fields -e frame.time_epoch -c 1";
-            var startInfo = _tsharkInfo.CreateProcessStartInfo(arguments);
+            // SECURITY: Use array-based arguments to prevent command injection
+            var startInfo = _tsharkInfo.CreateProcessStartInfo("-r", effectivePath, "-T", "fields", "-e", "frame.time_epoch", "-c", "1");
 
             using var process = Process.Start(startInfo);
             if (process is null) return null;
@@ -695,8 +697,8 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
         try
         {
             var effectivePath = _tsharkInfo.ConvertPathIfNeeded(pcapPath);
-            var arguments = $"-r \"{effectivePath}\" -T fields -e frame.time_epoch";
-            var startInfo = _tsharkInfo.CreateProcessStartInfo(arguments);
+            // SECURITY: Use array-based arguments to prevent command injection
+            var startInfo = _tsharkInfo.CreateProcessStartInfo("-r", effectivePath, "-T", "fields", "-e", "frame.time_epoch");
 
             using var process = Process.Start(startInfo);
             if (process is null) return null;

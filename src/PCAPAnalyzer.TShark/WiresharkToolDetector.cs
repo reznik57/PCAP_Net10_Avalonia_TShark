@@ -32,9 +32,52 @@ public sealed class WiresharkToolInfo
     public string Description { get; init; } = string.Empty;
 
     /// <summary>
-    /// Creates ProcessStartInfo for the tool with given arguments
+    /// Creates ProcessStartInfo for the tool with given arguments.
+    /// SECURITY: Uses ArgumentList to prevent command injection.
     /// </summary>
-    public ProcessStartInfo CreateProcessStartInfo(string arguments)
+    /// <param name="arguments">Array of individual arguments (NOT a shell command string)</param>
+    public ProcessStartInfo CreateProcessStartInfo(params string[] arguments)
+    {
+        var psi = new ProcessStartInfo
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+            StandardOutputEncoding = System.Text.Encoding.UTF8,
+            StandardErrorEncoding = System.Text.Encoding.UTF8
+        };
+
+        if (Mode == WiresharkExecutionMode.Wsl)
+        {
+            psi.FileName = "wsl.exe";
+            // SECURITY: Use ArgumentList - each argument is properly escaped by .NET
+            psi.ArgumentList.Add(ExecutablePath);
+            foreach (var arg in arguments)
+            {
+                psi.ArgumentList.Add(arg);
+            }
+        }
+        else
+        {
+            psi.FileName = ExecutablePath;
+            // SECURITY: Use ArgumentList - each argument is properly escaped by .NET
+            foreach (var arg in arguments)
+            {
+                psi.ArgumentList.Add(arg);
+            }
+        }
+
+        return psi;
+    }
+
+    /// <summary>
+    /// Creates ProcessStartInfo for the tool with given arguments (legacy string format).
+    /// WARNING: Only use for trusted, hardcoded arguments like "--version".
+    /// For user-controlled paths, use CreateProcessStartInfo(params string[]) instead.
+    /// </summary>
+    [Obsolete("Use CreateProcessStartInfo(params string[]) for user-controlled arguments to prevent command injection")]
+    public ProcessStartInfo CreateProcessStartInfoLegacy(string arguments)
     {
         var psi = new ProcessStartInfo
         {

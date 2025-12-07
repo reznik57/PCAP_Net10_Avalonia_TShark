@@ -102,57 +102,68 @@ public sealed class ProtocolDeepDiveService
             {
                 tempFile = Path.Combine(Path.GetTempPath(), $"deepdive_{frameNumber}_{Guid.NewGuid():N}.pcap");
 
-                // Extract single frame: editcap -r input.pcap output.pcap {frame_number}
-                var editcapArgs = $"-r \"{pcapPath}\" \"{tempFile}\" {frameNumber}";
                 DebugLogger.Log($"[DeepDive] Using editcap for fast extraction");
 
-                using var editcapProcess = new Process
+                // SECURITY: Use ArgumentList to prevent command injection
+                var editcapPsi = new ProcessStartInfo
                 {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = editcapPath,
-                        Arguments = editcapArgs,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    }
+                    FileName = editcapPath,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 };
+                // Extract single frame: editcap -r input.pcap output.pcap {frame_number}
+                editcapPsi.ArgumentList.Add("-r");
+                editcapPsi.ArgumentList.Add(pcapPath);
+                editcapPsi.ArgumentList.Add(tempFile);
+                editcapPsi.ArgumentList.Add(frameNumber.ToString());
 
-                editcapProcess.Start();
-                await editcapProcess.WaitForExitAsync(cancellationToken);
+                using var editcapProcess = Process.Start(editcapPsi);
+                if (editcapProcess is not null)
+                {
+                    await editcapProcess.WaitForExitAsync(cancellationToken);
 
-                if (editcapProcess.ExitCode == 0 && File.Exists(tempFile))
-                {
-                    // Now run tshark -V on the tiny single-packet file (instant!)
-                    pcapPath = tempFile;
-                }
-                else
-                {
-                    DebugLogger.Log("[DeepDive] editcap failed, using full scan fallback");
+                    if (editcapProcess.ExitCode == 0 && File.Exists(tempFile))
+                    {
+                        // Now run tshark -V on the tiny single-packet file (instant!)
+                        pcapPath = tempFile;
+                    }
+                    else
+                    {
+                        DebugLogger.Log("[DeepDive] editcap failed, using full scan fallback");
+                    }
                 }
             }
 
             // Use tshark -V for verbose output (full protocol dissection)
             // If we extracted single frame, this is instant. Otherwise scans entire file.
-            var args = tempFile is not null
-                ? $"-r \"{pcapPath}\" -V"  // Single packet file - no filter needed
-                : $"-r \"{pcapPath}\" -Y \"frame.number=={frameNumber}\" -V";  // Full file - need filter
-
-            using var process = new Process
+            // SECURITY: Use ArgumentList to prevent command injection
+            var psi = new ProcessStartInfo
             {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = _tsharkPath,
-                    Arguments = args,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
+                FileName = _tsharkPath,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
             };
+            psi.ArgumentList.Add("-r");
+            psi.ArgumentList.Add(pcapPath);
+            if (tempFile is null)
+            {
+                // Full file - need display filter (frame number is validated as uint, safe)
+                psi.ArgumentList.Add("-Y");
+                psi.ArgumentList.Add($"frame.number=={frameNumber}");
+            }
+            psi.ArgumentList.Add("-V");
 
-            process.Start();
+            using var process = Process.Start(psi);
+            if (process is null)
+            {
+                result.Error = "Failed to start TShark process";
+                return result;
+            }
+
             var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
             await process.WaitForExitAsync(cancellationToken);
 

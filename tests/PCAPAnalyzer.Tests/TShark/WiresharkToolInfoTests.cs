@@ -109,7 +109,7 @@ public class WiresharkToolInfoTests
 
     #endregion
 
-    #region CreateProcessStartInfo Tests
+    #region CreateProcessStartInfo Tests (Array-based for command injection safety)
 
     [Fact]
     public void CreateProcessStartInfo_NativeWindowsMode_SetsDirectExecutable()
@@ -122,12 +122,13 @@ public class WiresharkToolInfoTests
             ExecutablePath = @"C:\Program Files\Wireshark\tshark.exe"
         };
 
-        // Act
-        var psi = info.CreateProcessStartInfo("-r test.pcap -T fields");
+        // Act - Now uses array-based arguments for security
+        var psi = info.CreateProcessStartInfo("-r", "test.pcap", "-T", "fields");
 
         // Assert
         psi.FileName.Should().Be(@"C:\Program Files\Wireshark\tshark.exe");
-        psi.Arguments.Should().Be("-r test.pcap -T fields");
+        psi.ArgumentList.Should().ContainInOrder("-r", "test.pcap", "-T", "fields");
+        psi.Arguments.Should().BeEmpty(); // Arguments is empty when using ArgumentList
         psi.UseShellExecute.Should().BeFalse();
         psi.RedirectStandardOutput.Should().BeTrue();
         psi.RedirectStandardError.Should().BeTrue();
@@ -145,17 +146,18 @@ public class WiresharkToolInfoTests
             ExecutablePath = "tshark"
         };
 
-        // Act
-        var psi = info.CreateProcessStartInfo("-r /mnt/c/test.pcap -T fields");
+        // Act - Now uses array-based arguments for security
+        var psi = info.CreateProcessStartInfo("-r", "/mnt/c/test.pcap", "-T", "fields");
 
         // Assert
         psi.FileName.Should().Be("wsl.exe");
-        psi.Arguments.Should().Contain("tshark");
-        psi.Arguments.Should().Contain("-r /mnt/c/test.pcap -T fields");
+        psi.ArgumentList.Should().Contain("tshark");
+        psi.ArgumentList.Should().Contain("-r");
+        psi.ArgumentList.Should().Contain("/mnt/c/test.pcap");
     }
 
     [Fact]
-    public void CreateProcessStartInfo_WslMode_QuotesPathWithSpaces()
+    public void CreateProcessStartInfo_WslMode_HandlesPathWithSpaces()
     {
         // Arrange
         var info = new WiresharkToolInfo
@@ -165,12 +167,13 @@ public class WiresharkToolInfoTests
             ExecutablePath = "/usr/local/bin/my tshark"
         };
 
-        // Act
+        // Act - Array-based: .NET handles escaping, no manual quoting needed
         var psi = info.CreateProcessStartInfo("-v");
 
         // Assert
         psi.FileName.Should().Be("wsl.exe");
-        psi.Arguments.Should().Contain("\"/usr/local/bin/my tshark\"");
+        psi.ArgumentList.Should().Contain("/usr/local/bin/my tshark");
+        psi.ArgumentList.Should().Contain("-v");
     }
 
     [Fact]
@@ -184,12 +187,12 @@ public class WiresharkToolInfoTests
             ExecutablePath = "/usr/bin/tshark"
         };
 
-        // Act
-        var psi = info.CreateProcessStartInfo("-r capture.pcap");
+        // Act - Now uses array-based arguments for security
+        var psi = info.CreateProcessStartInfo("-r", "capture.pcap");
 
         // Assert
         psi.FileName.Should().Be("/usr/bin/tshark");
-        psi.Arguments.Should().Be("-r capture.pcap");
+        psi.ArgumentList.Should().ContainInOrder("-r", "capture.pcap");
     }
 
     [Fact]
@@ -211,6 +214,26 @@ public class WiresharkToolInfoTests
         psi.RedirectStandardError.Should().BeTrue();
         psi.StandardOutputEncoding.Should().Be(System.Text.Encoding.UTF8);
         psi.StandardErrorEncoding.Should().Be(System.Text.Encoding.UTF8);
+    }
+
+    [Fact]
+    public void CreateProcessStartInfo_PreventsCommandInjection()
+    {
+        // Arrange
+        var info = new WiresharkToolInfo
+        {
+            IsAvailable = true,
+            Mode = WiresharkExecutionMode.NativeWindows,
+            ExecutablePath = @"C:\Program Files\Wireshark\tshark.exe"
+        };
+
+        // Act - Attempt command injection via malicious path
+        var maliciousPath = "test.pcap\"; rm -rf /; \"";
+        var psi = info.CreateProcessStartInfo("-r", maliciousPath);
+
+        // Assert - The malicious string is treated as a single argument, not parsed as shell
+        psi.ArgumentList.Should().Contain(maliciousPath);
+        psi.ArgumentList.Should().HaveCount(2); // Just "-r" and the path
     }
 
     #endregion
