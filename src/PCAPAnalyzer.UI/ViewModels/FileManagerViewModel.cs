@@ -280,17 +280,28 @@ public partial class FileManagerViewModel : ObservableObject
             case nameof(FileAnalysisViewModel.SelectedFilePath):
                 // Cancel any existing countdown when file changes
                 CancelCountdown();
-                UpdateFileInfo();
+
+                // ⚡ PERFORMANCE: Set path properties FIRST for instant UI feedback
+                // This enables HasFile check without waiting for file metadata
+                var path = _fileAnalysisViewModel.SelectedFilePath;
+                FileName = !string.IsNullOrEmpty(path) ? Path.GetFileName(path) : null;
+                FilePath = path;
+
                 OnPropertyChanged(nameof(HasFile));
                 OnPropertyChanged(nameof(ShowBrowseMessage));
                 OnPropertyChanged(nameof(ShowFileInfo));
-                OnPropertyChanged(nameof(ShouldShowStages)); // ✅ Notify UI that visibility should update
+                OnPropertyChanged(nameof(ShouldShowStages));
                 OnPropertyChanged(nameof(CanAnalyze));
-                // Start countdown for auto-analysis if a new file was selected
+
+                // ⚡ PERFORMANCE: Start countdown IMMEDIATELY for instant visual feedback
+                // File metadata loads in background, doesn't block countdown
                 if (HasFile && !_fileAnalysisViewModel.IsAnalysisComplete)
                 {
                     StartCountdown();
                 }
+
+                // Load file metadata in background (non-blocking)
+                _ = Task.Run(() => UpdateFileInfoAsync(path));
                 break;
 
             case nameof(FileAnalysisViewModel.Stages):
@@ -469,6 +480,54 @@ public partial class FileManagerViewModel : ObservableObject
                 FileCreatedDate = null;
                 FileModifiedDate = null;
             }
+        }
+    }
+
+    /// <summary>
+    /// Async version of UpdateFileInfo - loads file metadata in background.
+    /// Updates UI via dispatcher to avoid blocking countdown start.
+    /// </summary>
+    private void UpdateFileInfoAsync(string? path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            // Dispatch UI updates to main thread
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                FileSizeFormatted = "0 B";
+                FileCreatedDate = null;
+                FileModifiedDate = null;
+            });
+            return;
+        }
+
+        try
+        {
+            if (File.Exists(path))
+            {
+                var fileInfo = new FileInfo(path);
+                var size = fileInfo.Length;
+                var created = fileInfo.CreationTime;
+                var modified = fileInfo.LastWriteTime;
+
+                // Dispatch UI updates to main thread
+                Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    FileSizeFormatted = NumberFormatter.FormatBytes(size);
+                    FileCreatedDate = created;
+                    FileModifiedDate = modified;
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            DebugLogger.Log($"[FileManagerViewModel] Error reading file info: {ex.Message}");
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                FileSizeFormatted = "Unknown";
+                FileCreatedDate = null;
+                FileModifiedDate = null;
+            });
         }
     }
 

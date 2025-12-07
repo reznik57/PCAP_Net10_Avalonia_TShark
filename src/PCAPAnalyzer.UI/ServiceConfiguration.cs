@@ -174,25 +174,28 @@ namespace PCAPAnalyzer.UI
                     return StatisticsCacheConfiguration.Default;
             });
 
-            // GeoIP Service (Singleton - expensive to initialize)
-            // ⚡ OPTIMIZATION: Eager initialization to avoid delay on first lookup
-            // Initializes synchronously during DI setup (app startup) instead of on first analysis
-            // Timeout: 10s (accounts for multi-path MMDB file search on slow drives/network shares)
+            // GeoIP Service (Singleton - lazy initialization)
+            // ⚡ OPTIMIZATION: Fire-and-forget initialization - doesn't block app startup
+            // Service will be ready by the time analysis starts (typically 3s+ after app launch)
+            // If not ready, GetLocationAsync() waits up to 5s internally
             services.AddSingleton<IGeoIPService>(provider =>
             {
-                var sw = System.Diagnostics.Stopwatch.StartNew();
                 var service = new UnifiedGeoIPService();
 
-                // Synchronous initialization - blocks DI setup but ensures ready before analysis
-                var initTask = service.InitializeAsync();
-                if (initTask.Wait(TimeSpan.FromSeconds(10)))
+                // Fire-and-forget: Start initialization in background, don't block DI setup
+                _ = Task.Run(async () =>
                 {
-                    DebugLogger.Log($"[ServiceConfiguration] ✅ GeoIP initialized in {sw.Elapsed.TotalSeconds:F2}s");
-                }
-                else
-                {
-                    DebugLogger.Log("[ServiceConfiguration] ⚠️  GeoIP initialization timeout (10s) - service will retry on first use");
-                }
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+                    try
+                    {
+                        await service.InitializeAsync().ConfigureAwait(false);
+                        DebugLogger.Log($"[ServiceConfiguration] ✅ GeoIP initialized in {sw.Elapsed.TotalSeconds:F2}s (background)");
+                    }
+                    catch (Exception ex)
+                    {
+                        DebugLogger.Log($"[ServiceConfiguration] ⚠️ GeoIP initialization failed: {ex.Message}");
+                    }
+                });
 
                 return service;
             });
