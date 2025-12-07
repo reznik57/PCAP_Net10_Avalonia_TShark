@@ -712,10 +712,14 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
             DebugLogger.Log($"[MainWindowViewModel] Applied global filters to PacketManager (IsEmpty={filter.IsEmpty})");
         }
+        catch (Exception ex)
+        {
+            DebugLogger.Log($"[MainWindowViewModel] Error in OnGlobalFilterStateChanged: {ex.Message}");
+        }
         finally
         {
             // Give UI a moment to show 100% before hiding
-            await Task.Delay(100);
+            try { await Task.Delay(100); } catch { /* ignore */ }
             _globalFilterState.IsFilteringInProgress = false;
         }
     }

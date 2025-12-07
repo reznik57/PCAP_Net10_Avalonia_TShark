@@ -51,45 +51,59 @@ namespace PCAPAnalyzer.Core.Monitoring
 
         private async void OnMemoryPressureCritical(object? sender, EventArgs e)
         {
-            if (!AutoOptimizationEnabled)
-                return;
+            try
+            {
+                if (!AutoOptimizationEnabled)
+                    return;
 
-            await TriggerOptimizationAsync("Critical memory pressure detected");
+                await TriggerOptimizationAsync("Critical memory pressure detected").ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                DebugLogger.Log($"[OPTIMIZER] Error in OnMemoryPressureCritical: {ex.Message}");
+            }
         }
 
         private async void CheckAndOptimize(object? state)
         {
-            if (!AutoOptimizationEnabled || _isOptimizing || _isDisposed)
-                return;
-
-            // Check if we should optimize
-            var shouldOptimize = false;
-            var reasons = new List<string>();
-
-            // Check memory pressure
-            if (MemoryPressureDetector.Instance.ShouldOptimize)
+            try
             {
-                shouldOptimize = true;
-                reasons.Add($"Memory pressure: {MemoryPressureDetector.Instance.CurrentLevel}");
+                if (!AutoOptimizationEnabled || _isOptimizing || _isDisposed)
+                    return;
+
+                // Check if we should optimize
+                var shouldOptimize = false;
+                var reasons = new List<string>();
+
+                // Check memory pressure
+                if (MemoryPressureDetector.Instance.ShouldOptimize)
+                {
+                    shouldOptimize = true;
+                    reasons.Add($"Memory pressure: {MemoryPressureDetector.Instance.CurrentLevel}");
+                }
+
+                // Check performance metrics
+                var perfSummary = PerformanceMonitor.Instance.GetSummary();
+                if (perfSummary.IsUnderPressure)
+                {
+                    shouldOptimize = true;
+                    reasons.Add($"Performance pressure: CPU {perfSummary.CpuUsage:F1}%");
+                }
+
+                // Check time since last optimization
+                if (shouldOptimize && DateTime.UtcNow - _lastOptimization < MinimumOptimizationInterval)
+                {
+                    shouldOptimize = false; // Too soon
+                }
+
+                if (shouldOptimize)
+                {
+                    await TriggerOptimizationAsync(string.Join(", ", reasons)).ConfigureAwait(false);
+                }
             }
-
-            // Check performance metrics
-            var perfSummary = PerformanceMonitor.Instance.GetSummary();
-            if (perfSummary.IsUnderPressure)
+            catch (Exception ex)
             {
-                shouldOptimize = true;
-                reasons.Add($"Performance pressure: CPU {perfSummary.CpuUsage:F1}%");
-            }
-
-            // Check time since last optimization
-            if (shouldOptimize && DateTime.UtcNow - _lastOptimization < MinimumOptimizationInterval)
-            {
-                shouldOptimize = false; // Too soon
-            }
-
-            if (shouldOptimize)
-            {
-                await TriggerOptimizationAsync(string.Join(", ", reasons));
+                DebugLogger.Log($"[OPTIMIZER] Error in CheckAndOptimize: {ex.Message}");
             }
         }
 
