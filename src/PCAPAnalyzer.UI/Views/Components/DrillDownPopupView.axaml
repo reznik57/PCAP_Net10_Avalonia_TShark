@@ -58,8 +58,8 @@
                 <TextBlock Text="TOP PORTS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
                 <ItemsControl ItemsSource="{Binding TopPorts}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Command="{Binding DataContext.FilterByPortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        <DataTemplate x:DataType="vm:PortBreakdownItem">
+                            <Button Command="{ReflectionBinding DataContext.FilterByPortCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding Port}"
                                     Classes="row-btn" ToolTip.Tip="Click to view packets for this port">
                                 <Grid ColumnDefinitions="80,*,50,70,70">
@@ -87,8 +87,8 @@
                 <TextBlock Text="TOP TALKERS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
                 <ItemsControl ItemsSource="{Binding ConnectedEndpoints}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Command="{Binding DataContext.FilterByIPCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        <DataTemplate x:DataType="vm:EndpointBreakdownItem">
+                            <Button Command="{ReflectionBinding DataContext.FilterByIPCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding IP}"
                                     Classes="row-btn" ToolTip.Tip="Click to view packets for this IP">
                                 <Grid ColumnDefinitions="120,*,50,70,70">
@@ -112,8 +112,8 @@
                 <TextBlock Text="TOP STREAMS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextSecondaryBrush}"/>
                 <ItemsControl ItemsSource="{Binding TopConversations}">
                     <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Command="{Binding DataContext.FilterByConversationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        <DataTemplate x:DataType="vm:ConversationBreakdownItem">
+                            <Button Command="{ReflectionBinding DataContext.FilterByConversationCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                     CommandParameter="{Binding}"
                                     Classes="row-btn" ToolTip.Tip="Click to view packets for this stream">
                                 <Grid ColumnDefinitions="180,*,50,50,60">

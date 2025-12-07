@@ -25,14 +25,14 @@ public partial class DashboardChartsViewModel : ObservableObject
     private readonly IProtocolColorService _protocolColorService;
     // ==================== CHART SERIES ====================
 
-    [ObservableProperty] private ObservableCollection<ISeries> _throughputSeries = new();
-    [ObservableProperty] private ObservableCollection<ISeries> _timelineSeries = new();
-    [ObservableProperty] private ObservableCollection<ISeries> _protocolSeries = new();
-    [ObservableProperty] private ObservableCollection<ISeries> _portSeries = new();
-    [ObservableProperty] private ObservableCollection<ISeries> _protocolPortSeries = new();
-    [ObservableProperty] private ObservableCollection<ISeries> _portByBytesSeries = new();
-    [ObservableProperty] private ObservableCollection<ISeries> _portByPacketsSeries = new();
-    [ObservableProperty] private ObservableCollection<ISeries> _packetSizeSeries = new();
+    [ObservableProperty] private ObservableCollection<ISeries> _throughputSeries = [];
+    [ObservableProperty] private ObservableCollection<ISeries> _timelineSeries = [];
+    [ObservableProperty] private ObservableCollection<ISeries> _protocolSeries = [];
+    [ObservableProperty] private ObservableCollection<ISeries> _portSeries = [];
+    [ObservableProperty] private ObservableCollection<ISeries> _protocolPortSeries = [];
+    [ObservableProperty] private ObservableCollection<ISeries> _portByBytesSeries = [];
+    [ObservableProperty] private ObservableCollection<ISeries> _portByPacketsSeries = [];
+    [ObservableProperty] private ObservableCollection<ISeries> _packetSizeSeries = [];
 
     // ==================== CHART AXES ====================
 
@@ -49,8 +49,8 @@ public partial class DashboardChartsViewModel : ObservableObject
 
     // ==================== CHART LEGEND & STYLING ====================
 
-    [ObservableProperty] private ObservableCollection<ProtocolLegendItem> _protocolLegendItems = new();
-    [ObservableProperty] private ObservableCollection<ProtocolPortItem> _protocolPortItems = new();
+    [ObservableProperty] private ObservableCollection<ProtocolLegendItem> _protocolLegendItems = [];
+    [ObservableProperty] private ObservableCollection<ProtocolPortItem> _protocolPortItems = [];
 
     public SolidColorPaint TooltipBackground { get; } = ThemeColorHelper.GetSolidColorPaint("BackgroundLevel1", "#161B22", 1);
     public SolidColorPaint TooltipTextPaint { get; } = ThemeColorHelper.GetSolidColorPaint("TextPrimary", "#F0F6FC");

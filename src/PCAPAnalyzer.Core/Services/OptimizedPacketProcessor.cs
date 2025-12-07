@@ -216,7 +216,7 @@ public class OptimizedPacketProcessor : IDisposable
 
 public class PacketBatchEventArgs : EventArgs
 {
-    public List<PacketInfo> Packets { get; init; } = new();
+    public List<PacketInfo> Packets { get; init; } = [];
     public BatchStatistics Statistics { get; init; } = new();
     public long TotalProcessed { get; init; }
 }
@@ -234,7 +234,7 @@ public class BatchStatistics
     public long TotalBytes { get; init; }
     public int UniqueSourceIPs { get; init; }
     public int UniqueDestinationIPs { get; init; }
-    public Dictionary<string, int> ProtocolDistribution { get; init; } = new();
+    public Dictionary<string, int> ProtocolDistribution { get; init; } = [];
     public TimeRange? TimeRange { get; init; }
 }
 

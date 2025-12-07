@@ -15,9 +15,9 @@ public class AnomalyFrameIndexService : IAnomalyFrameIndexService
     private readonly ILogger<AnomalyFrameIndexService> _logger;
     private readonly Lock _lock = new();
 
-    private List<NetworkAnomaly> _allAnomalies = new();
-    private Dictionary<long, List<NetworkAnomaly>> _frameToAnomalies = new();
-    private List<string> _detectorNames = new();
+    private List<NetworkAnomaly> _allAnomalies = [];
+    private Dictionary<long, List<NetworkAnomaly>> _frameToAnomalies = [];
+    private List<string> _detectorNames = [];
 
     public AnomalyFrameIndexService(ILogger<AnomalyFrameIndexService> logger)
     {

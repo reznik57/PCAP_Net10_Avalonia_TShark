@@ -176,7 +176,7 @@ namespace PCAPAnalyzer.Core.Services
     public class PacketChunk
     {
         public int ChunkNumber { get; set; }
-        public List<PacketInfo> Packets { get; set; } = new();
+        public List<PacketInfo> Packets { get; set; } = [];
         public int TotalPacketsProcessed { get; set; }
         public DateTime ProcessedAt { get; set; }
         public ChunkStatistics ChunkStatistics { get; set; } = new();
@@ -188,8 +188,8 @@ namespace PCAPAnalyzer.Core.Services
         public long TotalBytes { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public Dictionary<Protocol, int> ProtocolCounts { get; set; } = new();
-        public Dictionary<string, int> TopSourceIPs { get; set; } = new();
+        public Dictionary<Protocol, int> ProtocolCounts { get; set; } = [];
+        public Dictionary<string, int> TopSourceIPs { get; set; } = [];
         
         public double Duration => (EndTime - StartTime).TotalSeconds;
         public double PacketsPerSecond => Duration > 0 ? PacketCount / Duration : 0;

@@ -149,5 +149,5 @@ public class ProtocolLegendItem
 public class ProtocolCategoryGroup
 {
     public string Category { get; set; } = string.Empty;
-    public List<string> Protocols { get; set; } = new();
+    public List<string> Protocols { get; set; } = [];
 }

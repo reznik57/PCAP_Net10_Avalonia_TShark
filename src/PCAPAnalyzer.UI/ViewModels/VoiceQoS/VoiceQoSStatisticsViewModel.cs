@@ -20,23 +20,23 @@ public partial class VoiceQoSStatisticsViewModel : ObservableObject
         ?? throw new InvalidOperationException("IDispatcherService not registered");
     private IDispatcherService? _dispatcher;
 
-    private readonly object _collectionLock = new();
+    private readonly Lock _collectionLock = new();
 
     // Top sources/destinations (Top 30 each)
-    [ObservableProperty] private ObservableCollection<TopEndpointItem> _topQoSSources = new();
-    [ObservableProperty] private ObservableCollection<TopEndpointItem> _topQoSDestinations = new();
-    [ObservableProperty] private ObservableCollection<TopEndpointItem> _topLatencySources = new();
-    [ObservableProperty] private ObservableCollection<TopEndpointItem> _topLatencyDestinations = new();
-    [ObservableProperty] private ObservableCollection<TopEndpointItem> _topJitterSources = new();
-    [ObservableProperty] private ObservableCollection<TopEndpointItem> _topJitterDestinations = new();
+    [ObservableProperty] private ObservableCollection<TopEndpointItem> _topQoSSources = [];
+    [ObservableProperty] private ObservableCollection<TopEndpointItem> _topQoSDestinations = [];
+    [ObservableProperty] private ObservableCollection<TopEndpointItem> _topLatencySources = [];
+    [ObservableProperty] private ObservableCollection<TopEndpointItem> _topLatencyDestinations = [];
+    [ObservableProperty] private ObservableCollection<TopEndpointItem> _topJitterSources = [];
+    [ObservableProperty] private ObservableCollection<TopEndpointItem> _topJitterDestinations = [];
 
     // Extended collections for Dashboard-style tables (with Rank and Percentage)
-    [ObservableProperty] private ObservableCollection<TopEndpointItemExtended> _topQoSSourcesExtended = new();
-    [ObservableProperty] private ObservableCollection<TopEndpointItemExtended> _topQoSDestinationsExtended = new();
-    [ObservableProperty] private ObservableCollection<TopEndpointItemExtended> _topLatencySourcesExtended = new();
-    [ObservableProperty] private ObservableCollection<TopEndpointItemExtended> _topLatencyDestinationsExtended = new();
-    [ObservableProperty] private ObservableCollection<TopEndpointItemExtended> _topJitterSourcesExtended = new();
-    [ObservableProperty] private ObservableCollection<TopEndpointItemExtended> _topJitterDestinationsExtended = new();
+    [ObservableProperty] private ObservableCollection<TopEndpointItemExtended> _topQoSSourcesExtended = [];
+    [ObservableProperty] private ObservableCollection<TopEndpointItemExtended> _topQoSDestinationsExtended = [];
+    [ObservableProperty] private ObservableCollection<TopEndpointItemExtended> _topLatencySourcesExtended = [];
+    [ObservableProperty] private ObservableCollection<TopEndpointItemExtended> _topLatencyDestinationsExtended = [];
+    [ObservableProperty] private ObservableCollection<TopEndpointItemExtended> _topJitterSourcesExtended = [];
+    [ObservableProperty] private ObservableCollection<TopEndpointItemExtended> _topJitterDestinationsExtended = [];
 
     /// <summary>
     /// Updates top endpoints from the provided filtered collections.

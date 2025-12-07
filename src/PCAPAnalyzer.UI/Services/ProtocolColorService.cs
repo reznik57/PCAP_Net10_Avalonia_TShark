@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Collections.Generic;
 
 namespace PCAPAnalyzer.UI.Services;
@@ -8,8 +9,8 @@ namespace PCAPAnalyzer.UI.Services;
 /// </summary>
 public class ProtocolColorService : IProtocolColorService
 {
-    // GitHub-inspired color palette for better visual distinction
-    private readonly Dictionary<string, ProtocolColorInfo> _protocolColors = new()
+    // GitHub-inspired color palette for better visual distinction - Frozen for O(1) immutable lookup
+    private static readonly FrozenDictionary<string, ProtocolColorInfo> ProtocolColors = new Dictionary<string, ProtocolColorInfo>(StringComparer.OrdinalIgnoreCase)
     {
         // Layer 3 Protocols
         { "IP", new ProtocolColorInfo("#58A6FF", "#1F6FEB", "Internet Protocol") },
@@ -111,7 +112,7 @@ public class ProtocolColorService : IProtocolColorService
         // Other/Unknown
         { "OTHER", new ProtocolColorInfo("#6B7280", "#4B5563", "Other Protocol") },
         { "UNKNOWN", new ProtocolColorInfo("#4B5563", "#374151", "Unknown Protocol") }
-    };
+    }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Get color information for a specific protocol.
@@ -119,23 +120,23 @@ public class ProtocolColorService : IProtocolColorService
     public ProtocolColorInfo GetProtocolColor(string protocol)
     {
         if (string.IsNullOrWhiteSpace(protocol))
-            return _protocolColors["UNKNOWN"];
+            return ProtocolColors["UNKNOWN"];
 
         var protocolUpper = protocol.ToUpperInvariant();
 
         // Direct match
-        if (_protocolColors.TryGetValue(protocolUpper, out var color))
+        if (ProtocolColors.TryGetValue(protocolUpper, out var color))
             return color;
 
         // Partial match for compound protocols (e.g., "TCP/HTTP")
-        foreach (var kvp in _protocolColors)
+        foreach (var kvp in ProtocolColors)
         {
             if (protocolUpper.Contains(kvp.Key, StringComparison.Ordinal))
                 return kvp.Value;
         }
 
         // Default to "OTHER"
-        return _protocolColors["OTHER"];
+        return ProtocolColors["OTHER"];
     }
 
     /// <summary>
@@ -151,7 +152,7 @@ public class ProtocolColorService : IProtocolColorService
     /// </summary>
     public Dictionary<string, ProtocolColorInfo> GetAllProtocolColors()
     {
-        return new Dictionary<string, ProtocolColorInfo>(_protocolColors);
+        return new Dictionary<string, ProtocolColorInfo>(ProtocolColors);
     }
 
     /// <summary>
@@ -161,17 +162,17 @@ public class ProtocolColorService : IProtocolColorService
     {
         return new Dictionary<string, ProtocolColorInfo>
         {
-            { "TCP", _protocolColors["TCP"] },
-            { "UDP", _protocolColors["UDP"] },
-            { "ICMP", _protocolColors["ICMP"] },
-            { "HTTP", _protocolColors["HTTP"] },
-            { "HTTPS", _protocolColors["HTTPS"] },
-            { "DNS", _protocolColors["DNS"] },
-            { "TLS", _protocolColors["TLS"] },
-            { "SSH", _protocolColors["SSH"] },
-            { "FTP", _protocolColors["FTP"] },
-            { "SMTP", _protocolColors["SMTP"] },
-            { "OTHER", _protocolColors["OTHER"] }
+            { "TCP", ProtocolColors["TCP"] },
+            { "UDP", ProtocolColors["UDP"] },
+            { "ICMP", ProtocolColors["ICMP"] },
+            { "HTTP", ProtocolColors["HTTP"] },
+            { "HTTPS", ProtocolColors["HTTPS"] },
+            { "DNS", ProtocolColors["DNS"] },
+            { "TLS", ProtocolColors["TLS"] },
+            { "SSH", ProtocolColors["SSH"] },
+            { "FTP", ProtocolColors["FTP"] },
+            { "SMTP", ProtocolColors["SMTP"] },
+            { "OTHER", ProtocolColors["OTHER"] }
         };
     }
 

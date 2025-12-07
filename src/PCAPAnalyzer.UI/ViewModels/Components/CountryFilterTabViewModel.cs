@@ -7,9 +7,9 @@ public partial class CountryFilterTabViewModel : ObservableObject
 {
     [ObservableProperty] private string _countrySearchInput = "";
 
-    public ObservableCollection<FilterChipViewModel> DirectionChips { get; } = new();
-    public ObservableCollection<FilterChipViewModel> RegionChips { get; } = new();
-    public ObservableCollection<FilterChipViewModel> CountryChips { get; } = new();
+    public ObservableCollection<FilterChipViewModel> DirectionChips { get; } = [];
+    public ObservableCollection<FilterChipViewModel> RegionChips { get; } = [];
+    public ObservableCollection<FilterChipViewModel> CountryChips { get; } = [];
 
     public CountryFilterTabViewModel()
     {

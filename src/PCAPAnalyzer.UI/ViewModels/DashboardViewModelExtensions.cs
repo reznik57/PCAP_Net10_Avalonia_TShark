@@ -62,10 +62,10 @@ namespace PCAPAnalyzer.UI.ViewModels
         }
         
         // New Properties for Modern Dashboard
-        [ObservableProperty] private ObservableCollection<ConnectionInfo> _topConnectionsByBytes = new();
-        [ObservableProperty] private ObservableCollection<ConnectionInfo> _topConnectionsByPackets = new();
-        [ObservableProperty] private ObservableCollection<ConnectionInfo> _topConnectionsByBytesDisplay = new();
-        [ObservableProperty] private ObservableCollection<ConnectionInfo> _topConnectionsByPacketsDisplay = new();
+        [ObservableProperty] private ObservableCollection<ConnectionInfo> _topConnectionsByBytes = [];
+        [ObservableProperty] private ObservableCollection<ConnectionInfo> _topConnectionsByPackets = [];
+        [ObservableProperty] private ObservableCollection<ConnectionInfo> _topConnectionsByBytesDisplay = [];
+        [ObservableProperty] private ObservableCollection<ConnectionInfo> _topConnectionsByPacketsDisplay = [];
         // Port Activity Timeline controls (Top 5/10)
         [ObservableProperty] private bool _showTop10PortsTimeline = false;
         [ObservableProperty] private int _portTimelineDisplayCount = 5;
@@ -169,7 +169,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         }
         
         // Port Activity Timeline Properties (Packets/Second or Throughput/Second)
-        [ObservableProperty] private ObservableCollection<ISeries> _portActivitySeries = new();
+        [ObservableProperty] private ObservableCollection<ISeries> _portActivitySeries = [];
         [ObservableProperty] private Axis[] _portActivityXAxes = new[] { new Axis() };
         [ObservableProperty] private Axis[] _portActivityYAxes = new[] { new Axis() };
         

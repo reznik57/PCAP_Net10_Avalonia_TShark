@@ -25,7 +25,7 @@ namespace PCAPAnalyzer.Core.Orchestration
         private int _lastReportedPercent = -1;
         private int _highWaterMarkPercent = -1; // Track highest % ever reported (never go backwards)
         private DateTime _lastReportTime = DateTime.MinValue;
-        private readonly object _progressLock = new();
+        private readonly Lock _progressLock = new();
         private const int MIN_REPORT_INTERVAL_MS = 150; // Don't report more than every 150ms
         private bool _isComplete; // Prevent updates after completion
 
@@ -106,8 +106,8 @@ namespace PCAPAnalyzer.Core.Orchestration
         }
 
         // Phase timing tracking with individual stopwatches
-        private readonly Dictionary<string, Stopwatch> _phaseStopwatches = new();
-        private readonly Dictionary<string, TimeSpan> _phaseDurations = new();
+        private readonly Dictionary<string, Stopwatch> _phaseStopwatches = [];
+        private readonly Dictionary<string, TimeSpan> _phaseDurations = [];
         private string _currentPhase = "";
 
         // Time-based estimation (seconds per phase, scaled by file size)

@@ -37,8 +37,8 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
     // Collections
     private readonly BatchObservableCollection<PacketInfo> _packets;
     private readonly CircularBuffer<PacketInfo> _recentPacketsBuffer;
-    private List<PacketInfo> _allPackets = new();
-    private List<PacketInfo> _filteredPackets = new();
+    private List<PacketInfo> _allPackets = [];
+    private List<PacketInfo> _filteredPackets = [];
     private List<PacketInfo>? _dashboardPacketCache;
 
     // ✅ CACHE FIX: Cache metadata for validation using file hash + session ID
@@ -47,7 +47,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
     private Guid _currentAnalysisSessionId = Guid.Empty;
 
     // Thread safety
-    private readonly object _packetsLock = new();
+    private readonly Lock _packetsLock = new();
 
     // Filter state
     private PacketFilter _currentFilter = new();
@@ -55,7 +55,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
 
     // Stream filter state
     private string? _activeStreamFilter;
-    private List<PacketInfo> _preStreamFilterPackets = new(); // Stores packets before stream filter applied
+    private List<PacketInfo> _preStreamFilterPackets = []; // Stores packets before stream filter applied
     [ObservableProperty] private bool _hasStreamFilter;
 
     // Properties
@@ -80,7 +80,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
     [ObservableProperty] private DateTime? _firstPacketTimestamp;
 
     // Bookmarked packet frame numbers
-    private readonly HashSet<uint> _bookmarkedFrames = new();
+    private readonly HashSet<uint> _bookmarkedFrames = [];
     public IReadOnlyCollection<uint> BookmarkedFrames => _bookmarkedFrames;
 
     // Packet Details ViewModel
@@ -652,7 +652,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
         // Save current filtered packets if no stream filter active yet
         if (!HasStreamFilter)
         {
-            _preStreamFilterPackets = new List<PacketInfo>(_filteredPackets);
+            _preStreamFilterPackets = [.._filteredPackets];
         }
 
         _activeStreamFilter = searchPattern;
@@ -689,7 +689,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
         HasStreamFilter = false;
 
         // Restore pre-stream-filter packets
-        _filteredPackets = new List<PacketInfo>(_preStreamFilterPackets);
+        _filteredPackets = [.._preStreamFilterPackets];
         _preStreamFilterPackets.Clear();
 
         TotalFilteredPackets = _filteredPackets.Count;

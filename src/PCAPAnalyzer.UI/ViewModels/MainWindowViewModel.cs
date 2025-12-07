@@ -55,7 +55,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     [ObservableProperty] private ReportViewModel _reportViewModel;
     [ObservableProperty] private CompareViewModel? _compareViewModel;
     [ObservableProperty] private GeographicMapViewModel _geographicMapViewModel;
-    [ObservableProperty] private FlowSummaryViewModel _flowSummaryViewModel = new();
+    [ObservableProperty] private FlowSummaryViewModel _flowSummaryViewModel = new FlowSummaryViewModel();
     [ObservableProperty] private TopTalkersViewModel? _topTalkersViewModel;
     [ObservableProperty] private AnomalyViewModel? _anomalyViewModel;
     [ObservableProperty] private AnomaliesViewModel? _anomaliesViewModel;
@@ -63,7 +63,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
     // ==================== STATS BAR VIEWMODELS ====================
 
-    public StatsBarControlViewModel PacketAnalysisStats { get; } = new();
+    public StatsBarControlViewModel PacketAnalysisStats { get; } = new StatsBarControlViewModel();
 
     // ==================== SERVICES ====================
 

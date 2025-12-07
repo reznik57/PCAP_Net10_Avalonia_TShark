@@ -21,7 +21,7 @@ namespace PCAPAnalyzer.PerformanceTests;
 public class PacketProcessingBenchmarks
 {
     private PacketStreamProcessor? _processor;
-    private List<LivePacketData> _testPackets = new();
+    private List<LivePacketData> _testPackets = [];
 
     [Params(1000, 10000, 50000)]
     public int PacketCount { get; set; }

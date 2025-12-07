@@ -22,8 +22,8 @@ public partial class ThreatsFilterTabViewModel : ObservableObject
     public ObservableCollection<string> ThreatTypes { get; } = new() { "All" };
 
     // ==================== SEVERITY & CATEGORY CHIPS ====================
-    public ObservableCollection<FilterChipViewModel> SeverityChips { get; } = new();
-    public ObservableCollection<FilterChipViewModel> ThreatCategoryChips { get; } = new();
+    public ObservableCollection<FilterChipViewModel> SeverityChips { get; } = [];
+    public ObservableCollection<FilterChipViewModel> ThreatCategoryChips { get; } = [];
 
     // ==================== QUICK FILTER TOGGLES (OR logic) ====================
     [ObservableProperty] private bool _showCriticalOnly;

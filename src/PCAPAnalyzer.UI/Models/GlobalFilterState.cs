@@ -30,10 +30,10 @@ public partial class GlobalFilterState : ObservableObject
     public FilterCriteria ExcludeFilters { get; } = new();
 
     /// <summary>AND-grouped include filters (each group = all criteria AND'd together)</summary>
-    public ObservableCollection<FilterGroup> IncludeGroups { get; } = new();
+    public ObservableCollection<FilterGroup> IncludeGroups { get; } = [];
 
     /// <summary>AND-grouped exclude filters (each group = all criteria AND'd together, then NOT)</summary>
-    public ObservableCollection<FilterGroup> ExcludeGroups { get; } = new();
+    public ObservableCollection<FilterGroup> ExcludeGroups { get; } = [];
 
     public bool HasActiveFilters => IncludeFilters.HasAny || ExcludeFilters.HasAny ||
                                      IncludeGroups.Count > 0 || ExcludeGroups.Count > 0;
@@ -297,13 +297,13 @@ public partial class GlobalFilterState : ObservableObject
 
     // Anomaly filters (global scope - affects all tabs)
     [ObservableProperty]
-    private List<AnomalySeverity> _anomalySeverityFilter = new();
+    private List<AnomalySeverity> _anomalySeverityFilter = [];
 
     [ObservableProperty]
-    private List<AnomalyCategory> _anomalyCategoryFilter = new();
+    private List<AnomalyCategory> _anomalyCategoryFilter = [];
 
     [ObservableProperty]
-    private List<string> _anomalyDetectorFilter = new();
+    private List<string> _anomalyDetectorFilter = [];
 
     /// <summary>
     /// Check if any anomaly filters are active.
@@ -330,19 +330,19 @@ public enum FilterCategory { Protocol, IP, Port, QuickFilter, Severity, ThreatCa
 
 public class FilterCriteria
 {
-    public ObservableCollection<string> Protocols { get; } = new();
-    public ObservableCollection<string> IPs { get; } = new();
-    public ObservableCollection<string> Ports { get; } = new();
-    public ObservableCollection<string> QuickFilters { get; } = new();
-    public ObservableCollection<string> Severities { get; } = new();
-    public ObservableCollection<string> ThreatCategories { get; } = new();
-    public ObservableCollection<string> TlsVersions { get; } = new();
-    public ObservableCollection<string> Countries { get; } = new();
-    public ObservableCollection<string> Codecs { get; } = new();
-    public ObservableCollection<string> QualityLevels { get; } = new();
-    public ObservableCollection<string> VoipIssues { get; } = new();
-    public ObservableCollection<string> Directions { get; } = new();
-    public ObservableCollection<string> Regions { get; } = new();
+    public ObservableCollection<string> Protocols { get; } = [];
+    public ObservableCollection<string> IPs { get; } = [];
+    public ObservableCollection<string> Ports { get; } = [];
+    public ObservableCollection<string> QuickFilters { get; } = [];
+    public ObservableCollection<string> Severities { get; } = [];
+    public ObservableCollection<string> ThreatCategories { get; } = [];
+    public ObservableCollection<string> TlsVersions { get; } = [];
+    public ObservableCollection<string> Countries { get; } = [];
+    public ObservableCollection<string> Codecs { get; } = [];
+    public ObservableCollection<string> QualityLevels { get; } = [];
+    public ObservableCollection<string> VoipIssues { get; } = [];
+    public ObservableCollection<string> Directions { get; } = [];
+    public ObservableCollection<string> Regions { get; } = [];
 
     public string JitterThreshold { get; set; } = "";
     public string LatencyThreshold { get; set; } = "";

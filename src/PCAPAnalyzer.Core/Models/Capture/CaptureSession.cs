@@ -45,7 +45,7 @@ public class CaptureSession
     /// <summary>
     /// List of capture files created during this session
     /// </summary>
-    public List<string> CaptureFiles { get; set; } = new();
+    public List<string> CaptureFiles { get; set; } = [];
 
     /// <summary>
     /// Error message if capture failed

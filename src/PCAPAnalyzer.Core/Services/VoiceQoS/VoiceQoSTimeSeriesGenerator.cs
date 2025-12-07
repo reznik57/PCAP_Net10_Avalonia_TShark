@@ -17,9 +17,9 @@ namespace PCAPAnalyzer.Core.Services.VoiceQoS
         private class TimeBucket
         {
             public DateTime Timestamp;
-            public List<PacketInfo> QoSPackets = new();
-            public List<PacketInfo> LatencyPackets = new();
-            public List<PacketInfo> JitterPackets = new();
+            public List<PacketInfo> QoSPackets = [];
+            public List<PacketInfo> LatencyPackets = [];
+            public List<PacketInfo> JitterPackets = [];
         }
 
         // Zero-allocation flow key (struct instead of string)

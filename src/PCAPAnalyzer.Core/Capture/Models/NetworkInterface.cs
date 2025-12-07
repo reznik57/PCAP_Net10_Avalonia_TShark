@@ -46,7 +46,7 @@ namespace PCAPAnalyzer.Core.Capture.Models
         /// <summary>
         /// Gets or sets the list of IP addresses assigned to this interface
         /// </summary>
-        public List<string> IpAddresses { get; init; } = new();
+        public List<string> IpAddresses { get; init; } = [];
 
         /// <summary>
         /// Gets or sets the MAC address of the interface
@@ -71,7 +71,7 @@ namespace PCAPAnalyzer.Core.Capture.Models
         /// <summary>
         /// Gets or sets additional metadata about the interface
         /// </summary>
-        public Dictionary<string, object> Metadata { get; init; } = new();
+        public Dictionary<string, object> Metadata { get; init; } = [];
 
         public override string ToString()
         {

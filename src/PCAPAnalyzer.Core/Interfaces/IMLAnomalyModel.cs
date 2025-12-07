@@ -92,5 +92,5 @@ public class ModelMetrics
     public DateTime LastTrainedAt { get; set; }
     public int TrainingSamples { get; set; }
     public TimeSpan TrainingDuration { get; set; }
-    public Dictionary<string, double> AdditionalMetrics { get; set; } = new();
+    public Dictionary<string, double> AdditionalMetrics { get; set; } = [];
 }

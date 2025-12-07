@@ -75,33 +75,33 @@ public partial class DashboardStatisticsViewModel : ObservableObject
 
     // ==================== TABLE DATA - ENDPOINTS ====================
 
-    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topSources = new();
-    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topDestinations = new();
-    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topSourcesByBytes = new();
-    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topDestinationsByBytes = new();
+    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topSources = [];
+    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topDestinations = [];
+    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topSourcesByBytes = [];
+    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topDestinationsByBytes = [];
 
-    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topSourcesDisplay = new();
-    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topDestinationsDisplay = new();
-    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topSourcesByBytesDisplay = new();
-    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topDestinationsByBytesDisplay = new();
+    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topSourcesDisplay = [];
+    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topDestinationsDisplay = [];
+    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topSourcesByBytesDisplay = [];
+    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topDestinationsByBytesDisplay = [];
 
     // Total IPs (combined source + destination traffic)
-    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topTotalIPsByPacketsExtended = new();
-    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topTotalIPsByBytesExtended = new();
+    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topTotalIPsByPacketsExtended = [];
+    [ObservableProperty] private ObservableCollection<EndpointViewModel> _topTotalIPsByBytesExtended = [];
 
     // ==================== TABLE DATA - CONVERSATIONS & SERVICES ====================
 
-    [ObservableProperty] private ObservableCollection<ConversationViewModel> _topConversations = new();
-    [ObservableProperty] private ObservableCollection<ConversationViewModel> _topConversationsByBytes = new();
-    [ObservableProperty] private ObservableCollection<ServiceViewModel> _topServices = new();
-    [ObservableProperty] private ObservableCollection<ServiceViewModel> _topServicesByBytes = new();
+    [ObservableProperty] private ObservableCollection<ConversationViewModel> _topConversations = [];
+    [ObservableProperty] private ObservableCollection<ConversationViewModel> _topConversationsByBytes = [];
+    [ObservableProperty] private ObservableCollection<ServiceViewModel> _topServices = [];
+    [ObservableProperty] private ObservableCollection<ServiceViewModel> _topServicesByBytes = [];
 
     // ==================== TABLE DATA - PORTS & THREATS ====================
 
-    [ObservableProperty] private ObservableCollection<TopPortViewModel> _topPorts = new();
-    [ObservableProperty] private ObservableCollection<TopPortViewModel> _topPortsByPacketsDisplay = new();
-    [ObservableProperty] private ObservableCollection<TopPortViewModel> _topPortsByBytesDisplay = new();
-    [ObservableProperty] private ObservableCollection<ThreatViewModel> _topThreats = new();
+    [ObservableProperty] private ObservableCollection<TopPortViewModel> _topPorts = [];
+    [ObservableProperty] private ObservableCollection<TopPortViewModel> _topPortsByPacketsDisplay = [];
+    [ObservableProperty] private ObservableCollection<TopPortViewModel> _topPortsByBytesDisplay = [];
+    [ObservableProperty] private ObservableCollection<ThreatViewModel> _topThreats = [];
 
     // ==================== VIEW TOGGLE STATES ====================
 

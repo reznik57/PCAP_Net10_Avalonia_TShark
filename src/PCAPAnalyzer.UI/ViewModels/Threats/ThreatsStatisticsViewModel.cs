@@ -50,16 +50,16 @@ public partial class ThreatsStatisticsViewModel : ObservableObject
     // ==================== SIDE-BY-SIDE TABLE DATA ====================
 
     [ObservableProperty]
-    private ObservableCollection<AffectedPortViewModel> _topAffectedPortsByCount = new();
+    private ObservableCollection<AffectedPortViewModel> _topAffectedPortsByCount = [];
 
     [ObservableProperty]
-    private ObservableCollection<AffectedPortViewModel> _topAffectedPortsBySeverity = new();
+    private ObservableCollection<AffectedPortViewModel> _topAffectedPortsBySeverity = [];
 
     [ObservableProperty]
-    private ObservableCollection<AffectedIPViewModel> _topSourceIPs = new();
+    private ObservableCollection<AffectedIPViewModel> _topSourceIPs = [];
 
     [ObservableProperty]
-    private ObservableCollection<AffectedIPViewModel> _topDestinationIPs = new();
+    private ObservableCollection<AffectedIPViewModel> _topDestinationIPs = [];
 
     /// <summary>
     /// Updates all statistics from SecurityMetrics

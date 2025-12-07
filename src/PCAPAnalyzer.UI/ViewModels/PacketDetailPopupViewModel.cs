@@ -32,14 +32,14 @@ namespace PCAPAnalyzer.UI.ViewModels
         [ObservableProperty] private string quickFilter = string.Empty;
         [ObservableProperty] private string statusMessage = "Ready";
         
-        [ObservableProperty] private ObservableCollection<PacketInfo> filteredPackets = new();
+        [ObservableProperty] private ObservableCollection<PacketInfo> filteredPackets = [];
         [ObservableProperty] private PacketInfo? selectedPacket;
         [ObservableProperty] private string selectedPacketDetails = string.Empty;
         
-        [ObservableProperty] private ObservableCollection<ProtocolStat> protocolStats = new();
-        [ObservableProperty] private ObservableCollection<TopPortViewModel> topPorts = new();
-        [ObservableProperty] private ObservableCollection<TCPAnomalyViewModel> tCPAnomalies = new();
-        [ObservableProperty] private ObservableCollection<TCPStreamViewModel> tCPStreams = new();
+        [ObservableProperty] private ObservableCollection<ProtocolStat> protocolStats = [];
+        [ObservableProperty] private ObservableCollection<TopPortViewModel> topPorts = [];
+        [ObservableProperty] private ObservableCollection<TCPAnomalyViewModel> tCPAnomalies = [];
+        [ObservableProperty] private ObservableCollection<TCPStreamViewModel> tCPStreams = [];
         
         [ObservableProperty] private string totalBytes = "0 B";
         [ObservableProperty] private string averagePacketSize = "0 B";

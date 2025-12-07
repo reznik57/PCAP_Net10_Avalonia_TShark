@@ -20,8 +20,8 @@ public partial class PacketListViewModel : ViewModelBase, IDisposable
     private const int BatchSize = 50; // Flush when buffer reaches 50 packets
     private const int FlushIntervalMs = 100; // Flush every 100ms (whichever comes first)
 
-    private readonly AvaloniaList<PacketViewModel> _packets = new();
-    private readonly List<LivePacketData> _packetBuffer = new();
+    private readonly AvaloniaList<PacketViewModel> _packets = [];
+    private readonly List<LivePacketData> _packetBuffer = [];
     private readonly SemaphoreSlim _bufferLock = new(1, 1);
     private readonly DispatcherTimer _flushTimer;
     private bool _disposed;

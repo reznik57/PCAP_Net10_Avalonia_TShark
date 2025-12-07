@@ -60,7 +60,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     public DrillDownPopupViewModel DrillDown { get; }
 
     // Top countries list (for legacy compatibility)
-    [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<CountryItemViewModel> _topCountries = new();
+    [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<CountryItemViewModel> _topCountries = [];
 
     // ==================== FILTERED STATISTICS (from GlobalFilterState) ====================
 

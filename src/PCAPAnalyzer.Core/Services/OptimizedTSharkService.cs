@@ -36,7 +36,7 @@ namespace PCAPAnalyzer.Core.Services
         private readonly Stopwatch _stopwatch = new();
 
         // Cache for GeoIP lookups
-        private readonly ConcurrentDictionary<uint, GeoLocation> _geoCache = new();
+        private readonly ConcurrentDictionary<uint, GeoLocation> _geoCache = [];
 
         public OptimizedTSharkService(
             IAutoOptimizationService optimizer,

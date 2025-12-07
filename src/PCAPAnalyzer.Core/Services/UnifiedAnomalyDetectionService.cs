@@ -53,7 +53,7 @@ public interface IUnifiedAnomalyDetectionService
 /// </summary>
 public class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionService
 {
-    private readonly List<IAnomalyDetector> _detectors = new();
+    private readonly List<IAnomalyDetector> _detectors = [];
     private readonly Lock _lock = new();
 
     public UnifiedAnomalyDetectionService(IGeoIPService? geoIPService = null)

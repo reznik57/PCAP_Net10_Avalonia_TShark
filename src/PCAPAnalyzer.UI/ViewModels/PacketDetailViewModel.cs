@@ -28,7 +28,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         [ObservableProperty] private string _timeRange = "";
         [ObservableProperty] private string _filterExpression = "";
         [ObservableProperty] private string _statusMessage = "";
-        [ObservableProperty] private ObservableCollection<PacketDetailItem> _packets = new();
+        [ObservableProperty] private ObservableCollection<PacketDetailItem> _packets = [];
         [ObservableProperty] private PacketDetailItem? _selectedPacket;
         [ObservableProperty] private bool _hasSelectedPacket;
         

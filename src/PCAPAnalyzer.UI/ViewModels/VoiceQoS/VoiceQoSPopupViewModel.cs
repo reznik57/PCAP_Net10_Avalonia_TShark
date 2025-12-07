@@ -22,10 +22,10 @@ public partial class VoiceQoSPopupViewModel : ObservableObject
         ?? throw new InvalidOperationException("IDispatcherService not registered");
     private IDispatcherService? _dispatcher;
 
-    private readonly object _collectionLock = new();
+    private readonly Lock _collectionLock = new();
 
     // Dialog state
-    [ObservableProperty] private ObservableCollection<PacketInfo> _detailPackets = new();
+    [ObservableProperty] private ObservableCollection<PacketInfo> _detailPackets = [];
     [ObservableProperty] private string _detailTitle = "";
     [ObservableProperty] private bool _isDetailDialogOpen;
 

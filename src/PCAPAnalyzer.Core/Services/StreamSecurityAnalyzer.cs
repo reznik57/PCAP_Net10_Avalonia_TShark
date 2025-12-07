@@ -49,7 +49,7 @@ public class StreamSecurityAnalyzer
                 RiskScore = 0,
                 RiskLevel = StreamRiskLevel.Unknown,
                 EncryptionStatus = EncryptionStatus.Unknown,
-                Findings = new List<StreamSecurityFinding>()
+                Findings = []
             };
         }
 
@@ -61,7 +61,7 @@ public class StreamSecurityAnalyzer
             DestinationPort = destPort,
             PacketCount = packetList.Count,
             TotalBytes = packetList.Sum(p => (long)p.Length),
-            Findings = new List<StreamSecurityFinding>()
+            Findings = []
         };
 
         // Analyze encryption status
@@ -464,11 +464,11 @@ public class StreamSecurityResult
     // Protocol security
     public ProtocolSecurityEvaluator.SecurityLevel ProtocolSecurityLevel { get; set; }
     public string ProtocolSecurityReason { get; set; } = "";
-    public List<string> ProtocolVulnerabilities { get; set; } = new();
+    public List<string> ProtocolVulnerabilities { get; set; } = [];
     public string ProtocolRecommendation { get; set; } = "";
 
     // Detailed findings
-    public List<StreamSecurityFinding> Findings { get; set; } = new();
+    public List<StreamSecurityFinding> Findings { get; set; } = [];
 }
 
 public enum StreamRiskLevel
@@ -500,7 +500,7 @@ public class StreamSecurityFinding
     public string Title { get; set; } = "";
     public string Description { get; set; } = "";
     public string Recommendation { get; set; } = "";
-    public List<string> Vulnerabilities { get; set; } = new();
+    public List<string> Vulnerabilities { get; set; } = [];
 }
 
 public enum StreamFindingType

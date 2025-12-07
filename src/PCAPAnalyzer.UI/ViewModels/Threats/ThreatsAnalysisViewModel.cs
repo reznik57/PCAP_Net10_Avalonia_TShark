@@ -35,9 +35,9 @@ public partial class ThreatsAnalysisViewModel : ObservableObject
     private bool _lastFilterState;
 
     // Analysis results
-    public List<EnhancedSecurityThreat> AllThreats { get; private set; } = new();
-    public List<SuricataAlert> SuricataAlerts { get; private set; } = new();
-    public List<YaraMatch> YaraMatches { get; private set; } = new();
+    public List<EnhancedSecurityThreat> AllThreats { get; private set; } = [];
+    public List<SuricataAlert> SuricataAlerts { get; private set; } = [];
+    public List<YaraMatch> YaraMatches { get; private set; } = [];
     public SecurityMetrics? Metrics { get; private set; }
 
     /// <summary>

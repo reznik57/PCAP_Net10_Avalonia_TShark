@@ -20,7 +20,7 @@ public class LivePacketData
     /// <summary>
     /// Raw packet data
     /// </summary>
-    public byte[] RawData { get; set; } = Array.Empty<byte>();
+    public byte[] RawData { get; set; } = [];
 
     /// <summary>
     /// Packet length in bytes
@@ -80,7 +80,7 @@ public class LivePacketData
     /// <summary>
     /// List of detected anomalies
     /// </summary>
-    public List<string> Anomalies { get; set; } = new();
+    public List<string> Anomalies { get; set; } = [];
 
     /// <summary>
     /// Interface on which the packet was captured

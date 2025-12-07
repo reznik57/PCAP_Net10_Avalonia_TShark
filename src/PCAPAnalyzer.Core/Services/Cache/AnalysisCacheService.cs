@@ -24,6 +24,7 @@ namespace PCAPAnalyzer.Core.Services.Cache
         private readonly string _dbPath;
         private readonly string _connectionString;
         private readonly SemaphoreSlim _dbLock = new(1, 1);
+        private readonly TimeProvider _timeProvider;
         private bool _isInitialized;
         private bool _disposed;
 
@@ -34,8 +35,9 @@ namespace PCAPAnalyzer.Core.Services.Cache
             DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
         };
 
-        public AnalysisCacheService(string? databasePath = null)
+        public AnalysisCacheService(string? databasePath = null, TimeProvider? timeProvider = null)
         {
+            _timeProvider = timeProvider ?? TimeProvider.System;
             // Default to %LocalAppData%/PCAPAnalyzer/analysis_cache.db
             if (string.IsNullOrEmpty(databasePath))
             {
@@ -172,7 +174,7 @@ namespace PCAPAnalyzer.Core.Services.Cache
                 // Update last accessed time if exists
                 if (count > 0)
                 {
-                    await UpdateLastAccessedAsync(cacheKey, analysisType, connection, cancellationToken);
+                    await UpdateLastAccessedAsync(cacheKey, analysisType, connection, _timeProvider, cancellationToken);
                 }
 
                 return count > 0;
@@ -187,7 +189,7 @@ namespace PCAPAnalyzer.Core.Services.Cache
         {
             await EnsureInitializedAsync(cancellationToken);
 
-            var startTime = DateTime.Now;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             DebugLogger.Log($"[AnalysisCacheService] Saving {threats.Count:N0} threats to cache...");
 
             await _dbLock.WaitAsync(cancellationToken);
@@ -205,6 +207,7 @@ namespace PCAPAnalyzer.Core.Services.Cache
 
                 // Extract file hash from cache key
                 var fileHash = cacheKey.Split('_')[0];
+                var nowUnixSeconds = _timeProvider.GetUtcNow().ToUnixTimeSeconds();
 
                 using var cmd = connection.CreateCommand();
                 cmd.CommandText = @"
@@ -222,13 +225,14 @@ namespace PCAPAnalyzer.Core.Services.Cache
                 cmd.Parameters.AddWithValue("@AnalysisType", "Threats");
                 cmd.Parameters.AddWithValue("@AnalysisVersion", ANALYSIS_VERSION);
                 cmd.Parameters.AddWithValue("@ResultData", compressedData);
-                cmd.Parameters.AddWithValue("@CreatedAt", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                cmd.Parameters.AddWithValue("@LastAccessedAt", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                cmd.Parameters.AddWithValue("@CreatedAt", nowUnixSeconds);
+                cmd.Parameters.AddWithValue("@LastAccessedAt", nowUnixSeconds);
                 cmd.Parameters.AddWithValue("@DataSizeMB", dataSizeMB);
 
                 await cmd.ExecuteNonQueryAsync(cancellationToken);
 
-                var elapsed = (DateTime.Now - startTime).TotalMilliseconds;
+                stopwatch.Stop();
+                var elapsed = stopwatch.Elapsed.TotalMilliseconds;
                 DebugLogger.Log($"[AnalysisCacheService] Threats saved to cache in {elapsed:F0}ms");
             }
             catch (Exception ex)
@@ -246,7 +250,7 @@ namespace PCAPAnalyzer.Core.Services.Cache
         {
             await EnsureInitializedAsync(cancellationToken);
 
-            var startTime = DateTime.Now;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             DebugLogger.Log($"[AnalysisCacheService] Loading threats from cache...");
 
             await _dbLock.WaitAsync(cancellationToken);
@@ -272,9 +276,10 @@ namespace PCAPAnalyzer.Core.Services.Cache
                     var threats = JsonSerializer.Deserialize<List<EnhancedSecurityThreat>>(json, _jsonOptions);
 
                     // Update last accessed time
-                    await UpdateLastAccessedAsync(cacheKey, "Threats", connection, cancellationToken);
+                    await UpdateLastAccessedAsync(cacheKey, "Threats", connection, _timeProvider, cancellationToken);
 
-                    var elapsed = (DateTime.Now - startTime).TotalMilliseconds;
+                    stopwatch.Stop();
+                    var elapsed = stopwatch.Elapsed.TotalMilliseconds;
                     DebugLogger.Log($"[AnalysisCacheService] Loaded {threats?.Count ?? 0:N0} threats from cache in {elapsed:F0}ms (CACHE HIT)");
 
                     return threats;
@@ -298,7 +303,7 @@ namespace PCAPAnalyzer.Core.Services.Cache
         {
             await EnsureInitializedAsync(cancellationToken);
 
-            var startTime = DateTime.Now;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var totalItems = qosData.QoSTraffic.Count + qosData.HighLatencyConnections.Count + qosData.HighJitterConnections.Count;
             DebugLogger.Log($"[AnalysisCacheService] Saving VoiceQoS data to cache ({totalItems} items)...");
 
@@ -317,6 +322,7 @@ namespace PCAPAnalyzer.Core.Services.Cache
 
                 // Extract file hash from cache key
                 var fileHash = cacheKey.Split('_')[0];
+                var nowUnixSeconds = _timeProvider.GetUtcNow().ToUnixTimeSeconds();
 
                 using var cmd = connection.CreateCommand();
                 cmd.CommandText = @"
@@ -334,13 +340,14 @@ namespace PCAPAnalyzer.Core.Services.Cache
                 cmd.Parameters.AddWithValue("@AnalysisType", "VoiceQoS");
                 cmd.Parameters.AddWithValue("@AnalysisVersion", ANALYSIS_VERSION);
                 cmd.Parameters.AddWithValue("@ResultData", compressedData);
-                cmd.Parameters.AddWithValue("@CreatedAt", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-                cmd.Parameters.AddWithValue("@LastAccessedAt", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+                cmd.Parameters.AddWithValue("@CreatedAt", nowUnixSeconds);
+                cmd.Parameters.AddWithValue("@LastAccessedAt", nowUnixSeconds);
                 cmd.Parameters.AddWithValue("@DataSizeMB", dataSizeMB);
 
                 await cmd.ExecuteNonQueryAsync(cancellationToken);
 
-                var elapsed = (DateTime.Now - startTime).TotalMilliseconds;
+                stopwatch.Stop();
+                var elapsed = stopwatch.Elapsed.TotalMilliseconds;
                 DebugLogger.Log($"[AnalysisCacheService] VoiceQoS data saved to cache in {elapsed:F0}ms");
             }
             catch (Exception ex)
@@ -358,7 +365,7 @@ namespace PCAPAnalyzer.Core.Services.Cache
         {
             await EnsureInitializedAsync(cancellationToken);
 
-            var startTime = DateTime.Now;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             DebugLogger.Log($"[AnalysisCacheService] Loading VoiceQoS data from cache...");
 
             await _dbLock.WaitAsync(cancellationToken);
@@ -384,9 +391,10 @@ namespace PCAPAnalyzer.Core.Services.Cache
                     var qosData = JsonSerializer.Deserialize<VoiceQoSAnalysisResult>(json, _jsonOptions);
 
                     // Update last accessed time
-                    await UpdateLastAccessedAsync(cacheKey, "VoiceQoS", connection, cancellationToken);
+                    await UpdateLastAccessedAsync(cacheKey, "VoiceQoS", connection, _timeProvider, cancellationToken);
 
-                    var elapsed = (DateTime.Now - startTime).TotalMilliseconds;
+                    stopwatch.Stop();
+                    var elapsed = stopwatch.Elapsed.TotalMilliseconds;
                     DebugLogger.Log($"[AnalysisCacheService] Loaded VoiceQoS data from cache in {elapsed:F0}ms (CACHE HIT)");
 
                     return qosData;
@@ -418,7 +426,7 @@ namespace PCAPAnalyzer.Core.Services.Cache
                 using var connection = new SqliteConnection(_connectionString);
                 await connection.OpenAsync(cancellationToken);
 
-                var cutoffTime = DateTimeOffset.UtcNow.AddDays(-maxAgeDays).ToUnixTimeSeconds();
+                var cutoffTime = _timeProvider.GetUtcNow().AddDays(-maxAgeDays).ToUnixTimeSeconds();
 
                 using var cmd = connection.CreateCommand();
                 cmd.CommandText = @"
@@ -587,7 +595,7 @@ namespace PCAPAnalyzer.Core.Services.Cache
             }
         }
 
-        private static async Task UpdateLastAccessedAsync(string cacheKey, string analysisType, SqliteConnection connection, CancellationToken cancellationToken)
+        private static async Task UpdateLastAccessedAsync(string cacheKey, string analysisType, SqliteConnection connection, TimeProvider timeProvider, CancellationToken cancellationToken)
         {
             using var updateCmd = connection.CreateCommand();
             updateCmd.CommandText = @"
@@ -597,7 +605,7 @@ namespace PCAPAnalyzer.Core.Services.Cache
             ";
             updateCmd.Parameters.AddWithValue("@CacheKey", cacheKey);
             updateCmd.Parameters.AddWithValue("@AnalysisType", analysisType);
-            updateCmd.Parameters.AddWithValue("@LastAccessedAt", DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+            updateCmd.Parameters.AddWithValue("@LastAccessedAt", timeProvider.GetUtcNow().ToUnixTimeSeconds());
             await updateCmd.ExecuteNonQueryAsync(cancellationToken);
         }
 

@@ -25,7 +25,7 @@ namespace PCAPAnalyzer.UI.Controls
         #region Fields
 
         private readonly ContinentMapRenderer _renderer = new();
-        private readonly List<TrafficFlowAnimation> _trafficFlows = new();
+        private readonly List<TrafficFlowAnimation> _trafficFlows = [];
         private Continent? _selectedContinent;
         private bool _isDrillDownMode;
         private string? _hoveredCountryCode;

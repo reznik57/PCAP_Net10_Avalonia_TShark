@@ -415,7 +415,7 @@ namespace PCAPAnalyzer.Core.Services
     
     public class FastLoadPacketBatchEventArgs : EventArgs
     {
-        public List<PacketDisplayInfo> Packets { get; set; } = new();
+        public List<PacketDisplayInfo> Packets { get; set; } = [];
         public int TotalPacketsSoFar { get; set; }
         public bool IsFirstBatch { get; set; }
         public bool IsLastBatch { get; set; }

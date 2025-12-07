@@ -16,8 +16,8 @@ public static class WorldMapCountryPaths
     public const double CanvasHeight = 400;
 
     // Cache for country geometries
-    private static readonly Dictionary<string, StreamGeometry> _countryGeometries = new();
-    private static readonly Dictionary<string, Point> _countryCentroids = new();
+    private static readonly Dictionary<string, StreamGeometry> _countryGeometries = [];
+    private static readonly Dictionary<string, Point> _countryCentroids = [];
 
     /// <summary>
     /// Gets the geometry for a country, or null if not defined.
@@ -717,7 +717,7 @@ public static class WorldMapCountryPaths
     private static Point GetDefaultCentroid(string countryCode)
     {
         // Default centroids for common countries without full geometry
-        var centroids = new Dictionary<string, Point>
+        Dictionary<string, Point> centroids = new()
         {
             // Additional European countries
             ["NL"] = new Point(405, 78),

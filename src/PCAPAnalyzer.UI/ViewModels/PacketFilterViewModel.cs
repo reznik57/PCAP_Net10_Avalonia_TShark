@@ -21,7 +21,7 @@ public partial class PacketFilterViewModel : ObservableObject
 {
     private readonly ITabFilterService _filterService;
     private readonly Action<PacketFilter> _onFilterApplied;
-    private readonly List<string> _activePredefinedFilters = new();
+    private readonly List<string> _activePredefinedFilters = [];
 
     // Component ViewModels (Composition)
     public BasicFilterViewModel BasicFilters { get; }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -19,10 +20,11 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
     /// </summary>
     public class UnifiedGeoIPService : IGeoIPService
     {
-        private readonly List<IGeoIPProvider> _providers = new();
-        private readonly ConcurrentDictionary<string, CachedGeoLocation> _cache = new();
+        private readonly List<IGeoIPProvider> _providers = [];
+        private readonly ConcurrentDictionary<string, CachedGeoLocation> _cache = [];
         private readonly GeoIPConfiguration _configuration;
         private readonly ILogger? _logger;
+        private readonly TimeProvider _timeProvider;
         private readonly System.Threading.SemaphoreSlim _initLock = new(1, 1);
         private bool _isInitialized;
         private bool _disposed;
@@ -30,29 +32,31 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
         // ✅ DIAGNOSTIC: Track cache statistics for aggregate logging
         private int _cacheMissCount;
         private int _cacheHitCount;
-        private DateTime _lastCacheLogTime = DateTime.UtcNow;
+        private DateTime _lastCacheLogTime;
 
         // High-risk countries based on common cybersecurity threat intelligence
-        private readonly HashSet<string> _highRiskCountries = new()
-        {
+        private readonly HashSet<string> _highRiskCountries =
+        [
             "CN", "RU", "KP", "IR", "SY", "CU", "VE", "BY", "MM", "ZW", "NG"
-        };
+        ];
 
         /// <summary>
         /// Creates a new UnifiedGeoIPService with default configuration (MMDB only)
         /// </summary>
-        public UnifiedGeoIPService(ILogger? logger = null)
-            : this(GeoIPConfiguration.CreateDefault(), logger)
+        public UnifiedGeoIPService(ILogger? logger = null, TimeProvider? timeProvider = null)
+            : this(GeoIPConfiguration.CreateDefault(), logger, timeProvider)
         {
         }
 
         /// <summary>
         /// Creates a new UnifiedGeoIPService with specific configuration
         /// </summary>
-        public UnifiedGeoIPService(GeoIPConfiguration configuration, ILogger? logger = null)
+        public UnifiedGeoIPService(GeoIPConfiguration configuration, ILogger? logger = null, TimeProvider? timeProvider = null)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _logger = logger;
+            _timeProvider = timeProvider ?? TimeProvider.System;
+            _lastCacheLogTime = _timeProvider.GetUtcNow().UtcDateTime;
 
             // Validate configuration
             if (!_configuration.Validate(out var errors))
@@ -70,6 +74,8 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
         public UnifiedGeoIPService(params IGeoIPProvider[] providers)
         {
             _configuration = GeoIPConfiguration.CreateDefault();
+            _timeProvider = TimeProvider.System;
+            _lastCacheLogTime = _timeProvider.GetUtcNow().UtcDateTime;
 
             foreach (var provider in providers)
             {
@@ -170,8 +176,8 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             // Wait for initialization if not yet complete (max 5 seconds)
             if (!_isInitialized)
             {
-                var waitStart = DateTime.UtcNow;
-                while (!_isInitialized && (DateTime.UtcNow - waitStart).TotalSeconds < 5)
+                var waitStart = _timeProvider.GetUtcNow();
+                while (!_isInitialized && (_timeProvider.GetUtcNow() - waitStart).TotalSeconds < 5)
                 {
                     await Task.Delay(50); // Poll every 50ms
                 }
@@ -186,14 +192,14 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             if (_configuration.EnableCache && _cache.TryGetValue(ipAddress, out var cached))
             {
                 // Check if cache entry is still valid
-                if (DateTime.UtcNow < cached.ExpiresAt)
+                if (_timeProvider.GetUtcNow().UtcDateTime < cached.ExpiresAt)
                 {
                     cached.HitCount++;
                     System.Threading.Interlocked.Increment(ref _cacheHitCount);
 
                     // ✅ PERFORMANCE FIX: Aggregate logging instead of per-IP spam
                     // Log aggregate stats every 10 seconds instead of every 100 hits per IP
-                    var now = DateTime.UtcNow;
+                    var now = _timeProvider.GetUtcNow().UtcDateTime;
                     if ((now - _lastCacheLogTime).TotalSeconds > 10)
                     {
                         var totalLookups = _cacheHitCount + _cacheMissCount;
@@ -266,11 +272,12 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
 
         private void CacheResult(string ipAddress, GeoLocation location)
         {
+            var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
             var cachedEntry = new CachedGeoLocation
             {
                 Location = location,
-                CachedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.Add(_configuration.CacheExpiration),
+                CachedAt = utcNow,
+                ExpiresAt = utcNow.Add(_configuration.CacheExpiration),
                 HitCount = 0
             };
 
@@ -376,7 +383,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
 
             // Lookup all unique IPs in parallel for speed (use cache + parallel processing)
             DebugLogger.Log($"[UnifiedGeoIPService] Starting PARALLEL IP lookups for {uniqueIPs.Count} unique IPs...");
-            var startLookup = DateTime.Now;
+            var lookupStopwatch = Stopwatch.StartNew();
             var ipToCountry = new System.Collections.Concurrent.ConcurrentDictionary<string, string>();
             var lookupCount = 0;
             var ipList = uniqueIPs.ToList();
@@ -403,7 +410,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
                             (progressPercent >= 49.5 && progressPercent < 51) ||
                             (progressPercent >= 74.5 && progressPercent < 76))
                         {
-                            var elapsed = (DateTime.Now - startLookup).TotalSeconds;
+                            var elapsed = lookupStopwatch.Elapsed.TotalSeconds;
                             var rate = elapsed > 0 ? currentCount / elapsed : 0;
                             DebugLogger.Log($"[GeoIP] {progressPercent:F0}% ({currentCount:N0}/{uniqueIPs.Count:N0} IPs) @ {rate:F0}/s");
                         }
@@ -416,7 +423,8 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             });
 
             await Task.WhenAll(lookupTasks);
-            var lookupElapsed = (DateTime.Now - startLookup).TotalSeconds;
+            lookupStopwatch.Stop();
+            var lookupElapsed = lookupStopwatch.Elapsed.TotalSeconds;
             var successCount = ipToCountry.Count;
 
             DebugLogger.Log($"[UnifiedGeoIPService] PARALLEL IP lookups complete: {successCount}/{uniqueIPs.Count} IPs resolved in {lookupElapsed:F2}s ({(uniqueIPs.Count / lookupElapsed):F0} lookups/s)");
@@ -431,7 +439,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             DebugLogger.Log($"[GeoIP Cache] 📊 POST-LOOKUP Stats: {postCacheStats.TotalEntries} entries, {actualResolved}/{uniqueIPs.Count} resolved ({hitRate:F1}%), {actualMisses} failed");
 
             // Analyze packets by country using parallel processing
-            var aggregationStart = DateTime.Now;
+            var aggregationStopwatch = Stopwatch.StartNew();
             DebugLogger.Log($"[UnifiedGeoIPService] Starting PARALLEL packet aggregation for {packetList.Count:N0} packets...");
 
             // Temporary thread-safe wrapper for parallel aggregation (memory optimization)
@@ -521,7 +529,8 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
                 };
             }
 
-            var aggregationElapsed = (DateTime.Now - aggregationStart).TotalSeconds;
+            aggregationStopwatch.Stop();
+            var aggregationElapsed = aggregationStopwatch.Elapsed.TotalSeconds;
             DebugLogger.Log($"[UnifiedGeoIPService] PARALLEL packet aggregation complete in {aggregationElapsed:F2}s ({(packetList.Count / aggregationElapsed):F0} packets/s)");
 
             // Calculate total bytes and percentages
@@ -675,15 +684,15 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             var riskData = new Dictionary<string, (string name, string reason, List<string> threats)>
             {
                 ["CN"] = ("China", "Known source of cyber attacks and state-sponsored hacking",
-                    new List<string> { "APT groups", "Data theft", "Espionage" }),
+                    ["APT groups", "Data theft", "Espionage"]),
                 ["RU"] = ("Russia", "Major source of ransomware and cybercrime operations",
-                    new List<string> { "Ransomware", "Financial fraud", "State-sponsored attacks" }),
+                    ["Ransomware", "Financial fraud", "State-sponsored attacks"]),
                 ["KP"] = ("North Korea", "State-sponsored cyber warfare and cryptocurrency theft",
-                    new List<string> { "Cryptocurrency theft", "Destructive malware", "Espionage" }),
+                    ["Cryptocurrency theft", "Destructive malware", "Espionage"]),
                 ["IR"] = ("Iran", "State-sponsored attacks on critical infrastructure",
-                    new List<string> { "Infrastructure attacks", "Data wiping", "Espionage" }),
+                    ["Infrastructure attacks", "Data wiping", "Espionage"]),
                 ["NG"] = ("Nigeria", "High volume of financial fraud and scams",
-                    new List<string> { "Financial fraud", "Business email compromise", "Romance scams" })
+                    ["Financial fraud", "Business email compromise", "Romance scams"])
             };
 
             foreach (var (code, (name, reason, threats)) in riskData)
@@ -695,7 +704,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
                     Risk = code is "CN" or "RU" or "KP" ? RiskLevel.Critical : RiskLevel.High,
                     Reason = reason,
                     KnownThreats = threats,
-                    LastAssessment = DateTime.UtcNow
+                    LastAssessment = _timeProvider.GetUtcNow().UtcDateTime
                 });
             }
 
@@ -1036,9 +1045,9 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             public long IncomingBytes;
             public long OutgoingPackets;
             public long IncomingPackets;
-            public readonly ConcurrentBag<string> OutgoingIPs = new();
-            public readonly ConcurrentBag<string> IncomingIPs = new();
-            public readonly ConcurrentBag<string> UniqueIPs = new();
+            public readonly ConcurrentBag<string> OutgoingIPs = [];
+            public readonly ConcurrentBag<string> IncomingIPs = [];
+            public readonly ConcurrentBag<string> UniqueIPs = [];
         }
     }
 

@@ -9,7 +9,7 @@ namespace PCAPAnalyzer.UI.Helpers;
 
 internal sealed class ProcessingMetrics
 {
-    private readonly List<ProcessingSample> _samples = new();
+    private readonly List<ProcessingSample> _samples = [];
     private readonly Stopwatch _stopwatch = new();
     private readonly Lock _sync = new();
 
@@ -146,6 +146,6 @@ internal sealed class ProcessingMetrics
         public double PeakThroughputMbps { get; set; }
         public bool Success { get; set; }
         public string? ErrorMessage { get; set; }
-        public List<ProcessingSample> Samples { get; set; } = new();
+        public List<ProcessingSample> Samples { get; set; } = [];
     }
 }

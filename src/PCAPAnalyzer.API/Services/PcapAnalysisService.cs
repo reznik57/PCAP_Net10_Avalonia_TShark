@@ -6,8 +6,8 @@ namespace PCAPAnalyzer.API.Services;
 public class PcapAnalysisService : IPcapAnalysisService
 {
     private readonly ILogger<PcapAnalysisService> _logger;
-    private readonly ConcurrentDictionary<string, PcapFileInfo> _pcapFiles = new();
-    private readonly ConcurrentDictionary<string, AnalysisJob> _analysisJobs = new();
+    private readonly ConcurrentDictionary<string, PcapFileInfo> _pcapFiles = [];
+    private readonly ConcurrentDictionary<string, AnalysisJob> _analysisJobs = [];
 
     public PcapAnalysisService(ILogger<PcapAnalysisService> logger)
     {

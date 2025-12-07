@@ -10,8 +10,8 @@ namespace PCAPAnalyzer.Core.Services;
 
 public sealed class SimplePacketStore : IPacketStore
 {
-    private readonly List<PacketInfo> _packets = new();
-    private readonly List<FlowRecord> _flows = new();
+    private readonly List<PacketInfo> _packets = [];
+    private readonly List<FlowRecord> _flows = [];
     private readonly Lock _sync = new();
 
     public Task InitializeAsync(string databasePath, CancellationToken cancellationToken = default)

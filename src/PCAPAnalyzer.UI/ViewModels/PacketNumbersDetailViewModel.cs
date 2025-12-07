@@ -26,8 +26,8 @@ public partial class PacketNumbersDetailViewModel : ObservableObject
     [ObservableProperty] private long _totalBytes;
     [ObservableProperty] private string _totalBytesFormatted = "0 B";
     [ObservableProperty] private string _displayRange = "All";
-    [ObservableProperty] private ObservableCollection<PacketNumberViewModel> _packetNumbers = new();
-    private ObservableCollection<PacketNumberViewModel> _allPacketNumbers = new();
+    [ObservableProperty] private ObservableCollection<PacketNumberViewModel> _packetNumbers = [];
+    private ObservableCollection<PacketNumberViewModel> _allPacketNumbers = [];
 
     public PacketNumbersDetailViewModel()
     {

@@ -13,9 +13,9 @@ public sealed class TSharkCommandBuilder
     private readonly StringBuilder _arguments = new();
     private string? _inputFile;
     private OutputFormat _outputFormat = OutputFormat.Fields;
-    private readonly List<string> _fields = new();
-    private readonly List<string> _displayFilters = new();
-    private readonly List<string> _readFilters = new();
+    private readonly List<string> _fields = [];
+    private readonly List<string> _displayFilters = [];
+    private readonly List<string> _readFilters = [];
     private string? _captureFilter;
     private bool _quietMode;
     private int? _packetCount;

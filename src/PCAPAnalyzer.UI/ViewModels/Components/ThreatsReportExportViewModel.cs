@@ -32,7 +32,7 @@ public partial class ThreatsReportExportViewModel : ObservableObject
     [ObservableProperty] private bool _showExportStatus;
 
     // Data references (set by coordinator)
-    private List<EnhancedSecurityThreat> _allThreats = new();
+    private List<EnhancedSecurityThreat> _allThreats = [];
     private SecurityMetrics? _metrics;
     private string _sourceFileName = "";
 

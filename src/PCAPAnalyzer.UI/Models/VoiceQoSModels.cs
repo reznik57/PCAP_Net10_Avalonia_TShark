@@ -24,7 +24,7 @@ public class QoSTrafficItem : ObservableObject
     public string PortRange { get; set; } = "";
     public string DscpMarking { get; set; } = "";
     public int DscpValue { get; set; }
-    public List<PacketInfo> Packets { get; set; } = new();
+    public List<PacketInfo> Packets { get; set; } = [];
 
     public string BytesFormatted => NumberFormatter.FormatBytes(TotalBytes);
     public string Duration => TimeFormatter.FormatAsSeconds(LastSeen - FirstSeen);
@@ -49,7 +49,7 @@ public class LatencyConnectionItem : ObservableObject
     public DateTime FirstSeen { get; set; }
     public DateTime LastSeen { get; set; }
     public string PortRange { get; set; } = "";
-    public List<PacketInfo> Packets { get; set; } = new();
+    public List<PacketInfo> Packets { get; set; } = [];
 
     public string AverageLatencyFormatted => $"{AverageLatency:F2} ms";
     public string MaxLatencyFormatted => $"{MaxLatency:F2} ms";
@@ -79,7 +79,7 @@ public class JitterConnectionItem : ObservableObject
     public DateTime FirstSeen { get; set; }
     public DateTime LastSeen { get; set; }
     public string PortRange { get; set; } = "";
-    public List<PacketInfo> Packets { get; set; } = new();
+    public List<PacketInfo> Packets { get; set; } = [];
 
     public string AverageJitterFormatted => $"{AverageJitter:F2} ms";
     public string MaxJitterFormatted => $"{MaxJitter:F2} ms";

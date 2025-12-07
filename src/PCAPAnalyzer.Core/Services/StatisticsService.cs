@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -30,7 +31,7 @@ namespace PCAPAnalyzer.Core.Services
         private readonly IThreatDetector _threatDetector;
         private readonly ITimeSeriesGenerator _timeSeriesGenerator;
 
-        private readonly Dictionary<int, string> _wellKnownPorts = new()
+        private static readonly FrozenDictionary<int, string> WellKnownPorts = new Dictionary<int, string>
         {
             { 20, "FTP Data" }, { 21, "FTP Control" }, { 22, "SSH" }, { 23, "Telnet" },
             { 25, "SMTP" }, { 53, "DNS" }, { 67, "DHCP Server" }, { 68, "DHCP Client" },
@@ -38,9 +39,9 @@ namespace PCAPAnalyzer.Core.Services
             { 445, "SMB" }, { 3306, "MySQL" }, { 3389, "RDP" }, { 5432, "PostgreSQL" },
             { 6379, "Redis" }, { 8080, "HTTP Alternate" }, { 8443, "HTTPS Alternate" },
             { 27017, "MongoDB" }
-        };
+        }.ToFrozenDictionary();
 
-        private readonly Dictionary<string, string> _protocolColors = new()
+        private static readonly FrozenDictionary<string, string> ProtocolColors = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             { "TCP", "#3B82F6" },    // Blue
             { "UDP", "#10B981" },    // Green
@@ -52,7 +53,7 @@ namespace PCAPAnalyzer.Core.Services
             { "FTP", "#EF4444" },    // Red
             { "SMTP", "#6366F1" },   // Indigo
             { "Other", "#6B7280" }   // Gray
-        };
+        }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
         public StatisticsService(
             IGeoIPService geoIPService,
@@ -92,7 +93,7 @@ namespace PCAPAnalyzer.Core.Services
                 };
 
                 // Use injected calculator service
-                stats.ProtocolStats = _statisticsCalculator.CalculateProtocolStatistics(packetList, _protocolColors);
+                stats.ProtocolStats = _statisticsCalculator.CalculateProtocolStatistics(packetList, ProtocolColors);
 
                 stats.AllUniqueIPs = new HashSet<string>();
                 foreach (var packet in packetList)
@@ -113,11 +114,11 @@ namespace PCAPAnalyzer.Core.Services
                 // Calculate directional stream count (4-tuple) for Packet Analysis tab compatibility
                 stats.TotalStreamCount = CalculateDirectionalStreamCount(packetList);
 
-                var (topPorts, uniquePortCount) = _statisticsCalculator.CalculateTopPortsWithCount(packetList, _wellKnownPorts);
+                var (topPorts, uniquePortCount) = _statisticsCalculator.CalculateTopPortsWithCount(packetList, WellKnownPorts);
                 stats.TopPorts = topPorts;
                 stats.UniquePortCount = uniquePortCount;
 
-                stats.ServiceStats = _statisticsCalculator.CalculateServiceStatistics(packetList, _wellKnownPorts);
+                stats.ServiceStats = _statisticsCalculator.CalculateServiceStatistics(packetList, WellKnownPorts);
 
                 // Detect threats first for time series
                 stats.DetectedThreats = DetectThreats(packetList);

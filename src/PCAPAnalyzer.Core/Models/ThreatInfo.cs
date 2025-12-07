@@ -11,11 +11,11 @@ namespace PCAPAnalyzer.Core.Models
         public string SourceIP { get; set; } = string.Empty;
         public string DestinationIP { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
-        public List<int> PacketNumbers { get; set; } = new();
+        public List<int> PacketNumbers { get; set; } = [];
         public double Confidence { get; set; }
-        public List<string> MitigationSteps { get; set; } = new();
+        public List<string> MitigationSteps { get; set; } = [];
         public string ThreatId { get; set; } = Guid.NewGuid().ToString();
         public bool IsActive { get; set; } = true;
-        public Dictionary<string, object> AdditionalData { get; set; } = new();
+        public Dictionary<string, object> AdditionalData { get; set; } = [];
     }
 }

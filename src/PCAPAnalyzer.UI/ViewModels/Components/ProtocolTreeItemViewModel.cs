@@ -16,7 +16,7 @@ public partial class ProtocolTreeItemViewModel : ObservableObject
     [ObservableProperty] private int _level;
     [ObservableProperty] private string _displayText = string.Empty;
 
-    public ObservableCollection<ProtocolTreeItemViewModel> Children { get; } = new();
+    public ObservableCollection<ProtocolTreeItemViewModel> Children { get; } = [];
 
     /// <summary>
     /// Creates a protocol tree item

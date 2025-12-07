@@ -7,9 +7,9 @@ public partial class AnomaliesFilterTabViewModel : ObservableObject
 {
     [ObservableProperty] private string _searchInput = "";
 
-    public ObservableCollection<FilterChipViewModel> SeverityChips { get; } = new();
-    public ObservableCollection<FilterChipViewModel> CategoryChips { get; } = new();
-    public ObservableCollection<FilterChipViewModel> DetectorChips { get; } = new();
+    public ObservableCollection<FilterChipViewModel> SeverityChips { get; } = [];
+    public ObservableCollection<FilterChipViewModel> CategoryChips { get; } = [];
+    public ObservableCollection<FilterChipViewModel> DetectorChips { get; } = [];
 
     public AnomaliesFilterTabViewModel()
     {

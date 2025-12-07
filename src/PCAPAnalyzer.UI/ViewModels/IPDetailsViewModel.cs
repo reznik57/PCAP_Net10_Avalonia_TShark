@@ -23,8 +23,8 @@ namespace PCAPAnalyzer.UI.ViewModels
         private string _filterText = "";
         private string _selectedProtocol = "All";
         private string _selectedDirection = "All";
-        private ObservableCollection<IPPacketDetail> _allPackets = new();
-        private ObservableCollection<IPPacketDetail> _filteredPackets = new();
+        private ObservableCollection<IPPacketDetail> _allPackets = [];
+        private ObservableCollection<IPPacketDetail> _filteredPackets = [];
         
         public IPDetailsViewModel(EndpointViewModel endpoint, IEnumerable<PacketInfo> packets, bool isSource)
         {
@@ -91,8 +91,8 @@ namespace PCAPAnalyzer.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selectedDirection, value);
         }
         
-        public ObservableCollection<string> Protocols { get; } = new();
-        public ObservableCollection<string> Directions { get; } = new();
+        public ObservableCollection<string> Protocols { get; } = [];
+        public ObservableCollection<string> Directions { get; } = [];
         
         public ObservableCollection<IPPacketDetail> FilteredPackets
         {

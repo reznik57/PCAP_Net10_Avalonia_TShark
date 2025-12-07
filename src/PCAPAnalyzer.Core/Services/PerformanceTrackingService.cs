@@ -31,7 +31,7 @@ namespace PCAPAnalyzer.Core.Services
         public TimeSpan EstimatedRemaining { get; set; }
         public double ItemsPerSecond { get; set; }
         public string CurrentOperation { get; set; } = "";
-        public Dictionary<string, double> Metrics { get; set; } = new();
+        public Dictionary<string, double> Metrics { get; set; } = [];
         
         // Convenience properties
         public string ProgressText => $"{OverallProgress:F1}% - {CurrentOperation}";
@@ -51,7 +51,7 @@ namespace PCAPAnalyzer.Core.Services
         public long MemoryUsageMB { get; set; }
         public double CpuUsagePercent { get; set; }
         public int ThreadCount { get; set; }
-        public Dictionary<string, double> CustomMetrics { get; set; } = new();
+        public Dictionary<string, double> CustomMetrics { get; set; } = [];
     }
 
     public class BenchmarkResult
@@ -64,7 +64,7 @@ namespace PCAPAnalyzer.Core.Services
         public long MemoryUsedMB { get; set; }
         public int ThreadCount { get; set; }
         public double CpuUsage { get; set; }
-        public Dictionary<StatisticsCalculationStage, TimeSpan> StageDurations { get; set; } = new();
+        public Dictionary<StatisticsCalculationStage, TimeSpan> StageDurations { get; set; } = [];
         
         public string Summary => $"{Operation}: {ItemCount:N0} items in {Duration.TotalSeconds:F2}s " +
                                  $"({ItemsPerSecond:F0}/sec) using {MemoryUsedMB}MB";
@@ -94,10 +94,10 @@ namespace PCAPAnalyzer.Core.Services
 
     public class PerformanceTrackingService : IPerformanceTrackingService, IDisposable
     {
-        private readonly ConcurrentDictionary<string, List<PerformanceSnapshot>> _snapshots = new();
-        private readonly ConcurrentDictionary<string, List<BenchmarkResult>> _benchmarks = new();
-        private readonly ConcurrentDictionary<string, CalculationProgress> _activeOperations = new();
-        private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, double>> _metrics = new();
+        private readonly ConcurrentDictionary<string, List<PerformanceSnapshot>> _snapshots = [];
+        private readonly ConcurrentDictionary<string, List<BenchmarkResult>> _benchmarks = [];
+        private readonly ConcurrentDictionary<string, CalculationProgress> _activeOperations = [];
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, double>> _metrics = [];
         private readonly Timer _metricsCollector;
         private Process _currentProcess;
         private bool _disposed;
@@ -372,7 +372,7 @@ namespace PCAPAnalyzer.Core.Services
         public string OperationId { get; set; } = "";
         public DateTime Timestamp { get; set; }
         public string Bottleneck { get; set; } = "";
-        public List<PerformanceRecommendation> Recommendations { get; set; } = new();
+        public List<PerformanceRecommendation> Recommendations { get; set; } = [];
         
         public void AddRecommendation(string title, string description, PerformanceImpact impact)
         {

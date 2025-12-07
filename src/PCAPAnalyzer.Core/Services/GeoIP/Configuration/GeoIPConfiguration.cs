@@ -27,7 +27,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Configuration
         /// <summary>
         /// Provider configurations in priority order (lower number = higher priority)
         /// </summary>
-        public List<ProviderConfiguration> Providers { get; set; } = new();
+        public List<ProviderConfiguration> Providers { get; set; } = [];
 
         /// <summary>
         /// Enable automatic fallback to next provider on failure
@@ -66,8 +66,8 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Configuration
         {
             return new GeoIPConfiguration
             {
-                Providers = new List<ProviderConfiguration>
-                {
+                Providers =
+                [
                     new ProviderConfiguration
                     {
                         ProviderType = ProviderType.Mmdb,
@@ -78,7 +78,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Configuration
                             ["DatabasePath"] = "GeoLite2-Country.mmdb"
                         }
                     }
-                }
+                ]
             };
         }
 
@@ -89,8 +89,8 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Configuration
         {
             return new GeoIPConfiguration
             {
-                Providers = new List<ProviderConfiguration>
-                {
+                Providers =
+                [
                     new ProviderConfiguration
                     {
                         ProviderType = ProviderType.Mmdb,
@@ -111,7 +111,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Configuration
                             ["DatabasePath"] = "geoip.db"
                         }
                     }
-                }
+                ]
             };
         }
 
@@ -122,8 +122,8 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Configuration
         {
             return new GeoIPConfiguration
             {
-                Providers = new List<ProviderConfiguration>
-                {
+                Providers =
+                [
                     new ProviderConfiguration
                     {
                         ProviderType = ProviderType.Mmdb,
@@ -156,7 +156,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Configuration
                             ["BaseUrl"] = "http://ip-api.com/json/"
                         }
                     }
-                }
+                ]
             };
         }
 
@@ -165,7 +165,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Configuration
         /// </summary>
         public bool Validate(out List<string> errors)
         {
-            errors = new List<string>();
+            errors = [];
 
             if (CacheExpiration <= TimeSpan.Zero)
             {
@@ -248,7 +248,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Configuration
         /// <summary>
         /// Provider-specific settings
         /// </summary>
-        public Dictionary<string, string> Settings { get; set; } = new();
+        public Dictionary<string, string> Settings { get; set; } = [];
 
         /// <summary>
         /// Retry attempts on failure
@@ -270,7 +270,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Configuration
         /// </summary>
         public bool Validate(out List<string> errors)
         {
-            errors = new List<string>();
+            errors = [];
 
             if (Priority < 0)
             {

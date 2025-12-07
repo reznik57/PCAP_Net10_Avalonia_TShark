@@ -16,7 +16,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Rendering
     /// </summary>
     public class ContinentMapRenderer
     {
-        private readonly Dictionary<string, ContinentVisual> _continentVisuals = new();
+        private readonly Dictionary<string, ContinentVisual> _continentVisuals = [];
         private readonly CountryIconManager _iconManager = new();
 
         public IReadOnlyDictionary<string, ContinentVisual> ContinentVisuals => _continentVisuals;

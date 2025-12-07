@@ -25,7 +25,7 @@ public static partial class ProtocolSecurityEvaluator
     {
         public SecurityLevel Level { get; set; }
         public string Reason { get; set; } = "";
-        public List<string> Vulnerabilities { get; set; } = new();
+        public List<string> Vulnerabilities { get; set; } = [];
         public string Recommendation { get; set; } = "";
     }
 

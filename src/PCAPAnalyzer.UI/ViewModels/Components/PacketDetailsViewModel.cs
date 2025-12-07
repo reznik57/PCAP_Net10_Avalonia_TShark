@@ -35,14 +35,14 @@ public partial class PacketDetailsViewModel : ObservableObject
     private IPacketStore? _packetStore;
 
     // Stream analysis cache: key = stream identifier, value = analysis result
-    private readonly Dictionary<string, StreamAnalysisResult> _streamCache = new();
+    private readonly Dictionary<string, StreamAnalysisResult> _streamCache = [];
 
     [ObservableProperty] private PacketInfo? _currentPacket;
     [ObservableProperty] private bool _hasPacket;
     [ObservableProperty] private string _emptyStateMessage = "Select a packet to view details";
 
     // Packet Analysis Tab - Protocol Layers section
-    [ObservableProperty] private ObservableCollection<ProtocolTreeItemViewModel> _protocolTree = new();
+    [ObservableProperty] private ObservableCollection<ProtocolTreeItemViewModel> _protocolTree = [];
 
     // Stream Context Tab
     [ObservableProperty] private string _flowStreamId = "--";
@@ -61,7 +61,7 @@ public partial class PacketDetailsViewModel : ObservableObject
     [ObservableProperty] private string _destinationPortSecurity = "--";
     [ObservableProperty] private string _sourceGeoInfo = "--";
     [ObservableProperty] private string _destinationGeoInfo = "--";
-    [ObservableProperty] private ObservableCollection<string> _securityWarnings = new();
+    [ObservableProperty] private ObservableCollection<string> _securityWarnings = [];
     [ObservableProperty] private bool _hasSecurityWarnings;
 
     // Enhanced Security Analysis (StreamSecurityAnalyzer)
@@ -97,14 +97,14 @@ public partial class PacketDetailsViewModel : ObservableObject
     [ObservableProperty] private bool _deepDiveLoading;
     [ObservableProperty] private string _deepDiveProtocol = "";
     [ObservableProperty] private string _deepDiveIcon = "📦";
-    [ObservableProperty] private ObservableCollection<ProtocolSummaryItem> _deepDiveSummary = new();
-    [ObservableProperty] private ObservableCollection<ProtocolLayerViewModel> _deepDiveLayers = new();
+    [ObservableProperty] private ObservableCollection<ProtocolSummaryItem> _deepDiveSummary = [];
+    [ObservableProperty] private ObservableCollection<ProtocolLayerViewModel> _deepDiveLayers = [];
 
     // Packet Analysis Tab - Cleartext Detection section
     [ObservableProperty] private bool _hasCleartextCredentials;
     [ObservableProperty] private string _cleartextSeverityColor = ThemeColorHelper.GetColorHex("TextMuted", "#6E7681");
     [ObservableProperty] private string _cleartextSeverityText = "";
-    [ObservableProperty] private ObservableCollection<CleartextContentViewModel> _cleartextContents = new();
+    [ObservableProperty] private ObservableCollection<CleartextContentViewModel> _cleartextContents = [];
     [ObservableProperty] private int _totalCredentialsCount;
 
     // Static color references for theme consistency
@@ -911,7 +911,7 @@ public class ProtocolSummaryItem
 public class ProtocolLayerViewModel
 {
     public string Name { get; set; } = "";
-    public ObservableCollection<ProtocolFieldViewModel> Fields { get; set; } = new();
+    public ObservableCollection<ProtocolFieldViewModel> Fields { get; set; } = [];
     public bool HasFields => Fields.Count > 0;
 }
 
@@ -951,7 +951,7 @@ public class CleartextContentViewModel
     public string Description { get; set; } = "";
     public string RawContent { get; set; } = "";
     public CleartextSeverity Severity { get; set; }
-    public ObservableCollection<CleartextCredentialViewModel> Credentials { get; set; } = new();
+    public ObservableCollection<CleartextCredentialViewModel> Credentials { get; set; } = [];
 
     public bool HasCredentials => Credentials.Count > 0;
     public string SeverityIcon => Severity switch

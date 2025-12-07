@@ -13,7 +13,7 @@ namespace PCAPAnalyzer.UI.Services
     /// </summary>
     public class FilterCopyService
     {
-        private readonly Dictionary<string, IFilterableTab> _registeredTabs = new();
+        private readonly Dictionary<string, IFilterableTab> _registeredTabs = [];
         private readonly Lock _lock = new();
 
         /// <summary>

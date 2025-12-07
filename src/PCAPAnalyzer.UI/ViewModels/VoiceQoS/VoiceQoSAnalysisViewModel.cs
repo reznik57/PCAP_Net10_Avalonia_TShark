@@ -28,10 +28,10 @@ public partial class VoiceQoSAnalysisViewModel : ObservableObject
     private const int MinPacketsOther = 10;  // Default for other protocols
 
     // Analysis results (unfiltered "all" collections)
-    public List<QoSTrafficItem> AllQoSTraffic { get; private set; } = new();
-    public List<LatencyConnectionItem> AllLatencyConnections { get; private set; } = new();
-    public List<JitterConnectionItem> AllJitterConnections { get; private set; } = new();
-    public List<PacketInfo> AllPackets { get; private set; } = new();
+    public List<QoSTrafficItem> AllQoSTraffic { get; private set; } = [];
+    public List<LatencyConnectionItem> AllLatencyConnections { get; private set; } = [];
+    public List<JitterConnectionItem> AllJitterConnections { get; private set; } = [];
+    public List<PacketInfo> AllPackets { get; private set; } = [];
 
     // Pre-aggregated chart data (generated ONCE during analysis)
     public VoiceQoSTimeSeriesData? CachedTimeSeriesData { get; private set; }

@@ -20,7 +20,7 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 public partial class CountryVisualizationViewModel : ObservableObject
 {
     private NetworkStatistics? _currentStatistics;
-    private HashSet<string> _excludedCountries = new();
+    private HashSet<string> _excludedCountries = [];
 
     // Static color references for theme consistency
     private static readonly string DefaultContinentColor = ThemeColorHelper.GetColorHex("BackgroundLevel1", "#1C2128");
@@ -34,10 +34,10 @@ public partial class CountryVisualizationViewModel : ObservableObject
     private static string[] ChartColors => ThemeColorHelper.GetChartColorPalette();
 
     // Chart data
-    [ObservableProperty] private ObservableCollection<ISeries> _countryChartSeries = new();
+    [ObservableProperty] private ObservableCollection<ISeries> _countryChartSeries = [];
 
     // Map data
-    [ObservableProperty] private Dictionary<string, double> _countryMapData = new();
+    [ObservableProperty] private Dictionary<string, double> _countryMapData = [];
 
     // Continent colors based on traffic
     [ObservableProperty] private string _northAmericaColor = DefaultContinentColor;

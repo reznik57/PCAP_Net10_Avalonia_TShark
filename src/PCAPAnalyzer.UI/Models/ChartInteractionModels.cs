@@ -53,7 +53,7 @@ namespace PCAPAnalyzer.UI.Models
         private DateTime _timestamp;
         private int _totalPackets;
         private long _totalBytes;
-        private ObservableCollection<StreamPopupItem> _streams = new();
+        private ObservableCollection<StreamPopupItem> _streams = [];
         private CommunityToolkit.Mvvm.Input.IRelayCommand? _closeCommand;
 
         public DateTime Timestamp
@@ -136,11 +136,11 @@ namespace PCAPAnalyzer.UI.Models
         public double Value { get; set; }
         public string Series { get; set; } = string.Empty;
         public string DisplayValue { get; set; } = string.Empty;
-        
+
         // Data available at this point in time
-        public List<PortActivityData> TopPorts { get; set; } = new();
-        public List<IPAddressData> TopSourceIPs { get; set; } = new();
-        public List<IPAddressData> TopDestinationIPs { get; set; } = new();
+        public List<PortActivityData> TopPorts { get; set; } = [];
+        public List<IPAddressData> TopSourceIPs { get; set; } = [];
+        public List<IPAddressData> TopDestinationIPs { get; set; } = [];
         
         // Statistics for this time window
         public long PacketCount { get; set; }
@@ -185,7 +185,7 @@ namespace PCAPAnalyzer.UI.Models
     {
         private ChartPointData? _pointData;
         private string _selectedDataType = "Ports";
-        private ObservableCollection<object> _displayItems = new();
+        private ObservableCollection<object> _displayItems = [];
         private CommunityToolkit.Mvvm.Input.IRelayCommand? _closeCommand;
         
         public ChartPointData? PointData

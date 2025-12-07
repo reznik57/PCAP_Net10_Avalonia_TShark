@@ -16,7 +16,7 @@ namespace PCAPAnalyzer.Core.Monitoring
         private static readonly Lazy<PerformanceMonitor> _instance = new(() => new PerformanceMonitor());
         public static PerformanceMonitor Instance => _instance.Value;
 
-        private readonly ConcurrentDictionary<string, PerformanceMetric> _metrics = new();
+        private readonly ConcurrentDictionary<string, PerformanceMetric> _metrics = [];
         private readonly Timer _reportTimer;
         private readonly Process _currentProcess;
         private bool _isDisposed;
@@ -238,7 +238,7 @@ namespace PCAPAnalyzer.Core.Monitoring
     {
         public double CpuUsage { get; set; }
         public long MemoryUsage { get; set; }
-        public List<MetricSummary> Metrics { get; set; } = new();
+        public List<MetricSummary> Metrics { get; set; } = [];
         public bool IsUnderPressure { get; set; }
     }
 

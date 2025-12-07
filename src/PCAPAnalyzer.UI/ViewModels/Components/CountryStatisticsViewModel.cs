@@ -45,11 +45,11 @@ public partial class CountryStatisticsViewModel : ObservableObject
     [ObservableProperty] private string _ipv6Traffic = "0 packets";
 
     // Country lists
-    [ObservableProperty] private ObservableCollection<CountryTrafficItem> _topCountriesList = new();
-    [ObservableProperty] private ObservableCollection<CountryTrafficItem> _allCountriesList = new();
+    [ObservableProperty] private ObservableCollection<CountryTrafficItem> _topCountriesList = [];
+    [ObservableProperty] private ObservableCollection<CountryTrafficItem> _allCountriesList = [];
 
     // Country traffic statistics (for map control)
-    [ObservableProperty] private Dictionary<string, CountryTrafficStatistics> _countryTrafficStatistics = new();
+    [ObservableProperty] private Dictionary<string, CountryTrafficStatistics> _countryTrafficStatistics = [];
 
     /// <summary>
     /// Event raised when statistics have been updated

@@ -34,12 +34,12 @@ namespace PCAPAnalyzer.Core.Models
         public long IncomingBytes { get; set; }
         public long OutgoingBytes { get; set; }
         public long TotalBytes { get; set; }
-        public HashSet<string> UniqueIPs { get; set; } = new();
-        public HashSet<string> OutgoingIPs { get; set; } = new();
-        public HashSet<string> IncomingIPs { get; set; } = new();
+        public HashSet<string> UniqueIPs { get; set; } = [];
+        public HashSet<string> OutgoingIPs { get; set; } = [];
+        public HashSet<string> IncomingIPs { get; set; } = [];
         public double Percentage { get; set; }
-        public Dictionary<string, long> ProtocolBreakdown { get; set; } = new();
-        public List<SecurityThreat> AssociatedThreats { get; set; } = new();
+        public Dictionary<string, long> ProtocolBreakdown { get; set; } = [];
+        public List<SecurityThreat> AssociatedThreats { get; set; } = [];
         public bool IsHighRisk { get; set; }
         public DateTime LatestTimestamp { get; set; }
     }
@@ -78,8 +78,8 @@ namespace PCAPAnalyzer.Core.Models
         public string RiskLevel { get; set; } = string.Empty;
         public string Reason { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public List<string> KnownThreats { get; set; } = new();
-        public List<string> ThreatTypes { get; set; } = new();
+        public List<string> KnownThreats { get; set; } = [];
+        public List<string> ThreatTypes { get; set; } = [];
         public DateTime LastAssessment { get; set; }
     }
 
@@ -100,8 +100,8 @@ namespace PCAPAnalyzer.Core.Models
         public string DestinationCountryName { get; set; } = string.Empty;
         public long PacketCount { get; set; }
         public long ByteCount { get; set; }
-        public List<string> Protocols { get; set; } = new();
-        public HashSet<string> UniqueConnections { get; set; } = new();
+        public List<string> Protocols { get; set; } = [];
+        public HashSet<string> UniqueConnections { get; set; } = [];
         public bool IsCrossBorder { get; set; }
         public bool IsHighRisk { get; set; }
     }

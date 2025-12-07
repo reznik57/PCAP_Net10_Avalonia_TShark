@@ -20,6 +20,7 @@ namespace PCAPAnalyzer.Core.Performance
         private readonly LinkedList<TKey> _accessOrder;
         private readonly ReaderWriterLockSlim _lock;
         private readonly Timer? _cleanupTimer;
+        private readonly TimeProvider _timeProvider;
         private bool _disposed;
 
         // Statistics
@@ -62,13 +63,15 @@ namespace PCAPAnalyzer.Core.Performance
         /// </summary>
         /// <param name="maxCapacity">Maximum number of items to cache</param>
         /// <param name="expirationTime">Optional time after which entries expire</param>
-        public ResultCache(int maxCapacity = 1000, TimeSpan? expirationTime = null)
+        /// <param name="timeProvider">Optional TimeProvider for testability</param>
+        public ResultCache(int maxCapacity = 1000, TimeSpan? expirationTime = null, TimeProvider? timeProvider = null)
         {
             if (maxCapacity <= 0)
                 throw new ArgumentOutOfRangeException(nameof(maxCapacity), "Capacity must be positive");
 
             _maxCapacity = maxCapacity;
             _expirationTime = expirationTime;
+            _timeProvider = timeProvider ?? TimeProvider.System;
             _cache = new ConcurrentDictionary<TKey, CacheEntry>();
             _accessOrder = new LinkedList<TKey>();
             _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
@@ -95,9 +98,11 @@ namespace PCAPAnalyzer.Core.Performance
         {
             if (_cache.TryGetValue(key, out var entry))
             {
+                var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
+
                 // Check expiration
                 if (_expirationTime.HasValue &&
-                    DateTime.UtcNow - entry.CreatedAt > _expirationTime.Value)
+                    utcNow - entry.CreatedAt > _expirationTime.Value)
                 {
                     // Expired - remove it
                     TryRemove(key);
@@ -107,7 +112,7 @@ namespace PCAPAnalyzer.Core.Performance
                 }
 
                 // Update access time and order
-                entry.LastAccessedAt = DateTime.UtcNow;
+                entry.LastAccessedAt = utcNow;
                 UpdateAccessOrder(key);
 
                 Interlocked.Increment(ref _hits);
@@ -127,11 +132,12 @@ namespace PCAPAnalyzer.Core.Performance
         /// <param name="value">Value to cache</param>
         public void AddOrUpdate(TKey key, TValue value)
         {
+            var utcNow = _timeProvider.GetUtcNow().UtcDateTime;
             var entry = new CacheEntry
             {
                 Value = value,
-                CreatedAt = DateTime.UtcNow,
-                LastAccessedAt = DateTime.UtcNow
+                CreatedAt = utcNow,
+                LastAccessedAt = utcNow
             };
 
             // Add or update the entry
@@ -265,7 +271,7 @@ namespace PCAPAnalyzer.Core.Performance
         {
             if (_disposed) return;
 
-            var now = DateTime.UtcNow;
+            var now = _timeProvider.GetUtcNow().UtcDateTime;
             var keysToRemove = new List<TKey>();
 
             // Find expired keys

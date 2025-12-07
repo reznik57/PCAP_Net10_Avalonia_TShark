@@ -16,7 +16,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
     {
         public Dictionary<string, ProtocolStatistics> CalculateProtocolStatistics(
             List<PacketInfo> packets,
-            Dictionary<string, string> protocolColors)
+            IReadOnlyDictionary<string, string> protocolColors)
         {
             try
             {
@@ -121,7 +121,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
         /// </summary>
         public (List<PortStatistics> TopPorts, int UniqueCount) CalculateTopPortsWithCount(
             List<PacketInfo> packets,
-            Dictionary<int, string> wellKnownPorts)
+            IReadOnlyDictionary<int, string> wellKnownPorts)
         {
             // Single-pass O(n) aggregation - Wireshark-compatible unique packet counting
             var portStats = new Dictionary<(int Port, Protocol Protocol), (int Count, long Bytes)>();
@@ -197,7 +197,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
 
         public Dictionary<string, ServiceStatistics> CalculateServiceStatistics(
             List<PacketInfo> packets,
-            Dictionary<int, string> wellKnownPorts)
+            IReadOnlyDictionary<int, string> wellKnownPorts)
         {
             var services = new Dictionary<string, ServiceStatistics>();
 

@@ -19,11 +19,12 @@ namespace PCAPAnalyzer.Core.Performance
         // Suppress CA1416 for the entire field - it's conditionally used based on platform checks
         [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility",
             Justification = "PerformanceCounter is conditionally used with OperatingSystem.IsWindows() checks")]
-        private readonly ConcurrentDictionary<string, PerformanceCounter?> _counters = new();
+        private readonly ConcurrentDictionary<string, PerformanceCounter?> _counters = [];
 
-        private readonly ConcurrentDictionary<string, List<PerformanceMetric>> _metrics = new();
+        private readonly ConcurrentDictionary<string, List<PerformanceMetric>> _metrics = [];
         private readonly Lock _lock = new();
         private readonly bool _isWindowsPlatform = OperatingSystem.IsWindows();
+        private readonly TimeProvider _timeProvider;
         private bool _disposed;
 
         /// <summary>
@@ -31,8 +32,16 @@ namespace PCAPAnalyzer.Core.Performance
         /// </summary>
         public static PerformanceMonitor Instance => _instance.Value;
 
-        private PerformanceMonitor()
+        private PerformanceMonitor() : this(TimeProvider.System)
         {
+        }
+
+        /// <summary>
+        /// Constructor for testing with custom TimeProvider
+        /// </summary>
+        internal PerformanceMonitor(TimeProvider timeProvider)
+        {
+            _timeProvider = timeProvider;
             InitializeCounters();
         }
 
@@ -110,7 +119,7 @@ namespace PCAPAnalyzer.Core.Performance
                 Name = name,
                 Value = value,
                 Unit = unit,
-                Timestamp = DateTime.UtcNow
+                Timestamp = _timeProvider.GetUtcNow().UtcDateTime
             };
 
             _metrics.AddOrUpdate(
@@ -233,7 +242,7 @@ namespace PCAPAnalyzer.Core.Performance
         {
             var report = new System.Text.StringBuilder();
             report.AppendLine("=== Performance Report ===");
-            report.AppendLine($"Generated: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            report.AppendLine($"Generated: {_timeProvider.GetLocalNow():yyyy-MM-dd HH:mm:ss}");
             report.AppendLine();
 
             // Current counters

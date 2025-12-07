@@ -18,7 +18,7 @@ namespace PCAPAnalyzer.Core.Models
         /// All packets loaded from PCAP file. Memory footprint: ~250 bytes per packet.
         /// For 10M packets: ~2.5GB memory.
         /// </summary>
-        public List<PacketInfo> AllPackets { get; init; } = new();
+        public List<PacketInfo> AllPackets { get; init; } = [];
 
         // ============================================================================
         // COMPREHENSIVE STATISTICS (Dashboard Tab)
@@ -38,7 +38,7 @@ namespace PCAPAnalyzer.Core.Models
         /// All detected security threats from UnifiedAnomalyDetectionService.
         /// Includes insecure ports, anomalies, suspicious traffic patterns.
         /// </summary>
-        public List<SecurityThreat> Threats { get; init; } = new();
+        public List<SecurityThreat> Threats { get; init; } = [];
 
         // ============================================================================
         // NETWORK ANOMALIES (Anomalies Tab)
@@ -48,7 +48,7 @@ namespace PCAPAnalyzer.Core.Models
         /// Raw network anomalies detected by all anomaly detectors.
         /// Behavioral/traffic deviations: SYN floods, retransmissions, beaconing, etc.
         /// </summary>
-        public List<NetworkAnomaly> Anomalies { get; init; } = new();
+        public List<NetworkAnomaly> Anomalies { get; init; } = [];
 
         // ============================================================================
         // COUNTRY TRAFFIC (CountryTraffic Tab)
@@ -58,12 +58,12 @@ namespace PCAPAnalyzer.Core.Models
         /// Per-country traffic statistics with incoming/outgoing breakdown.
         /// Key: CountryCode (e.g., "US", "CN"), Value: CountryTrafficStatistics.
         /// </summary>
-        public Dictionary<string, CountryTrafficStatistics> CountryTraffic { get; init; } = new();
+        public Dictionary<string, CountryTrafficStatistics> CountryTraffic { get; init; } = [];
 
         /// <summary>
         /// Cross-border traffic flows for map visualization.
         /// </summary>
-        public List<TrafficFlowDirection> TrafficFlows { get; init; } = new();
+        public List<TrafficFlowDirection> TrafficFlows { get; init; } = [];
 
         // ============================================================================
         // VOICEQOS DATA (VoiceQoS Tab)

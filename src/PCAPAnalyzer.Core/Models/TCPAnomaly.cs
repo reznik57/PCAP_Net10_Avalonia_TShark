@@ -15,8 +15,8 @@ namespace PCAPAnalyzer.Core.Models
         public int SourcePort { get; set; }
         public int DestinationPort { get; set; }
         public AnomalySeverity Severity { get; set; }
-        public List<long> AffectedFrames { get; set; } = new();
-        public Dictionary<string, object> Metrics { get; set; } = new();
+        public List<long> AffectedFrames { get; set; } = [];
+        public Dictionary<string, object> Metrics { get; set; } = [];
         public string TCPStream { get; set; } = string.Empty;
         public string Recommendation { get; set; } = string.Empty;
     }
@@ -65,7 +65,7 @@ namespace PCAPAnalyzer.Core.Models
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public TCPConnectionState State { get; set; }
-        public List<TCPAnomaly> Anomalies { get; set; } = new();
+        public List<TCPAnomaly> Anomalies { get; set; } = [];
     }
 
     public enum TCPConnectionState
@@ -91,22 +91,22 @@ namespace PCAPAnalyzer.Core.Models
         public string ServiceName { get; set; } = string.Empty;
         public long PacketCount { get; set; }
         public long ByteCount { get; set; }
-        public HashSet<string> UniqueHosts { get; set; } = new();
+        public HashSet<string> UniqueHosts { get; set; } = [];
         public double Percentage { get; set; }
         public bool IsWellKnown { get; set; }
         public bool IsSuspicious { get; set; }
-        public List<string> AssociatedIPs { get; set; } = new();
+        public List<string> AssociatedIPs { get; set; } = [];
         public DateTime FirstSeen { get; set; }
         public DateTime LastSeen { get; set; }
-        public Dictionary<string, long> DirectionStats { get; set; } = new(); // Inbound/Outbound counts
+        public Dictionary<string, long> DirectionStats { get; set; } = []; // Inbound/Outbound counts
     }
 
     public class TopPortsAnalysis
     {
-        public List<PortAnalysis> TCPPorts { get; set; } = new();
-        public List<PortAnalysis> UDPPorts { get; set; } = new();
-        public List<PortAnalysis> CombinedPorts { get; set; } = new();
-        public Dictionary<string, PortAnalysis> ServiceMap { get; set; } = new();
+        public List<PortAnalysis> TCPPorts { get; set; } = [];
+        public List<PortAnalysis> UDPPorts { get; set; } = [];
+        public List<PortAnalysis> CombinedPorts { get; set; } = [];
+        public Dictionary<string, PortAnalysis> ServiceMap { get; set; } = [];
         public long TotalTCPPackets { get; set; }
         public long TotalUDPPackets { get; set; }
     }

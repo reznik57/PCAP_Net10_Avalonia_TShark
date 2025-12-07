@@ -28,7 +28,7 @@ public partial class FileAnalysisStagesViewModel : ObservableObject
     /// 7-stage analysis progress indicators with individual percentages and states.
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<AnalysisProgressStage> _stages = new();
+    private ObservableCollection<AnalysisProgressStage> _stages = [];
 
     /// <summary>
     /// Event raised when stages collection changes (for parent to forward notifications)

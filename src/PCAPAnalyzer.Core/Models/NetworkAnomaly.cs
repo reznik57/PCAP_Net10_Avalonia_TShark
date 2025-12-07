@@ -82,17 +82,17 @@ public class NetworkAnomaly
     /// <summary>
     /// List of frame numbers affected by this anomaly
     /// </summary>
-    public List<long> AffectedFrames { get; set; } = new();
+    public List<long> AffectedFrames { get; set; } = [];
 
     /// <summary>
     /// Quantitative metrics related to the anomaly
     /// </summary>
-    public Dictionary<string, object> Metrics { get; set; } = new();
+    public Dictionary<string, object> Metrics { get; set; } = [];
 
     /// <summary>
     /// Additional evidence and context
     /// </summary>
-    public Dictionary<string, object> Evidence { get; set; } = new();
+    public Dictionary<string, object> Evidence { get; set; } = [];
 
     // Remediation
 

@@ -28,13 +28,13 @@ public class AnalysisCoordinatorService : IAnalysisCoordinator
     private readonly AnalysisOrchestrator _orchestrator;
     private readonly IAnalysisCacheService? _cacheService;
     private readonly ISessionAnalysisCache _sessionCache;
-    private readonly List<ITabPopulationTarget> _tabs = new();
+    private readonly List<ITabPopulationTarget> _tabs = [];
 
     /// <summary>
     /// Tab indices that support lazy loading. Configure based on your tab order.
     /// Default: Security Threats (3), Voice/QoS (4)
     /// </summary>
-    private readonly HashSet<int> _lazyLoadTabs = new() { 3, 4 };
+    private readonly HashSet<int> _lazyLoadTabs = [3, 4];
 
     public event EventHandler<CoordinatorCompletedEventArgs>? AnalysisCompleted;
     public event EventHandler<CoordinatorFailedEventArgs>? AnalysisFailed;

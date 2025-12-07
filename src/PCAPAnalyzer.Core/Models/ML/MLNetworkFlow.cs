@@ -151,7 +151,7 @@ public class MLAnomalyPrediction
     /// <summary>
     /// Feature importance scores
     /// </summary>
-    public Dictionary<string, float> FeatureImportance { get; set; } = new();
+    public Dictionary<string, float> FeatureImportance { get; set; } = [];
 }
 
 /// <summary>
@@ -162,7 +162,7 @@ public class EnsemblePrediction
     public string FlowId { get; set; } = string.Empty;
     public float AggregatedScore { get; set; }
     public bool IsAnomaly { get; set; }
-    public Dictionary<string, MLAnomalyPrediction> ModelPredictions { get; set; } = new();
+    public Dictionary<string, MLAnomalyPrediction> ModelPredictions { get; set; } = [];
     public string DominantAnomalyType { get; set; } = string.Empty;
     public float Confidence { get; set; }
 }

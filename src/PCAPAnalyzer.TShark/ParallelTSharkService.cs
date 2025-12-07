@@ -141,7 +141,7 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
     private async Task ProcessPcapParallelAsync(string pcapPath, CancellationToken cancellationToken)
     {
         var sw = Stopwatch.StartNew();
-        List<string> chunkFiles = new();
+        List<string> chunkFiles = [];
 
         DebugLogger.Log($"[ParallelTSharkService] ProcessPcapParallelAsync ENTERED for: {Path.GetFileName(pcapPath)}");
 
@@ -585,7 +585,7 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
 
         string? lastLine = null;
         long lineCount = 0;
-        var lastProgressReport = DateTime.Now;
+        var progressReportTimer = System.Diagnostics.Stopwatch.StartNew();
 
         while (true)
         {
@@ -597,13 +597,12 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
                 lastLine = line.Trim();
                 lineCount++;
 
-                var elapsed = (DateTime.Now - lastProgressReport).TotalSeconds;
-                if (elapsed >= 2.0)
+                if (progressReportTimer.Elapsed.TotalSeconds >= 2.0)
                 {
                     var totalElapsed = sw.Elapsed.TotalSeconds;
                     var estimatedProgress = Math.Min(95, (int)(totalElapsed / 0.3));
                     progressCoordinator?.ReportCounting(estimatedProgress, $"Counting packets... {lineCount:N0} detected", lineCount);
-                    lastProgressReport = DateTime.Now;
+                    progressReportTimer.Restart();
                 }
             }
         }

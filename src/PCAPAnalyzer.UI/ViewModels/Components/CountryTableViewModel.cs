@@ -26,19 +26,19 @@ public partial class CountryTableViewModel : ObservableObject
     public Func<string, CountryTableContext, IReadOnlyList<double>?>? TimelineBucketProvider { get; set; }
 
     // Country tables
-    [ObservableProperty] private ObservableCollection<CountryTableItem> _countriesByPackets = new();
-    [ObservableProperty] private ObservableCollection<CountryTableItem> _countriesByBytes = new();
+    [ObservableProperty] private ObservableCollection<CountryTableItem> _countriesByPackets = [];
+    [ObservableProperty] private ObservableCollection<CountryTableItem> _countriesByBytes = [];
 
     // Source/Destination tables
-    [ObservableProperty] private ObservableCollection<CountryTableItem> _topSourceCountriesByPackets = new();
-    [ObservableProperty] private ObservableCollection<CountryTableItem> _topSourceCountriesByBytes = new();
-    [ObservableProperty] private ObservableCollection<CountryTableItem> _topDestinationCountriesByPackets = new();
-    [ObservableProperty] private ObservableCollection<CountryTableItem> _topDestinationCountriesByBytes = new();
+    [ObservableProperty] private ObservableCollection<CountryTableItem> _topSourceCountriesByPackets = [];
+    [ObservableProperty] private ObservableCollection<CountryTableItem> _topSourceCountriesByBytes = [];
+    [ObservableProperty] private ObservableCollection<CountryTableItem> _topDestinationCountriesByPackets = [];
+    [ObservableProperty] private ObservableCollection<CountryTableItem> _topDestinationCountriesByBytes = [];
 
     // Active flows
-    [ObservableProperty] private ObservableCollection<ActiveFlowViewModel> _activeFlows = new();
-    [ObservableProperty] private ObservableCollection<ActiveFlowViewModel> _activeFlowsByPackets = new();
-    [ObservableProperty] private ObservableCollection<ActiveFlowViewModel> _activeFlowsByBytes = new();
+    [ObservableProperty] private ObservableCollection<ActiveFlowViewModel> _activeFlows = [];
+    [ObservableProperty] private ObservableCollection<ActiveFlowViewModel> _activeFlowsByPackets = [];
+    [ObservableProperty] private ObservableCollection<ActiveFlowViewModel> _activeFlowsByBytes = [];
     [ObservableProperty] private int _activeFlowCount = 0;
 
     /// <summary>

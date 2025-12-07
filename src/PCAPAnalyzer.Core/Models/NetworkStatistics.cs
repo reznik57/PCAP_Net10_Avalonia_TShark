@@ -16,22 +16,22 @@ namespace PCAPAnalyzer.Core.Models
         public double PacketsPerSecond => Duration.TotalSeconds > 0 ? TotalPackets / Duration.TotalSeconds : 0;
         public double BytesPerSecond => Duration.TotalSeconds > 0 ? TotalBytes / Duration.TotalSeconds : 0;
         
-        public Dictionary<string, ProtocolStatistics> ProtocolStats { get; set; } = new();
-        public List<EndpointStatistics> TopSources { get; set; } = new();
-        public List<EndpointStatistics> TopDestinations { get; set; } = new();
-        public HashSet<string> AllUniqueIPs { get; set; } = new();
-        public List<ConversationStatistics> TopConversations { get; set; } = new();
-        public List<PortStatistics> TopPorts { get; set; } = new();
+        public Dictionary<string, ProtocolStatistics> ProtocolStats { get; set; } = [];
+        public List<EndpointStatistics> TopSources { get; set; } = [];
+        public List<EndpointStatistics> TopDestinations { get; set; } = [];
+        public HashSet<string> AllUniqueIPs { get; set; } = [];
+        public List<ConversationStatistics> TopConversations { get; set; } = [];
+        public List<PortStatistics> TopPorts { get; set; } = [];
         public int UniquePortCount { get; set; }  // Total count of unique ports (not just top N)
         public int TotalConversationCount { get; set; }  // Total count of all unique BIDIRECTIONAL conversations (grouped by normalized IP pair + ports)
         public int TotalStreamCount { get; set; }  // Total count of all unique DIRECTIONAL streams (4-tuple: SrcIP, SrcPort, DstIP, DstPort)
-        public List<ServiceStatistics> TopServices => ServiceStats?.Values.OrderByDescending(s => s.PacketCount).Take(10).ToList() ?? new();
-        public List<TimeSeriesDataPoint> ThroughputTimeSeries { get; set; } = new();
-        public List<TimeSeriesDataPoint> PacketsPerSecondTimeSeries { get; set; } = new();
-        public List<TimeSeriesDataPoint> AnomaliesPerSecondTimeSeries { get; set; } = new();
-        public List<TimeSeriesDataPoint> ThreatsPerSecondTimeSeries { get; set; } = new();
-        public List<ThroughputDataPoint> ThroughputDataPoints => ThroughputTimeSeries?.Select(t => new ThroughputDataPoint { Timestamp = t.Timestamp, Value = t.Value }).ToList() ?? new();
-        public List<SecurityThreat> DetectedThreats { get; set; } = new();
+        public List<ServiceStatistics> TopServices => ServiceStats?.Values.OrderByDescending(s => s.PacketCount).Take(10).ToList() ?? [];
+        public List<TimeSeriesDataPoint> ThroughputTimeSeries { get; set; } = [];
+        public List<TimeSeriesDataPoint> PacketsPerSecondTimeSeries { get; set; } = [];
+        public List<TimeSeriesDataPoint> AnomaliesPerSecondTimeSeries { get; set; } = [];
+        public List<TimeSeriesDataPoint> ThreatsPerSecondTimeSeries { get; set; } = [];
+        public List<ThroughputDataPoint> ThroughputDataPoints => ThroughputTimeSeries?.Select(t => new ThroughputDataPoint { Timestamp = t.Timestamp, Value = t.Value }).ToList() ?? [];
+        public List<SecurityThreat> DetectedThreats { get; set; } = [];
         public List<ThreatInfo> Threats => DetectedThreats?.Select(t => new ThreatInfo
         {
             Type = t.Type,
@@ -41,13 +41,13 @@ namespace PCAPAnalyzer.Core.Models
             DestinationIP = t.DestinationAddress,
             Timestamp = t.DetectedAt,
             Confidence = 0.8
-        }).ToList() ?? new();
-        public Dictionary<string, ServiceStatistics> ServiceStats { get; set; } = new();
-        
+        }).ToList() ?? [];
+        public Dictionary<string, ServiceStatistics> ServiceStats { get; set; } = [];
+
         // Country-related statistics
-        public Dictionary<string, CountryTrafficStatistics> CountryStatistics { get; set; } = new();
-        public List<TrafficFlowDirection> TrafficFlows { get; set; } = new();
-        public List<CountryRiskProfile> HighRiskCountries { get; set; } = new();
+        public Dictionary<string, CountryTrafficStatistics> CountryStatistics { get; set; } = [];
+        public List<TrafficFlowDirection> TrafficFlows { get; set; } = [];
+        public List<CountryRiskProfile> HighRiskCountries { get; set; } = [];
         public int UniqueCountries => CountryStatistics?.Count ?? 0;
         public long InternationalPackets { get; set; }
         public long DomesticPackets { get; set; }
@@ -79,7 +79,7 @@ namespace PCAPAnalyzer.Core.Models
         public long PacketCount { get; set; }
         public long ByteCount { get; set; }
         public double Percentage { get; set; }
-        public Dictionary<string, long> ProtocolBreakdown { get; set; } = new();
+        public Dictionary<string, long> ProtocolBreakdown { get; set; } = [];
         public bool IsInternal { get; set; }
         public string Country { get; set; } = "Unknown";
         public string CountryCode { get; set; } = "";
@@ -124,7 +124,7 @@ namespace PCAPAnalyzer.Core.Models
         public DateTime Timestamp { get; set; }
         public double Value { get; set; }
         public string Series { get; set; } = string.Empty;
-        public Dictionary<string, double> AdditionalMetrics { get; set; } = new();
+        public Dictionary<string, double> AdditionalMetrics { get; set; } = [];
         public double PacketsPerSecond { get; set; }
         public double AnomaliesPerSecond { get; set; }
     }
@@ -138,8 +138,8 @@ namespace PCAPAnalyzer.Core.Models
         public string Description { get; set; } = string.Empty;
         public string SourceAddress { get; set; } = string.Empty;
         public string DestinationAddress { get; set; } = string.Empty;
-        public List<long> AffectedPackets { get; set; } = new();
-        public Dictionary<string, object> Evidence { get; set; } = new();
+        public List<long> AffectedPackets { get; set; } = [];
+        public Dictionary<string, object> Evidence { get; set; } = [];
         public string Recommendation { get; set; } = string.Empty;
         public bool IsFalsePositive { get; set; }
     }
@@ -161,8 +161,8 @@ namespace PCAPAnalyzer.Core.Models
         public string Protocol { get; set; } = string.Empty;
         public long PacketCount { get; set; }
         public long ByteCount { get; set; }
-        public List<string> UniqueHosts { get; set; } = new();
-        public Dictionary<string, long> MethodBreakdown { get; set; } = new();
+        public List<string> UniqueHosts { get; set; } = [];
+        public Dictionary<string, long> MethodBreakdown { get; set; } = [];
         public double ResponseTime { get; set; }
         public bool IsEncrypted { get; set; }
     }
@@ -181,8 +181,8 @@ namespace PCAPAnalyzer.Core.Models
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public InsightSeverity Severity { get; set; }
-        public List<string> Recommendations { get; set; } = new();
-        public Dictionary<string, object> SupportingData { get; set; } = new();
+        public List<string> Recommendations { get; set; } = [];
+        public Dictionary<string, object> SupportingData { get; set; } = [];
     }
 
     public enum InsightSeverity

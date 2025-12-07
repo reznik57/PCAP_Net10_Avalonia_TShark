@@ -19,7 +19,7 @@ public partial class AnomalyViewModel : ObservableObject
     private IReadOnlyList<NetworkAnomaly> _allAnomalies = Array.Empty<NetworkAnomaly>();
 
     [ObservableProperty]
-    private ObservableCollection<AnomalyDisplayItem> _filteredAnomalies = new();
+    private ObservableCollection<AnomalyDisplayItem> _filteredAnomalies = [];
 
     [ObservableProperty]
     private AnomalyDisplayItem? _selectedAnomaly;

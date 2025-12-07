@@ -26,7 +26,7 @@ namespace PCAPAnalyzer.UI.Views;
 public partial class VoiceQoSView : UserControl
 {
     // Cached data for efficient tooltip rendering (7 series)
-    private Dictionary<string, List<DateTimePoint>> _cachedTimelineData = new();
+    private Dictionary<string, List<DateTimePoint>> _cachedTimelineData = [];
     private double _cachedMinY;
     private double _cachedMaxY;
 

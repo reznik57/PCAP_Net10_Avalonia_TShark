@@ -14,10 +14,10 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
     /// <typeparam name="T">The type of items to paginate</typeparam>
     public abstract partial class PaginatedViewModel<T> : ObservableObject
     {
-        private List<T> _allItems = new();
+        private List<T> _allItems = [];
 
         [ObservableProperty]
-        private ObservableCollection<T> _pagedItems = new();
+        private ObservableCollection<T> _pagedItems = [];
 
         [ObservableProperty]
         private int _currentPage = 1;

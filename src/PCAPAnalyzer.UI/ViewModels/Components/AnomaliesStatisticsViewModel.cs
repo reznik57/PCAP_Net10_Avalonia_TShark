@@ -28,10 +28,10 @@ public partial class AnomaliesStatisticsViewModel : ObservableObject
     [ObservableProperty] private int _filteredTotalAnomalies;
 
     // Ranked tables
-    public ObservableCollection<AnomalyEndpointViewModel> TopSources { get; } = new();
-    public ObservableCollection<AnomalyEndpointViewModel> TopTargets { get; } = new();
-    public ObservableCollection<AnomalyPortViewModel> TopPorts { get; } = new();
-    public ObservableCollection<AnomalyCategoryViewModel> CategoryBreakdown { get; } = new();
+    public ObservableCollection<AnomalyEndpointViewModel> TopSources { get; } = [];
+    public ObservableCollection<AnomalyEndpointViewModel> TopTargets { get; } = [];
+    public ObservableCollection<AnomalyPortViewModel> TopPorts { get; } = [];
+    public ObservableCollection<AnomalyCategoryViewModel> CategoryBreakdown { get; } = [];
 
     public void UpdateKPIs(AnomalyKPIs kpis)
     {

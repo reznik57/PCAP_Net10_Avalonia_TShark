@@ -30,7 +30,7 @@ public class CaptureInterface
     /// <summary>
     /// List of IP addresses assigned to the interface
     /// </summary>
-    public List<string> Addresses { get; set; } = new();
+    public List<string> Addresses { get; set; } = [];
 
     /// <summary>
     /// MAC address of the interface

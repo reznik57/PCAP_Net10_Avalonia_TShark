@@ -95,6 +95,6 @@ public class PacketsTimelineDataPoint
     public DateTime Time { get; set; }
     public int TotalCount { get; set; }
     public long TotalBytes { get; set; }
-    public Dictionary<string, int> StreamCounts { get; set; } = new();
-    public Dictionary<string, long> StreamBytes { get; set; } = new();
+    public Dictionary<string, int> StreamCounts { get; set; } = [];
+    public Dictionary<string, long> StreamBytes { get; set; } = [];
 }

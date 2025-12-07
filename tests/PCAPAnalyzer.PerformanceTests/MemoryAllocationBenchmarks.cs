@@ -22,7 +22,7 @@ public class MemoryAllocationBenchmarks
 {
     private ObjectPool<byte[]>? _bufferPool;
     private ObjectPool<LivePacketData>? _packetPool;
-    private List<byte[]> _testData = new();
+    private List<byte[]> _testData = [];
     private Random _random = new(42);
 
     [Params(1000, 10000, 50000)]

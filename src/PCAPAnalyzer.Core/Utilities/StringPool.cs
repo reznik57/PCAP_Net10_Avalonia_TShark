@@ -19,7 +19,7 @@ namespace PCAPAnalyzer.Core.Utilities;
 /// </summary>
 public sealed class StringPool
 {
-    private readonly ConcurrentDictionary<int, string> _pool = new();
+    private readonly ConcurrentDictionary<int, string> _pool = [];
 
     /// <summary>
     /// Returns an interned string for the given span.

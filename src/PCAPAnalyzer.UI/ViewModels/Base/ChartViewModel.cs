@@ -17,13 +17,13 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
     public abstract partial class ChartViewModel : ObservableObject
     {
         [ObservableProperty]
-        private ObservableCollection<ISeries> _series = new();
+        private ObservableCollection<ISeries> _series = [];
 
         [ObservableProperty]
-        private ObservableCollection<Axis> _xAxes = new();
+        private ObservableCollection<Axis> _xAxes = [];
 
         [ObservableProperty]
-        private ObservableCollection<Axis> _yAxes = new();
+        private ObservableCollection<Axis> _yAxes = [];
 
         [ObservableProperty]
         private string _title = string.Empty;

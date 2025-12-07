@@ -77,7 +77,7 @@ namespace PCAPAnalyzer.Core.Models
         /// <summary>
         /// Additional metadata for debugging and analysis
         /// </summary>
-        public Dictionary<string, object> Metadata { get; set; } = new();
+        public Dictionary<string, object> Metadata { get; set; } = [];
     }
 
     /// <summary>
@@ -89,7 +89,7 @@ namespace PCAPAnalyzer.Core.Models
         /// <summary>
         /// Ordered list of time-series data points
         /// </summary>
-        public List<VoiceQoSTimeSeriesPoint> DataPoints { get; set; } = new();
+        public List<VoiceQoSTimeSeriesPoint> DataPoints { get; set; } = [];
 
         /// <summary>
         /// Start time of the first time bucket
@@ -134,7 +134,7 @@ namespace PCAPAnalyzer.Core.Models
         /// <summary>
         /// Additional statistics or metadata
         /// </summary>
-        public Dictionary<string, object> Metadata { get; set; } = new();
+        public Dictionary<string, object> Metadata { get; set; } = [];
     }
 
     /// <summary>
@@ -145,17 +145,17 @@ namespace PCAPAnalyzer.Core.Models
         /// <summary>
         /// All QoS traffic items (unfiltered)
         /// </summary>
-        public List<VoiceQoSTrafficItem> QoSTraffic { get; set; } = new();
+        public List<VoiceQoSTrafficItem> QoSTraffic { get; set; } = [];
 
         /// <summary>
         /// All high latency connections (unfiltered)
         /// </summary>
-        public List<VoiceQoSLatencyItem> HighLatencyConnections { get; set; } = new();
+        public List<VoiceQoSLatencyItem> HighLatencyConnections { get; set; } = [];
 
         /// <summary>
         /// All high jitter connections (unfiltered)
         /// </summary>
-        public List<VoiceQoSJitterItem> HighJitterConnections { get; set; } = new();
+        public List<VoiceQoSJitterItem> HighJitterConnections { get; set; } = [];
 
         /// <summary>
         /// Analysis timestamp

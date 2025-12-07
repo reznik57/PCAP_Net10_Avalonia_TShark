@@ -82,7 +82,7 @@ namespace PCAPAnalyzer.Core.Services
         public double CacheHitRate { get; set; }
         public long MemoryUsed { get; set; }
         public OptimizationStrategy StrategyUsed { get; set; } = new();
-        public Dictionary<string, double> Metrics { get; set; } = new();
+        public Dictionary<string, double> Metrics { get; set; } = [];
     }
 
     public interface IAutoOptimizationService
@@ -97,8 +97,8 @@ namespace PCAPAnalyzer.Core.Services
 
     public class AutoOptimizationService : IAutoOptimizationService, IDisposable
     {
-        private readonly ConcurrentBag<PerformanceHistory> _history = new();
-        private readonly ConcurrentDictionary<string, OptimizationStrategy> _strategyCache = new();
+        private readonly ConcurrentBag<PerformanceHistory> _history = [];
+        private readonly ConcurrentDictionary<string, OptimizationStrategy> _strategyCache = [];
         private readonly SemaphoreSlim _optimizationLock = new(1, 1);
 
         // Object pools for zero-allocation

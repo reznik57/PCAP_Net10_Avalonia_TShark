@@ -114,7 +114,7 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
 
     // ==================== PACKET PREVIEW ====================
 
-    public ObservableCollection<PacketInfo> PreviewPackets { get; } = new();
+    public ObservableCollection<PacketInfo> PreviewPackets { get; } = [];
 
     // ==================== SUMMARY STATS ====================
 

@@ -459,7 +459,7 @@ namespace PCAPAnalyzer.Core.Services
     {
         public abstract string Name { get; }
         public abstract OptimizationLevel Level { get; }
-        protected List<string> AppliedOptimizationsList { get; } = new();
+        protected List<string> AppliedOptimizationsList { get; } = [];
         
         public abstract Task<StageResult> OptimizeAsync(
             string pcapFile,
@@ -482,7 +482,7 @@ namespace PCAPAnalyzer.Core.Services
         public TimeSpan FinalTime { get; set; }
         public int PacketsProcessed { get; set; }
         public OptimizationLevel OptimizationLevel { get; set; }
-        public List<string> AppliedOptimizations { get; set; } = new();
+        public List<string> AppliedOptimizations { get; set; } = [];
         public string Message { get; set; } = "";
     }
     
@@ -504,6 +504,6 @@ namespace PCAPAnalyzer.Core.Services
         public double MemoryPressure { get; set; }
         public int ThreadsActive { get; set; }
         public long BytesProcessed { get; set; }
-        public Dictionary<string, double> CustomMetrics { get; set; } = new();
+        public Dictionary<string, double> CustomMetrics { get; set; } = [];
     }
 }

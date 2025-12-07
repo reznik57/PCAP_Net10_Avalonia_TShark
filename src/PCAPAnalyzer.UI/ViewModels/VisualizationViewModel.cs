@@ -32,25 +32,25 @@ namespace PCAPAnalyzer.UI.ViewModels
         private bool _isRealTimeEnabled;
 
         // Chart Collections
-        [ObservableProperty] private ObservableCollection<ISeries> _timeSeriesSeries = new();
-        [ObservableProperty] private ObservableCollection<ISeries> _heatmapSeries = new();
-        [ObservableProperty] private ObservableCollection<ISeries> _histogramSeries = new();
-        [ObservableProperty] private ObservableCollection<ISeries> _boxPlotSeries = new();
+        [ObservableProperty] private ObservableCollection<ISeries> _timeSeriesSeries = [];
+        [ObservableProperty] private ObservableCollection<ISeries> _heatmapSeries = [];
+        [ObservableProperty] private ObservableCollection<ISeries> _histogramSeries = [];
+        [ObservableProperty] private ObservableCollection<ISeries> _boxPlotSeries = [];
 
         // Axes
-        [ObservableProperty] private ObservableCollection<Axis> _timeSeriesXAxes = new();
-        [ObservableProperty] private ObservableCollection<Axis> _timeSeriesYAxes = new();
+        [ObservableProperty] private ObservableCollection<Axis> _timeSeriesXAxes = [];
+        [ObservableProperty] private ObservableCollection<Axis> _timeSeriesYAxes = [];
 
         // Heatmap Data
-        [ObservableProperty] private ObservableCollection<HeatmapCellViewModel> _heatmapCells = new();
-        [ObservableProperty] private ObservableCollection<string> _xLabels = new();
-        [ObservableProperty] private ObservableCollection<string> _yLabels = new();
+        [ObservableProperty] private ObservableCollection<HeatmapCellViewModel> _heatmapCells = [];
+        [ObservableProperty] private ObservableCollection<string> _xLabels = [];
+        [ObservableProperty] private ObservableCollection<string> _yLabels = [];
         [ObservableProperty] private int _rowCount;
         [ObservableProperty] private int _columnCount;
 
         // Network Graph Data
-        [ObservableProperty] private ObservableCollection<NetworkNodeViewModel> _nodes = new();
-        [ObservableProperty] private ObservableCollection<NetworkEdgeViewModel> _edges = new();
+        [ObservableProperty] private ObservableCollection<NetworkNodeViewModel> _nodes = [];
+        [ObservableProperty] private ObservableCollection<NetworkEdgeViewModel> _edges = [];
         [ObservableProperty] private int _nodeCount;
         [ObservableProperty] private int _edgeCount;
 

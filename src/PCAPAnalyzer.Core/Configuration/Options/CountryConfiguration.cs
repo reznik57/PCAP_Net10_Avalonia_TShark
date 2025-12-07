@@ -11,11 +11,11 @@ namespace PCAPAnalyzer.Core.Configuration.Options
         /// <summary>
         /// ISO 3166-1 alpha-2 country codes considered high-risk.
         /// </summary>
-        public HashSet<string> HighRiskCountries { get; set; } = new();
+        public HashSet<string> HighRiskCountries { get; set; } = [];
 
         /// <summary>
         /// Country code to continent name mappings.
         /// </summary>
-        public Dictionary<string, string> ContinentMappings { get; set; } = new();
+        public Dictionary<string, string> ContinentMappings { get; set; } = [];
     }
 }

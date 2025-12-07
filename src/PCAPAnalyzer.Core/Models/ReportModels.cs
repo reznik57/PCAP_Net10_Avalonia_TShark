@@ -46,14 +46,14 @@ namespace PCAPAnalyzer.Core.Models
         // Report Sections
         public ExecutiveSummary ExecutiveSummary { get; set; } = new();
         public NetworkOverview NetworkOverview { get; set; } = new();
-        public List<SecurityFinding> SecurityFindings { get; set; } = new();
-        public List<PerformanceIssue> PerformanceIssues { get; set; } = new();
-        public List<ComplianceViolation> ComplianceViolations { get; set; } = new();
-        public List<Recommendation> Recommendations { get; set; } = new();
+        public List<SecurityFinding> SecurityFindings { get; set; } = [];
+        public List<PerformanceIssue> PerformanceIssues { get; set; } = [];
+        public List<ComplianceViolation> ComplianceViolations { get; set; } = [];
+        public List<Recommendation> Recommendations { get; set; } = [];
         public RiskAssessment RiskAssessment { get; set; } = new();
         public RemediationPlan RemediationPlan { get; set; } = new();
         public TechnicalDetails TechnicalDetails { get; set; } = new();
-        
+
         // Report Configuration
         public ReportConfiguration Configuration { get; set; } = new();
     }
@@ -86,8 +86,8 @@ namespace PCAPAnalyzer.Core.Models
         public double SecurityScore { get; set; } // 0-100
         public double ComplianceScore { get; set; } // 0-100
         public double PerformanceScore { get; set; } // 0-100
-        public List<string> KeyFindings { get; set; } = new();
-        public List<string> ImmediateActions { get; set; } = new();
+        public List<string> KeyFindings { get; set; } = [];
+        public List<string> ImmediateActions { get; set; } = [];
         public string BusinessImpact { get; set; } = "";
         public string EstimatedRemediationEffort { get; set; } = "";
     }
@@ -97,12 +97,12 @@ namespace PCAPAnalyzer.Core.Models
         public int TotalDevices { get; set; }
         public int TotalConnections { get; set; }
         public long TotalBandwidth { get; set; }
-        public List<NetworkSegmentInfo> Segments { get; set; } = new();
-        public List<DeviceInfo> CriticalDevices { get; set; } = new();
-        public Dictionary<string, int> ProtocolDistribution { get; set; } = new();
-        public Dictionary<string, int> ServiceDistribution { get; set; } = new();
-        public List<TopTalker> TopTalkers { get; set; } = new();
-        public List<string> ExternalConnections { get; set; } = new();
+        public List<NetworkSegmentInfo> Segments { get; set; } = [];
+        public List<DeviceInfo> CriticalDevices { get; set; } = [];
+        public Dictionary<string, int> ProtocolDistribution { get; set; } = [];
+        public Dictionary<string, int> ServiceDistribution { get; set; } = [];
+        public List<TopTalker> TopTalkers { get; set; } = [];
+        public List<string> ExternalConnections { get; set; } = [];
     }
 
     public class SecurityFinding
@@ -113,15 +113,15 @@ namespace PCAPAnalyzer.Core.Models
         public SeverityLevel Severity { get; set; }
         public string Description { get; set; } = "";
         public string TechnicalDetails { get; set; } = "";
-        public List<AffectedSystem> AffectedSystems { get; set; } = new();
+        public List<AffectedSystem> AffectedSystems { get; set; } = [];
         public string PotentialImpact { get; set; } = "";
         public string RootCause { get; set; } = "";
         public RemediationStep Remediation { get; set; } = new();
-        public List<string> Evidence { get; set; } = new();
+        public List<string> Evidence { get; set; } = [];
         public DateTime FirstDetected { get; set; }
         public DateTime LastDetected { get; set; }
         public int OccurrenceCount { get; set; }
-        public Dictionary<string, string> References { get; set; } = new();
+        public Dictionary<string, string> References { get; set; } = [];
         public string CveReference { get; set; } = "";
         public double RiskScore { get; set; }
     }
@@ -132,31 +132,31 @@ namespace PCAPAnalyzer.Core.Models
         public string Hostname { get; set; } = "";
         public string MacAddress { get; set; } = "";
         public string OperatingSystem { get; set; } = "";
-        public List<int> AffectedPorts { get; set; } = new();
-        public List<string> AffectedServices { get; set; } = new();
+        public List<int> AffectedPorts { get; set; } = [];
+        public List<string> AffectedServices { get; set; } = [];
         public string Location { get; set; } = "";
         public string Owner { get; set; } = "";
         public string Department { get; set; } = "";
         public bool IsCriticalAsset { get; set; }
-        public List<string> VulnerableComponents { get; set; } = new();
-        public Dictionary<string, string> AdditionalInfo { get; set; } = new();
+        public List<string> VulnerableComponents { get; set; } = [];
+        public Dictionary<string, string> AdditionalInfo { get; set; } = [];
     }
 
     public class RemediationStep
     {
         public RemediationPriority Priority { get; set; }
         public string Summary { get; set; } = "";
-        public List<string> DetailedSteps { get; set; } = new();
+        public List<string> DetailedSteps { get; set; } = [];
         public string EstimatedEffort { get; set; } = "";
         public string RequiredSkills { get; set; } = "";
-        public List<string> Prerequisites { get; set; } = new();
-        public List<string> Tools { get; set; } = new();
+        public List<string> Prerequisites { get; set; } = [];
+        public List<string> Tools { get; set; } = [];
         public string ValidationMethod { get; set; } = "";
         public string ExpectedOutcome { get; set; } = "";
-        public List<string> PotentialRisks { get; set; } = new();
+        public List<string> PotentialRisks { get; set; } = [];
         public string FallbackPlan { get; set; } = "";
-        public Dictionary<string, string> ConfigurationChanges { get; set; } = new();
-        public List<string> TestingSteps { get; set; } = new();
+        public Dictionary<string, string> ConfigurationChanges { get; set; } = [];
+        public List<string> TestingSteps { get; set; } = [];
     }
 
     public class PerformanceIssue
@@ -166,11 +166,11 @@ namespace PCAPAnalyzer.Core.Models
         public string Category { get; set; } = ""; // Latency, Bandwidth, Packet Loss, etc.
         public SeverityLevel Severity { get; set; }
         public string Description { get; set; } = "";
-        public List<AffectedSystem> AffectedSystems { get; set; } = new();
+        public List<AffectedSystem> AffectedSystems { get; set; } = [];
         public PerformanceMetrics Metrics { get; set; } = new();
         public string Impact { get; set; } = "";
         public RemediationStep Remediation { get; set; } = new();
-        public List<string> RelatedFindings { get; set; } = new();
+        public List<string> RelatedFindings { get; set; } = [];
     }
 
     public class PerformanceMetrics
@@ -182,7 +182,7 @@ namespace PCAPAnalyzer.Core.Models
         public long BandwidthUtilization { get; set; }
         public double RetransmissionRate { get; set; }
         public int ConcurrentConnections { get; set; }
-        public Dictionary<string, double> CustomMetrics { get; set; } = new();
+        public Dictionary<string, double> CustomMetrics { get; set; } = [];
     }
 
     public class ComplianceViolation
@@ -192,7 +192,7 @@ namespace PCAPAnalyzer.Core.Models
         public string Requirement { get; set; } = "";
         public string Description { get; set; } = "";
         public SeverityLevel Severity { get; set; }
-        public List<AffectedSystem> AffectedSystems { get; set; } = new();
+        public List<AffectedSystem> AffectedSystems { get; set; } = [];
         public string Evidence { get; set; } = "";
         public RemediationStep Remediation { get; set; } = new();
         public string ComplianceImpact { get; set; } = "";
@@ -211,20 +211,20 @@ namespace PCAPAnalyzer.Core.Models
         public string Implementation { get; set; } = "";
         public string EstimatedCost { get; set; } = "";
         public string EstimatedTimeframe { get; set; } = "";
-        public List<string> Dependencies { get; set; } = new();
-        public List<string> Risks { get; set; } = new();
+        public List<string> Dependencies { get; set; } = [];
+        public List<string> Risks { get; set; } = [];
         public double ExpectedImprovement { get; set; } // Percentage
-        public List<string> RelatedFindings { get; set; } = new();
+        public List<string> RelatedFindings { get; set; } = [];
     }
 
     public class RiskAssessment
     {
         public double OverallRiskScore { get; set; }
         public string RiskLevel { get; set; } = "";
-        public Dictionary<string, double> CategoryScores { get; set; } = new();
-        public List<RiskFactor> RiskFactors { get; set; } = new();
+        public Dictionary<string, double> CategoryScores { get; set; } = [];
+        public List<RiskFactor> RiskFactors { get; set; } = [];
         public string RiskTrend { get; set; } = ""; // Increasing, Stable, Decreasing
-        public List<string> MitigationStrategies { get; set; } = new();
+        public List<string> MitigationStrategies { get; set; } = [];
         public string BusinessImpactAnalysis { get; set; } = "";
     }
 
@@ -238,12 +238,12 @@ namespace PCAPAnalyzer.Core.Models
 
     public class RemediationPlan
     {
-        public List<RemediationPhase> Phases { get; set; } = new();
+        public List<RemediationPhase> Phases { get; set; } = [];
         public string TotalEstimatedTime { get; set; } = "";
         public string TotalEstimatedCost { get; set; } = "";
-        public List<string> RequiredResources { get; set; } = new();
-        public Dictionary<string, List<RemediationTask>> TasksByPriority { get; set; } = new();
-        public List<string> Dependencies { get; set; } = new();
+        public List<string> RequiredResources { get; set; } = [];
+        public Dictionary<string, List<RemediationTask>> TasksByPriority { get; set; } = [];
+        public List<string> Dependencies { get; set; } = [];
         public string SuccessCriteria { get; set; } = "";
     }
 
@@ -254,8 +254,8 @@ namespace PCAPAnalyzer.Core.Models
         public string Description { get; set; } = "";
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
-        public List<RemediationTask> Tasks { get; set; } = new();
-        public List<string> Deliverables { get; set; } = new();
+        public List<RemediationTask> Tasks { get; set; } = [];
+        public List<string> Deliverables { get; set; } = [];
         public string SuccessCriteria { get; set; } = "";
     }
 
@@ -267,18 +267,18 @@ namespace PCAPAnalyzer.Core.Models
         public string AssignedTo { get; set; } = "";
         public RemediationPriority Priority { get; set; }
         public string EstimatedEffort { get; set; } = "";
-        public List<string> Dependencies { get; set; } = new();
+        public List<string> Dependencies { get; set; } = [];
         public string Status { get; set; } = "Pending";
-        public List<string> RelatedFindings { get; set; } = new();
+        public List<string> RelatedFindings { get; set; } = [];
     }
 
     public class TechnicalDetails
     {
-        public Dictionary<string, List<PacketSample>> PacketSamples { get; set; } = new();
-        public List<NetworkFlow> SuspiciousFlows { get; set; } = new();
-        public Dictionary<string, string> ConfigurationSnapshots { get; set; } = new();
-        public List<LogEntry> RelevantLogs { get; set; } = new();
-        public Dictionary<string, object> RawMetrics { get; set; } = new();
+        public Dictionary<string, List<PacketSample>> PacketSamples { get; set; } = [];
+        public List<NetworkFlow> SuspiciousFlows { get; set; } = [];
+        public Dictionary<string, string> ConfigurationSnapshots { get; set; } = [];
+        public List<LogEntry> RelevantLogs { get; set; } = [];
+        public Dictionary<string, object> RawMetrics { get; set; } = [];
     }
 
     public class PacketSample
@@ -290,7 +290,7 @@ namespace PCAPAnalyzer.Core.Models
         public string Protocol { get; set; } = "";
         public string Summary { get; set; } = "";
         public string HexDump { get; set; } = "";
-        public Dictionary<string, string> Headers { get; set; } = new();
+        public Dictionary<string, string> Headers { get; set; } = [];
     }
 
     public class NetworkFlow
@@ -305,7 +305,7 @@ namespace PCAPAnalyzer.Core.Models
         public int PacketCount { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public List<string> Flags { get; set; } = new();
+        public List<string> Flags { get; set; } = [];
         public string Reason { get; set; } = "";
     }
 
@@ -315,7 +315,7 @@ namespace PCAPAnalyzer.Core.Models
         public string Source { get; set; } = "";
         public string Level { get; set; } = "";
         public string Message { get; set; } = "";
-        public Dictionary<string, string> Context { get; set; } = new();
+        public Dictionary<string, string> Context { get; set; } = [];
     }
 
     public class NetworkSegmentInfo
@@ -323,7 +323,7 @@ namespace PCAPAnalyzer.Core.Models
         public string Name { get; set; } = "";
         public string Subnet { get; set; } = "";
         public int DeviceCount { get; set; }
-        public List<string> Services { get; set; } = new();
+        public List<string> Services { get; set; } = [];
         public string SecurityLevel { get; set; } = "";
     }
 
@@ -333,7 +333,7 @@ namespace PCAPAnalyzer.Core.Models
         public string Hostname { get; set; } = "";
         public string Type { get; set; } = "";
         public string Criticality { get; set; } = "";
-        public List<string> Services { get; set; } = new();
+        public List<string> Services { get; set; } = [];
     }
 
     public class TopTalker

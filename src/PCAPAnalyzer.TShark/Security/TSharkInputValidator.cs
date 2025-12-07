@@ -20,10 +20,10 @@ public sealed class TSharkInputValidator
     private readonly ILogger<TSharkInputValidator>? _logger;
 
     // Shell metacharacters that could be exploited for command injection
-    private static readonly char[] ShellMetacharacters = { ';', '&', '|', '<', '>', '`', '$', '(', ')', '{', '}', '[', ']', '\n', '\r' };
+    private static readonly char[] ShellMetacharacters = [';', '&', '|', '<', '>', '`', '$', '(', ')', '{', '}', '[', ']', '\n', '\r'];
 
     // Whitelisted PCAP file extensions
-    private static readonly string[] AllowedExtensions = { ".pcap", ".pcapng", ".cap", ".dmp" };
+    private static readonly string[] AllowedExtensions = [".pcap", ".pcapng", ".cap", ".dmp"];
 
     // Maximum lengths to prevent DoS attacks
     private const int MaxPathLength = 4096;
@@ -201,7 +201,7 @@ public sealed class TSharkInputValidator
 
         // Check for shell metacharacters that could be exploited
         // Note: Some overlap with pattern check, but provides defense in depth
-        var dangerousChars = new[] { ';', '`', '$', '\n', '\r', '"', '\'' };
+        char[] dangerousChars = [';', '`', '$', '\n', '\r', '"', '\''];
         if (filter.IndexOfAny(dangerousChars) >= 0)
         {
             _logger?.LogError("SECURITY: Shell metacharacters detected in filter: {Filter}", filter);

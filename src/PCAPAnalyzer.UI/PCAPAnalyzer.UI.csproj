@@ -6,7 +6,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <!-- Disabled for Debug builds to allow incremental development - re-enable for Release -->
+    <!-- CompiledBindings: Enabled in Release for 20-40% binding perf -->
+    <!-- In Debug: Disabled to allow iterative development; many views need x:DataType migration -->
+    <!-- TODO: Add x:DataType to all views, then enable globally (tracked in bugs.md) -->
     <AvaloniaUseCompiledBindingsByDefault Condition="'$(Configuration)' == 'Release'">true</AvaloniaUseCompiledBindingsByDefault>
     <AvaloniaUseCompiledBindingsByDefault Condition="'$(Configuration)' != 'Release'">false</AvaloniaUseCompiledBindingsByDefault>
     <!-- Suppress XAML type resolution errors for LiveCharts and deprecated properties -->
@@ -14,8 +16,9 @@
     <!-- CA rules (CA1063, CA1816, CA2213) now documented in .editorconfig -->
     <AvaloniaXamlErrorOnUnresolvedTypes>false</AvaloniaXamlErrorOnUnresolvedTypes>
     <!-- AVLN2000: LiveCharts types are resolved at runtime - see .editorconfig for details -->
+    <!-- AVLN2100: Some bindings use RelativeSource which requires reflection binding -->
     <!-- CA1002: List<T> used intentionally in internal ViewModels for performance -->
-    <NoWarn>$(NoWarn);AVLN2000;CA1002</NoWarn>
+    <NoWarn>$(NoWarn);AVLN2000;AVLN2100;CA1002</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

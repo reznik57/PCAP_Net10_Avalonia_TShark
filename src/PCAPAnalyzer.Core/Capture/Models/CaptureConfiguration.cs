@@ -99,7 +99,7 @@ namespace PCAPAnalyzer.Core.Capture.Models
         /// <summary>
         /// Gets or sets additional TShark arguments
         /// </summary>
-        public List<string> AdditionalTSharkArgs { get; init; } = new();
+        public List<string> AdditionalTSharkArgs { get; init; } = [];
 
         /// <summary>
         /// Gets or sets the timeout for TShark process startup

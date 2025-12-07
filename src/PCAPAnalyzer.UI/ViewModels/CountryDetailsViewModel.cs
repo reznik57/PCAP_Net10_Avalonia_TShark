@@ -22,8 +22,8 @@ namespace PCAPAnalyzer.UI.ViewModels
         private string _filterText = "";
         private string _selectedProtocol = "All";
         private bool _useNotFilter;
-        private ObservableCollection<CountryPacketDetail> _allPackets = new();
-        private ObservableCollection<CountryPacketDetail> _filteredPackets = new();
+        private ObservableCollection<CountryPacketDetail> _allPackets = [];
+        private ObservableCollection<CountryPacketDetail> _filteredPackets = [];
         private readonly string _countryCode;
         private long _actualIncomingPackets;
         private long _actualOutgoingPackets;
@@ -105,7 +105,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _useNotFilter, value);
         }
         
-        public ObservableCollection<string> Protocols { get; } = new();
+        public ObservableCollection<string> Protocols { get; } = [];
         
         public ObservableCollection<CountryPacketDetail> FilteredPackets
         {

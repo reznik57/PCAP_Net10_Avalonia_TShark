@@ -19,10 +19,10 @@ namespace PCAPAnalyzer.UI.Controls
     {
         #region Fields
 
-        private readonly Dictionary<string, CountryGeoData> _countryGeoData = new();
-        private readonly Dictionary<Protocol, Color> _protocolColors = new();
-        private readonly List<TrafficFlowAnimation> _trafficFlows = new();
-        private readonly Dictionary<string, HeatMapPoint> _heatMapPoints = new();
+        private readonly Dictionary<string, CountryGeoData> _countryGeoData = [];
+        private readonly Dictionary<Protocol, Color> _protocolColors = [];
+        private readonly List<TrafficFlowAnimation> _trafficFlows = [];
+        private readonly Dictionary<string, HeatMapPoint> _heatMapPoints = [];
 
         #endregion
 

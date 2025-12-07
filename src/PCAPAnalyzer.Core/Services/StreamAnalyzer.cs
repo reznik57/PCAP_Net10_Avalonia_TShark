@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,8 +26,8 @@ public class StreamAnalyzer
     private readonly IInsecurePortDetector? _portDetector;
     private readonly IGeoIPService? _geoIPService;
 
-    // Known malware ports (C2, backdoors, etc.)
-    private static readonly HashSet<int> MalwarePorts = new()
+    // Known malware ports (C2, backdoors, etc.) - FrozenSet for O(1) immutable lookups
+    private static readonly FrozenSet<int> MalwarePorts = new HashSet<int>
     {
         4444,   // Metasploit default
         5555,   // Android ADB exploitation
@@ -38,7 +39,7 @@ public class StreamAnalyzer
         1337,   // Elite/Leet
         9001,   // Tor default
         9050    // Tor SOCKS
-    };
+    }.ToFrozenSet();
 
     /// <summary>
     /// Creates StreamAnalyzer with optional security services for enhanced analysis.

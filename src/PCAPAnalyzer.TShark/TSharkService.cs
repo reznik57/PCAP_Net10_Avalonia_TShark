@@ -841,7 +841,7 @@ public sealed class TSharkService : ITSharkService
 
         string? lastLine = null;
         long lineCount = 0;
-        var lastProgressReport = DateTime.Now;
+        var progressReportTimer = System.Diagnostics.Stopwatch.StartNew();
 
         while (true)
         {
@@ -858,14 +858,13 @@ public sealed class TSharkService : ITSharkService
                 lineCount++;
 
                 // Report progress every 2 seconds to show activity
-                var elapsed = (DateTime.Now - lastProgressReport).TotalSeconds;
-                if (elapsed >= 2.0)
+                if (progressReportTimer.Elapsed.TotalSeconds >= 2.0)
                 {
                     // Estimate progress based on elapsed time (rough approximation)
                     var totalElapsed = sw.Elapsed.TotalSeconds;
                     var estimatedProgress = Math.Min(95, (int)(totalElapsed / 0.3)); // Assume ~30s total, cap at 95%
                     progressCoordinator?.ReportCounting(estimatedProgress, $"Counting packets... {lineCount:N0} detected", lineCount);
-                    lastProgressReport = DateTime.Now;
+                    progressReportTimer.Restart();
                 }
             }
         }

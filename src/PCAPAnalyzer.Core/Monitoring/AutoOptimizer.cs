@@ -296,7 +296,7 @@ namespace PCAPAnalyzer.Core.Monitoring
         public string Reason { get; set; } = "";
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public List<StrategyResult> StrategyResults { get; set; } = new();
+        public List<StrategyResult> StrategyResults { get; set; } = [];
 
         public TimeSpan Duration => EndTime - StartTime;
     }
@@ -305,8 +305,8 @@ namespace PCAPAnalyzer.Core.Monitoring
     {
         public bool Success { get; set; }
         public string Message { get; set; } = "";
-        public Dictionary<string, object> MetricsBefore { get; set; } = new();
-        public Dictionary<string, object> MetricsAfter { get; set; } = new();
+        public Dictionary<string, object> MetricsBefore { get; set; } = [];
+        public Dictionary<string, object> MetricsAfter { get; set; } = [];
     }
 
     public class OptimizationEventArgs : EventArgs

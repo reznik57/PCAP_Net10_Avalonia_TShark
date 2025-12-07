@@ -13,16 +13,16 @@ namespace PCAPAnalyzer.UI.ViewModels
     public partial class DashboardViewModel
     {
         // Extended collections with ranking support (up to 30 entries)
-        [ObservableProperty] private ObservableCollection<TopPortViewModelExtended> _topPortsByPacketsExtended = new();
-        [ObservableProperty] private ObservableCollection<TopPortViewModelExtended> _topPortsByBytesExtended = new();
-        [ObservableProperty] private ObservableCollection<EndpointViewModelExtended> _topSourcesExtended = new();
-        [ObservableProperty] private ObservableCollection<EndpointViewModelExtended> _topSourcesByBytesExtended = new();
-        [ObservableProperty] private ObservableCollection<EndpointViewModelExtended> _topDestinationsExtended = new();
-        [ObservableProperty] private ObservableCollection<EndpointViewModelExtended> _topDestinationsByBytesExtended = new();
-        [ObservableProperty] private ObservableCollection<ConnectionViewModelExtended> _topConnectionsExtended = new();
-        [ObservableProperty] private ObservableCollection<ConnectionViewModelExtended> _topConnectionsByBytesExtended = new();
-        [ObservableProperty] private ObservableCollection<EndpointViewModelExtended> _topTotalIPsByPacketsExtended = new();
-        [ObservableProperty] private ObservableCollection<EndpointViewModelExtended> _topTotalIPsByBytesExtended = new();
+        [ObservableProperty] private ObservableCollection<TopPortViewModelExtended> _topPortsByPacketsExtended = [];
+        [ObservableProperty] private ObservableCollection<TopPortViewModelExtended> _topPortsByBytesExtended = [];
+        [ObservableProperty] private ObservableCollection<EndpointViewModelExtended> _topSourcesExtended = [];
+        [ObservableProperty] private ObservableCollection<EndpointViewModelExtended> _topSourcesByBytesExtended = [];
+        [ObservableProperty] private ObservableCollection<EndpointViewModelExtended> _topDestinationsExtended = [];
+        [ObservableProperty] private ObservableCollection<EndpointViewModelExtended> _topDestinationsByBytesExtended = [];
+        [ObservableProperty] private ObservableCollection<ConnectionViewModelExtended> _topConnectionsExtended = [];
+        [ObservableProperty] private ObservableCollection<ConnectionViewModelExtended> _topConnectionsByBytesExtended = [];
+        [ObservableProperty] private ObservableCollection<EndpointViewModelExtended> _topTotalIPsByPacketsExtended = [];
+        [ObservableProperty] private ObservableCollection<EndpointViewModelExtended> _topTotalIPsByBytesExtended = [];
 
         /// <summary>
         /// Update extended collections with ranking information

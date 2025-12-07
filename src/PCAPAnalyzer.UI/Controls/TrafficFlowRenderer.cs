@@ -14,8 +14,8 @@ namespace PCAPAnalyzer.UI.Controls
     /// </summary>
     public class TrafficFlowRenderer
     {
-        private readonly List<AnimatedFlow> _flows = new();
-        private readonly Dictionary<Protocol, FlowStyle> _protocolStyles = new();
+        private readonly List<AnimatedFlow> _flows = [];
+        private readonly Dictionary<Protocol, FlowStyle> _protocolStyles = [];
 #pragma warning disable CA5394 // Do not use insecure randomness - Used only for UI animation natural variation, not security
         private readonly Random _random = new();
 #pragma warning restore CA5394
@@ -353,7 +353,7 @@ namespace PCAPAnalyzer.UI.Controls
         public int PacketCount { get; set; }
         public long ByteCount { get; set; }
         public DateTime CreatedAt { get; set; }
-        public List<Point> DirectionArrows { get; set; } = new();
+        public List<Point> DirectionArrows { get; set; } = [];
     }
 
     public class FlowStyle
@@ -369,7 +369,7 @@ namespace PCAPAnalyzer.UI.Controls
     {
         public double Temperature { get; set; }
         public DateTime LastUpdate { get; set; }
-        public Dictionary<Protocol, long> ProtocolBytes { get; set; } = new();
+        public Dictionary<Protocol, long> ProtocolBytes { get; set; } = [];
         public long TotalPackets { get; set; }
         public long TotalBytes { get; set; }
     }

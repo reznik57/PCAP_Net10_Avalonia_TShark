@@ -14,7 +14,7 @@ namespace PCAPAnalyzer.Core.Interfaces.Statistics
         /// </summary>
         Dictionary<string, ProtocolStatistics> CalculateProtocolStatistics(
             List<PacketInfo> packets,
-            Dictionary<string, string> protocolColors);
+            IReadOnlyDictionary<string, string> protocolColors);
 
         /// <summary>
         /// Calculates top endpoints by packet count.
@@ -31,14 +31,14 @@ namespace PCAPAnalyzer.Core.Interfaces.Statistics
         /// </summary>
         (List<PortStatistics> TopPorts, int UniqueCount) CalculateTopPortsWithCount(
             List<PacketInfo> packets,
-            Dictionary<int, string> wellKnownPorts);
+            IReadOnlyDictionary<int, string> wellKnownPorts);
 
         /// <summary>
         /// Calculates service-level statistics based on well-known ports.
         /// </summary>
         Dictionary<string, ServiceStatistics> CalculateServiceStatistics(
             List<PacketInfo> packets,
-            Dictionary<int, string> wellKnownPorts);
+            IReadOnlyDictionary<int, string> wellKnownPorts);
 
         /// <summary>
         /// Determines if an IP address is in private/internal address space (RFC1918).

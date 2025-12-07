@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -7,7 +8,7 @@ namespace PCAPAnalyzer.UI.Helpers
 {
     internal static class CountryNameHelper
     {
-        private static readonly Dictionary<string, string> CustomCodeToName = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly FrozenDictionary<string, string> CustomCodeToName = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             // IPv4 Private/Internal
             ["PRIV"] = "Internal Network",
@@ -27,9 +28,9 @@ namespace PCAPAnalyzer.UI.Helpers
             // Generic/Unknown
             ["XX"] = "Unknown",
             ["XK"] = "Kosovo"
-        };
+        }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
-        private static readonly Dictionary<string, string> CustomNameToCode = new(StringComparer.OrdinalIgnoreCase)
+        private static readonly FrozenDictionary<string, string> CustomNameToCode = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
         {
             // IPv4 Private/Internal
             ["Internal Network"] = "PRIV",
@@ -53,7 +54,7 @@ namespace PCAPAnalyzer.UI.Helpers
             // Generic
             ["Unknown"] = "XX",
             ["Kosovo"] = "XK"
-        };
+        }.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
 
         private static readonly Lazy<Dictionary<string, string>> CodeToNameLazy = new(BuildCodeToNameMap);
         private static readonly Lazy<Dictionary<string, string>> NameToCodeLazy = new(BuildNameToCodeMap);

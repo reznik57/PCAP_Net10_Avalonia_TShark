@@ -21,7 +21,7 @@ public partial class AnomalySummaryViewModel : ObservableObject
     [ObservableProperty] private bool _isVisible = true;
 
     [ObservableProperty]
-    private ObservableCollection<AnomalySummaryItem> _topThreats = new();
+    private ObservableCollection<AnomalySummaryItem> _topThreats = [];
 
     public int TotalCount => CriticalCount + HighCount + MediumCount + LowCount;
     public bool HasAnomalies => TotalCount > 0;

@@ -25,18 +25,18 @@ public class SecurityThreatItemViewModel : ObservableObject
     public DateTime FirstSeen { get; set; }
     public DateTime LastSeen { get; set; }
     public string Description { get; set; } = "";
-    public List<string> Vulnerabilities { get; set; } = new();
-    public List<string> Mitigations { get; set; } = new();
-    public List<string> AffectedIPs { get; set; } = new();
+    public List<string> Vulnerabilities { get; set; } = [];
+    public List<string> Mitigations { get; set; } = [];
+    public List<string> AffectedIPs { get; set; } = [];
     public string DetectedVersion { get; set; } = "";
     public bool IsEncryptedButInsecure { get; set; }
-    public List<string> SourceIPs { get; set; } = new();
-    public List<string> DestinationIPs { get; set; } = new();
+    public List<string> SourceIPs { get; set; } = [];
+    public List<string> DestinationIPs { get; set; } = [];
 
     /// <summary>
     /// Percentage of total threats this item represents (for percentage bar display).
     /// </summary>
     public double Percentage { get; set; }
 
-    public List<(string Source, string Destination)> Connections { get; set; } = new();
+    public List<(string Source, string Destination)> Connections { get; set; } = [];
 }

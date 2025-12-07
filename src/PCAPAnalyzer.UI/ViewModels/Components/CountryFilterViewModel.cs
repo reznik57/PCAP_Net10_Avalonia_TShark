@@ -17,7 +17,7 @@ public partial class CountryFilterViewModel : ObservableObject
     [ObservableProperty] private int _sortMode = 0; // 0=Traffic, 1=Risk, 2=Name
 
     // Country exclusion
-    [ObservableProperty] private ObservableCollection<string> _excludedCountries = new();
+    [ObservableProperty] private ObservableCollection<string> _excludedCountries = [];
     [ObservableProperty] private bool _hasExcludedCountries;
     [ObservableProperty] private string _excludedCountriesText = "";
 

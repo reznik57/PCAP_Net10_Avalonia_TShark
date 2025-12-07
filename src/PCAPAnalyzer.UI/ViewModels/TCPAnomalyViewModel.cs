@@ -34,7 +34,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         [ObservableProperty] private int affectedPacketCount;
         [ObservableProperty] private string tcpStream = string.Empty;
         [ObservableProperty] private string recommendation = string.Empty;
-        [ObservableProperty] private Dictionary<string, object> metrics = new();
+        [ObservableProperty] private Dictionary<string, object> metrics = [];
 
         public ICommand ViewDetailsCommand { get; }
         public Action<TCPAnomalyViewModel>? OnViewDetails { get; set; }
@@ -82,7 +82,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         [ObservableProperty] private bool isSuspicious;
         [ObservableProperty] private string displayName = string.Empty;
         [ObservableProperty] private string statusIcon = string.Empty;
-        [ObservableProperty] private ObservableCollection<string> associatedIPs = new();
+        [ObservableProperty] private ObservableCollection<string> associatedIPs = [];
 
         public ICommand ViewDetailsCommand { get; }
         public Action<TopPortViewModel>? OnViewDetails { get; set; }
@@ -141,7 +141,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         [ObservableProperty] private string state = string.Empty;
         [ObservableProperty] private string stateColor = TCPAnomalyViewModel.ColorMuted;
         [ObservableProperty] private int anomalyCount;
-        [ObservableProperty] private ObservableCollection<TCPAnomalyViewModel> anomalies = new();
+        [ObservableProperty] private ObservableCollection<TCPAnomalyViewModel> anomalies = [];
 
         public ICommand ViewDetailsCommand { get; }
         public Action<TCPStreamViewModel>? OnViewDetails { get; set; }

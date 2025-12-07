@@ -32,13 +32,13 @@ public partial class AnomaliesPacketTableViewModel : ObservableObject
     private const int DefaultPageSize = 30;
 
     // All anomalous packets (unfiltered)
-    private List<AnomalyPacketViewModel> _allPackets = new();
+    private List<AnomalyPacketViewModel> _allPackets = [];
 
     // Current filtered list
-    private List<AnomalyPacketViewModel> _filteredPackets = new();
+    private List<AnomalyPacketViewModel> _filteredPackets = [];
 
     // Displayed packets (current page)
-    public ObservableCollection<AnomalyPacketViewModel> Packets { get; } = new();
+    public ObservableCollection<AnomalyPacketViewModel> Packets { get; } = [];
 
     // Pagination
     [ObservableProperty] private int _currentPage = 1;

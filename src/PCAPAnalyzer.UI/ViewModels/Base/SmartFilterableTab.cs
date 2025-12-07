@@ -212,28 +212,28 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
         /// IMPORTANT: Each tab instance gets its OWN collection (not shared across tabs).
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<FilterGroup> _includeFilterGroups = new();
+        private ObservableCollection<FilterGroup> _includeFilterGroups = [];
 
         /// <summary>
         /// INCLUDE individual filter chips (OR'd together).
         /// IMPORTANT: Each tab instance gets its OWN collection (not shared across tabs).
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<FilterChipItem> _includeIndividualChips = new();
+        private ObservableCollection<FilterChipItem> _includeIndividualChips = [];
 
         /// <summary>
         /// EXCLUDE filter groups (each group is AND of its fields, groups are OR'd together, then NOT'd).
         /// IMPORTANT: Each tab instance gets its OWN collection (not shared across tabs).
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<FilterGroup> _excludeFilterGroups = new();
+        private ObservableCollection<FilterGroup> _excludeFilterGroups = [];
 
         /// <summary>
         /// EXCLUDE individual filter chips (OR'd together, then NOT'd).
         /// IMPORTANT: Each tab instance gets its OWN collection (not shared across tabs).
         /// </summary>
         [ObservableProperty]
-        private ObservableCollection<FilterChipItem> _excludeIndividualChips = new();
+        private ObservableCollection<FilterChipItem> _excludeIndividualChips = [];
 
         // ==================== FILTER STATE ====================
 

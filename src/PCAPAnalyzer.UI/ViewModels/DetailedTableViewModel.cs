@@ -18,7 +18,7 @@ namespace PCAPAnalyzer.UI.ViewModels
     {
         [ObservableProperty] private string _title = "Detailed View";
         [ObservableProperty] private object? _data;
-        [ObservableProperty] private string[] _columns = Array.Empty<string>();
+        [ObservableProperty] private string[] _columns = [];
         [ObservableProperty] private int _totalItems;
         [ObservableProperty] private string _statusMessage = "";
         [ObservableProperty] private bool _isExporting;

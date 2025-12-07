@@ -7,8 +7,8 @@ public partial class GeneralFilterTabViewModel : ObservableObject
 {
     // NOTE: IP/Port inputs moved to UnifiedFilterPanelViewModel (shared across all tabs)
 
-    public ObservableCollection<FilterChipViewModel> ProtocolChips { get; } = new();
-    public ObservableCollection<FilterChipViewModel> SecurityChips { get; } = new();
+    public ObservableCollection<FilterChipViewModel> ProtocolChips { get; } = [];
+    public ObservableCollection<FilterChipViewModel> SecurityChips { get; } = [];
 
     public GeneralFilterTabViewModel()
     {

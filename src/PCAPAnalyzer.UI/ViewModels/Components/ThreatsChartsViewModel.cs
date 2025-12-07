@@ -25,10 +25,10 @@ public partial class ThreatsChartsViewModel : ObservableObject
     private readonly IInsecurePortDetector _insecurePortDetector;
 
     // Chart series collections
-    [ObservableProperty] private ObservableCollection<ISeries> _threatSeveritySeries = new();
-    [ObservableProperty] private ObservableCollection<ISeries> _threatTimelineSeries = new();
-    [ObservableProperty] private ObservableCollection<ISeries> _portRiskSeries = new();
-    [ObservableProperty] private ObservableCollection<ISeries> _threatCategorySeries = new();
+    [ObservableProperty] private ObservableCollection<ISeries> _threatSeveritySeries = [];
+    [ObservableProperty] private ObservableCollection<ISeries> _threatTimelineSeries = [];
+    [ObservableProperty] private ObservableCollection<ISeries> _portRiskSeries = [];
+    [ObservableProperty] private ObservableCollection<ISeries> _threatCategorySeries = [];
 
     // Chart axes
     [ObservableProperty] private Axis[] _xAxes = new[] { new Axis() };
@@ -37,14 +37,14 @@ public partial class ThreatsChartsViewModel : ObservableObject
     [ObservableProperty] private Axis[] _threatCategoryYAxes = new[] { new Axis() };
 
     // Threat Port Activity Timeline (Dashboard pattern)
-    [ObservableProperty] private ObservableCollection<ISeries> _threatPortActivitySeries = new();
+    [ObservableProperty] private ObservableCollection<ISeries> _threatPortActivitySeries = [];
     [ObservableProperty] private Axis[] _threatPortActivityXAxes = new[] { new Axis() };
     [ObservableProperty] private Axis[] _threatPortActivityYAxes = new[] { new Axis() };
     [ObservableProperty] private bool _showThreatPortActivityAsThroughput;
     [ObservableProperty] private bool _showTop10ThreatPortsTimeline;
 
     // Cached threat data for re-rendering when toggles change
-    private List<EnhancedSecurityThreat> _cachedThreats = new();
+    private List<EnhancedSecurityThreat> _cachedThreats = [];
 
     // Threat rates (calculated from timeline)
     [ObservableProperty] private double _peakThreatRate;

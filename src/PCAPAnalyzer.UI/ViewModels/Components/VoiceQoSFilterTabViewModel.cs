@@ -8,9 +8,9 @@ public partial class VoiceQoSFilterTabViewModel : ObservableObject
     [ObservableProperty] private string _jitterThresholdInput = "";
     [ObservableProperty] private string _latencyThresholdInput = "";
 
-    public ObservableCollection<FilterChipViewModel> CodecChips { get; } = new();
-    public ObservableCollection<FilterChipViewModel> QualityChips { get; } = new();
-    public ObservableCollection<FilterChipViewModel> IssueChips { get; } = new();
+    public ObservableCollection<FilterChipViewModel> CodecChips { get; } = [];
+    public ObservableCollection<FilterChipViewModel> QualityChips { get; } = [];
+    public ObservableCollection<FilterChipViewModel> IssueChips { get; } = [];
 
     public VoiceQoSFilterTabViewModel()
     {

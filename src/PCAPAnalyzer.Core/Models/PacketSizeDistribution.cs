@@ -14,7 +14,7 @@ public class PacketSizeDistribution
     /// Distribution buckets for packet sizes.
     /// Each bucket represents a range of packet sizes.
     /// </summary>
-    public List<PacketSizeBucket> Buckets { get; set; } = new();
+    public List<PacketSizeBucket> Buckets { get; set; } = [];
 
     /// <summary>
     /// Total number of packets analyzed.
@@ -188,8 +188,8 @@ public static class PacketSizeBucketDefinitions
     /// <summary>
     /// Standard packet size buckets based on common network patterns.
     /// </summary>
-    public static readonly List<(int MinSize, int MaxSize, string Label, PacketSizeCategory Category, string Description)> StandardBuckets = new()
-    {
+    public static readonly List<(int MinSize, int MaxSize, string Label, PacketSizeCategory Category, string Description)> StandardBuckets =
+    [
         (0, 63, "0-63", PacketSizeCategory.Tiny, "TCP ACKs, control packets"),
         (64, 127, "64-127", PacketSizeCategory.Small, "Small data, DNS queries"),
         (128, 255, "128-255", PacketSizeCategory.Medium, "HTTP headers, small responses"),
@@ -198,13 +198,13 @@ public static class PacketSizeBucketDefinitions
         (1024, 1499, "1024-1499", PacketSizeCategory.Large, "Near-MTU transfers"),
         (1500, 1514, "1500-1514", PacketSizeCategory.Jumbo, "Standard Ethernet MTU packets"),
         (1515, int.MaxValue, "1515+", PacketSizeCategory.Jumbo, "Jumbo frames")
-    };
+    ];
 
     /// <summary>
     /// Detailed packet size buckets for granular analysis.
     /// </summary>
-    public static readonly List<(int MinSize, int MaxSize, string Label, PacketSizeCategory Category, string Description)> DetailedBuckets = new()
-    {
+    public static readonly List<(int MinSize, int MaxSize, string Label, PacketSizeCategory Category, string Description)> DetailedBuckets =
+    [
         (0, 63, "0-63", PacketSizeCategory.Tiny, "TCP ACKs, control packets"),
         (64, 127, "64-127", PacketSizeCategory.Small, "Small data, DNS queries"),
         (128, 191, "128-191", PacketSizeCategory.Medium, "HTTP headers"),
@@ -217,7 +217,7 @@ public static class PacketSizeBucketDefinitions
         (1280, 1499, "1280-1499", PacketSizeCategory.Large, "Near-MTU"),
         (1500, 9000, "1500-9000", PacketSizeCategory.Jumbo, "MTU packets"),
         (9001, int.MaxValue, "9001+", PacketSizeCategory.Jumbo, "Jumbo frames")
-    };
+    ];
 
     /// <summary>
     /// Gets the category for a given packet size.

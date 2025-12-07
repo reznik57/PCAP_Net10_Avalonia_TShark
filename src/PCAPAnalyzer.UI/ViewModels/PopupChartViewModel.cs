@@ -8,9 +8,9 @@ namespace PCAPAnalyzer.UI.ViewModels
 {
     public partial class PopupChartViewModel : ObservableObject
     {
-        [ObservableProperty] private ObservableCollection<ISeries> _chartSeries = new();
-        [ObservableProperty] private ObservableCollection<ISeries> _pieSeries = new();
-        [ObservableProperty] private ObservableCollection<ISeries> _cartesianSeries = new();
+        [ObservableProperty] private ObservableCollection<ISeries> _chartSeries = [];
+        [ObservableProperty] private ObservableCollection<ISeries> _pieSeries = [];
+        [ObservableProperty] private ObservableCollection<ISeries> _cartesianSeries = [];
         [ObservableProperty] private Axis[]? _chartXAxes;
         [ObservableProperty] private Axis[]? _chartYAxes;
         [ObservableProperty] private bool _isTimelineChart;

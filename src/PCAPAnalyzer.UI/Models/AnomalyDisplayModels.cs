@@ -39,8 +39,8 @@ public partial class AnomalyEndpointViewModel : ObservableObject
     [ObservableProperty] private int _rank;
     [ObservableProperty] private string _country = string.Empty;
     [ObservableProperty] private string _countryCode = string.Empty;
-    [ObservableProperty] private List<AnomalyCategory> _categories = new();
-    [ObservableProperty] private List<long> _affectedFrames = new();
+    [ObservableProperty] private List<AnomalyCategory> _categories = [];
+    [ObservableProperty] private List<long> _affectedFrames = [];
 
     public string SeverityColor => HighestSeverity switch
     {
@@ -71,7 +71,7 @@ public class AnomalyPortViewModel
     public int AnomalyCount { get; set; }
     public double Percentage { get; set; }
     public AnomalySeverity HighestSeverity { get; set; }
-    public List<long> AffectedFrames { get; set; } = new();
+    public List<long> AffectedFrames { get; set; } = [];
 
     public string SeverityColor => HighestSeverity switch
     {
@@ -130,6 +130,6 @@ public class AnomalyTimeSliceSummary
     public int HighCount { get; set; }
     public int MediumCount { get; set; }
     public int LowCount { get; set; }
-    public Dictionary<AnomalyCategory, int> CategoryBreakdown { get; set; } = new();
-    public List<NetworkAnomaly> TopAnomalies { get; set; } = new();
+    public Dictionary<AnomalyCategory, int> CategoryBreakdown { get; set; } = [];
+    public List<NetworkAnomaly> TopAnomalies { get; set; } = [];
 }

@@ -13,8 +13,8 @@ public partial class FilterSummaryViewModel : ObservableObject
 {
     private readonly GlobalFilterState _filterState;
 
-    public ObservableCollection<ActiveFilterChip> IncludeChips { get; } = new();
-    public ObservableCollection<ActiveFilterChip> ExcludeChips { get; } = new();
+    public ObservableCollection<ActiveFilterChip> IncludeChips { get; } = [];
+    public ObservableCollection<ActiveFilterChip> ExcludeChips { get; } = [];
 
     [ObservableProperty] private bool _hasIncludeFilters;
     [ObservableProperty] private bool _hasExcludeFilters;

@@ -282,7 +282,7 @@ public class AutoencoderModel : IMLAnomalyModel
     private class PcaPrediction
     {
         [VectorType(3)]
-        public float[] Features { get; set; } = Array.Empty<float>();
+        public float[] Features { get; set; } = [];
 
         [ColumnName("Score")]
         public float Score { get; set; }

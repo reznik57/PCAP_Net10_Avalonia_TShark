@@ -10,7 +10,7 @@ namespace PCAPAnalyzer.Core.Models
         public string ServiceName { get; set; } = string.Empty;
         public ThreatSeverity RiskLevel { get; set; }
         public bool IsEncrypted { get; set; }
-        public string[] KnownVulnerabilities { get; set; } = Array.Empty<string>();
+        public string[] KnownVulnerabilities { get; set; } = [];
         public string RecommendedAlternative { get; set; } = string.Empty;
         public string SecurityNotes { get; set; } = string.Empty;
         public bool RequiresImmediateAction { get; set; }
@@ -25,9 +25,9 @@ namespace PCAPAnalyzer.Core.Models
         public int LowThreats { get; set; }
         public int InfoThreats { get; set; }
         public double OverallRiskScore { get; set; }
-        public Dictionary<string, int> ThreatsByCategory { get; set; } = new();
-        public Dictionary<int, int> ThreatsByPort { get; set; } = new();
-        public List<string> TopVulnerableServices { get; set; } = new();
+        public Dictionary<string, int> ThreatsByCategory { get; set; } = [];
+        public Dictionary<int, int> ThreatsByPort { get; set; } = [];
+        public List<string> TopVulnerableServices { get; set; } = [];
         public DateTime AnalysisTimestamp { get; set; } = DateTime.Now;
     }
 
@@ -41,25 +41,25 @@ namespace PCAPAnalyzer.Core.Models
         public string Service { get; set; } = string.Empty;
         public string ThreatName { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
-        public List<string> Vulnerabilities { get; set; } = new();
-        public List<string> Mitigations { get; set; } = new();
+        public List<string> Vulnerabilities { get; set; } = [];
+        public List<string> Mitigations { get; set; } = [];
         public string CVE { get; set; } = string.Empty;
         public double RiskScore { get; set; }
         public DateTime FirstSeen { get; set; }
         public DateTime LastSeen { get; set; }
         public int OccurrenceCount { get; set; }
-        public List<string> AffectedIPs { get; set; } = new();
-        public Dictionary<string, object> Metadata { get; set; } = new();
+        public List<string> AffectedIPs { get; set; } = [];
+        public Dictionary<string, object> Metadata { get; set; } = [];
 
         /// <summary>
         /// Frame numbers of packets that triggered this threat (for DrillDown investigation)
         /// </summary>
-        public List<uint> FrameNumbers { get; set; } = new();
+        public List<uint> FrameNumbers { get; set; } = [];
 
         /// <summary>
         /// Connection tuples affected by this threat (for conversation-level investigation)
         /// </summary>
-        public List<ConnectionTuple> AffectedConnections { get; set; } = new();
+        public List<ConnectionTuple> AffectedConnections { get; set; } = [];
     }
 
     /// <summary>

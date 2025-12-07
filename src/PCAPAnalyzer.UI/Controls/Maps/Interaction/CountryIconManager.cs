@@ -18,7 +18,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Interaction
     /// </summary>
     public class CountryIconManager
     {
-        private readonly Dictionary<string, CountryIconInfo> _countryIcons = new();
+        private readonly Dictionary<string, CountryIconInfo> _countryIcons = [];
 
         /// <summary>
         /// Gets read-only dictionary of country icons for hit testing and tooltips

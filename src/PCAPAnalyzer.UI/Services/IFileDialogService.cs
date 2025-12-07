@@ -48,7 +48,7 @@ namespace PCAPAnalyzer.UI.Services
     public class FileDialogFilter
     {
         public string Name { get; set; } = string.Empty;
-        public List<string> Extensions { get; set; } = new();
+        public List<string> Extensions { get; set; } = [];
 
         public FileDialogFilter(string name, params string[] extensions)
         {

@@ -21,7 +21,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
     {
         private DatabaseReader? _ipv4Reader;
         private DatabaseReader? _ipv6Reader;
-        private readonly Dictionary<string, string> _countryCodeToName = new();
+        private readonly Dictionary<string, string> _countryCodeToName = [];
         private readonly ILogger? _logger;
         private bool _isReady;
         private string? _ipv4DatabasePath;

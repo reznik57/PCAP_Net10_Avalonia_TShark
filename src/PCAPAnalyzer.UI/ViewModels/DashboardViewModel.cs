@@ -59,10 +59,10 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     private readonly Action<string>? _navigateToTab;
 
     // Anomaly frame number caches for efficient filtering
-    private HashSet<long> _anomalyFrameNumbers = new();
-    private HashSet<long> _highSeverityFrames = new();  // Critical + High severity
-    private HashSet<long> _tcpAnomalyFrames = new();
-    private HashSet<long> _networkAnomalyFrames = new();
+    private HashSet<long> _anomalyFrameNumbers = [];
+    private HashSet<long> _highSeverityFrames = [];  // Critical + High severity
+    private HashSet<long> _tcpAnomalyFrames = [];
+    private HashSet<long> _networkAnomalyFrames = [];
 
     // Filter cancellation and progress tracking
     private CancellationTokenSource? _filterCancellationTokenSource;
@@ -74,7 +74,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // ==================== FILTERABLE TAB IMPLEMENTATION ====================
 
-    public new CommonFilterViewModel CommonFilters { get; } = new();
+    public new CommonFilterViewModel CommonFilters { get; } = new CommonFilterViewModel();
     [ObservableProperty] private string _trafficTypeFilter = "All";
     [ObservableProperty] private string _portRangeFilter = "";
     public override string TabName => TabNames.Dashboard;
@@ -106,7 +106,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // ==================== UPDATE CONTROL ====================
 
-    private readonly object _updateLock = new();
+    private readonly Lock _updateLock = new();
     private bool _isUpdating;
     private bool _isDisposed;
 
@@ -175,8 +175,8 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // ==================== GEOGRAPHIC DATA ====================
 
-    [ObservableProperty] private Dictionary<string, double> _countryMapData = new();
-    [ObservableProperty] private ObservableCollection<string> _excludedCountries = new();
+    [ObservableProperty] private Dictionary<string, double> _countryMapData = [];
+    [ObservableProperty] private ObservableCollection<string> _excludedCountries = [];
     [ObservableProperty] private int _itemsCount = 0;
 
     [ObservableProperty] private int _uniqueCountries;
@@ -203,13 +203,13 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // ==================== FILTER PRESETS ====================
 
-    [ObservableProperty] private ObservableCollection<FilterPreset> _availablePresets = new();
+    [ObservableProperty] private ObservableCollection<FilterPreset> _availablePresets = [];
     [ObservableProperty] private FilterPreset? _selectedPreset;
     [ObservableProperty] private bool _isLoadingPresets = false;
 
     // ==================== ACTIVE FILTER DESCRIPTIONS ====================
 
-    [ObservableProperty] private ObservableCollection<string> _activeFilterDescriptions = new();
+    [ObservableProperty] private ObservableCollection<string> _activeFilterDescriptions = [];
 
     // ==================== CONSTRUCTORS ====================
 

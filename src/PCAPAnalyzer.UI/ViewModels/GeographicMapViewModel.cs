@@ -32,18 +32,18 @@ namespace PCAPAnalyzer.UI.ViewModels
         private readonly IGeoIPService _geoIPService;
         private readonly IStatisticsService _statisticsService;
         private readonly IProtocolColorService _protocolColorService;
-        private Dictionary<string, CountryTrafficStatistics> _countryTrafficData = new();
-        private List<GeographicTrafficFlow> _trafficFlows = new();
-        private ObservableCollection<ContinentSummary> _topContinents = new();
-        private ObservableCollection<CountrySummary> _topCountries = new();
-        private ObservableCollection<ProtocolSummary> _protocolStats = new();
+        private Dictionary<string, CountryTrafficStatistics> _countryTrafficData = [];
+        private List<GeographicTrafficFlow> _trafficFlows = [];
+        private ObservableCollection<ContinentSummary> _topContinents = [];
+        private ObservableCollection<CountrySummary> _topCountries = [];
+        private ObservableCollection<ProtocolSummary> _protocolStats = [];
     private IReadOnlyList<PacketInfo>? _allPackets;
         
         // Table view properties
         private bool _showTop100;
         private int _countryDisplayCount = 25;
-        private ObservableCollection<CountryTableItem> _topCountriesByPackets = new();
-        private ObservableCollection<CountryTableItem> _topCountriesByBytes = new();
+        private ObservableCollection<CountryTableItem> _topCountriesByPackets = [];
+        private ObservableCollection<CountryTableItem> _topCountriesByBytes = [];
 
         private int _selectedViewMode;
         private int _selectedColorScheme;

@@ -35,9 +35,9 @@ public partial class DrillDownPopupViewModel : ObservableObject
     [ObservableProperty] private bool _showSamplingWarning;
 
     // Breakdown Collections
-    [ObservableProperty] private ObservableCollection<PortBreakdownItem> _topPorts = new();
-    [ObservableProperty] private ObservableCollection<EndpointBreakdownItem> _connectedEndpoints = new();
-    [ObservableProperty] private ObservableCollection<ConversationBreakdownItem> _topConversations = new();
+    [ObservableProperty] private ObservableCollection<PortBreakdownItem> _topPorts = [];
+    [ObservableProperty] private ObservableCollection<EndpointBreakdownItem> _connectedEndpoints = [];
+    [ObservableProperty] private ObservableCollection<ConversationBreakdownItem> _topConversations = [];
 
     // Current filter context
     private string _currentFilterKey = "";

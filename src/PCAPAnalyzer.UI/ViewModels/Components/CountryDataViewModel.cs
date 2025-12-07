@@ -16,9 +16,9 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 public partial class CountryDataViewModel : ObservableObject
 {
     // Performance optimization: Cache packet indices by country
-    private Dictionary<string, List<int>> _countryPacketIndices = new();
-    private Dictionary<string, List<int>> _countryOutgoingIndices = new();
-    private Dictionary<string, List<int>> _countryIncomingIndices = new();
+    private Dictionary<string, List<int>> _countryPacketIndices = [];
+    private Dictionary<string, List<int>> _countryOutgoingIndices = [];
+    private Dictionary<string, List<int>> _countryIncomingIndices = [];
 
     private IReadOnlyList<PacketInfo>? _allPackets;
     private NetworkStatistics? _currentStatistics;

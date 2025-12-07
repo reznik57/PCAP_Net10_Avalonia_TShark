@@ -9,9 +9,9 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 /// </summary>
 public partial class HostInventoryFilterTabViewModel : ObservableObject
 {
-    public ObservableCollection<FilterChipViewModel> OsTypeChips { get; } = new();
-    public ObservableCollection<FilterChipViewModel> DeviceTypeChips { get; } = new();
-    public ObservableCollection<FilterChipViewModel> HostRoleChips { get; } = new();
+    public ObservableCollection<FilterChipViewModel> OsTypeChips { get; } = [];
+    public ObservableCollection<FilterChipViewModel> DeviceTypeChips { get; } = [];
+    public ObservableCollection<FilterChipViewModel> HostRoleChips { get; } = [];
 
     public HostInventoryFilterTabViewModel()
     {

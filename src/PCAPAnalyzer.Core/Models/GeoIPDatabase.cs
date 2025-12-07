@@ -46,20 +46,20 @@ namespace PCAPAnalyzer.Core.Models
         public string CountryName { get; set; } = string.Empty;
         public string? ContinentCode { get; set; }
         public string? ContinentName { get; set; }
-        public List<IPRangeCountryMapping> IPRanges { get; set; } = new();
-        public Dictionary<string, int> SourceCounts { get; set; } = new(); // Source -> Count of ranges
+        public List<IPRangeCountryMapping> IPRanges { get; set; } = [];
+        public Dictionary<string, int> SourceCounts { get; set; } = []; // Source -> Count of ranges
         public double AverageConfidence { get; set; }
         public int TotalIPCount { get; set; }
         public DateTime LastUpdated { get; set; }
         public bool IsHighRisk { get; set; }
         public string? RiskNotes { get; set; }
-        public List<string> AlternativeNames { get; set; } = new();
+        public List<string> AlternativeNames { get; set; } = [];
         public string? ISO3Code { get; set; }
         public int? NumericCode { get; set; }
         public string? PhoneCode { get; set; }
         public string? Currency { get; set; }
-        public List<string> Languages { get; set; } = new();
-        public List<string> Neighbors { get; set; } = new();
+        public List<string> Languages { get; set; } = [];
+        public List<string> Neighbors { get; set; } = [];
     }
 
     /// <summary>
@@ -69,16 +69,16 @@ namespace PCAPAnalyzer.Core.Models
     {
         public long TotalIPRanges { get; set; }
         public int TotalCountries { get; set; }
-        public Dictionary<string, long> RangesPerSource { get; set; } = new();
-        public Dictionary<string, double> SourceReliability { get; set; } = new();
+        public Dictionary<string, long> RangesPerSource { get; set; } = [];
+        public Dictionary<string, double> SourceReliability { get; set; } = [];
         public DateTime LastFullUpdate { get; set; }
         public DateTime LastIncrementalUpdate { get; set; }
         public long DatabaseSizeBytes { get; set; }
         public double AverageConfidenceScore { get; set; }
         public int ConflictingMappings { get; set; }
         public int UnverifiedMappings { get; set; }
-        public Dictionary<string, int> ContinentDistribution { get; set; } = new();
-        public List<string> RecentErrors { get; set; } = new();
+        public Dictionary<string, int> ContinentDistribution { get; set; } = [];
+        public List<string> RecentErrors { get; set; } = [];
         public bool NeedsUpdate { get; set; }
         public string DatabaseVersion { get; set; } = "1.0.0";
     }
@@ -99,10 +99,10 @@ namespace PCAPAnalyzer.Core.Models
         public DateTime LastSuccessfulUpdate { get; set; }
         public DateTime LastFailedUpdate { get; set; }
         public int ConsecutiveFailures { get; set; }
-        public Dictionary<string, string> CustomHeaders { get; set; } = new();
+        public Dictionary<string, string> CustomHeaders { get; set; } = [];
         public TimeSpan UpdateInterval { get; set; } = TimeSpan.FromDays(7);
         public bool SupportsIPv6 { get; set; }
-        public List<string> SupportedFields { get; set; } = new();
+        public List<string> SupportedFields { get; set; } = [];
     }
 
     /// <summary>
@@ -111,7 +111,7 @@ namespace PCAPAnalyzer.Core.Models
     public class IPMappingConflict
     {
         public string IPAddress { get; set; } = string.Empty;
-        public List<ConflictingMapping> ConflictingMappings { get; set; } = new();
+        public List<ConflictingMapping> ConflictingMappings { get; set; } = [];
         public IPRangeCountryMapping? ResolvedMapping { get; set; }
         public string ResolutionMethod { get; set; } = string.Empty; // Majority, HighestConfidence, Manual
         public DateTime DetectedAt { get; set; }
@@ -153,7 +153,7 @@ namespace PCAPAnalyzer.Core.Models
         public string Name { get; set; } = string.Empty;
         public string Organization { get; set; } = string.Empty;
         public string CountryCode { get; set; } = string.Empty;
-        public List<string> IPRanges { get; set; } = new();
+        public List<string> IPRanges { get; set; } = [];
         public bool IsISP { get; set; }
         public bool IsHostingProvider { get; set; }
         public bool IsVPNProvider { get; set; }

@@ -14,8 +14,8 @@ namespace PCAPAnalyzer.Core.Services;
 /// </summary>
 public sealed class InMemoryPacketStore : IPacketStore
 {
-    private readonly List<PacketInfo> _packets = new();
-    private readonly List<FlowRecord> _flows = new();
+    private readonly List<PacketInfo> _packets = [];
+    private readonly List<FlowRecord> _flows = [];
     private readonly ReaderWriterLockSlim _lock = new(LockRecursionPolicy.NoRecursion);
 
     private long _totalBytes;

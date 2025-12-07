@@ -15,7 +15,7 @@ public sealed class PacketQuery
 
 public sealed class PacketQueryResult
 {
-    public IReadOnlyList<PacketInfo> Packets { get; init; } = Array.Empty<PacketInfo>();
+    public IReadOnlyList<PacketInfo> Packets { get; init; } = [];
     public long TotalCount { get; init; }
     public long TotalBytes { get; init; }
     public long ThreatCount { get; init; }

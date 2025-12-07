@@ -11,7 +11,7 @@ namespace PCAPAnalyzer.Core.Models
         public bool IsSecure { get; set; }
         public ThreatSeverity RiskLevel { get; set; }
         public DateTime? DeprecatedDate { get; set; }
-        public string[] KnownVulnerabilities { get; set; } = Array.Empty<string>();
+        public string[] KnownVulnerabilities { get; set; } = [];
         public string RecommendedVersion { get; set; } = string.Empty;
         public string SecurityNotes { get; set; } = string.Empty;
     }
@@ -21,7 +21,7 @@ namespace PCAPAnalyzer.Core.Models
         public int Port { get; set; }
         public string Protocol { get; set; } = string.Empty;
         public string ServiceName { get; set; } = string.Empty;
-        public Dictionary<string, ProtocolVersion> SupportedVersions { get; set; } = new();
+        public Dictionary<string, ProtocolVersion> SupportedVersions { get; set; } = [];
         public string MinimumSecureVersion { get; set; } = string.Empty;
         public bool RequiresVersionCheck { get; set; }
     }
@@ -33,7 +33,7 @@ namespace PCAPAnalyzer.Core.Models
         public bool VersionIdentified { get; set; }
         public ThreatSeverity SecurityRisk { get; set; }
         public string SecurityAssessment { get; set; } = string.Empty;
-        public List<string> Vulnerabilities { get; set; } = new();
+        public List<string> Vulnerabilities { get; set; } = [];
         public string Recommendation { get; set; } = string.Empty;
     }
 
@@ -140,7 +140,7 @@ namespace PCAPAnalyzer.Core.Models
                     IsEncrypted = true,
                     IsSecure = true,
                     RiskLevel = ThreatSeverity.Info,
-                    KnownVulnerabilities = Array.Empty<string>(),
+                    KnownVulnerabilities = [],
                     RecommendedVersion = "TLS 1.3",
                     SecurityNotes = "Current recommended version. Removes legacy insecure features."
                 }
@@ -274,7 +274,7 @@ namespace PCAPAnalyzer.Core.Models
                     IsEncrypted = true,
                     IsSecure = true,
                     RiskLevel = ThreatSeverity.Info,
-                    KnownVulnerabilities = Array.Empty<string>(),
+                    KnownVulnerabilities = [],
                     RecommendedVersion = "SMB3.1.1",
                     SecurityNotes = "Latest SMB version with pre-authentication integrity and AES-128-GCM encryption."
                 }
@@ -335,7 +335,7 @@ namespace PCAPAnalyzer.Core.Models
                     IsEncrypted = true,
                     IsSecure = true,
                     RiskLevel = ThreatSeverity.Info,
-                    KnownVulnerabilities = Array.Empty<string>(),
+                    KnownVulnerabilities = [],
                     RecommendedVersion = "HTTP/3",
                     SecurityNotes = "HTTP/3 uses QUIC with mandatory TLS 1.3. Secure by design."
                 }

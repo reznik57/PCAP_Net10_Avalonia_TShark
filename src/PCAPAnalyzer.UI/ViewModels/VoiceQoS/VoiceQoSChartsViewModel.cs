@@ -29,9 +29,9 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
 
         private List<VoiceQoSTimeSeriesPoint>? _cachedDataPoints;
 
-        [ObservableProperty] private ObservableCollection<ISeries> _timelineSeries = new();
-        [ObservableProperty] private Axis[] _xAxes = Array.Empty<Axis>();
-        [ObservableProperty] private Axis[] _yAxes = Array.Empty<Axis>();
+        [ObservableProperty] private ObservableCollection<ISeries> _timelineSeries = [];
+        [ObservableProperty] private Axis[] _xAxes = [];
+        [ObservableProperty] private Axis[] _yAxes = [];
 
         // Series visibility toggles
         [ObservableProperty] private bool _showQoSPackets = true;

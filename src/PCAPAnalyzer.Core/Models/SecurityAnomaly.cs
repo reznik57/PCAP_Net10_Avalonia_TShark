@@ -15,7 +15,7 @@ public class SecurityAnomaly
     public AnomalySeverity Severity { get; set; }
     public string Description { get; set; } = string.Empty;
     public DateTime DetectedAt { get; set; }
-    public List<int> AffectedPackets { get; set; } = new();
-    public Dictionary<string, object> Evidence { get; set; } = new();
+    public List<int> AffectedPackets { get; set; } = [];
+    public Dictionary<string, object> Evidence { get; set; } = [];
     public string Recommendation { get; set; } = string.Empty;
 }

@@ -282,8 +282,10 @@ public class FeatureExtractor
     private string GenerateFlowId(PacketInfo packet)
     {
         // Create bidirectional flow identifier
-        var ips = new[] { packet.SourceIP, packet.DestinationIP }.OrderBy(s => s);
-        var ports = new[] { packet.SourcePort, packet.DestinationPort }.OrderBy(p => p);
+        string[] ips = [packet.SourceIP, packet.DestinationIP];
+        int[] ports = [packet.SourcePort, packet.DestinationPort];
+        Array.Sort(ips);
+        Array.Sort(ports);
 
         return $"{string.Join("-", ips)}_{string.Join("-", ports)}_{packet.Protocol}";
     }

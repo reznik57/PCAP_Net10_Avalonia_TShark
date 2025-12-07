@@ -28,7 +28,7 @@ namespace PCAPAnalyzer.Core.Configuration.Options
         /// <summary>
         /// Protocol security ratings (0-5, higher is more secure).
         /// </summary>
-        public Dictionary<string, int> SecurityRatings { get; set; } = new();
+        public Dictionary<string, int> SecurityRatings { get; set; } = [];
 
         /// <summary>
         /// Protocols considered suspicious/insecure.

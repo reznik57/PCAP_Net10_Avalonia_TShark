@@ -17,14 +17,14 @@ public sealed class StreamingStatisticsAggregator
     private const int MaxThroughputBuckets = int.MaxValue; // Preserve full capture history for throughput analysis
 
     private readonly Lock _sync = new();
-    private readonly Dictionary<string, ProtocolAccumulator> _protocols = new();
-    private readonly Dictionary<string, EndpointAccumulator> _sources = new();
-    private readonly Dictionary<string, EndpointAccumulator> _destinations = new();
-    private readonly Dictionary<(string Src, string Dest, ushort SrcPort, ushort DestPort, string Protocol), FlowAccumulator> _flows = new();
-    private readonly Dictionary<(ushort Port, string Protocol), PortAccumulator> _ports = new();
-    private readonly Dictionary<DateTime, ThroughputAccumulator> _throughput = new();
-    private readonly Queue<DateTime> _throughputOrder = new();
-    private readonly HashSet<string> _uniqueIps = new();
+    private readonly Dictionary<string, ProtocolAccumulator> _protocols = [];
+    private readonly Dictionary<string, EndpointAccumulator> _sources = [];
+    private readonly Dictionary<string, EndpointAccumulator> _destinations = [];
+    private readonly Dictionary<(string Src, string Dest, ushort SrcPort, ushort DestPort, string Protocol), FlowAccumulator> _flows = [];
+    private readonly Dictionary<(ushort Port, string Protocol), PortAccumulator> _ports = [];
+    private readonly Dictionary<DateTime, ThroughputAccumulator> _throughput = [];
+    private readonly Queue<DateTime> _throughputOrder = [];
+    private readonly HashSet<string> _uniqueIps = [];
 
     private long _totalPackets;
     private long _totalBytes;
@@ -388,7 +388,7 @@ public sealed class StreamingStatisticsAggregator
 
     private sealed class EndpointAccumulator : IAccumulator
     {
-        private readonly Dictionary<string, long> _protocolCounts = new();
+        private readonly Dictionary<string, long> _protocolCounts = [];
 
         public string Ip { get; }
         public long PacketCount { get; private set; }

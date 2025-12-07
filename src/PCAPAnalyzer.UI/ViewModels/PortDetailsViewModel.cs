@@ -22,8 +22,8 @@ namespace PCAPAnalyzer.UI.ViewModels
         private bool _disposed;
         private string _filterText = "";
         private string _selectedDirection = "All";
-        private ObservableCollection<PortPacketDetail> _allPackets = new();
-        private ObservableCollection<PortPacketDetail> _filteredPackets = new();
+        private ObservableCollection<PortPacketDetail> _allPackets = [];
+        private ObservableCollection<PortPacketDetail> _filteredPackets = [];
         
         public PortDetailsViewModel(TopPortViewModel portInfo, IEnumerable<PacketInfo> packets)
         {
@@ -79,7 +79,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             set => this.RaiseAndSetIfChanged(ref _selectedDirection, value);
         }
         
-        public ObservableCollection<string> Directions { get; } = new();
+        public ObservableCollection<string> Directions { get; } = [];
         
         public ObservableCollection<PortPacketDetail> FilteredPackets
         {

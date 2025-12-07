@@ -28,7 +28,7 @@ public partial class ThreatsFilterViewModel : ObservableObject
     [ObservableProperty] private string _selectedCategory = "All";
     [ObservableProperty] private string _selectedThreatType = "All";
     [ObservableProperty] private string _searchFilter = "";
-    [ObservableProperty] private ObservableCollection<string> _threatTypes = new();
+    [ObservableProperty] private ObservableCollection<string> _threatTypes = [];
     [ObservableProperty] private bool _hasFiltersApplied = false;
 
     partial void OnIsInsecureProtocolFilterActiveChanged(bool value)
@@ -91,7 +91,7 @@ public partial class ThreatsFilterViewModel : ObservableObject
     /// <summary>
     /// Active quick filter chips displayed below the THREAT FILTERS section
     /// </summary>
-    public ObservableCollection<ActiveQuickFilterChip> ActiveQuickFilterChips { get; } = new();
+    public ObservableCollection<ActiveQuickFilterChip> ActiveQuickFilterChips { get; } = [];
 
     /// <summary>
     /// Event fired when any filter changes

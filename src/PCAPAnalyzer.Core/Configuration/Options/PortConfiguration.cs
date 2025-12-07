@@ -11,7 +11,7 @@ namespace PCAPAnalyzer.Core.Configuration.Options
         /// <summary>
         /// Well-known port to service name mappings.
         /// </summary>
-        public Dictionary<int, string> WellKnownPorts { get; set; } = new();
+        public Dictionary<int, string> WellKnownPorts { get; set; } = [];
 
         /// <summary>
         /// Ports that use encrypted protocols (TLS/SSL).

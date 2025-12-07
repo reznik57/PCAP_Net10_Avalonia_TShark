@@ -37,12 +37,12 @@ public class HostFingerprint
     /// <summary>
     /// All TCP fingerprint samples collected for this host.
     /// </summary>
-    public List<TcpFingerprintData> TcpFingerprints { get; set; } = new();
+    public List<TcpFingerprintData> TcpFingerprints { get; set; } = [];
 
     /// <summary>
     /// All JA3 hashes seen from this host (for JA3 variety analysis).
     /// </summary>
-    public List<Ja3FingerprintData> Ja3Fingerprints { get; set; } = new();
+    public List<Ja3FingerprintData> Ja3Fingerprints { get; set; } = [];
 
     /// <summary>
     /// DHCP fingerprint data (if Option 55 seen).
@@ -52,7 +52,7 @@ public class HostFingerprint
     /// <summary>
     /// Server banners detected (SSH, HTTP, FTP, etc.).
     /// </summary>
-    public List<ServerBanner> ServerBanners { get; set; } = new();
+    public List<ServerBanner> ServerBanners { get; set; } = [];
 
     /// <summary>
     /// Hostname from DHCP, DNS, NetBIOS, or other sources.
@@ -77,7 +77,7 @@ public class HostFingerprint
     /// <summary>
     /// Open ports detected (services responding).
     /// </summary>
-    public HashSet<ushort> OpenPorts { get; set; } = new();
+    public HashSet<ushort> OpenPorts { get; set; } = [];
 
     /// <summary>
     /// Gets a display-friendly OS name with confidence indicator.

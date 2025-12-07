@@ -18,7 +18,7 @@ namespace PCAPAnalyzer.PerformanceTests;
 [MinColumn, MaxColumn, MeanColumn, MedianColumn]
 public class UIUpdateBenchmarks
 {
-    private List<LivePacketData> _packets = new();
+    private List<LivePacketData> _packets = [];
 
     [Params(1000, 10000, 50000)]
     public int PacketCount { get; set; }
@@ -312,6 +312,6 @@ public class UIUpdateBenchmarks
     {
         public long TotalPackets { get; set; }
         public long TotalBytes { get; set; }
-        public Dictionary<string, long> ProtocolCounts { get; set; } = new();
+        public Dictionary<string, long> ProtocolCounts { get; set; } = [];
     }
 }

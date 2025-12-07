@@ -17,7 +17,7 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 
 public partial class FlowSummaryViewModel : ObservableObject
 {
-    public ObservableCollection<FlowRecordViewModel> Flows { get; } = new();
+    public ObservableCollection<FlowRecordViewModel> Flows { get; } = [];
 
     [ObservableProperty]
     private int _totalFlows;

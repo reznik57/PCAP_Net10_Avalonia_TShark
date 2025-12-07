@@ -27,7 +27,7 @@ namespace PCAPAnalyzer.Core.Capture
         /// <summary>
         /// Gets validation errors (empty if valid)
         /// </summary>
-        public List<string> ValidationErrors { get; private set; } = new();
+        public List<string> ValidationErrors { get; private set; } = [];
 
         /// <summary>
         /// Gets the parsed filter tokens

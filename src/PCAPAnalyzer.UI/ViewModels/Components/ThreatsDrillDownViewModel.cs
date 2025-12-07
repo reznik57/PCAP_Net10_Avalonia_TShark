@@ -43,7 +43,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
     [ObservableProperty] private string _timelineSvg = "";
 
     // Tab 2: Evidence packets
-    [ObservableProperty] private ObservableCollection<EvidencePacketViewModel> _evidencePackets = new();
+    [ObservableProperty] private ObservableCollection<EvidencePacketViewModel> _evidencePackets = [];
     [ObservableProperty] private int _totalEvidencePackets;
     [ObservableProperty] private int _displayedEvidencePackets;
     [ObservableProperty] private int _evidencePacketsPage = 1;
@@ -51,22 +51,22 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
     private const int PacketsPerPage = 20;
 
     // Tab 3: Related threats
-    [ObservableProperty] private ObservableCollection<RelatedThreatGroup> _relatedThreatGroups = new();
+    [ObservableProperty] private ObservableCollection<RelatedThreatGroup> _relatedThreatGroups = [];
     [ObservableProperty] private int _totalRelatedThreats;
 
     // Tab 4: IOCs (Indicators of Compromise)
-    [ObservableProperty] private ObservableCollection<IOCItem> _networkIOCs = new();
+    [ObservableProperty] private ObservableCollection<IOCItem> _networkIOCs = [];
     [ObservableProperty] private string _iocExportText = "";
 
     // Tab 5: Mitigations
-    [ObservableProperty] private ObservableCollection<string> _vulnerabilities = new();
-    [ObservableProperty] private ObservableCollection<MitigationItem> _mitigations = new();
+    [ObservableProperty] private ObservableCollection<string> _vulnerabilities = [];
+    [ObservableProperty] private ObservableCollection<MitigationItem> _mitigations = [];
 
     // Internal state
     private EnhancedSecurityThreat? _currentThreat;
     private IReadOnlyList<PacketInfo> _allPackets = Array.Empty<PacketInfo>();
-    private List<EnhancedSecurityThreat> _allThreats = new();
-    private List<uint> _currentFrameNumbers = new();
+    private List<EnhancedSecurityThreat> _allThreats = [];
+    private List<uint> _currentFrameNumbers = [];
 
     public ThreatsDrillDownViewModel()
     {
@@ -634,7 +634,7 @@ public class RelatedThreatGroup
 {
     public string GroupName { get; set; } = "";
     public string GroupIcon { get; set; } = "";
-    public ObservableCollection<RelatedThreatItem> Threats { get; set; } = new();
+    public ObservableCollection<RelatedThreatItem> Threats { get; set; } = [];
 
     // AXAML bindings
     public string GroupType => GroupIcon;
@@ -673,7 +673,7 @@ public class MitigationItem
 public class ViewInPacketAnalysisEventArgs : EventArgs
 {
     public string ThreatId { get; set; } = "";
-    public List<uint> FrameNumbers { get; set; } = new();
-    public List<string> AffectedIPs { get; set; } = new();
+    public List<uint> FrameNumbers { get; set; } = [];
+    public List<string> AffectedIPs { get; set; } = [];
     public int Port { get; set; }
 }

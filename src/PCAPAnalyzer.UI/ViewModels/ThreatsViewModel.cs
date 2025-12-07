@@ -39,9 +39,9 @@ namespace PCAPAnalyzer.UI.ViewModels
         private readonly GlobalFilterState? _globalFilterState;
         private readonly Components.UnifiedFilterPanelViewModel? _unifiedFilterPanel;
         private bool _disposed;
-    private List<EnhancedSecurityThreat> _allThreats = new();
-    private List<SuricataAlert> _suricataAlerts = new();
-    private List<YaraMatch> _yaraMatches = new();
+    private List<EnhancedSecurityThreat> _allThreats = [];
+    private List<SuricataAlert> _suricataAlerts = [];
+    private List<YaraMatch> _yaraMatches = [];
         private IReadOnlyList<PacketInfo> _currentPackets = Array.Empty<PacketInfo>(); // Filtered packets (may be reference or new list)
         private IReadOnlyList<PacketInfo> _unfilteredPackets = Array.Empty<PacketInfo>(); // Reference to cache (NOT a copy)
         private SecurityMetrics? _metrics;
@@ -216,10 +216,10 @@ namespace PCAPAnalyzer.UI.ViewModels
         [ObservableProperty] private bool _isDetailsPanelVisible;
         [ObservableProperty] private string _detailsTitle = "";
         [ObservableProperty] private string _detailsDescription = "";
-        [ObservableProperty] private ObservableCollection<string> _detailsVulnerabilities = new();
-        [ObservableProperty] private ObservableCollection<string> _detailsMitigations = new();
-        [ObservableProperty] private ObservableCollection<string> _affectedEndpoints = new();
-        [ObservableProperty] private ObservableCollection<string> _detailsConnections = new();
+        [ObservableProperty] private ObservableCollection<string> _detailsVulnerabilities = [];
+        [ObservableProperty] private ObservableCollection<string> _detailsMitigations = [];
+        [ObservableProperty] private ObservableCollection<string> _affectedEndpoints = [];
+        [ObservableProperty] private ObservableCollection<string> _detailsConnections = [];
 
         // Chart axes - delegated to Charts component
         public Axis[] XAxes => Charts.XAxes;

@@ -41,7 +41,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
 
     // ==================== OBSERVABLE PROPERTIES ====================
 
-    [ObservableProperty] private ObservableCollection<HostInventoryItem> _hosts = new();
+    [ObservableProperty] private ObservableCollection<HostInventoryItem> _hosts = [];
     [ObservableProperty] private HostInventoryItem? _selectedHost;
     [ObservableProperty] private string _searchFilter = string.Empty;
     [ObservableProperty] private string _osFilter = "All";

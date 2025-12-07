@@ -58,9 +58,9 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
     // Final stage
     private const string StageFinalizingKey = "stage-final";
 
-    public ObservableCollection<AnalysisProgressStage> AnalysisStages { get; } = new();
-    private readonly Dictionary<string, AnalysisProgressStage> _stageLookup = new();
-    private readonly object _finalizingProgressLock = new();
+    public ObservableCollection<AnalysisProgressStage> AnalysisStages { get; } = [];
+    private readonly Dictionary<string, AnalysisProgressStage> _stageLookup = [];
+    private readonly Lock _finalizingProgressLock = new();
     private double _lastFinalizingPercent;
     private string? _lastFinalizingDetail;
 

@@ -25,10 +25,10 @@ namespace PCAPAnalyzer.UI.ViewModels.Capture;
 public partial class LiveStatisticsViewModel : ViewModelBase, IDisposable
 {
     private readonly DispatcherTimer _updateTimer;
-    private readonly object _statsLock = new();
+    private readonly Lock _statsLock = new();
     private DateTime _sessionStart = DateTime.UtcNow;
-    private readonly Dictionary<string, long> _protocolCounts = new();
-    private readonly ObservableCollection<DateTimePoint> _packetRateData = new();
+    private readonly Dictionary<string, long> _protocolCounts = [];
+    private readonly ObservableCollection<DateTimePoint> _packetRateData = [];
     private readonly Stopwatch _uiUpdateStopwatch = Stopwatch.StartNew();
     private int _uiUpdateCount;
     private bool _disposed;
@@ -121,18 +121,28 @@ public partial class LiveStatisticsViewModel : ViewModelBase, IDisposable
     /// Protocol distribution for pie chart
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<ProtocolStatistic> _protocolDistribution = new();
+    private ObservableCollection<ProtocolStatistic> _protocolDistribution = [];
 
     /// <summary>
     /// Top talkers list
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<TalkerStatistic> _topTalkers = new();
+    private ObservableCollection<TalkerStatistic> _topTalkers = [];
 
     /// <summary>
     /// Packet rate chart series
     /// </summary>
     public ISeries[] PacketRateSeries { get; set; }
+
+    /// <summary>
+    /// X-axis configuration for packet rate chart
+    /// </summary>
+    public LiveChartsCore.SkiaSharpView.Axis[] PacketRateXAxes { get; set; }
+
+    /// <summary>
+    /// Y-axis configuration for packet rate chart
+    /// </summary>
+    public LiveChartsCore.SkiaSharpView.Axis[] PacketRateYAxes { get; set; }
 
     /// <summary>
     /// Protocol distribution pie chart series
@@ -155,8 +165,30 @@ public partial class LiveStatisticsViewModel : ViewModelBase, IDisposable
             }
         };
 
+        // Initialize X-axis (time-based)
+        PacketRateXAxes =
+        [
+            new DateTimeAxis(TimeSpan.FromSeconds(1), date => date.ToString("HH:mm:ss"))
+            {
+                LabelsRotation = 0,
+                TextSize = 10,
+                LabelsPaint = new SolidColorPaint(SKColors.Gray)
+            }
+        ];
+
+        // Initialize Y-axis (packet count)
+        PacketRateYAxes =
+        [
+            new LiveChartsCore.SkiaSharpView.Axis
+            {
+                TextSize = 10,
+                LabelsPaint = new SolidColorPaint(SKColors.Gray),
+                MinLimit = 0
+            }
+        ];
+
         // Initialize protocol pie chart (will be updated dynamically)
-        ProtocolPieSeries = Array.Empty<ISeries>();
+        ProtocolPieSeries = [];
 
         // Update statistics every 500ms
         _updateTimer = new DispatcherTimer

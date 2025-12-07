@@ -23,7 +23,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
         private readonly IReportGeneratorService _reportService;
         private NetworkStatistics? _currentStatistics;
-        private List<SecurityThreat> _currentThreats = new();
+        private List<SecurityThreat> _currentThreats = [];
         
         [ObservableProperty] private NetworkAnalysisReport? _currentReport;
         [ObservableProperty] private bool _isGenerating;
@@ -48,10 +48,10 @@ namespace PCAPAnalyzer.UI.ViewModels
         
         // Report sections for preview
         [ObservableProperty] private string _executiveSummaryText = "";
-        [ObservableProperty] private ObservableCollection<SecurityFindingViewModel> _securityFindings = new();
-        [ObservableProperty] private ObservableCollection<RecommendationViewModel> _recommendations = new();
+        [ObservableProperty] private ObservableCollection<SecurityFindingViewModel> _securityFindings = [];
+        [ObservableProperty] private ObservableCollection<RecommendationViewModel> _recommendations = [];
         [ObservableProperty] private string _riskAssessmentText = "";
-        [ObservableProperty] private ObservableCollection<RemediationPhaseViewModel> _remediationPhases = new();
+        [ObservableProperty] private ObservableCollection<RemediationPhaseViewModel> _remediationPhases = [];
         
         // Statistics
         [ObservableProperty] private int _totalFindings;

@@ -21,7 +21,7 @@ namespace PCAPAnalyzer.Core.Services.OsFingerprinting;
 public sealed class OsFingerprintService : IOsFingerprintService
 {
     private readonly ILogger<OsFingerprintService> _logger;
-    private readonly ConcurrentDictionary<string, HostFingerprint> _hosts = new();
+    private readonly ConcurrentDictionary<string, HostFingerprint> _hosts = [];
 
     // Signature databases (loaded once at startup)
     private List<TcpSignatureEntry>? _tcpSignatures;

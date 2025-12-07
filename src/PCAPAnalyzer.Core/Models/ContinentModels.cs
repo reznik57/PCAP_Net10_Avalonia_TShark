@@ -17,10 +17,10 @@ namespace PCAPAnalyzer.Core.Models
         public double BoundingBoxSouth { get; set; }
         public double BoundingBoxEast { get; set; }
         public double BoundingBoxWest { get; set; }
-        public List<Country> Countries { get; set; } = new();
+        public List<Country> Countries { get; set; } = [];
         public long TotalPackets { get; set; }
         public long TotalBytes { get; set; }
-        public Dictionary<string, long> ProtocolBreakdown { get; set; } = new();
+        public Dictionary<string, long> ProtocolBreakdown { get; set; } = [];
         public string PrimaryColor { get; set; } = "#4A90E2";
         public string AccentColor { get; set; } = "#357ABD";
     }
@@ -42,8 +42,8 @@ namespace PCAPAnalyzer.Core.Models
         public long IncomingPackets { get; set; }
         public long OutgoingPackets { get; set; }
         public long TotalBytes { get; set; }
-        public Dictionary<string, long> ProtocolBreakdown { get; set; } = new();
-        public List<string> TopPorts { get; set; } = new();
+        public Dictionary<string, long> ProtocolBreakdown { get; set; } = [];
+        public List<string> TopPorts { get; set; } = [];
         public double ThreatLevel { get; set; } // 0.0 to 1.0
         public bool IsHighRisk { get; set; }
         public DateTime LastActivity { get; set; }

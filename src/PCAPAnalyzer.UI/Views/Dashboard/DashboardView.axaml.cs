@@ -31,8 +31,8 @@ public partial class DashboardView : UserControl
     #region Fields
 
     // Cached data for efficient tooltip rendering
-    private readonly Dictionary<string, List<DateTimePoint>> _cachedTrafficData = new();
-    private readonly Dictionary<string, List<object>> _cachedPortData = new();
+    private readonly Dictionary<string, List<DateTimePoint>> _cachedTrafficData = [];
+    private readonly Dictionary<string, List<object>> _cachedPortData = [];
 
     // Cached ViewModel references for cleanup
     private DashboardViewModel? _dashboardVm;

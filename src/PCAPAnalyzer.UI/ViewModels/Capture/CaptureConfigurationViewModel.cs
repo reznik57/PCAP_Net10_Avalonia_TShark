@@ -26,7 +26,7 @@ public partial class CaptureConfigurationViewModel : ViewModelBase, IDisposable
     /// Available network interfaces
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<CaptureInterface> _availableInterfaces = new();
+    private ObservableCollection<CaptureInterface> _availableInterfaces = [];
 
     /// <summary>
     /// Selected network interface

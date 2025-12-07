@@ -9,7 +9,7 @@ namespace PCAPAnalyzer.UI.Helpers
     /// </summary>
     public static class CommandManager
     {
-        private static readonly HashSet<IRelayCommand> _commands = new();
+        private static readonly HashSet<IRelayCommand> _commands = [];
         private static bool _globalEnabled = true;
         
         /// <summary>

@@ -33,7 +33,7 @@ public partial class StatsBarControlViewModel : ObservableObject
     /// Collection of statistics to display
     /// Populated by parent ViewModel with tab-specific metrics
     /// </summary>
-    public ObservableCollection<StatItem> Stats { get; } = new();
+    public ObservableCollection<StatItem> Stats { get; } = [];
 
     /// <summary>
     /// Helper method to add a stat item

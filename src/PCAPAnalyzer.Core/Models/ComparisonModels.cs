@@ -37,8 +37,8 @@ public record ComparisonStatistics
     public double MatchPercentage => TotalFileA + TotalFileB > 0
         ? (CommonCount * 2.0) / (TotalFileA + TotalFileB) * 100
         : 0;
-    public Dictionary<string, int> ProtocolDiffA { get; init; } = new();
-    public Dictionary<string, int> ProtocolDiffB { get; init; } = new();
+    public Dictionary<string, int> ProtocolDiffA { get; init; } = [];
+    public Dictionary<string, int> ProtocolDiffB { get; init; } = [];
 }
 
 /// <summary>

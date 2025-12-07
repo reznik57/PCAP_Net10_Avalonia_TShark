@@ -38,19 +38,19 @@ public partial class AnomaliesDrillDownViewModel : ObservableObject
     [ObservableProperty] private int _timePointTopDestinationCount;
     [ObservableProperty] private string _timePointTopPort = string.Empty;
     [ObservableProperty] private int _timePointTopPortCount;
-    public ObservableCollection<AnomalyCategoryViewModel> TimePointCategories { get; } = new();
-    public ObservableCollection<NetworkAnomaly> TimePointTopAnomalies { get; } = new();
+    public ObservableCollection<AnomalyCategoryViewModel> TimePointCategories { get; } = [];
+    public ObservableCollection<NetworkAnomaly> TimePointTopAnomalies { get; } = [];
 
     // Anomaly list in detail popup
-    public ObservableCollection<NetworkAnomaly> DetailAnomalies { get; } = new();
-    public ObservableCollection<AnomalyCategoryViewModel> DetailCategoryBreakdown { get; } = new();
+    public ObservableCollection<NetworkAnomaly> DetailAnomalies { get; } = [];
+    public ObservableCollection<AnomalyCategoryViewModel> DetailCategoryBreakdown { get; } = [];
 
     // Pagination
     [ObservableProperty] private int _detailCurrentPage = 1;
     [ObservableProperty] private int _detailTotalPages = 1;
     [ObservableProperty] private int _detailPageSize = 10;
 
-    private List<NetworkAnomaly> _allDetailAnomalies = new();
+    private List<NetworkAnomaly> _allDetailAnomalies = [];
 
     public void ShowTimeSliceDrillDown(
         DateTime timestamp,

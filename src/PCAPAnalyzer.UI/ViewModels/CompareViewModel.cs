@@ -63,8 +63,8 @@ public partial class CompareViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _matchPercentage = "0%";
 
     // Protocol breakdown for unique packets
-    [ObservableProperty] private ObservableCollection<ProtocolDiffItem> _protocolDiffA = new();
-    [ObservableProperty] private ObservableCollection<ProtocolDiffItem> _protocolDiffB = new();
+    [ObservableProperty] private ObservableCollection<ProtocolDiffItem> _protocolDiffA = [];
+    [ObservableProperty] private ObservableCollection<ProtocolDiffItem> _protocolDiffB = [];
 
     // ==================== FILTER STATE ====================
 
@@ -73,9 +73,9 @@ public partial class CompareViewModel : ObservableObject, IDisposable
 
     // ==================== PACKET DATA ====================
 
-    private List<ComparedPacketViewModel> _allPackets = new();
+    private List<ComparedPacketViewModel> _allPackets = [];
 
-    [ObservableProperty] private ObservableCollection<ComparedPacketViewModel> _displayedPackets = new();
+    [ObservableProperty] private ObservableCollection<ComparedPacketViewModel> _displayedPackets = [];
 
     // ==================== COLORS ====================
 

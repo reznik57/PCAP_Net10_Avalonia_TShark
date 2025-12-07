@@ -39,7 +39,7 @@ public partial class AnomaliesChartsViewModel : ObservableObject
     };
 
     // Timeline chart - ObservableCollection for dynamic highlight series
-    public ObservableCollection<ISeries> TimelineSeriesCollection { get; } = new();
+    public ObservableCollection<ISeries> TimelineSeriesCollection { get; } = [];
 
     // Legacy property for binding compatibility (returns the collection as array)
     public ISeries[] TimelineSeries => TimelineSeriesCollection.ToArray();

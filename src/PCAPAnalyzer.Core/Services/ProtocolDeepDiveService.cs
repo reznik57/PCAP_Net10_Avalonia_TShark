@@ -484,13 +484,13 @@ public class ProtocolDeepDiveResult
     public uint FrameNumber { get; set; }
     public bool Success { get; set; }
     public string? Error { get; set; }
-    public List<ProtocolLayer> Layers { get; set; } = new();
+    public List<ProtocolLayer> Layers { get; set; } = [];
     public string? RawOutput { get; set; }
 
     /// <summary>
     /// Detected cleartext content including credentials, messages, and sensitive data.
     /// </summary>
-    public List<CleartextContent> CleartextContent { get; set; } = new();
+    public List<CleartextContent> CleartextContent { get; set; } = [];
 
     /// <summary>
     /// Indicates if any cleartext credentials were detected.
@@ -511,7 +511,7 @@ public class ProtocolDeepDiveResult
 public class ProtocolLayer
 {
     public string Name { get; set; } = "";
-    public List<ProtocolField> Fields { get; set; } = new();
+    public List<ProtocolField> Fields { get; set; } = [];
 }
 
 /// <summary>
@@ -532,7 +532,7 @@ public class ProtocolSummary
 {
     public string Protocol { get; set; } = "";
     public string Icon { get; set; } = "📦";
-    public Dictionary<string, string> KeyValues { get; set; } = new();
+    public Dictionary<string, string> KeyValues { get; set; } = [];
 }
 
 /// <summary>
@@ -545,7 +545,7 @@ public class CleartextContent
     public string Description { get; set; } = "";
     public string RawContent { get; set; } = "";
     public CleartextSeverity Severity { get; set; } = CleartextSeverity.Info;
-    public List<CleartextCredential> Credentials { get; set; } = new();
+    public List<CleartextCredential> Credentials { get; set; } = [];
 }
 
 /// <summary>

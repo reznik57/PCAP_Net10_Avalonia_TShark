@@ -6,7 +6,7 @@ namespace PCAPAnalyzer.Core.Monitoring
 {
     public static class IntegrityMonitor
     {
-        private static readonly Dictionary<string, long> _counters = new();
+        private static readonly Dictionary<string, long> _counters = [];
         private static readonly Lock _lock = new();
         
         public static void Increment(string counter)

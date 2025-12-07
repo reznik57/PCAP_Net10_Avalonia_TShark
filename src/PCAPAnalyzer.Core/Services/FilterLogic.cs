@@ -16,8 +16,8 @@ namespace PCAPAnalyzer.Core.Services
     public class FilterServiceCore : IFilterServiceCore
     {
         private PacketFilter _currentFilter = new PacketFilter();
-        private readonly List<PacketFilter> _filterHistory = new();
-        private readonly Dictionary<string, PacketFilter> _presetFilters = new();
+        private readonly List<PacketFilter> _filterHistory = [];
+        private readonly Dictionary<string, PacketFilter> _presetFilters = [];
 
         public PacketFilter CurrentFilter
         {

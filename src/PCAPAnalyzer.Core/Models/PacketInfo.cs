@@ -162,8 +162,8 @@ public class PacketStatistics
     public long TotalBytes { get; set; }
     public DateTime FirstPacketTime { get; set; }
     public DateTime LastPacketTime { get; set; }
-    public Dictionary<Protocol, long> ProtocolCounts { get; set; } = new();
-    public Dictionary<string, long> TopTalkers { get; set; } = new();
+    public Dictionary<Protocol, long> ProtocolCounts { get; set; } = [];
+    public Dictionary<string, long> TopTalkers { get; set; } = [];
     public double PacketsPerSecond { get; set; }
     public double BytesPerSecond { get; set; }
 }

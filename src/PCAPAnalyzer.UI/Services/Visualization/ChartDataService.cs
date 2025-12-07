@@ -58,7 +58,7 @@ namespace PCAPAnalyzer.UI.Services.Visualization
 
     public class ChartDataService : IChartDataService
     {
-        private readonly Dictionary<string, (object Data, DateTime CachedAt)> _cache = new();
+        private readonly Dictionary<string, (object Data, DateTime CachedAt)> _cache = [];
         private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(5);
 
         public List<TimeSeriesDataPoint> AggregateTimeSeries(List<TimeSeriesDataPoint> data, TimeSpan interval)
@@ -385,9 +385,9 @@ namespace PCAPAnalyzer.UI.Services.Visualization
 
     public class HeatmapData
     {
-        public List<HeatmapCell> Cells { get; set; } = new();
-        public List<string> XLabels { get; set; } = new();
-        public List<string> YLabels { get; set; } = new();
+        public List<HeatmapCell> Cells { get; set; } = [];
+        public List<string> XLabels { get; set; } = [];
+        public List<string> YLabels { get; set; } = [];
         public long MaxIntensity { get; set; }
     }
 
@@ -401,8 +401,8 @@ namespace PCAPAnalyzer.UI.Services.Visualization
 
     public class SankeyData
     {
-        public List<SankeyNode> Nodes { get; set; } = new();
-        public List<SankeyLink> Links { get; set; } = new();
+        public List<SankeyNode> Nodes { get; set; } = [];
+        public List<SankeyLink> Links { get; set; } = [];
     }
 
     public class SankeyNode
@@ -422,8 +422,8 @@ namespace PCAPAnalyzer.UI.Services.Visualization
 
     public class NetworkGraphData
     {
-        public List<NetworkNode> Nodes { get; set; } = new();
-        public List<NetworkEdge> Edges { get; set; } = new();
+        public List<NetworkNode> Nodes { get; set; } = [];
+        public List<NetworkEdge> Edges { get; set; } = [];
     }
 
     public class NetworkNode

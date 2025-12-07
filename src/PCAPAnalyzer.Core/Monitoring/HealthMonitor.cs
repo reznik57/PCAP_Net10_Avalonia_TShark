@@ -7,15 +7,24 @@ namespace PCAPAnalyzer.Core.Monitoring
     public static class HealthMonitor
     {
         private static readonly Process _process = Process.GetCurrentProcess();
-        private static DateTime _startTime = DateTime.Now;
+        private static DateTime _startTime;
         private static long _packetsProcessed;
-        
+        private static TimeProvider _timeProvider = TimeProvider.System;
+
+        /// <summary>
+        /// Sets the TimeProvider for testing purposes. Call before Initialize().
+        /// </summary>
+        internal static void SetTimeProvider(TimeProvider timeProvider)
+        {
+            _timeProvider = timeProvider ?? TimeProvider.System;
+        }
+
         public static void Initialize()
         {
-            _startTime = DateTime.Now;
+            _startTime = _timeProvider.GetLocalNow().DateTime;
             DebugLogger.Log($"[HEALTH] Monitor initialized at {_startTime:HH:mm:ss}");
         }
-        
+
         public static void LogPacketProcessed()
         {
             _packetsProcessed++;
@@ -25,14 +34,15 @@ namespace PCAPAnalyzer.Core.Monitoring
                 LogStatus($"Processed {_packetsProcessed} packets");
             }
         }
-        
+
         public static void LogStatus(string operation)
         {
             _process.Refresh();
             var memoryMB = _process.WorkingSet64 / (1024 * 1024);
-            var runtime = DateTime.Now - _startTime;
-            
-            DebugLogger.Log($"[{DateTime.Now:HH:mm:ss}] {operation}");
+            var now = _timeProvider.GetLocalNow().DateTime;
+            var runtime = now - _startTime;
+
+            DebugLogger.Log($"[{now:HH:mm:ss}] {operation}");
             DebugLogger.Log($"  Memory: {memoryMB}MB | Runtime: {runtime:hh\\:mm\\:ss} | Packets: {_packetsProcessed}");
             
             // Warning only - no action taken

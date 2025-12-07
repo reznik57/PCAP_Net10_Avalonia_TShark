@@ -28,9 +28,9 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
     private readonly IGeoIPService _geoIPService;
     private readonly ILogger<AnomaliesViewModel> _logger;
 
-    private List<NetworkAnomaly> _allAnomalies = new();
-    private List<NetworkAnomaly> _filteredAnomalies = new();
-    private List<PacketInfo> _allPackets = new();
+    private List<NetworkAnomaly> _allAnomalies = [];
+    private List<NetworkAnomaly> _filteredAnomalies = [];
+    private List<PacketInfo> _allPackets = [];
     private CancellationTokenSource? _filterCts;
     private bool _disposed;
 

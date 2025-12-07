@@ -24,15 +24,15 @@ public static class VoIPCodecs
     public const string GSM = "GSM";         // 13 kbps, legacy mobile
     public const string EVS = "EVS";         // 5.9-128 kbps, VoLTE
 
-    public static readonly string[] All = new[]
-    {
+    public static readonly string[] All =
+    [
         G711, G729, G722, G723, G726,
         Opus, ILBC, Speex,
         AMR, AMRWB, GSM, EVS
-    };
+    ];
 
-    public static readonly string[] HighQuality = new[] { G711, G722, Opus, EVS };
-    public static readonly string[] LowBandwidth = new[] { G729, G723, ILBC, AMR };
+    public static readonly string[] HighQuality = [G711, G722, Opus, EVS];
+    public static readonly string[] LowBandwidth = [G729, G723, ILBC, AMR];
 }
 
 /// <summary>
@@ -58,15 +58,15 @@ public static class VoIPProtocols
     public const string TURN = "TURN";       // Traversal Using Relay NAT
     public const string ICE = "ICE";         // Interactive Connectivity
 
-    public static readonly string[] All = new[]
-    {
+    public static readonly string[] All =
+    [
         RTP, RTCP, SRTP,
         SIP, H323, MGCP, SCCP, IAX,
         STUN, TURN, ICE
-    };
+    ];
 
-    public static readonly string[] MediaTransport = new[] { RTP, RTCP, SRTP };
-    public static readonly string[] Signaling = new[] { SIP, H323, MGCP, SCCP, IAX };
+    public static readonly string[] MediaTransport = [RTP, RTCP, SRTP];
+    public static readonly string[] Signaling = [SIP, H323, MGCP, SCCP, IAX];
 }
 
 /// <summary>
@@ -100,15 +100,15 @@ public static class VoIPDSCP
     public const string CS3 = "CS3";         // DSCP 24 - Signaling
     public const string CS0 = "CS0";         // DSCP 0 - Best effort
 
-    public static readonly string[] Voice = new[] { EF };
-    public static readonly string[] Video = new[] { AF41, AF42, AF43 };
-    public static readonly string[] Signaling = new[] { CS5, CS3 };
-    public static readonly string[] All = new[]
-    {
+    public static readonly string[] Voice = [EF];
+    public static readonly string[] Video = [AF41, AF42, AF43];
+    public static readonly string[] Signaling = [CS5, CS3];
+    public static readonly string[] All =
+    [
         EF,
         AF41, AF42, AF43, AF31, AF32, AF33, AF21, AF22, AF23, AF11, AF12, AF13,
         CS5, CS3, CS0
-    };
+    ];
 }
 
 /// <summary>
@@ -121,8 +121,8 @@ public static class VoIPQualityLevels
     public const string Medium = "Medium";
     public const string Good = "Good";
 
-    public static readonly string[] All = new[] { Critical, High, Medium, Good };
-    public static readonly string[] ProblemLevels = new[] { Critical, High };
+    public static readonly string[] All = [Critical, High, Medium, Good];
+    public static readonly string[] ProblemLevels = [Critical, High];
 }
 
 /// <summary>

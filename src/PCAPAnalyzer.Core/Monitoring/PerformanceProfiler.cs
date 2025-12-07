@@ -17,7 +17,7 @@ namespace PCAPAnalyzer.Core.Monitoring
         private static readonly Lazy<PerformanceProfiler> _instance = new(() => new PerformanceProfiler());
         public static PerformanceProfiler Instance => _instance.Value;
 
-        private readonly ConcurrentDictionary<string, ProfileSection> _sections = new();
+        private readonly ConcurrentDictionary<string, ProfileSection> _sections = [];
         private readonly Timer _reportTimer;
         private bool _isDisposed;
 
@@ -170,7 +170,7 @@ namespace PCAPAnalyzer.Core.Monitoring
         {
             private readonly string _name;
             private readonly Lock _lock = new();
-            private readonly List<ProfileMeasurement> _measurements = new();
+            private readonly List<ProfileMeasurement> _measurements = [];
             private DateTime _lastAccessed;
 
             public ProfileSection(string name)
@@ -276,7 +276,7 @@ namespace PCAPAnalyzer.Core.Monitoring
     public class ProfilingReport
     {
         public DateTime GeneratedAt { get; set; }
-        public List<ProfileReport> Sections { get; set; } = new();
+        public List<ProfileReport> Sections { get; set; } = [];
 
         public string GenerateTextReport()
         {

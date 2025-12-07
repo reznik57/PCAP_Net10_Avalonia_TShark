@@ -8,7 +8,7 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
     /// </summary>
     public partial class SecurityThreatPaginationViewModel : PaginatedViewModel<SecurityThreatItemViewModel>
     {
-        private ObservableCollection<int> _pageNumbers = new();
+        private ObservableCollection<int> _pageNumbers = [];
 
         public ObservableCollection<int> PageNumbers => _pageNumbers;
 

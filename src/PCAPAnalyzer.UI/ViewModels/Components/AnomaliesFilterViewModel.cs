@@ -32,7 +32,7 @@ public partial class AnomaliesFilterViewModel : ObservableObject
     [ObservableProperty] private bool _isMalformedSelected;
 
     // Available detectors (populated from service)
-    public ObservableCollection<DetectorToggle> AvailableDetectors { get; } = new();
+    public ObservableCollection<DetectorToggle> AvailableDetectors { get; } = [];
 
     public event EventHandler? FiltersChanged;
 

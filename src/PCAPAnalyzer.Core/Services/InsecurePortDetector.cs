@@ -170,9 +170,9 @@ namespace PCAPAnalyzer.Core.Services
         private void DetectServiceOnNonStandardPorts(List<PacketInfo> packets, List<EnhancedSecurityThreat> threats)
         {
             // Common services that might be hidden on non-standard ports
-            var httpPatterns = new[] { "HTTP/", "GET ", "POST ", "PUT ", "DELETE " };
-            var sshPatterns = new[] { "SSH-", "diffie-hellman" };
-            var rdpPatterns = new[] { "RDP", "mstsc" };
+            string[] httpPatterns = ["HTTP/", "GET ", "POST ", "PUT ", "DELETE "];
+            string[] sshPatterns = ["SSH-", "diffie-hellman"];
+            string[] rdpPatterns = ["RDP", "mstsc"];
 
             // Define well-known service ports that could be suspicious if used as source ports
             var wellKnownServicePorts = new HashSet<int>
@@ -350,7 +350,7 @@ namespace PCAPAnalyzer.Core.Services
                 ServiceName = "Unknown",
                 RiskLevel = ThreatSeverity.Info,
                 IsEncrypted = false,
-                KnownVulnerabilities = Array.Empty<string>(),
+                KnownVulnerabilities = [],
                 RecommendedAlternative = "Verify if this service is required",
                 SecurityNotes = "Unknown service - verify if authorized",
                 RequiresImmediateAction = false
@@ -519,12 +519,12 @@ namespace PCAPAnalyzer.Core.Services
             if (versionResult.DetectedVersion == null)
                 return false;
 
-            var encryptedButInsecure = new[]
-            {
+            string[] encryptedButInsecure =
+            [
                 "SSL 2.0", "SSL 3.0", "TLS 1.0", "TLS 1.1",
                 "SSH-1.0", "SSH-1.5",
                 "RDP 5.x", "RDP 6.x"
-            };
+            ];
 
             return encryptedButInsecure.Any(v => versionResult.DetectedVersion.Contains(v, StringComparison.OrdinalIgnoreCase));
         }

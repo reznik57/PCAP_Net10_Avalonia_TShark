@@ -36,11 +36,11 @@ namespace PCAPAnalyzer.Core.Services
         private bool _isInitialized;
         
         // Efficient lookup structure using sorted ranges
-        private List<IPRange> _ipv4Ranges = new();
+        private List<IPRange> _ipv4Ranges = [];
         
         // Known Cloudflare IP ranges
-        private readonly List<(uint start, uint end)> _cloudflareRanges = new()
-        {
+        private readonly List<(uint start, uint end)> _cloudflareRanges =
+        [
             // 104.16.0.0/12
             (1745879040, 1746927615),
             // 141.101.64.0/18  
@@ -61,9 +61,9 @@ namespace PCAPAnalyzer.Core.Services
             (1746010112, 1746075647),
             // 141.101.90.0/24 (includes 141.101.90.107)
             (2372686336, 2372686591),
-        };
-        private readonly Dictionary<string, string> _countryCodeToName = new();
-        private readonly Dictionary<string, GeoLocation> _cache = new();
+        ];
+        private readonly Dictionary<string, string> _countryCodeToName = [];
+        private readonly Dictionary<string, GeoLocation> _cache = [];
 
         public bool IsInitialized => _isInitialized;
 
@@ -684,7 +684,7 @@ namespace PCAPAnalyzer.Core.Services
         {
             public string Version { get; set; } = "";
             public DateTime UpdatedAt { get; set; }
-            public List<IPRange> Ranges { get; set; } = new();
+            public List<IPRange> Ranges { get; set; } = [];
         }
 
         // IDisposable implementation

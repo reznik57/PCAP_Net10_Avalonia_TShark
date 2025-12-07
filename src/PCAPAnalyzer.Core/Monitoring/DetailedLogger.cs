@@ -16,10 +16,10 @@ namespace PCAPAnalyzer.Core.Monitoring
         private static readonly Lazy<DetailedLogger> _instance = new(() => new DetailedLogger());
         public static DetailedLogger Instance => _instance.Value;
 
-        private readonly ConcurrentQueue<LogEntry> _logQueue = new();
+        private readonly ConcurrentQueue<LogEntry> _logQueue = [];
         private readonly Timer _flushTimer;
         private readonly string _logDirectory;
-        private readonly object _writeLock = new();
+        private readonly Lock _writeLock = new();
         private StreamWriter? _currentLogWriter;
         private DateTime _currentLogDate;
         private bool _isDisposed;

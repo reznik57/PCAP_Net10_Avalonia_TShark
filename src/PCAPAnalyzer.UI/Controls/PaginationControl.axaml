@@ -2,8 +2,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vmc="using:PCAPAnalyzer.UI.ViewModels.Components"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="50"
-             x:Class="PCAPAnalyzer.UI.Controls.PaginationControl">
+             x:Class="PCAPAnalyzer.UI.Controls.PaginationControl"
+             x:DataType="vmc:PaginationViewModel">
 
     <!-- ═══════════════════════════════════════════════════════════════
          UNIFIED PAGINATION CONTROL

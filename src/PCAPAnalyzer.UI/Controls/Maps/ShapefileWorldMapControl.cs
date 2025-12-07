@@ -34,7 +34,7 @@ public class ShapefileWorldMapControl : Control
     private bool _isLoaded;
 
     // Cached country data from shapefile
-    private readonly List<CountryShape> _countries = new();
+    private readonly List<CountryShape> _countries = [];
     private Rect _geoBounds; // Geographic bounds (lon/lat)
 
     // Zoom and pan state

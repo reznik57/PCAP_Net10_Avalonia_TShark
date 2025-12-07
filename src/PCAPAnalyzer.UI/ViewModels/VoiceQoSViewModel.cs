@@ -37,21 +37,21 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
     private readonly PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService? _cacheService;
     private readonly FilterCopyService? _filterCopyService;
     private readonly GlobalFilterState? _globalFilterState;
-    private readonly object _collectionLock = new(); // Thread-safety lock
+    private readonly Lock _collectionLock = new(); // Thread-safety lock
     private readonly DebouncedAction _filterDebouncer; // Debouncer for IP filter TextBoxes
     private bool _disposed; // Track disposal state
     private IReadOnlyList<PacketInfo> _allPackets = Array.Empty<PacketInfo>(); // Reference to cache (NOT a copy)
     private string? _currentFilePath;
 
     // Storage for unfiltered collections (for local QoS/DSCP filtering)
-    private List<QoSTrafficItem> _allQoSTraffic = new();
-    private List<LatencyConnectionItem> _allLatencyConnections = new();
-    private List<JitterConnectionItem> _allJitterConnections = new();
+    private List<QoSTrafficItem> _allQoSTraffic = [];
+    private List<LatencyConnectionItem> _allLatencyConnections = [];
+    private List<JitterConnectionItem> _allJitterConnections = [];
 
     // Collections for the three main lists
-    [ObservableProperty] private ObservableCollection<QoSTrafficItem> _qosTraffic = new();
-    [ObservableProperty] private ObservableCollection<LatencyConnectionItem> _highLatencyConnections = new();
-    [ObservableProperty] private ObservableCollection<JitterConnectionItem> _highJitterConnections = new();
+    [ObservableProperty] private ObservableCollection<QoSTrafficItem> _qosTraffic = [];
+    [ObservableProperty] private ObservableCollection<LatencyConnectionItem> _highLatencyConnections = [];
+    [ObservableProperty] private ObservableCollection<JitterConnectionItem> _highJitterConnections = [];
 
     // Statistics - All Data
     [ObservableProperty] private int _totalQoSPackets;
@@ -122,7 +122,7 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
     /// <summary>
     /// Common filters for protocol, source IP, and destination IP
     /// </summary>
-    public new CommonFilterViewModel CommonFilters { get; } = new();
+    public new CommonFilterViewModel CommonFilters { get; } = new CommonFilterViewModel();
 
     /// <summary>
     /// Unique tab identifier for FilterCopyService

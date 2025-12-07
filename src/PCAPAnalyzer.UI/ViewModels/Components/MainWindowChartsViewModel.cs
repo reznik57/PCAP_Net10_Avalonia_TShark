@@ -40,7 +40,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
     /// Now supports Total line + Top 5 streams
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<ISeries> _packetsOverTimeSeries = new();
+    private ObservableCollection<ISeries> _packetsOverTimeSeries = [];
 
     /// <summary>
     /// X-Axis configuration for Packets Over Time chart
@@ -108,7 +108,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
     /// Legend items for interactive series toggling
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<SeriesLegendItem> _legendItems = new();
+    private ObservableCollection<SeriesLegendItem> _legendItems = [];
 
     // ==================== TOP STREAMS TABLES ====================
 
@@ -116,13 +116,13 @@ public partial class MainWindowChartsViewModel : ObservableObject
     /// Top streams sorted by packet count (for table display)
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<TopStreamTableItem> _topStreamsByPackets = new();
+    private ObservableCollection<TopStreamTableItem> _topStreamsByPackets = [];
 
     /// <summary>
     /// Top streams sorted by byte count (for table display)
     /// </summary>
     [ObservableProperty]
-    private ObservableCollection<TopStreamTableItem> _topStreamsByBytes = new();
+    private ObservableCollection<TopStreamTableItem> _topStreamsByBytes = [];
 
     // ==================== CHART TOGGLE OPTIONS ====================
 
@@ -171,14 +171,14 @@ public partial class MainWindowChartsViewModel : ObservableObject
     private long _lastChartDataHash;
 
     // Cache for tooltip lookup - now includes stream data
-    private Dictionary<long, PacketsTimelineDataPoint> _timelineDataCache = new();
+    private Dictionary<long, PacketsTimelineDataPoint> _timelineDataCache = [];
 
     // Cache for Y-axis range (for highlight vertical line)
     private double _cachedMinY;
     private double _cachedMaxY;
 
     // Top 5 streams for the current filter
-    private List<StreamInfo> _topStreams = new();
+    private List<StreamInfo> _topStreams = [];
 
     // Stream colors - delegate to centralized ThemeColorHelper
     private static string[] StreamColors => ThemeColorHelper.StreamColors;

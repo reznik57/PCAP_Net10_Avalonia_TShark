@@ -77,7 +77,7 @@ public partial class FileManagerViewModel : ObservableObject
     [ObservableProperty] private string _estimatedTimeRemaining = "Calculating...";
     [ObservableProperty] private string _processingRateFormatted = "0 pkt/s";
     [ObservableProperty] private long _currentPacketCount;
-    [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<AnalysisProgressStage> _analysisStages = new();
+    [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<AnalysisProgressStage> _analysisStages = [];
 
     // ==================== ANALYSIS STATISTICS (File-specific, not network stats) ====================
 

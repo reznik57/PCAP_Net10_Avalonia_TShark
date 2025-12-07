@@ -18,7 +18,7 @@ public sealed class SecureTSharkCommandBuilder
     private readonly TSharkInputValidator _validator;
     private string? _inputFile;
     private OutputFormat _outputFormat = OutputFormat.Fields;
-    private readonly List<string> _fields = new();
+    private readonly List<string> _fields = [];
     private string? _displayFilter;
     private bool _quietMode;
     private int? _packetCount;

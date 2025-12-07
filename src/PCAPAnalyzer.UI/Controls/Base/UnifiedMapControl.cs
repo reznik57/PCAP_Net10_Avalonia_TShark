@@ -22,7 +22,7 @@ namespace PCAPAnalyzer.UI.Controls.Base
 #pragma warning disable CA5394 // Do not use insecure randomness - Used only for UI particle effects and animation jitter, not security
         private readonly Random _random = new();
 #pragma warning restore CA5394
-        private readonly List<MapParticle> _particles = new();
+        private readonly List<MapParticle> _particles = [];
 
         protected DispatcherTimer AnimationTimer => _animationTimer;
         protected Random Random => _random;

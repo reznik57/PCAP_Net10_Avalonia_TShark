@@ -230,7 +230,7 @@ namespace PCAPAnalyzer.Core.Performance
         public long PacketNumber { get; init; }
         public DateTime Timestamp { get; init; }
         public ReadOnlyMemory<byte> Data { get; init; }
-        public Dictionary<string, object> Metadata { get; init; } = new();
+        public Dictionary<string, object> Metadata { get; init; } = [];
     }
 
     /// <summary>
@@ -240,7 +240,7 @@ namespace PCAPAnalyzer.Core.Performance
     {
         public bool Success { get; init; }
         public string? ErrorMessage { get; init; }
-        public Dictionary<string, object> ExtractedData { get; init; } = new();
+        public Dictionary<string, object> ExtractedData { get; init; } = [];
     }
 
     /// <summary>

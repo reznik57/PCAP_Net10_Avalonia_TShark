@@ -58,15 +58,15 @@ public partial class TopTalkersViewModel : ObservableObject
 
     // ==================== TOP TALKERS DATA ====================
 
-    [ObservableProperty] private ObservableCollection<TopTalkerViewModel> _topTalkers = new();
-    [ObservableProperty] private ObservableCollection<ConversationDetailViewModel> _topConversations = new();
+    [ObservableProperty] private ObservableCollection<TopTalkerViewModel> _topTalkers = [];
+    [ObservableProperty] private ObservableCollection<ConversationDetailViewModel> _topConversations = [];
 
     // ==================== SELECTED TALKER DETAILS ====================
 
     [ObservableProperty] private TopTalkerViewModel? _selectedTalker;
-    [ObservableProperty] private ObservableCollection<ProtocolBreakdownViewModel> _protocolBreakdown = new();
-    [ObservableProperty] private ObservableCollection<ConversationDetailViewModel> _talkerConversations = new();
-    [ObservableProperty] private ObservableCollection<TimeSeriesPointViewModel> _talkerTimeline = new();
+    [ObservableProperty] private ObservableCollection<ProtocolBreakdownViewModel> _protocolBreakdown = [];
+    [ObservableProperty] private ObservableCollection<ConversationDetailViewModel> _talkerConversations = [];
+    [ObservableProperty] private ObservableCollection<TimeSeriesPointViewModel> _talkerTimeline = [];
 
     // ==================== SUMMARY STATISTICS ====================
 

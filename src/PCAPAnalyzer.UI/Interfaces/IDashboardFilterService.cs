@@ -9,10 +9,10 @@ namespace PCAPAnalyzer.UI.Interfaces;
 /// </summary>
 public sealed class AnomalyFrameSet
 {
-    public HashSet<long> AllFrames { get; init; } = new();
-    public HashSet<long> HighSeverityFrames { get; init; } = new();
-    public HashSet<long> TcpAnomalyFrames { get; init; } = new();
-    public HashSet<long> NetworkAnomalyFrames { get; init; } = new();
+    public HashSet<long> AllFrames { get; init; } = [];
+    public HashSet<long> HighSeverityFrames { get; init; } = [];
+    public HashSet<long> TcpAnomalyFrames { get; init; } = [];
+    public HashSet<long> NetworkAnomalyFrames { get; init; } = [];
 
     public static AnomalyFrameSet Empty { get; } = new();
 }
