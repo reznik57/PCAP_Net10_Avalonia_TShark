@@ -166,59 +166,6 @@ public static class TSharkFieldDefinitions
     }
 
     /// <summary>
-    /// Builds complete TShark arguments for streaming packet analysis.
-    /// Includes all field categories: core, credentials, OS fingerprinting, and security.
-    /// </summary>
-    /// <param name="pcapPath">Path to PCAP file (will be quoted)</param>
-    /// <returns>Complete TShark command arguments</returns>
-    [Obsolete("Use BuildStreamingArgumentsArray for command injection safety")]
-    public static string BuildStreamingArguments(string pcapPath)
-    {
-        return $"-r \"{pcapPath}\" -T fields " +
-               $"{CoreFields} " +
-               $"{CredentialFields} " +
-               $"{OsFingerprintFields} " +
-               $"{SecurityFields} " +
-               "-E occurrence=f";
-    }
-
-    /// <summary>
-    /// Builds TShark arguments for fast packet counting.
-    /// Only extracts frame.number for minimal processing overhead.
-    /// </summary>
-    /// <param name="pcapPath">Path to PCAP file (will be quoted)</param>
-    /// <returns>TShark command arguments for counting</returns>
-    [Obsolete("Use BuildCountArgumentsArray for command injection safety")]
-    public static string BuildCountArguments(string pcapPath)
-    {
-        return $"-r \"{pcapPath}\" -T fields -e frame.number";
-    }
-
-    /// <summary>
-    /// Builds TShark arguments for extracting first packet timestamp.
-    /// Used for capture time range detection.
-    /// </summary>
-    /// <param name="pcapPath">Path to PCAP file (will be quoted)</param>
-    /// <returns>TShark command arguments for first timestamp</returns>
-    [Obsolete("Use BuildFirstTimestampArgumentsArray for command injection safety")]
-    public static string BuildFirstTimestampArguments(string pcapPath)
-    {
-        return $"-r \"{pcapPath}\" -T fields -e frame.time_epoch -c 1";
-    }
-
-    /// <summary>
-    /// Builds TShark arguments for extracting all packet timestamps.
-    /// Used for finding last packet timestamp (expensive for large files).
-    /// </summary>
-    /// <param name="pcapPath">Path to PCAP file (will be quoted)</param>
-    /// <returns>TShark command arguments for all timestamps</returns>
-    [Obsolete("Use BuildAllTimestampsArgumentsArray for command injection safety")]
-    public static string BuildAllTimestampsArguments(string pcapPath)
-    {
-        return $"-r \"{pcapPath}\" -T fields -e frame.time_epoch";
-    }
-
-    /// <summary>
     /// Total number of fields in streaming output.
     /// Must match MAX_TSHARK_FIELDS in TSharkParserOptimized.
     /// Core (18) + Credentials (20) + OS Fingerprint (18) + Security (2) = 58 fields

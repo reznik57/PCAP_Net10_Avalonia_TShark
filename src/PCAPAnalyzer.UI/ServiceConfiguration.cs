@@ -180,7 +180,9 @@ namespace PCAPAnalyzer.UI
             // If not ready, GetLocationAsync() waits up to 5s internally
             services.AddSingleton<IGeoIPService>(provider =>
             {
-                var service = new UnifiedGeoIPService();
+                // Inject country configuration for high-risk countries list
+                var countryOptions = provider.GetRequiredService<IOptions<CountryConfiguration>>();
+                var service = new UnifiedGeoIPService(countryOptions);
 
                 // Fire-and-forget: Start initialization in background, don't block DI setup
                 _ = Task.Run(async () =>

@@ -72,38 +72,6 @@ public sealed class WiresharkToolInfo
     }
 
     /// <summary>
-    /// Creates ProcessStartInfo for the tool with given arguments (legacy string format).
-    /// WARNING: Only use for trusted, hardcoded arguments like "--version".
-    /// For user-controlled paths, use CreateProcessStartInfo(params string[]) instead.
-    /// </summary>
-    [Obsolete("Use CreateProcessStartInfo(params string[]) for user-controlled arguments to prevent command injection")]
-    public ProcessStartInfo CreateProcessStartInfoLegacy(string arguments)
-    {
-        var psi = new ProcessStartInfo
-        {
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true,
-            StandardOutputEncoding = System.Text.Encoding.UTF8,
-            StandardErrorEncoding = System.Text.Encoding.UTF8
-        };
-
-        if (Mode == WiresharkExecutionMode.Wsl)
-        {
-            psi.FileName = "wsl.exe";
-            psi.Arguments = $"{QuoteIfNeeded(ExecutablePath)} {arguments}";
-        }
-        else
-        {
-            psi.FileName = ExecutablePath;
-            psi.Arguments = arguments;
-        }
-
-        return psi;
-    }
-
-    /// <summary>
     /// Converts Windows path to WSL path format (/mnt/c/...) if needed
     /// </summary>
     public string ConvertPathIfNeeded(string windowsPath)

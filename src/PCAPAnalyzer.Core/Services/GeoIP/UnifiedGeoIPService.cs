@@ -6,6 +6,8 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using PCAPAnalyzer.Core.Configuration.Options;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services.GeoIP.Configuration;
 using PCAPAnalyzer.Core.Services.GeoIP.Providers;
@@ -34,30 +36,47 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
         private int _cacheHitCount;
         private DateTime _lastCacheLogTime;
 
-        // High-risk countries based on common cybersecurity threat intelligence
-        private readonly HashSet<string> _highRiskCountries =
+        // High-risk countries - defaults used when IOptions<CountryConfiguration> not injected
+        private static readonly HashSet<string> DefaultHighRiskCountries =
         [
             "CN", "RU", "KP", "IR", "SY", "CU", "VE", "BY", "MM", "ZW", "NG"
         ];
+
+        // Actual high-risk countries (from config or defaults)
+        private readonly HashSet<string> _highRiskCountries;
 
         /// <summary>
         /// Creates a new UnifiedGeoIPService with default configuration (MMDB only)
         /// </summary>
         public UnifiedGeoIPService(ILogger? logger = null, TimeProvider? timeProvider = null)
-            : this(GeoIPConfiguration.CreateDefault(), logger, timeProvider)
+            : this(GeoIPConfiguration.CreateDefault(), null, logger, timeProvider)
+        {
+        }
+
+        /// <summary>
+        /// Creates a new UnifiedGeoIPService with IOptions pattern for country configuration (DI-friendly)
+        /// </summary>
+        public UnifiedGeoIPService(IOptions<CountryConfiguration>? countryOptions, ILogger? logger = null, TimeProvider? timeProvider = null)
+            : this(GeoIPConfiguration.CreateDefault(), countryOptions, logger, timeProvider)
         {
         }
 
         /// <summary>
         /// Creates a new UnifiedGeoIPService with specific configuration
         /// </summary>
-        public UnifiedGeoIPService(GeoIPConfiguration configuration, ILogger? logger = null, TimeProvider? timeProvider = null)
+        public UnifiedGeoIPService(GeoIPConfiguration configuration, IOptions<CountryConfiguration>? countryOptions = null, ILogger? logger = null, TimeProvider? timeProvider = null)
         {
             ArgumentNullException.ThrowIfNull(configuration);
             _configuration = configuration;
             _logger = logger;
             _timeProvider = timeProvider ?? TimeProvider.System;
             _lastCacheLogTime = _timeProvider.GetUtcNow().UtcDateTime;
+
+            // Use configured high-risk countries or defaults
+            var configuredCountries = countryOptions?.Value?.HighRiskCountries;
+            _highRiskCountries = configuredCountries is { Count: > 0 }
+                ? new HashSet<string>(configuredCountries, StringComparer.OrdinalIgnoreCase)
+                : DefaultHighRiskCountries;
 
             // Validate configuration
             if (!_configuration.Validate(out var errors))
@@ -77,6 +96,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             _configuration = GeoIPConfiguration.CreateDefault();
             _timeProvider = TimeProvider.System;
             _lastCacheLogTime = _timeProvider.GetUtcNow().UtcDateTime;
+            _highRiskCountries = DefaultHighRiskCountries;
 
             foreach (var provider in providers)
             {
