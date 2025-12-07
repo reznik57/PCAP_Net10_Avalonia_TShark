@@ -15,7 +15,7 @@ namespace PCAPAnalyzer.Core.Services
         Dictionary<string, List<VersionDetectionResult>> GroupVersionsByService(List<VersionDetectionResult> results);
     }
 
-    public class ProtocolVersionDetector : IProtocolVersionDetector
+    public sealed class ProtocolVersionDetector : IProtocolVersionDetector
     {
         private readonly Dictionary<int, ProtocolVersionProfile> _versionProfiles;
 

@@ -17,7 +17,7 @@ namespace PCAPAnalyzer.Core.Services.Cache
     /// SQLite-based cache service for storing PCAP analysis results.
     /// Dramatically reduces load times for previously analyzed files.
     /// </summary>
-    public class AnalysisCacheService : IAnalysisCacheService
+    public sealed class AnalysisCacheService : IAnalysisCacheService
     {
         private const string ANALYSIS_VERSION = "1.0"; // Increment when analysis logic changes
 

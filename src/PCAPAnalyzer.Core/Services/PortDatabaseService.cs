@@ -9,7 +9,7 @@ namespace PCAPAnalyzer.Core.Services;
 /// Delegates to static PortDatabase for backward compatibility during migration.
 /// Future enhancement: Load from config/ports.json via IOptions&lt;PortConfiguration&gt;.
 /// </summary>
-public class PortDatabaseService : IPortDatabase
+public sealed class PortDatabaseService : IPortDatabase
 {
     /// <summary>
     /// Look up port information by port number and transport protocol.

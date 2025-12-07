@@ -6,7 +6,7 @@ namespace PCAPAnalyzer.Core.Services;
 /// DI-injectable service for network filtering and IP address classification.
 /// Delegates to static NetworkFilterHelper for backward compatibility.
 /// </summary>
-public class NetworkFilterHelperService : INetworkFilterHelper
+public sealed class NetworkFilterHelperService : INetworkFilterHelper
 {
     /// <inheritdoc />
     public bool IsRFC1918(string ipAddress) => NetworkFilterHelper.IsRFC1918(ipAddress);

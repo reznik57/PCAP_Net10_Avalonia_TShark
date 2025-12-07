@@ -8,7 +8,7 @@ namespace PCAPAnalyzer.Core.Services;
 /// Delegates to static ProtocolSecurityEvaluator for backward compatibility during migration.
 /// Future enhancement: Load vulnerability database from config or external source via DI.
 /// </summary>
-public class ProtocolSecurityEvaluatorService : IProtocolSecurityEvaluator
+public sealed class ProtocolSecurityEvaluatorService : IProtocolSecurityEvaluator
 {
     /// <summary>
     /// Evaluates the security level of a protocol based on its name and optional port.

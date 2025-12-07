@@ -15,7 +15,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
     /// Extracted from EnhancedGeoIPService with improved error handling and performance.
     /// Supports IP range lookups with confidence scoring and metadata.
     /// </summary>
-    public class SqliteGeoIPProvider : IGeoIPProvider, IDisposable
+    public sealed class SqliteGeoIPProvider : IGeoIPProvider, IDisposable
     {
         private readonly ILogger? _logger;
         private readonly string _databasePath;

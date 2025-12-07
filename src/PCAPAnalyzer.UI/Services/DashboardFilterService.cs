@@ -13,7 +13,7 @@ namespace PCAPAnalyzer.UI.Services;
 /// THREAD-SAFE implementation of dashboard smart filter logic.
 /// All methods are stateless - anomaly data passed as parameter to avoid race conditions.
 /// </summary>
-public class DashboardFilterService : IDashboardFilterService
+public sealed class DashboardFilterService : IDashboardFilterService
 {
     // Pre-computed insecure protocol set for O(1) lookup
     private static readonly FrozenSet<string> InsecureProtocols = new[]

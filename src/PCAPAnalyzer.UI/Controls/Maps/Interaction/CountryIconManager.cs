@@ -16,7 +16,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Interaction
     /// Manages country icon rendering with collision detection in continent drill-down view.
     /// Handles icon positioning, sizing, and tooltip data.
     /// </summary>
-    public class CountryIconManager
+    public sealed class CountryIconManager
     {
         private readonly Dictionary<string, CountryIconInfo> _countryIcons = [];
 

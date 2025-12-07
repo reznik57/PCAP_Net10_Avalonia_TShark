@@ -11,7 +11,7 @@ namespace PCAPAnalyzer.Core.Services.AnomalyDetectors;
 /// <summary>
 /// Detects cryptocurrency mining and cryptojacking activity
 /// </summary>
-public class CryptoMiningDetector : ISpecializedDetector
+public sealed class CryptoMiningDetector : ISpecializedDetector
 {
     private const int MINING_CONNECTION_THRESHOLD = 5; // Minimum concurrent connections to mining pools
     private const int MINING_TRAFFIC_BYTES_THRESHOLD = 1024 * 1024; // 1MB of traffic to mining pools

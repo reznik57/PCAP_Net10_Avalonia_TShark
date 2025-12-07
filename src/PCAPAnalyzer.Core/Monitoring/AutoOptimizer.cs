@@ -206,7 +206,7 @@ namespace PCAPAnalyzer.Core.Monitoring
         Task<StrategyResult> ApplyAsync();
     }
 
-    public class MemoryOptimizationStrategy : IOptimizationStrategy
+    public sealed class MemoryOptimizationStrategy : IOptimizationStrategy
     {
         public string Name => "Memory Optimization";
 
@@ -238,7 +238,7 @@ namespace PCAPAnalyzer.Core.Monitoring
         }
     }
 
-    public class CollectionOptimizationStrategy : IOptimizationStrategy
+    public sealed class CollectionOptimizationStrategy : IOptimizationStrategy
     {
         public string Name => "Collection Optimization";
 
@@ -263,7 +263,7 @@ namespace PCAPAnalyzer.Core.Monitoring
         }
     }
 
-    public class CacheOptimizationStrategy : IOptimizationStrategy
+    public sealed class CacheOptimizationStrategy : IOptimizationStrategy
     {
         public string Name => "Cache Optimization";
 

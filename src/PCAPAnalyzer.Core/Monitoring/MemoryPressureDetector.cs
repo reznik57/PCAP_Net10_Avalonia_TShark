@@ -10,7 +10,7 @@ namespace PCAPAnalyzer.Core.Monitoring
     /// <summary>
     /// Detects memory pressure and triggers optimization when needed
     /// </summary>
-    public class MemoryPressureDetector : IDisposable
+    public sealed class MemoryPressureDetector : IDisposable
     {
         private static readonly Lazy<MemoryPressureDetector> _instance = new(() => new MemoryPressureDetector());
         public static MemoryPressureDetector Instance => _instance.Value;
@@ -267,7 +267,7 @@ namespace PCAPAnalyzer.Core.Monitoring
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_isDisposed) return;
 

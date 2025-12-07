@@ -12,7 +12,7 @@ namespace PCAPAnalyzer.Core.Orchestration
     /// Uses time-based estimation for smooth, predictable progress regardless of
     /// packet processing rate variations.
     /// </summary>
-    public class ProgressCoordinator
+    public sealed class ProgressCoordinator
     {
         private readonly IProgress<AnalysisProgress>? _parentProgress;
         private readonly Stopwatch _totalStopwatch;

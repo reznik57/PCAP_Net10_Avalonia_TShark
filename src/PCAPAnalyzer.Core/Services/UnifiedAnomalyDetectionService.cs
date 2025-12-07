@@ -51,7 +51,7 @@ public interface IUnifiedAnomalyDetectionService
 /// <summary>
 /// Implementation of unified anomaly detection service
 /// </summary>
-public class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionService
+public sealed class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionService
 {
     private readonly List<IAnomalyDetector> _detectors = [];
     private readonly Lock _lock = new();

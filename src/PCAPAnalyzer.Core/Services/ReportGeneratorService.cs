@@ -54,7 +54,7 @@ namespace PCAPAnalyzer.Core.Services
     /// Orchestrator implementation for network analysis report generation.
     /// Delegates specialized tasks to dedicated services while coordinating overall report assembly.
     /// </summary>
-    public class ReportGeneratorService : IReportGeneratorService
+    public sealed class ReportGeneratorService : IReportGeneratorService
     {
         private readonly ISecurityFindingsGenerator _securityFindingsGenerator;
         private readonly IRemediationPlanner _remediationPlanner;

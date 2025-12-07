@@ -10,7 +10,7 @@ namespace PCAPAnalyzer.Core.Services.AnomalyDetectors;
 /// <summary>
 /// Detects application-layer anomalies: DNS tunneling, beaconing, malformed packets
 /// </summary>
-public class ApplicationAnomalyDetector : IAnomalyDetector
+public sealed class ApplicationAnomalyDetector : IAnomalyDetector
 {
     private const int DNS_QUERY_LENGTH_THRESHOLD = 50;
     private const double BEACON_INTERVAL_TOLERANCE = 0.1; // 10% tolerance

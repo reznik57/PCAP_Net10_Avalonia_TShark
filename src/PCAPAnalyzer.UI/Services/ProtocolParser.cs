@@ -10,7 +10,7 @@ namespace PCAPAnalyzer.UI.Services;
 /// Parses PacketInfo into hierarchical protocol layer structure.
 /// Creates Wireshark-style protocol tree breakdown.
 /// </summary>
-public class ProtocolParser
+public sealed class ProtocolParser
 {
     /// <summary>
     /// Parses packet into protocol tree hierarchy

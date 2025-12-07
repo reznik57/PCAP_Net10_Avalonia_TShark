@@ -13,7 +13,7 @@ namespace PCAPAnalyzer.UI.Services
     /// Implementation of IScreenshotService using Avalonia's RenderTargetBitmap.
     /// Cross-platform approach that works reliably on Windows, Linux, and WSL2.
     /// </summary>
-    public class ScreenshotService : IScreenshotService
+    public sealed class ScreenshotService : IScreenshotService
     {
         private Window? GetMainWindow()
         {

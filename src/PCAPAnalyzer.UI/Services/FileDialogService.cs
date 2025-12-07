@@ -12,7 +12,7 @@ namespace PCAPAnalyzer.UI.Services
     /// <summary>
     /// Implementation of IFileDialogService using Avalonia dialogs
     /// </summary>
-    public class FileDialogService : IFileDialogService
+    public sealed class FileDialogService : IFileDialogService
     {
         private Window? GetMainWindow()
         {

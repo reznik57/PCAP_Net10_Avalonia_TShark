@@ -17,7 +17,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
     /// High-performance local lookups with no API limits or rate restrictions.
     /// Supports both IPv4 and IPv6 addresses.
     /// </summary>
-    public class MmdbGeoIPProvider : IGeoIPProvider, IDisposable
+    public sealed class MmdbGeoIPProvider : IGeoIPProvider, IDisposable
     {
         private DatabaseReader? _ipv4Reader;
         private DatabaseReader? _ipv6Reader;
@@ -404,7 +404,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
             }
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_disposed) return;
 

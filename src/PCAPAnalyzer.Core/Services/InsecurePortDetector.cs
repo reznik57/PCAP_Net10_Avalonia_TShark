@@ -19,7 +19,7 @@ namespace PCAPAnalyzer.Core.Services
         List<EnhancedSecurityThreat> DetectAllPortThreats(IEnumerable<PacketInfo> packets);
     }
 
-    public class InsecurePortDetector : IInsecurePortDetector
+    public sealed class InsecurePortDetector : IInsecurePortDetector
     {
         private readonly Dictionary<int, PortRiskProfile> _insecurePortDatabase;
         private readonly IProtocolVersionDetector _versionDetector;

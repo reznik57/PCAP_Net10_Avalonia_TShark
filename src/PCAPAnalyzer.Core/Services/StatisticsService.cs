@@ -21,7 +21,7 @@ namespace PCAPAnalyzer.Core.Services
         List<ExpertInsight> GenerateInsights(NetworkStatistics stats);
     }
 
-    public class StatisticsService : IStatisticsService
+    public sealed class StatisticsService : IStatisticsService
     {
         private readonly IInsecurePortDetector _insecurePortDetector;
         private readonly IGeoIPService _geoIPService;

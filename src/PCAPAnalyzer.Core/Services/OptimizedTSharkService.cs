@@ -22,7 +22,7 @@ namespace PCAPAnalyzer.Core.Services
     /// Ultra-optimized TShark service for high-throughput packet processing
     /// Target: 30,000+ packets/second
     /// </summary>
-    public class OptimizedTSharkService : IDisposable
+    public sealed class OptimizedTSharkService : IDisposable
     {
         private readonly IAutoOptimizationService _optimizer;
         private readonly IPerformanceTrackingService _perfTracker;
@@ -485,7 +485,7 @@ namespace PCAPAnalyzer.Core.Services
             return "tshark"; // Hope it's in PATH
         }
         
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposing)
             {

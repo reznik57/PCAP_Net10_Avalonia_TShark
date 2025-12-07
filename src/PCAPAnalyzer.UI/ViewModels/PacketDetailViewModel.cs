@@ -33,8 +33,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         [ObservableProperty] private bool _hasSelectedPacket;
         
         public ICommand ExportCommand { get; }
-        public ICommand CopyDetailsCommand { get; }
-        
+
         public PacketDetailViewModel(
             string title,
             IEnumerable<PacketInfo> allPackets,
@@ -45,10 +44,9 @@ namespace PCAPAnalyzer.UI.ViewModels
             _allPackets = allPackets;
             _filterPredicate = filterPredicate;
             _filterExpression = filterExpression;
-            
+
             ExportCommand = new AsyncRelayCommand(ExportPacketsAsync);
-            CopyDetailsCommand = new RelayCommand(CopyDetails);
-            
+
             LoadPackets();
         }
         
@@ -226,11 +224,12 @@ namespace PCAPAnalyzer.UI.ViewModels
             }
         }
         
-        private async void CopyDetails()
+        [RelayCommand]
+        private async Task CopyDetailsAsync()
         {
             if (SelectedPacket is null)
                 return;
-                
+
             var details = new StringBuilder();
             details.AppendLine($"Frame Number: {SelectedPacket.FrameNumber}");
             details.AppendLine($"Timestamp: {SelectedPacket.Timestamp}");
@@ -239,14 +238,14 @@ namespace PCAPAnalyzer.UI.ViewModels
             details.AppendLine($"Protocol: {SelectedPacket.Protocol}");
             details.AppendLine($"Length: {SelectedPacket.Length} bytes");
             details.AppendLine($"Info: {SelectedPacket.Info}");
-            
+
             // Get clipboard from the main window's TopLevel
             try
             {
                 var mainWindow = Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop
                     ? desktop.MainWindow
                     : null;
-                    
+
                 if (mainWindow is not null)
                 {
                     var topLevel = TopLevel.GetTopLevel(mainWindow);

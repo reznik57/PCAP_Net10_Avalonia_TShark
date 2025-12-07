@@ -690,7 +690,17 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     /// Handles GlobalFilterState changes - propagates filters to Packet Analysis tab.
     /// Dashboard handles its own via ApplyGlobalFilters() called from View code-behind.
     /// </summary>
-    private async void OnGlobalFilterStateChanged()
+    private void OnGlobalFilterStateChanged()
+    {
+        // Fire-and-forget with discard to avoid async void
+        _ = HandleGlobalFilterStateChangedAsync();
+    }
+
+    /// <summary>
+    /// Async implementation of global filter state change handling.
+    /// Separated from event handler to ensure proper Task-based async pattern.
+    /// </summary>
+    private async Task HandleGlobalFilterStateChangedAsync()
     {
         if (_globalFilterState is null) return;
 
@@ -718,7 +728,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         }
         catch (Exception ex)
         {
-            DebugLogger.Log($"[MainWindowViewModel] Error in OnGlobalFilterStateChanged: {ex.Message}");
+            DebugLogger.Log($"[MainWindowViewModel] Error in HandleGlobalFilterStateChangedAsync: {ex.Message}");
         }
         finally
         {

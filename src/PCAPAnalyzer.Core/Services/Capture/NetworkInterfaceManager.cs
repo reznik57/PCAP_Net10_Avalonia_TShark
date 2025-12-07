@@ -15,7 +15,7 @@ namespace PCAPAnalyzer.Core.Services.Capture;
 /// <summary>
 /// Manages network interfaces for packet capture using TShark
 /// </summary>
-public class NetworkInterfaceManager : INetworkInterfaceManager
+public sealed class NetworkInterfaceManager : INetworkInterfaceManager
 {
     private readonly ILogger<NetworkInterfaceManager> _logger;
     private readonly string _tsharkPath;

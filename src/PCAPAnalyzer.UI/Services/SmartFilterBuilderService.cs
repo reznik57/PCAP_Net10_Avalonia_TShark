@@ -21,7 +21,7 @@ namespace PCAPAnalyzer.UI.Services
     ///
     /// Each tab can now have the same sophisticated filtering UI without code duplication.
     /// </summary>
-    public class SmartFilterBuilderService : ISmartFilterBuilder
+    public sealed class SmartFilterBuilderService : ISmartFilterBuilder
     {
         /// <summary>
         /// Builds a combined PacketFilter from filter groups and individual chips.

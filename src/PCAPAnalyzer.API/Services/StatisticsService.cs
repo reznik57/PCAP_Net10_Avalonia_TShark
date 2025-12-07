@@ -2,7 +2,7 @@ using PCAPAnalyzer.API.DTOs;
 
 namespace PCAPAnalyzer.API.Services;
 
-public class StatisticsService : IStatisticsService
+public sealed class StatisticsService : IStatisticsService
 {
     private readonly ILogger<StatisticsService> _logger;
 

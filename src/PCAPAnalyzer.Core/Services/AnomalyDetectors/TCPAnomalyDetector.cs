@@ -10,7 +10,7 @@ namespace PCAPAnalyzer.Core.Services.AnomalyDetectors;
 /// <summary>
 /// Detects TCP-specific anomalies: retransmissions, duplicate ACKs, out-of-order packets, zero window
 /// </summary>
-public class TCPAnomalyDetector : IAnomalyDetector
+public sealed class TCPAnomalyDetector : IAnomalyDetector
 {
     private const int RETRANSMISSION_THRESHOLD = 3; // % threshold
     private const int DUP_ACK_THRESHOLD = 3; // Triple duplicate ACK triggers fast retransmit

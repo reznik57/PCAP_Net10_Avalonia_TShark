@@ -11,7 +11,7 @@ namespace PCAPAnalyzer.Core.Services.Caching
     /// Thread-safe in-memory cache service implementation.
     /// Provides caching with automatic expiration, size limits, and comprehensive metrics tracking.
     /// </summary>
-    public class MemoryCacheService : ICacheService, IDisposable
+    public sealed class MemoryCacheService : ICacheService, IDisposable
     {
         private readonly IMemoryCache _memoryCache;
         private readonly CacheConfiguration _configuration;
@@ -346,7 +346,7 @@ namespace PCAPAnalyzer.Core.Services.Caching
         /// <summary>
         /// Protected implementation of Dispose pattern.
         /// </summary>
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (!_disposed)
             {

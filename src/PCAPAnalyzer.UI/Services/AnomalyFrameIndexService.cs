@@ -10,7 +10,7 @@ namespace PCAPAnalyzer.UI.Services;
 /// <summary>
 /// Singleton service that indexes anomalies by frame number for efficient cross-tab filtering.
 /// </summary>
-public class AnomalyFrameIndexService : IAnomalyFrameIndexService
+public sealed class AnomalyFrameIndexService : IAnomalyFrameIndexService
 {
     private readonly ILogger<AnomalyFrameIndexService> _logger;
     private readonly Lock _lock = new();

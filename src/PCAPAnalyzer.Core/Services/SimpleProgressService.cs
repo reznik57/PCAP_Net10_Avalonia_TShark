@@ -7,7 +7,7 @@ namespace PCAPAnalyzer.Core.Services
     /// <summary>
     /// Simple progress reporting service that works with existing models
     /// </summary>
-    public class SimpleProgressService
+    public sealed class SimpleProgressService
     {
         private readonly Stopwatch _stopwatch = new();
         private long _totalItems;

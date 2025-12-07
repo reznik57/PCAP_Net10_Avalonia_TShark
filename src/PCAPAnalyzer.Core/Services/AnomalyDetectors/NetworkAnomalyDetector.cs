@@ -10,7 +10,7 @@ namespace PCAPAnalyzer.Core.Services.AnomalyDetectors;
 /// <summary>
 /// Detects network-layer anomalies: SYN floods, ARP spoofing, ICMP floods
 /// </summary>
-public class NetworkAnomalyDetector : IAnomalyDetector
+public sealed class NetworkAnomalyDetector : IAnomalyDetector
 {
     private const int SYN_FLOOD_THRESHOLD = 100; // SYN packets per second
     private const int ICMP_FLOOD_THRESHOLD = 50; // ICMP packets per second

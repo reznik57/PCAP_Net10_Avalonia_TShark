@@ -23,7 +23,7 @@ namespace PCAPAnalyzer.Core.Services;
 /// - Handle lazy tab loading on tab selection
 /// - Notify completion/failure via events
 /// </summary>
-public class AnalysisCoordinatorService : IAnalysisCoordinator
+public sealed class AnalysisCoordinatorService : IAnalysisCoordinator
 {
     private readonly AnalysisOrchestrator _orchestrator;
     private readonly IAnalysisCacheService? _cacheService;

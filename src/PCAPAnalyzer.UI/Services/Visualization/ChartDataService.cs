@@ -56,7 +56,7 @@ namespace PCAPAnalyzer.UI.Services.Visualization
         T? GetCachedData<T>(string cacheKey) where T : class;
     }
 
-    public class ChartDataService : IChartDataService
+    public sealed class ChartDataService : IChartDataService
     {
         private readonly Dictionary<string, (object Data, DateTime CachedAt)> _cache = [];
         private readonly TimeSpan _cacheExpiration = TimeSpan.FromMinutes(5);

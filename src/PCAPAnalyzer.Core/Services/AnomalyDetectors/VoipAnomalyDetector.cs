@@ -10,7 +10,7 @@ namespace PCAPAnalyzer.Core.Services.AnomalyDetectors;
 /// <summary>
 /// Detects VoIP-specific anomalies: SIP flooding, RTP quality issues, ghost calls, toll fraud
 /// </summary>
-public class VoipAnomalyDetector : ISpecializedDetector
+public sealed class VoipAnomalyDetector : ISpecializedDetector
 {
     private const int SIP_FLOOD_THRESHOLD = 50; // SIP messages per second
     private const double RTP_PACKET_LOSS_THRESHOLD = 0.05; // 5% packet loss

@@ -13,7 +13,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
     /// Implements IThreatDetector for DI injection and testability.
     /// Uses IOptions&lt;ProtocolConfiguration&gt; for configurable suspicious protocol list.
     /// </summary>
-    public class ThreatDetector : IThreatDetector
+    public sealed class ThreatDetector : IThreatDetector
     {
         private readonly ITimeSeriesGenerator _timeSeriesGenerator;
         private readonly ProtocolConfiguration _protocolConfig;

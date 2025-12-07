@@ -14,7 +14,7 @@ namespace PCAPAnalyzer.UI.Services;
 /// Service for managing recently opened PCAP files.
 /// Persists recent file history to user settings and provides quick access.
 /// </summary>
-public class RecentFilesService
+public sealed class RecentFilesService
 {
     private const int MaxRecentFiles = 10;
     private const string SettingsFileName = "recent_files.json";

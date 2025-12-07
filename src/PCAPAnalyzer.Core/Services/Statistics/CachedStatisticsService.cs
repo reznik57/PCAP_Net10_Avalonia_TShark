@@ -16,7 +16,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
     /// Enhanced decorator that adds enterprise-grade caching to any IStatisticsService implementation.
     /// Uses Microsoft.Extensions.Caching.Memory with configurable size limits, metrics, and eviction policies.
     /// </summary>
-    public class CachedStatisticsService : IStatisticsService, IDisposable
+    public sealed class CachedStatisticsService : IStatisticsService, IDisposable
     {
         private readonly IStatisticsService _inner;
         private readonly IMemoryCache _cache;
@@ -352,7 +352,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             return estimatedThreats * perThreatSize;
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_disposed)
                 return;

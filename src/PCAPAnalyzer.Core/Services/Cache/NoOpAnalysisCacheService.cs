@@ -12,7 +12,7 @@ namespace PCAPAnalyzer.Core.Services.Cache
     /// Used when cache is temporarily disabled or for testing fresh analysis performance.
     /// All cache operations immediately return "not found" without doing any work.
     /// </summary>
-    public class NoOpAnalysisCacheService : IAnalysisCacheService
+    public sealed class NoOpAnalysisCacheService : IAnalysisCacheService
     {
         private static bool _loggedOnce;
 

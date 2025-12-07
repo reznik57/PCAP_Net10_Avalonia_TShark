@@ -7,7 +7,7 @@ namespace PCAPAnalyzer.UI.Services;
 /// Centralized service for protocol color coding across the application.
 /// Provides consistent color schemes for network protocol visualization.
 /// </summary>
-public class ProtocolColorService : IProtocolColorService
+public sealed class ProtocolColorService : IProtocolColorService
 {
     // GitHub-inspired color palette for better visual distinction - Frozen for O(1) immutable lookup
     private static readonly FrozenDictionary<string, ProtocolColorInfo> ProtocolColors = new Dictionary<string, ProtocolColorInfo>(StringComparer.OrdinalIgnoreCase)

@@ -10,7 +10,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
     /// Time series generation service for traffic visualization.
     /// Implements ITimeSeriesGenerator for DI injection and testability.
     /// </summary>
-    public class TimeSeriesGeneratorService : ITimeSeriesGenerator
+    public sealed class TimeSeriesGeneratorService : ITimeSeriesGenerator
     {
         public (List<TimeSeriesDataPoint> ThroughputSeries,
                 List<TimeSeriesDataPoint> PacketsSeries,

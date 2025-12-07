@@ -15,7 +15,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
     /// Extracted from EnhancedGeoIPService with rate limiting and error handling.
     /// Supports multiple API providers: ip-api.com, ipinfo.io, ipgeolocation.io
     /// </summary>
-    public class ApiGeoIPProvider : IGeoIPProvider, IDisposable
+    public sealed class ApiGeoIPProvider : IGeoIPProvider, IDisposable
     {
         private readonly ILogger? _logger;
         private readonly HttpClient _httpClient;
@@ -340,7 +340,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
             return mapping.TryGetValue(countryCode, out var name) ? name : countryCode;
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_disposed) return;
 

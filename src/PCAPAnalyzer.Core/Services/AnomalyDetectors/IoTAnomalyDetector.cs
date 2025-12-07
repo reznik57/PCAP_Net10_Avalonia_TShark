@@ -10,7 +10,7 @@ namespace PCAPAnalyzer.Core.Services.AnomalyDetectors;
 /// <summary>
 /// Detects IoT-specific anomalies: MQTT flooding, CoAP amplification, unauthorized access, multiple brokers
 /// </summary>
-public class IoTAnomalyDetector : ISpecializedDetector
+public sealed class IoTAnomalyDetector : ISpecializedDetector
 {
     private const int MQTT_PORT = 1883;
     private const int MQTT_SECURE_PORT = 8883;

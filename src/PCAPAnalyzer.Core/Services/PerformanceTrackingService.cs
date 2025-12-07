@@ -92,7 +92,7 @@ namespace PCAPAnalyzer.Core.Services
         string IdentifyBottleneck(string operationId);
     }
 
-    public class PerformanceTrackingService : IPerformanceTrackingService, IDisposable
+    public sealed class PerformanceTrackingService : IPerformanceTrackingService, IDisposable
     {
         private readonly ConcurrentDictionary<string, List<PerformanceSnapshot>> _snapshots = [];
         private readonly ConcurrentDictionary<string, List<BenchmarkResult>> _benchmarks = [];
@@ -345,7 +345,7 @@ namespace PCAPAnalyzer.Core.Services
             }
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_disposed) return;
 

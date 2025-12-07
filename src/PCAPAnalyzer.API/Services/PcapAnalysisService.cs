@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace PCAPAnalyzer.API.Services;
 
-public class PcapAnalysisService : IPcapAnalysisService
+public sealed class PcapAnalysisService : IPcapAnalysisService
 {
     private readonly ILogger<PcapAnalysisService> _logger;
     private readonly ConcurrentDictionary<string, PcapFileInfo> _pcapFiles = [];

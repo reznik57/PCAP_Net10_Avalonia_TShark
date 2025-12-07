@@ -10,7 +10,7 @@ namespace PCAPAnalyzer.Core.Services
     /// Tab-specific filter service using composition with FilterServiceCore.
     /// Each tab instance maintains its own filter state independently via its own FilterServiceCore instance.
     /// </summary>
-    public class TabFilterService : ITabFilterService
+    public sealed class TabFilterService : ITabFilterService
     {
         private readonly IFilterServiceCore _filterLogic;
 

@@ -18,7 +18,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
     /// Supports fallback cascade through multiple providers with configuration support.
     /// Thread-safe with in-memory caching and automatic provider initialization.
     /// </summary>
-    public class UnifiedGeoIPService : IGeoIPService
+    public sealed class UnifiedGeoIPService : IGeoIPService
     {
         private readonly List<IGeoIPProvider> _providers = [];
         private readonly ConcurrentDictionary<string, CachedGeoLocation> _cache = [];
@@ -971,7 +971,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_disposed) return;
 

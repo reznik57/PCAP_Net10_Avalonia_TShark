@@ -9,6 +9,7 @@ using PCAPAnalyzer.Core.Services.Cache;
 using PCAPAnalyzer.UI.Views;
 using ReactiveUI;
 using System;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Threading.Tasks;
 using PCAPAnalyzer.Core.Utilities;
@@ -42,6 +43,9 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // Global exception handlers for Windows 11 stability
+        SetupGlobalExceptionHandlers();
+
         try
         {
             // ✅ FORCE DEBUG MODE: Set environment variable if not already set
@@ -103,6 +107,42 @@ public partial class App : Application
 
             throw;
         }
+    }
+
+    /// <summary>
+    /// Sets up global exception handlers to prevent crashes from unhandled async exceptions.
+    /// Critical for Windows 11 stability - catches exceptions that escape async void handlers.
+    /// </summary>
+    private static void SetupGlobalExceptionHandlers()
+    {
+        // Handle exceptions on non-UI threads
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            var ex = e.ExceptionObject as Exception;
+            DebugLogger.Log($"[FATAL] Unhandled exception: {ex?.Message}");
+            DebugLogger.Log($"[FATAL] Stack trace: {ex?.StackTrace}");
+            // Let Windows Error Reporting handle true crashes
+        };
+
+        // Handle unobserved Task exceptions (fire-and-forget async operations)
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            DebugLogger.Log($"[ASYNC-ERROR] Unobserved task exception: {e.Exception.Message}");
+            foreach (var inner in e.Exception.InnerExceptions)
+            {
+                DebugLogger.Log($"[ASYNC-ERROR] Inner: {inner.Message}");
+            }
+            e.SetObserved(); // Prevent app crash, we've logged it
+        };
+
+        // Handle Avalonia UI thread exceptions via ReactiveUI
+        RxApp.DefaultExceptionHandler = Observer.Create<Exception>(ex =>
+        {
+            DebugLogger.Log($"[UI-ERROR] ReactiveUI exception: {ex.Message}");
+            DebugLogger.Log($"[UI-ERROR] Stack trace: {ex.StackTrace}");
+        });
+
+        DebugLogger.Log("[App] Global exception handlers registered");
     }
 
     /// <summary>

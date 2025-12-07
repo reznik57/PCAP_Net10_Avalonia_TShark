@@ -44,7 +44,7 @@ namespace PCAPAnalyzer.UI.Services.Visualization
         Task<bool> CreateVisualizationReportAsync(List<ChartExportInfo> charts, string filePath);
     }
 
-    public class ChartExportService : IChartExportService
+    public sealed class ChartExportService : IChartExportService
     {
         public async Task<bool> ExportToPngAsync(Control chartControl, string filePath, int width = 1920, int height = 1080)
         {

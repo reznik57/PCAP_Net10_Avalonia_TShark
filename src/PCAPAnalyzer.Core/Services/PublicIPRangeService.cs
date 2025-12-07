@@ -27,7 +27,7 @@ namespace PCAPAnalyzer.Core.Services
         bool IsInitialized { get; }
     }
 
-    public class PublicIPRangeService : IPublicIPRangeService
+    public sealed class PublicIPRangeService : IPublicIPRangeService
     {
         private readonly ILogger<PublicIPRangeService>? _logger;
         private readonly HttpClient _httpClient;
@@ -703,7 +703,7 @@ namespace PCAPAnalyzer.Core.Services
         /// Releases the unmanaged resources used by the PublicIPRangeService and optionally releases the managed resources.
         /// </summary>
         /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_disposed) return;
 

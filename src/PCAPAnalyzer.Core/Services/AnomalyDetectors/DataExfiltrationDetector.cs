@@ -10,7 +10,7 @@ namespace PCAPAnalyzer.Core.Services.AnomalyDetectors;
 /// <summary>
 /// Detects data exfiltration patterns including slow exfiltration, encoded transfers, and unusual uploads
 /// </summary>
-public class DataExfiltrationDetector : ISpecializedDetector
+public sealed class DataExfiltrationDetector : ISpecializedDetector
 {
     private const long UPLOAD_THRESHOLD_BYTES = 10 * 1024 * 1024; // 10MB upload threshold
     private const double UPLOAD_DOWNLOAD_RATIO = 3.0; // Upload/Download ratio threshold

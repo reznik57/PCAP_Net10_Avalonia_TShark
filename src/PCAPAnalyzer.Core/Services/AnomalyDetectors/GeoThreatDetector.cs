@@ -15,7 +15,7 @@ namespace PCAPAnalyzer.Core.Services.AnomalyDetectors;
 /// single-IP country anomalies (potential C2/targeted attacks), and suspicious
 /// geo-based traffic patterns.
 /// </summary>
-public class GeoThreatDetector : ISpecializedDetector
+public sealed class GeoThreatDetector : ISpecializedDetector
 {
     private readonly IGeoIPService? _geoIPService;
 

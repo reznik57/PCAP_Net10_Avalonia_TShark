@@ -15,7 +15,7 @@ namespace PCAPAnalyzer.UI.Services;
 /// Service for managing Dashboard filter presets.
 /// Stores user presets in JSON, provides immutable built-in presets.
 /// </summary>
-public class FilterPresetService : IFilterPresetService
+public sealed class FilterPresetService : IFilterPresetService
 {
     private const string SettingsFileName = "filter-presets.json";
     private readonly string _settingsPath;

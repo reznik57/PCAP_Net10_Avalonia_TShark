@@ -17,7 +17,7 @@ namespace PCAPAnalyzer.Core.Services;
 /// - Aggressive GC on Clear() to reclaim 10-20GB memory
 /// - Cache validation via file hash
 /// </summary>
-public class SessionAnalysisCacheService : ISessionAnalysisCache
+public sealed class SessionAnalysisCacheService : ISessionAnalysisCache
 {
     private AnalysisResult? _current;
     private readonly Lock _lock = new();

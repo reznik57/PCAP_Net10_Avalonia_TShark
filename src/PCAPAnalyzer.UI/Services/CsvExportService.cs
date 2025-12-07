@@ -23,7 +23,7 @@ namespace PCAPAnalyzer.UI.Services;
 /// - Reserved filename validation (Windows compatibility)
 /// - Comprehensive audit logging of all export operations
 /// </remarks>
-public class CsvExportService : ICsvExportService
+public sealed class CsvExportService : ICsvExportService
 {
     private readonly ILogger<CsvExportService>? _logger;
     private readonly string[] _allowedDirectories;

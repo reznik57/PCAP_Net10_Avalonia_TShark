@@ -11,7 +11,7 @@ namespace PCAPAnalyzer.UI.Services
     /// Enables users to copy common filters (Protocol, Source IP, Destination IP)
     /// from one tab to another without tight coupling between ViewModels.
     /// </summary>
-    public class FilterCopyService
+    public sealed class FilterCopyService
     {
         private readonly Dictionary<string, IFilterableTab> _registeredTabs = [];
         private readonly Lock _lock = new();

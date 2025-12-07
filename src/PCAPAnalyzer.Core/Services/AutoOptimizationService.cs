@@ -37,7 +37,7 @@ namespace PCAPAnalyzer.Core.Services
         FullOptimization = 6 // Everything enabled
     }
 
-    public class OptimizationStrategy
+    public sealed class OptimizationStrategy
     {
         public ProcessingMode Mode { get; set; } = ProcessingMode.Adaptive;
         public int ThreadCount { get; set; } = Environment.ProcessorCount;
@@ -95,7 +95,7 @@ namespace PCAPAnalyzer.Core.Services
         OptimizationStrategy LearnFromHistory();
     }
 
-    public class AutoOptimizationService : IAutoOptimizationService, IDisposable
+    public sealed class AutoOptimizationService : IAutoOptimizationService, IDisposable
     {
         private readonly ConcurrentBag<PerformanceHistory> _history = [];
         private readonly ConcurrentDictionary<string, OptimizationStrategy> _strategyCache = [];
@@ -639,7 +639,7 @@ namespace PCAPAnalyzer.Core.Services
             // ... serialization logic
         }
 
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (_disposed) return;
 

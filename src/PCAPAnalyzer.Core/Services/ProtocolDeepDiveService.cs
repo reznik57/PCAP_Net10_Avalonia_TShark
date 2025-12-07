@@ -14,7 +14,7 @@ namespace PCAPAnalyzer.Core.Services;
 /// Service for extracting detailed protocol information from specific packets using TShark.
 /// Uses on-demand extraction to avoid slowing down initial parsing.
 /// </summary>
-public class ProtocolDeepDiveService
+public sealed class ProtocolDeepDiveService
 {
     private readonly string _tsharkPath;
     private readonly ProtocolAnalyzerRegistry _registry;
