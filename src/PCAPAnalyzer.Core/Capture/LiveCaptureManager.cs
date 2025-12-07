@@ -695,6 +695,15 @@ namespace PCAPAnalyzer.Core.Capture
             // Stop all sessions
             StopAllCapturesAsync().Wait(TimeSpan.FromSeconds(10));
 
+            // Unsubscribe from session events and dispose sessions
+            foreach (var session in _activeSessions.Values)
+            {
+                session.StateChanged -= OnSessionStateChanged;
+                session.ErrorOccurred -= OnSessionError;
+                session.Dispose();
+            }
+            _activeSessions.Clear();
+
             _packetProcessor.Dispose();
             _bufferPool.Dispose();
             _sessionLock.Dispose();

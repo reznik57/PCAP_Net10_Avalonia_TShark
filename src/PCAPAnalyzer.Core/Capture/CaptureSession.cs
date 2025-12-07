@@ -480,7 +480,13 @@ namespace PCAPAnalyzer.Core.Capture
             _cancellationSource.Cancel();
             _cancellationSource.Dispose();
 
-            _tsharkProcess?.Dispose();
+            // Unsubscribe from process events to prevent memory leaks
+            if (_tsharkProcess != null)
+            {
+                _tsharkProcess.Exited -= OnProcessExited;
+                _tsharkProcess.Dispose();
+            }
+
             _stateLock.Dispose();
 
             _disposed = true;
