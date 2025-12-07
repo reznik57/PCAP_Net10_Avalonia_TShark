@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using PCAPAnalyzer.Core.Models;
@@ -17,7 +18,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
         /// Database of insecure ports and their security implications.
         /// Used for identifying security risks in network traffic.
         /// </summary>
-        public static readonly Dictionary<int, string> InsecurePortDatabase = new()
+        public static readonly FrozenDictionary<int, string> InsecurePortDatabase = new Dictionary<int, string>
         {
             { 21, "FTP (Unencrypted file transfer)" },
             { 23, "Telnet (Unencrypted remote access)" },
@@ -44,7 +45,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
             { 11211, "Memcached (Cache server - often exposed)" },
             { 27017, "MongoDB (Database - often exposed without auth)" },
             { 50000, "SAP (Enterprise software - security sensitive)" }
-        };
+        }.ToFrozenDictionary();
 
         #endregion
 
@@ -54,14 +55,14 @@ namespace PCAPAnalyzer.Core.Services.Reporting
         /// Compliance standards and their descriptions.
         /// Used for mapping security findings to regulatory requirements.
         /// </summary>
-        public static readonly Dictionary<string, string> ComplianceStandards = new()
+        public static readonly FrozenDictionary<string, string> ComplianceStandards = new Dictionary<string, string>
         {
             { "PCI-DSS", "Payment Card Industry Data Security Standard - Required for handling credit card data" },
             { "HIPAA", "Health Insurance Portability and Accountability Act - Required for healthcare data" },
             { "GDPR", "General Data Protection Regulation - Required for EU personal data processing" },
             { "SOX", "Sarbanes-Oxley Act - Required for public company financial reporting" },
             { "NIST", "National Institute of Standards and Technology Cybersecurity Framework" }
-        };
+        }.ToFrozenDictionary();
 
         #endregion
 

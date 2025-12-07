@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Collections.Generic;
 
 namespace PCAPAnalyzer.Core.Utilities
@@ -16,7 +17,7 @@ namespace PCAPAnalyzer.Core.Utilities
         /// <summary>
         /// Maps technical phase names to tab display names with emoji icons
         /// </summary>
-        private static readonly Dictionary<string, string> PhaseToTabName = new()
+        private static readonly FrozenDictionary<string, string> PhaseToTabName = new Dictionary<string, string>
         {
             // Counting phase prepares File Manager tab (file info, selection)
             { "Counting Packets", "📂 File Manager" },
@@ -44,7 +45,7 @@ namespace PCAPAnalyzer.Core.Utilities
 
             // Completion marker
             { "Complete", "✅ Complete" }
-        };
+        }.ToFrozenDictionary();
 
         /// <summary>
         /// Maps technical phase name to user-friendly tab name with icon

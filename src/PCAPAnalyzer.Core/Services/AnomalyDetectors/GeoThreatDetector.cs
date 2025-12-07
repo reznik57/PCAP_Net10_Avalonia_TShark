@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -19,7 +20,7 @@ public class GeoThreatDetector : ISpecializedDetector
     private readonly IGeoIPService? _geoIPService;
 
     // High-risk countries based on threat intelligence (OFAC sanctions, APT origins, cybercrime hubs)
-    private static readonly HashSet<string> HighRiskCountryCodes = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly FrozenSet<string> HighRiskCountryCodes = new[]
     {
         // OFAC Sanctioned
         "RU", // Russia - APT28, APT29, Sandworm
@@ -38,10 +39,10 @@ public class GeoThreatDetector : ISpecializedDetector
         "BR", // Brazil - banking trojans
         "VN", // Vietnam - APT32
         "PK", // Pakistan - APT36
-    };
+    }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     // Countries requiring elevated scrutiny (not blocked but flagged)
-    private static readonly HashSet<string> ElevatedRiskCountryCodes = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly FrozenSet<string> ElevatedRiskCountryCodes = new[]
     {
         "IN", // India
         "ID", // Indonesia
@@ -51,7 +52,7 @@ public class GeoThreatDetector : ISpecializedDetector
         "TR", // Turkey
         "EG", // Egypt
         "ZA", // South Africa
-    };
+    }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     private const int SINGLE_IP_PACKET_THRESHOLD = 10; // Min packets to consider significant
     private const long HIGH_RISK_BYTES_THRESHOLD = 1024 * 1024; // 1MB to high-risk = concern

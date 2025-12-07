@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using PCAPAnalyzer.Core.Models;
@@ -15,11 +16,11 @@ namespace PCAPAnalyzer.UI.Services;
 public class DashboardFilterService : IDashboardFilterService
 {
     // Pre-computed insecure protocol set for O(1) lookup
-    private static readonly HashSet<string> InsecureProtocols = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly FrozenSet<string> InsecureProtocols = new[]
     {
         "HTTP", "FTP", "TELNET", "POP", "POP3", "IMAP", "SMTP", "SMB", "SMB2",
         "NFS", "TFTP", "SNMPv1", "SNMPv2c", "RDP", "TLS v1.0", "TLS v1.1"
-    };
+    }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
 
     public IEnumerable<PacketInfo> ApplySmartFilters(
         IEnumerable<PacketInfo> packets,
