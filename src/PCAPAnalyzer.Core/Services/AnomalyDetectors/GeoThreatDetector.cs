@@ -99,10 +99,12 @@ public sealed class GeoThreatDetector : ISpecializedDetector
     /// Builds a cache of IP addresses to country codes for efficient lookup.
     /// Uses batched async lookups via Task.WhenAll for performance.
     ///
-    /// NOTE: Uses GetAwaiter().GetResult() because IAnomalyDetector.Detect() is synchronous.
+    /// TECH DEBT: Uses GetAwaiter().GetResult() because IAnomalyDetector.Detect() is synchronous.
     /// This is intentional - batching all lookups into a single blocking wait is faster than
     /// N sequential blocking waits. Consider adding IAnomalyDetectorAsync interface if this
     /// becomes a bottleneck.
+    ///
+    /// TODO: Migrate to IAnomalyDetectorAsync when interface is added.
     /// </summary>
     private Dictionary<string, string> BuildIPCountryCache(List<PacketInfo> packets)
     {

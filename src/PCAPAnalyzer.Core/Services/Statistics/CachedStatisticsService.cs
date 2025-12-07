@@ -64,6 +64,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
         /// WARNING: Prefer using CalculateStatisticsAsync directly when possible to avoid thread pool overhead.
         /// This method exists solely for IStatisticsService interface compatibility.
         /// </summary>
+        [Obsolete("Use CalculateStatisticsAsync instead. Sync-over-async causes thread pool starvation under load.")]
         public NetworkStatistics CalculateStatistics(IEnumerable<PacketInfo> packets)
         {
             // Uses Task.Run to avoid sync-over-async blocking. The inner async method needs to:

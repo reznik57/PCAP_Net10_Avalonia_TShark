@@ -120,91 +120,100 @@ public partial class MainWindow : Window
         }
     }
     
-    private async void OnTabSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    /// <summary>
+    /// Handles tab selection changes with animation.
+    /// Uses fire-and-forget pattern with exception handling to avoid async void.
+    /// </summary>
+    private void OnTabSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (sender is TabControl tabControl && DataContext is MainWindowViewModel viewModel)
+        {
+            _ = HandleTabSelectionChangedAsync(tabControl, viewModel);
+        }
+    }
+
+    private async Task HandleTabSelectionChangedAsync(TabControl tabControl, MainWindowViewModel viewModel)
     {
         try
         {
-            if (sender is TabControl tabControl && DataContext is MainWindowViewModel viewModel)
+            var selectedTab = tabControl.SelectedItem as TabItem;
+
+            // Animate the tab content with fade-in effect
+            if (selectedTab?.Content is Control content)
             {
-                var selectedTab = tabControl.SelectedItem as TabItem;
+                await AnimateTabContentFadeIn(content);
+            }
 
-                // Animate the tab content with fade-in effect
-                if (selectedTab?.Content is Control content)
+            // Continue with original logic
+            selectedTab = tabControl.SelectedItem as TabItem;
+            if (selectedTab is not null)
+            {
+                var header = selectedTab.Header?.ToString() ?? "";
+                var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+                DebugLogger.Log($"[{timestamp}] [TAB-SWITCH] User clicked tab: '{header}' - BEGIN");
+
+                // If switching to Dashboard tab, ensure it's safe to display
+                if (header.Contains("Dashboard", StringComparison.Ordinal))
                 {
-                    await AnimateTabContentFadeIn(content);
-                }
+                    DebugLogger.Log("[MainWindow] Dashboard tab selected");
 
-                // Continue with original logic
-                selectedTab = tabControl.SelectedItem as TabItem;
-                if (selectedTab is not null)
-                {
-                    var header = selectedTab.Header?.ToString() ?? "";
-                    var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
-                    DebugLogger.Log($"[{timestamp}] [TAB-SWITCH] User clicked tab: '{header}' - BEGIN");
-
-                    // If switching to Dashboard tab, ensure it's safe to display
-                    if (header.Contains("Dashboard", StringComparison.Ordinal))
+                    // Ensure dashboard is initialized
+                    if (viewModel.DashboardViewModel is null)
                     {
-                        DebugLogger.Log("[MainWindow] Dashboard tab selected");
-
-                        // Ensure dashboard is initialized
-                        if (viewModel.DashboardViewModel is null)
+                        DebugLogger.Log("[MainWindow] Dashboard not initialized, creating new instance");
+                        try
                         {
-                            DebugLogger.Log("[MainWindow] Dashboard not initialized, creating new instance");
-                            try
-                            {
-                                viewModel.DashboardViewModel = new();
-                            }
-                            catch (Exception dashEx)
-                            {
-                                DebugLogger.Log($"[MainWindow] Failed to create DashboardViewModel: {dashEx.Message}");
-                                return;
-                            }
+                            viewModel.DashboardViewModel = new();
                         }
-
-                        // Only update dashboard if we have completed analysis with data
-                        // Skip the update if analysis is in progress to prevent crashes
-                        if (viewModel.PacketCount > 0 && !viewModel.IsAnalyzing)
+                        catch (Exception dashEx)
                         {
-                            DebugLogger.Log($"[MainWindow] Dashboard update conditions met: PacketCount={viewModel.PacketCount}, IsAnalyzing={viewModel.IsAnalyzing}");
-
-                            // Delay slightly to ensure UI is ready
-                            _ = System.Threading.Tasks.Task.Run(async () =>
-                            {
-                                try
-                                {
-                                    // Add a small delay to let UI stabilize
-                                    await System.Threading.Tasks.Task.Delay(100);
-
-                                    // Check again that we should update
-                                    if (viewModel.DashboardViewModel is not null && !viewModel.IsAnalyzing)
-                                    {
-                                        DebugLogger.Log("[MainWindow] Executing dashboard update command");
-                                        await viewModel.UpdateDashboardCommand.ExecuteAsync(null);
-                                        DebugLogger.Log("[MainWindow] Dashboard update command completed");
-                                    }
-                                    else
-                                    {
-                                        DebugLogger.Log("[MainWindow] Skipping dashboard update - conditions changed");
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    DebugLogger.Log($"[MainWindow] Dashboard update failed: {ex.Message}");
-                                    DebugLogger.Log($"[MainWindow] Stack trace: {ex.StackTrace}");
-                                }
-                            });
-                        }
-                        else
-                        {
-                            DebugLogger.Log($"[MainWindow] Skipping dashboard update: PacketCount={viewModel.PacketCount}, IsAnalyzing={viewModel.IsAnalyzing}");
+                            DebugLogger.Log($"[MainWindow] Failed to create DashboardViewModel: {dashEx.Message}");
+                            return;
                         }
                     }
 
-                    // Log tab switch completion
-                    var timestamp2 = DateTime.Now.ToString("HH:mm:ss.fff");
-                    DebugLogger.Log($"[{timestamp2}] [TAB-SWITCH] Tab '{header}' - END (handler complete)");
+                    // Only update dashboard if we have completed analysis with data
+                    // Skip the update if analysis is in progress to prevent crashes
+                    if (viewModel.PacketCount > 0 && !viewModel.IsAnalyzing)
+                    {
+                        DebugLogger.Log($"[MainWindow] Dashboard update conditions met: PacketCount={viewModel.PacketCount}, IsAnalyzing={viewModel.IsAnalyzing}");
+
+                        // Delay slightly to ensure UI is ready
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                // Add a small delay to let UI stabilize
+                                await Task.Delay(100);
+
+                                // Check again that we should update
+                                if (viewModel.DashboardViewModel is not null && !viewModel.IsAnalyzing)
+                                {
+                                    DebugLogger.Log("[MainWindow] Executing dashboard update command");
+                                    await viewModel.UpdateDashboardCommand.ExecuteAsync(null);
+                                    DebugLogger.Log("[MainWindow] Dashboard update command completed");
+                                }
+                                else
+                                {
+                                    DebugLogger.Log("[MainWindow] Skipping dashboard update - conditions changed");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                DebugLogger.Log($"[MainWindow] Dashboard update failed: {ex.Message}");
+                                DebugLogger.Log($"[MainWindow] Stack trace: {ex.StackTrace}");
+                            }
+                        });
+                    }
+                    else
+                    {
+                        DebugLogger.Log($"[MainWindow] Skipping dashboard update: PacketCount={viewModel.PacketCount}, IsAnalyzing={viewModel.IsAnalyzing}");
+                    }
                 }
+
+                // Log tab switch completion
+                var timestamp2 = DateTime.Now.ToString("HH:mm:ss.fff");
+                DebugLogger.Log($"[{timestamp2}] [TAB-SWITCH] Tab '{header}' - END (handler complete)");
             }
         }
         catch (Exception ex)
@@ -240,34 +249,40 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Handles Browse button click - opens file picker for PCAP files
+    /// Handles Browse button click - opens file picker for PCAP files.
+    /// Uses fire-and-forget pattern with exception handling to avoid async void.
     /// </summary>
-    private async void BrowseButton_Click(object? sender, RoutedEventArgs e)
+    private void BrowseButton_Click(object? sender, RoutedEventArgs e)
+    {
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is null || DataContext is not MainWindowViewModel viewModel)
+        {
+            DebugLogger.Log("[MainWindow] TopLevel or ViewModel not available");
+            return;
+        }
+
+        _ = HandleBrowseButtonClickAsync(topLevel, viewModel);
+    }
+
+    private async Task HandleBrowseButtonClickAsync(TopLevel topLevel, MainWindowViewModel viewModel)
     {
         try
         {
-            var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel is null || DataContext is not MainWindowViewModel viewModel)
-            {
-                DebugLogger.Log("[MainWindow] TopLevel or ViewModel not available");
-                return;
-            }
-
             var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
             {
                 Title = "Select PCAP File",
                 AllowMultiple = false,
-                FileTypeFilter = new[]
-                {
+                FileTypeFilter =
+                [
                     new FilePickerFileType("PCAP Files")
                     {
-                        Patterns = new[] { "*.pcap", "*.pcapng", "*.cap" }
+                        Patterns = ["*.pcap", "*.pcapng", "*.cap"]
                     },
                     new FilePickerFileType("All Files")
                     {
-                        Patterns = new[] { "*.*" }
+                        Patterns = ["*.*"]
                     }
-                }
+                ]
             });
 
             if (files.Count > 0)
@@ -287,26 +302,32 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             DebugLogger.Log($"[MainWindow] Browse error: {ex.Message}");
-            if (DataContext is MainWindowViewModel vm)
-            {
-                vm.UIState.UpdateStatus($"Error selecting file: {ex.Message}", ThemeColorHelper.GetColorHex("ColorDanger", "#FF5252"));
-            }
+            viewModel.UIState.UpdateStatus($"Error selecting file: {ex.Message}", ThemeColorHelper.GetColorHex("ColorDanger", "#FF5252"));
         }
     }
 
-    private async void OnFilterButtonClick(object? sender, RoutedEventArgs e)
+    /// <summary>
+    /// Handles filter button click.
+    /// Uses fire-and-forget pattern with exception handling to avoid async void.
+    /// </summary>
+    private void OnFilterButtonClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            _ = HandleFilterButtonClickAsync(viewModel);
+        }
+    }
+
+    private async Task HandleFilterButtonClickAsync(MainWindowViewModel viewModel)
     {
         try
         {
-            if (DataContext is MainWindowViewModel viewModel)
+            var filterDialog = new FilterDialog
             {
-                var filterDialog = new FilterDialog
-                {
-                    DataContext = viewModel.FilterViewModel
-                };
+                DataContext = viewModel.FilterViewModel
+            };
 
-                await filterDialog.ShowDialogWithAnimation(this);
-            }
+            await filterDialog.ShowDialogWithAnimation(this);
         }
         catch (Exception ex)
         {

@@ -49,28 +49,48 @@ namespace PCAPAnalyzer.Core.Monitoring
             MemoryPressureDetector.Instance.MemoryPressureCritical += OnMemoryPressureCritical;
         }
 
-        private async void OnMemoryPressureCritical(object? sender, EventArgs e)
+        /// <summary>
+        /// Handles critical memory pressure events.
+        /// Uses fire-and-forget with exception handling to avoid async void.
+        /// </summary>
+        private void OnMemoryPressureCritical(object? sender, EventArgs e)
+        {
+            if (!AutoOptimizationEnabled)
+                return;
+
+            // Fire-and-forget with proper exception handling
+            _ = HandleMemoryPressureCriticalAsync();
+        }
+
+        private async Task HandleMemoryPressureCriticalAsync()
         {
             try
             {
-                if (!AutoOptimizationEnabled)
-                    return;
-
                 await TriggerOptimizationAsync("Critical memory pressure detected").ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                DebugLogger.Log($"[OPTIMIZER] Error in OnMemoryPressureCritical: {ex.Message}");
+                DebugLogger.Log($"[OPTIMIZER] Error in HandleMemoryPressureCriticalAsync: {ex.Message}");
             }
         }
 
-        private async void CheckAndOptimize(object? state)
+        /// <summary>
+        /// Timer callback for periodic optimization checks.
+        /// Uses fire-and-forget with exception handling to avoid async void.
+        /// </summary>
+        private void CheckAndOptimize(object? state)
+        {
+            if (!AutoOptimizationEnabled || _isOptimizing || _isDisposed)
+                return;
+
+            // Fire-and-forget with proper exception handling
+            _ = CheckAndOptimizeAsync();
+        }
+
+        private async Task CheckAndOptimizeAsync()
         {
             try
             {
-                if (!AutoOptimizationEnabled || _isOptimizing || _isDisposed)
-                    return;
-
                 // Check if we should optimize
                 var shouldOptimize = false;
                 var reasons = new List<string>();
@@ -103,7 +123,7 @@ namespace PCAPAnalyzer.Core.Monitoring
             }
             catch (Exception ex)
             {
-                DebugLogger.Log($"[OPTIMIZER] Error in CheckAndOptimize: {ex.Message}");
+                DebugLogger.Log($"[OPTIMIZER] Error in CheckAndOptimizeAsync: {ex.Message}");
             }
         }
 

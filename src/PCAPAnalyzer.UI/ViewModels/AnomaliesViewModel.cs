@@ -246,14 +246,16 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
             .ToList();
     }
 
+    /// <summary>
+    /// Builds endpoint view model for anomaly display.
+    /// TECH DEBT: GeoIP lookup is async but this is called from LINQ .Select().
+    /// Using fire-and-forget enrichment to avoid blocking - Country will be "Loading..." initially.
+    /// </summary>
     private AnomalyEndpointViewModel BuildEndpointViewModel(string ip, List<NetworkAnomaly> anomalies)
     {
         var total = _filteredAnomalies.Count > 0 ? _filteredAnomalies.Count : 1;
-        // GetLocationAsync is async, but we're in a sync method. For now, use sync wrapper or defaults.
-        // TODO: Refactor to async if needed for GeoIP enrichment
-        var geoInfo = Task.Run(() => _geoIPService.GetLocationAsync(ip)).GetAwaiter().GetResult();
 
-        return new AnomalyEndpointViewModel
+        var viewModel = new AnomalyEndpointViewModel
         {
             IpAddress = ip,
             AnomalyCount = anomalies.Count,
@@ -263,11 +265,34 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
             LowCount = anomalies.Count(a => a.Severity == AnomalySeverity.Low),
             HighestSeverity = anomalies.Max(a => a.Severity),
             Percentage = (double)anomalies.Count / total * 100,
-            Country = geoInfo?.CountryName ?? "Unknown",
-            CountryCode = geoInfo?.CountryCode ?? "",
+            Country = "Loading...",
+            CountryCode = "",
             Categories = anomalies.Select(a => a.Category).Distinct().ToList(),
             AffectedFrames = anomalies.SelectMany(a => a.AffectedFrames ?? Enumerable.Empty<long>()).Distinct().ToList()
         };
+
+        // Fire-and-forget GeoIP enrichment - updates viewModel.Country when complete
+        _ = EnrichEndpointGeoIPAsync(viewModel, ip);
+
+        return viewModel;
+    }
+
+    /// <summary>
+    /// Asynchronously enriches endpoint with GeoIP data.
+    /// </summary>
+    private async Task EnrichEndpointGeoIPAsync(AnomalyEndpointViewModel viewModel, string ip)
+    {
+        try
+        {
+            var geoInfo = await _geoIPService.GetLocationAsync(ip);
+            viewModel.Country = geoInfo?.CountryName ?? "Unknown";
+            viewModel.CountryCode = geoInfo?.CountryCode ?? "";
+        }
+        catch
+        {
+            viewModel.Country = "Unknown";
+            viewModel.CountryCode = "";
+        }
     }
 
     private List<AnomalyPortViewModel> BuildPortBreakdown(List<NetworkAnomaly> anomalies)

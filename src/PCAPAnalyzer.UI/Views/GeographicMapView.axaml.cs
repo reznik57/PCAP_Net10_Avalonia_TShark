@@ -37,46 +37,53 @@ namespace PCAPAnalyzer.UI.Views
                 viewModel.ScreenshotRequested += OnScreenshotRequested;
             }
         }
-        
-        private async void OnScreenshotRequested(string filePath)
+
+        /// <summary>
+        /// Handles screenshot requests from the ViewModel.
+        /// Uses fire-and-forget pattern with exception handling to avoid async void.
+        /// </summary>
+        private void OnScreenshotRequested(string filePath)
+        {
+            if (_mapControl is null)
+            {
+                DebugLogger.Log($"[EnhancedMapView] Map control is null, cannot take screenshot");
+                return;
+            }
+
+            _ = HandleScreenshotRequestedAsync(filePath);
+        }
+
+        private async Task HandleScreenshotRequestedAsync(string filePath)
         {
             try
             {
-                if (_mapControl is null) 
-                {
-                    DebugLogger.Log($"[EnhancedMapView] Map control is null, cannot take screenshot");
-                    return;
-                }
-                
+                if (_mapControl is null) return;
+
                 // Ensure the control has valid bounds
                 if (_mapControl.Bounds.Width <= 0 || _mapControl.Bounds.Height <= 0)
                 {
                     DebugLogger.Log($"[EnhancedMapView] Map control has invalid bounds: {_mapControl.Bounds}");
                     return;
                 }
-                
+
                 // Render the control to a bitmap
                 var pixelSize = new PixelSize((int)_mapControl.Bounds.Width, (int)_mapControl.Bounds.Height);
                 var dpi = new Vector(96, 96);
-                
-                using (var bitmap = new RenderTargetBitmap(pixelSize, dpi))
-                {
-                    _mapControl.Measure(new Size(pixelSize.Width, pixelSize.Height));
-                    _mapControl.Arrange(new Rect(0, 0, pixelSize.Width, pixelSize.Height));
-                    
-                    // Force a render
-                    await Task.Delay(100);
-                    
-                    bitmap.Render(_mapControl);
-                    
-                    // Save to file using stream
-                    using (var stream = File.Create(filePath))
-                    {
-                        bitmap.Save(stream);
-                    }
-                    
-                    DebugLogger.Log($"[EnhancedMapView] Screenshot saved to: {filePath}");
-                }
+
+                using var bitmap = new RenderTargetBitmap(pixelSize, dpi);
+                _mapControl.Measure(new Size(pixelSize.Width, pixelSize.Height));
+                _mapControl.Arrange(new Rect(0, 0, pixelSize.Width, pixelSize.Height));
+
+                // Force a render
+                await Task.Delay(100);
+
+                bitmap.Render(_mapControl);
+
+                // Save to file using stream
+                await using var stream = File.Create(filePath);
+                bitmap.Save(stream);
+
+                DebugLogger.Log($"[EnhancedMapView] Screenshot saved to: {filePath}");
             }
             catch (Exception ex)
             {

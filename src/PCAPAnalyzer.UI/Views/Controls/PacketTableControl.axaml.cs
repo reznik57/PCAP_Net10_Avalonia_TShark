@@ -47,7 +47,11 @@ public partial class PacketTableControl : UserControl
 
     #region Keyboard Navigation
 
-    private async void PacketList_KeyDown(object? sender, KeyEventArgs e)
+    /// <summary>
+    /// Handles keyboard navigation in packet list.
+    /// Uses fire-and-forget pattern with exception handling to avoid async void.
+    /// </summary>
+    private void PacketList_KeyDown(object? sender, KeyEventArgs e)
     {
         if (DataContext is not MainWindowViewModel viewModel) return;
 
@@ -59,64 +63,75 @@ public partial class PacketTableControl : UserControl
         if (currentPacket is PacketInfo selected)
             currentIndex = packets.IndexOf(selected);
 
+        // Handle synchronous commands first
         switch (e.Key)
         {
-            case Key.Up when currentIndex > 0:
-                await viewModel.PacketManager.SelectPacketAsync(packets[currentIndex - 1]);
-                e.Handled = true;
-                break;
-
-            case Key.Down when currentIndex < packets.Count - 1:
-                await viewModel.PacketManager.SelectPacketAsync(packets[currentIndex + 1]);
-                e.Handled = true;
-                break;
-
-            case Key.Down when currentIndex == -1 && packets.Count > 0:
-                await viewModel.PacketManager.SelectPacketAsync(packets[0]);
-                e.Handled = true;
-                break;
-
-            case Key.Enter when currentPacket is { } pktEnter:
-                await viewModel.PacketManager.SelectPacketAsync(pktEnter);
-                e.Handled = true;
-                break;
-
-            case Key.Home when packets.Count > 0:
-                await viewModel.PacketManager.SelectPacketAsync(packets[0]);
-                e.Handled = true;
-                break;
-
-            case Key.End when packets.Count > 0:
-                await viewModel.PacketManager.SelectPacketAsync(packets[^1]);
-                e.Handled = true;
-                break;
-
             case Key.PageUp:
                 viewModel.GoToPreviousPageCommand.Execute(null);
                 e.Handled = true;
-                break;
+                return;
 
             case Key.PageDown:
                 viewModel.GoToNextPageCommand.Execute(null);
                 e.Handled = true;
-                break;
-
-            case Key.C when e.KeyModifiers.HasFlag(KeyModifiers.Control) && currentPacket is { } pkt:
-                var summary = $"#{pkt.FrameNumber} {pkt.Timestamp:HH:mm:ss.fff} {pkt.SourceIP}:{pkt.SourcePort} → {pkt.DestinationIP}:{pkt.DestinationPort} {pkt.Protocol} {pkt.Length}B";
-                await CopyToClipboard(summary);
-                e.Handled = true;
-                break;
+                return;
 
             case Key.F when currentPacket is { } filterPkt:
                 viewModel.UIState.SearchStreamText = $"{filterPkt.SourceIP}:{filterPkt.SourcePort}-{filterPkt.DestinationIP}:{filterPkt.DestinationPort}";
                 viewModel.UIState.SearchStreamCommand.Execute(null);
                 e.Handled = true;
-                break;
+                return;
 
             case Key.Escape:
                 viewModel.UIState.ClearStreamSearchCommand.Execute(null);
                 e.Handled = true;
-                break;
+                return;
+        }
+
+        // Handle async operations with fire-and-forget
+        _ = HandlePacketListKeyDownAsync(e, viewModel, packets, currentPacket, currentIndex);
+    }
+
+    private async Task HandlePacketListKeyDownAsync(KeyEventArgs e, MainWindowViewModel viewModel,
+        System.Collections.ObjectModel.ObservableCollection<PacketInfo> packets, PacketInfo? currentPacket, int currentIndex)
+    {
+        try
+        {
+            switch (e.Key)
+            {
+                case Key.Up when currentIndex > 0:
+                    await viewModel.PacketManager.SelectPacketAsync(packets[currentIndex - 1]);
+                    break;
+
+                case Key.Down when currentIndex < packets.Count - 1:
+                    await viewModel.PacketManager.SelectPacketAsync(packets[currentIndex + 1]);
+                    break;
+
+                case Key.Down when currentIndex == -1 && packets.Count > 0:
+                    await viewModel.PacketManager.SelectPacketAsync(packets[0]);
+                    break;
+
+                case Key.Enter when currentPacket is { } pktEnter:
+                    await viewModel.PacketManager.SelectPacketAsync(pktEnter);
+                    break;
+
+                case Key.Home when packets.Count > 0:
+                    await viewModel.PacketManager.SelectPacketAsync(packets[0]);
+                    break;
+
+                case Key.End when packets.Count > 0:
+                    await viewModel.PacketManager.SelectPacketAsync(packets[^1]);
+                    break;
+
+                case Key.C when e.KeyModifiers.HasFlag(KeyModifiers.Control) && currentPacket is { } pkt:
+                    var summary = $"#{pkt.FrameNumber} {pkt.Timestamp:HH:mm:ss.fff} {pkt.SourceIP}:{pkt.SourcePort} → {pkt.DestinationIP}:{pkt.DestinationPort} {pkt.Protocol} {pkt.Length}B";
+                    await CopyToClipboard(summary);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[KEYBOARD] Error handling key: {ex.Message}");
         }
     }
 
@@ -124,40 +139,70 @@ public partial class PacketTableControl : UserControl
 
     #region Context Menu Handlers
 
-    private async void CopyRowSummary_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    /// <summary>
+    /// Copy row summary to clipboard. Uses fire-and-forget pattern.
+    /// </summary>
+    private void CopyRowSummary_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (GetPacketFromMenuItem(sender) is { } packet)
         {
             var summary = $"#{packet.FrameNumber} {packet.Timestamp:HH:mm:ss.fff} {packet.SourceIP}:{packet.SourcePort} → {packet.DestinationIP}:{packet.DestinationPort} {packet.Protocol} {packet.Length}B {packet.Info}";
-            await CopyToClipboard(summary);
+            _ = CopyToClipboardSafe(summary);
         }
     }
 
-    private async void CopySourceIP_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    /// <summary>
+    /// Copy source IP to clipboard. Uses fire-and-forget pattern.
+    /// </summary>
+    private void CopySourceIP_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (GetPacketFromMenuItem(sender) is { } packet)
-            await CopyToClipboard(packet.SourceIP);
+            _ = CopyToClipboardSafe(packet.SourceIP);
     }
 
-    private async void CopyDestIP_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    /// <summary>
+    /// Copy destination IP to clipboard. Uses fire-and-forget pattern.
+    /// </summary>
+    private void CopyDestIP_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (GetPacketFromMenuItem(sender) is { } packet)
-            await CopyToClipboard(packet.DestinationIP);
+            _ = CopyToClipboardSafe(packet.DestinationIP);
     }
 
-    private async void CopyConversation_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    /// <summary>
+    /// Copy conversation to clipboard. Uses fire-and-forget pattern.
+    /// </summary>
+    private void CopyConversation_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (GetPacketFromMenuItem(sender) is { } packet)
         {
             var conversation = $"{packet.SourceIP}:{packet.SourcePort} ↔ {packet.DestinationIP}:{packet.DestinationPort}";
-            await CopyToClipboard(conversation);
+            _ = CopyToClipboardSafe(conversation);
         }
     }
 
-    private async void CopyFrameNumber_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    /// <summary>
+    /// Copy frame number to clipboard. Uses fire-and-forget pattern.
+    /// </summary>
+    private void CopyFrameNumber_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (GetPacketFromMenuItem(sender) is { } packet)
-            await CopyToClipboard(packet.FrameNumber.ToString());
+            _ = CopyToClipboardSafe(packet.FrameNumber.ToString());
+    }
+
+    /// <summary>
+    /// Safe wrapper for clipboard operations with exception handling.
+    /// </summary>
+    private async Task CopyToClipboardSafe(string text)
+    {
+        try
+        {
+            await CopyToClipboard(text);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CLIPBOARD] Error: {ex.Message}");
+        }
     }
 
     private void FilterByStream_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -213,24 +258,36 @@ public partial class PacketTableControl : UserControl
     #endregion
 
     /// <summary>
-    /// Handles packet row selection - loads packet details in bottom panel
+    /// Handles packet row selection - loads packet details in bottom panel.
+    /// Uses fire-and-forget pattern with exception handling to avoid async void.
     /// </summary>
-    private async void PacketRow_PointerPressed(object? sender, PointerPressedEventArgs e)
+    private void PacketRow_PointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        // Use Console.WriteLine DIRECTLY to guarantee output
         Console.WriteLine($"[CLICK] PacketRow_PointerPressed - sender: {sender?.GetType().Name}");
 
         if (sender is Border { DataContext: PacketInfo packet } &&
             DataContext is MainWindowViewModel viewModel)
         {
             Console.WriteLine($"[CLICK] ✅ Valid packet click - Frame: {packet.FrameNumber}");
-            await viewModel.PacketManager.SelectPacketAsync(packet);
-            Console.WriteLine($"[CLICK] SelectPacketAsync completed");
             e.Handled = true;
+            _ = SelectPacketSafeAsync(viewModel, packet);
         }
         else
         {
             Console.WriteLine($"[CLICK] ❌ Invalid - sender: {sender?.GetType().Name}, DataContext: {DataContext?.GetType().Name}");
+        }
+    }
+
+    private async Task SelectPacketSafeAsync(MainWindowViewModel viewModel, PacketInfo packet)
+    {
+        try
+        {
+            await viewModel.PacketManager.SelectPacketAsync(packet);
+            Console.WriteLine($"[CLICK] SelectPacketAsync completed");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CLICK] Error selecting packet: {ex.Message}");
         }
     }
 }
