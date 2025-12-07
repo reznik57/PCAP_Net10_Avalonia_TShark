@@ -35,15 +35,8 @@ public partial class MainWindow
     private LineSeries<ObservablePoint>? _packetsHighlightLine;
     private int _lastPacketsHighlightIndex = -1;
 
-    // Stream colors (must match MainWindowChartsViewModel.StreamColors) - lazy initialized for theme support
-    private static string[]? _streamColorsCache;
-    private static string[] StreamColors => _streamColorsCache ??= new[] {
-        ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
-        ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
-        ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
-        ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"),
-        ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6")
-    };
+    // Stream colors - delegate to centralized ThemeColorHelper (always in sync)
+    private static string[] StreamColors => ThemeColorHelper.StreamColors;
 
     /// <summary>
     /// Resets highlight series references when the chart series collection is rebuilt.
@@ -251,8 +244,8 @@ public partial class MainWindow
                 {
                     Values = new ObservableCollection<ObservablePoint> { new(timestamp.Ticks, value) },
                     GeometrySize = 12,
-                    Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentGold", "#FFD700"))),
-                    Stroke = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentOrange", "#FFA500"))) { StrokeThickness = 2 },
+                    Fill = ThemeColorHelper.GetSolidColorPaint("AccentGold", "#FFD700"),
+                    Stroke = ThemeColorHelper.GetSolidColorPaint("AccentOrange", "#FFA500", 2),
                     Name = "Highlight",
                     IsVisibleAtLegend = false,
                     ZIndex = 1000,
@@ -274,7 +267,7 @@ public partial class MainWindow
                         new(timestamp.Ticks, minY),
                         new(timestamp.Ticks, maxY)
                     },
-                    Stroke = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentGold", "#FFD700"))) { StrokeThickness = 4f },  // Thick like Dashboard
+                    Stroke = ThemeColorHelper.GetSolidColorPaint("AccentGold", "#FFD700", 4f),  // Thick like Dashboard
                     Fill = null,
                     GeometrySize = 0,
                     LineSmoothness = 0,

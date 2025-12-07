@@ -180,20 +180,8 @@ public partial class MainWindowChartsViewModel : ObservableObject
     // Top 5 streams for the current filter
     private List<StreamInfo> _topStreams = new();
 
-    // Stream colors (consistent with Dashboard port colors, 10 colors for Top 10 support) - resolved at runtime
-    private static string[]? _streamColorsCache;
-    private static string[] StreamColors => _streamColorsCache ??= new[] {
-        ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
-        ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
-        ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
-        ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"),
-        ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6"),
-        ThemeColorHelper.GetColorHex("AccentCyan", "#06B6D4"),
-        ThemeColorHelper.GetColorHex("AccentPink", "#EC4899"),
-        ThemeColorHelper.GetColorHex("ColorOrange", "#F97316"),
-        ThemeColorHelper.GetColorHex("ColorLime", "#84CC16"),
-        ThemeColorHelper.GetColorHex("AccentIndigo", "#6366F1")
-    };
+    // Stream colors - delegate to centralized ThemeColorHelper
+    private static string[] StreamColors => ThemeColorHelper.StreamColors;
 
     /// <summary>
     /// Gets the top streams for external access (used by click handler)
@@ -238,7 +226,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
         {
             Values = new[] { 1.0 },
             Name = "No Data",
-            Fill = new SolidColorPaint(SKColors.Gray)
+            Fill = ThemeColorHelper.GrayPaint
         });
     }
 
@@ -362,8 +350,8 @@ public partial class MainWindowChartsViewModel : ObservableObject
                 },
                 LabelsRotation = 45,
                 TextSize = 10,
-                SeparatorsPaint = new SolidColorPaint(SKColors.LightGray.WithAlpha(50)),
-                LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E")))
+                SeparatorsPaint = ThemeColorHelper.LightGrayAlpha50Paint,
+                LabelsPaint = ThemeColorHelper.GetSolidColorPaint("TextMuted", "#8B949E")
             }
         };
 
@@ -375,10 +363,10 @@ public partial class MainWindowChartsViewModel : ObservableObject
                 Position = LiveChartsCore.Measure.AxisPosition.Start,
                 Labeler = value => value >= 1000 ? $"{value / 1000:F1}K" : $"{value:F0}",
                 TextSize = 10,
-                SeparatorsPaint = new SolidColorPaint(SKColors.LightGray.WithAlpha(50)),
+                SeparatorsPaint = ThemeColorHelper.LightGrayAlpha50Paint,
                 MinLimit = 0,
-                NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"))),
-                LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF")))
+                NamePaint = ThemeColorHelper.GetSolidColorPaint("AccentBlue", "#58A6FF"),
+                LabelsPaint = ThemeColorHelper.GetSolidColorPaint("AccentBlue", "#58A6FF")
             }
         };
     }
@@ -594,11 +582,11 @@ public partial class MainWindowChartsViewModel : ObservableObject
                 Values = totalDataPoints,
                 Name = "Total",
                 GeometrySize = 4,
-                GeometryStroke = new SolidColorPaint(SKColor.Parse(totalColor)) { StrokeThickness = 1.5f },
-                GeometryFill = new SolidColorPaint(SKColor.Parse(totalColor)),
+                GeometryStroke = ThemeColorHelper.ParseSolidColorPaint(totalColor, 1.5f),
+                GeometryFill = ThemeColorHelper.ParseSolidColorPaint(totalColor),
                 LineSmoothness = 0,
-                Stroke = new SolidColorPaint(SKColor.Parse(totalColor)) { StrokeThickness = 2.5f },
-                Fill = new SolidColorPaint(SKColor.Parse(totalColor).WithAlpha(40)),
+                Stroke = ThemeColorHelper.ParseSolidColorPaint(totalColor, 2.5f),
+                Fill = ThemeColorHelper.ParseSolidColorPaint(totalColor, 40),
                 DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0),
                 IsVisibleAtLegend = false, // Use custom legend
                 ZIndex = 0
@@ -620,7 +608,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
             {
                 var stream = _topStreams[i];
                 var colorHex = StreamColors[i];
-                var color = SKColor.Parse(colorHex);
+                var color = ThemeColorHelper.ParseSKColor(colorHex);
 
                 var streamDataPoints = orderedBuckets
                     .Select(b =>
@@ -698,8 +686,9 @@ public partial class MainWindowChartsViewModel : ObservableObject
                     yAxis.Labeler = ShowStreamActivityAsThroughput
                         ? (value => FormatBytes((long)value))
                         : (value => value >= 1000 ? $"{value / 1000:F1}K" : $"{value:F0}");
-                    yAxis.NamePaint = new SolidColorPaint(SKColor.Parse(ShowStreamActivityAsThroughput ? ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981") : ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF")));
-                    yAxis.LabelsPaint = new SolidColorPaint(SKColor.Parse(ShowStreamActivityAsThroughput ? ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981") : ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF")));
+                    var axisColor = ShowStreamActivityAsThroughput ? ("ColorSuccess", "#10B981") : ("AccentBlue", "#58A6FF");
+                    yAxis.NamePaint = ThemeColorHelper.GetSolidColorPaint(axisColor.Item1, axisColor.Item2);
+                    yAxis.LabelsPaint = ThemeColorHelper.GetSolidColorPaint(axisColor.Item1, axisColor.Item2);
                 }
             }
 
@@ -725,12 +714,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
     /// Formats bytes into human-readable format for Y-axis labels
     /// </summary>
     private static string FormatBytes(long bytes)
-    {
-        if (bytes < 1024) return $"{bytes} B";
-        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
-        if (bytes < 1024 * 1024 * 1024) return $"{bytes / (1024.0 * 1024):F1} MB";
-        return $"{bytes / (1024.0 * 1024 * 1024):F2} GB";
-    }
+        => Core.Utilities.NumberFormatter.FormatBytes(bytes);
 
     /// <summary>
     /// Calculates appropriate bucket size based on time range and packet count.

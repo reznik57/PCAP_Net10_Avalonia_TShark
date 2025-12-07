@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Input;
+using PCAPAnalyzer.UI.Constants;
 using PCAPAnalyzer.UI.ViewModels;
 using PCAPAnalyzer.UI.Utilities;
 using LiveChartsCore;
@@ -238,12 +239,12 @@ namespace PCAPAnalyzer.UI.Views
                     _threatHighlightScatter = new ScatterSeries<DateTimePoint>
                     {
                         Values = new ObservableCollection<DateTimePoint> { new(timestamp, value) },
-                        GeometrySize = 12,
-                        Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.HighlightYellowHex)),
-                        Stroke = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.HighlightOrangeHex)) { StrokeThickness = 2 },
+                        GeometrySize = ChartConstants.HighlightDotSize,
+                        Fill = ChartConstants.HighlightFillPaint,
+                        Stroke = ChartConstants.HighlightStrokePaint,
                         Name = "Highlight",
                         IsVisibleAtLegend = false,
-                        ZIndex = 1000,
+                        ZIndex = ChartConstants.HighlightScatterZIndex,
                         DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0),
                         IsHoverable = false
                     };
@@ -262,13 +263,13 @@ namespace PCAPAnalyzer.UI.Views
                             new(timestamp, _cachedThreatMinY),
                             new(timestamp, _cachedThreatMaxY)
                         },
-                        Stroke = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.HighlightYellowHex)) { StrokeThickness = 4f },
+                        Stroke = ChartConstants.HighlightLinePaint,
                         Fill = null,
                         GeometrySize = 0,
                         LineSmoothness = 0,
                         Name = "VerticalLine",
                         IsVisibleAtLegend = false,
-                        ZIndex = 999,
+                        ZIndex = ChartConstants.HighlightLineZIndex,
                         DataPadding = new LiveChartsCore.Drawing.LvcPoint(0, 0),
                         IsHoverable = false
                     };

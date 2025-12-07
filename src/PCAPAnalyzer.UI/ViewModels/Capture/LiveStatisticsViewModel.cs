@@ -12,6 +12,7 @@ using LiveChartsCore.SkiaSharpView.Painting;
 using PCAPAnalyzer.Core.Models.Capture;
 using PCAPAnalyzer.Core.Performance;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
 using SkiaSharp;
 
 namespace PCAPAnalyzer.UI.ViewModels.Capture;
@@ -230,7 +231,7 @@ public partial class LiveStatisticsViewModel : ViewModelBase, IDisposable
 
             // Update formatted strings
             TotalPacketsFormatted = TotalPackets.ToString("N0");
-            TotalBytesFormatted = NumberFormatter.FormatBytes(TotalBytes);
+            TotalBytesFormatted = Core.Utilities.NumberFormatter.FormatBytes(TotalBytes);
             PacketRateFormatted = $"{PacketsPerSecond:F0} pps";
             BandwidthFormatted = $"{MegabytesPerSecond:F2} MB/s";
 
@@ -283,7 +284,7 @@ public partial class LiveStatisticsViewModel : ViewModelBase, IDisposable
             {
                 Values = new double[] { (double)p.Count },
                 Name = p.Protocol,
-                DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                DataLabelsPaint = ThemeColorHelper.WhitePaint,
                 DataLabelsSize = 12,
                 DataLabelsFormatter = point => $"{p.Protocol}\n{p.Percentage:F1}%"
             }).ToArray();

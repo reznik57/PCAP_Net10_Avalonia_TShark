@@ -1,76 +1,33 @@
 using System;
+using PCAPAnalyzer.Core.Extensions;
+using CoreFormatter = PCAPAnalyzer.Core.Utilities.NumberFormatter;
 
 namespace PCAPAnalyzer.UI.Utilities;
 
 /// <summary>
-/// Provides standardized number and time formatting utilities for PCAP Analyzer UI.
-/// Centralizes formatting logic to eliminate duplication across 15+ ViewModels.
+/// UI facade for number formatting. Delegates to Core utilities and extensions.
+/// Maintained for backward compatibility with existing UI code.
+/// New code should use PCAPAnalyzer.Core.Extensions directly.
 /// </summary>
 public static class NumberFormatter
 {
     /// <summary>
     /// Formats large numbers with abbreviated suffixes (e.g., 1,106,728 → "1.1M")
     /// </summary>
-    /// <param name="count">Number to format</param>
-    /// <returns>Formatted string with K/M suffix</returns>
-    public static string FormatCount(long count)
-    {
-        if (count >= 1_000_000)
-            return $"{count / 1_000_000.0:F1}M";
-        if (count >= 1_000)
-            return $"{count / 1_000.0:F1}K";
-        return count.ToString("N0");
-    }
+    public static string FormatCount(long count) => CoreFormatter.FormatCount(count);
 
     /// <summary>
     /// Formats number with European thousand separators (dots instead of commas).
-    /// Example: 1106937 → "1.106.937"
     /// </summary>
-    /// <param name="number">Number to format</param>
-    /// <returns>Formatted string with dot separators</returns>
-    public static string FormatNumberEuropean(long number)
-    {
-        if (number == 0)
-            return "0";
-
-        // Use ToString with grouping, then replace commas with dots
-        return number.ToString("N0").Replace(",", ".", StringComparison.Ordinal);
-    }
+    public static string FormatNumberEuropean(long number) => CoreFormatter.FormatNumberEuropean(number);
 
     /// <summary>
     /// Formats TimeSpan to HH:MM:SS format for capture durations.
-    /// Always shows full format for clarity.
     /// </summary>
-    /// <param name="timeSpan">TimeSpan to format</param>
-    /// <returns>Formatted time string in HH:MM:SS format</returns>
-    public static string FormatTimeSpan(TimeSpan timeSpan)
-    {
-        // Always use full format for capture duration clarity
-        // For very long captures (24+ hours), show total hours
-        if (timeSpan.TotalHours >= 24)
-            return $"{(int)timeSpan.TotalHours:D2}:{timeSpan.Minutes:D2}:{timeSpan.Seconds:D2}";
-
-        return timeSpan.ToString(@"hh\:mm\:ss");
-    }
+    public static string FormatTimeSpan(TimeSpan timeSpan) => CoreFormatter.FormatTimeSpan(timeSpan);
 
     /// <summary>
     /// Formats bytes to human-readable size with appropriate unit (B, KB, MB, GB, TB).
-    /// Uses 1000-based scaling (not 1024).
     /// </summary>
-    /// <param name="bytes">Number of bytes</param>
-    /// <returns>Formatted string with unit</returns>
-    public static string FormatBytes(long bytes)
-    {
-        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-        var order = 0;
-        var size = (double)bytes;
-
-        while (size >= 1000 && order < sizes.Length - 1)
-        {
-            order++;
-            size /= 1000;
-        }
-
-        return $"{size:F2} {sizes[order]}";
-    }
+    public static string FormatBytes(long bytes) => bytes.ToFormattedBytes();
 }

@@ -8,6 +8,7 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
@@ -175,7 +176,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             var firstTime = packets.Min(p => p.Timestamp);
             var lastTime = packets.Max(p => p.Timestamp);
             var durationValue = lastTime - firstTime;
-            Duration = FormatDuration(durationValue);
+            Duration = durationValue.ToFormattedSeconds();
             
             var pps = durationValue.TotalSeconds > 0 
                 ? packets.Count / durationValue.TotalSeconds 
@@ -466,10 +467,6 @@ namespace PCAPAnalyzer.UI.ViewModels
             }
         }
 
-        private string FormatDuration(TimeSpan duration)
-        {
-            return Helpers.TimeFormatter.FormatAsSeconds(duration);
-        }
     }
 
     public class ProtocolStat

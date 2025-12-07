@@ -50,14 +50,14 @@ public partial class ThreatsChartsViewModel : ObservableObject
     [ObservableProperty] private double _peakThreatRate;
     [ObservableProperty] private double _averageThreatRate;
 
-    // Severity colors - resolved at runtime for theme support
+    // Severity colors - resolved at runtime for theme support via ThemeColorHelper
     private static Dictionary<string, SKColor>? _severityColorsCache;
     private static Dictionary<string, SKColor> SeverityColors => _severityColorsCache ??= new()
     {
-        { "Critical", SKColor.Parse(ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444")) }, // Red
-        { "High", SKColor.Parse(ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B")) },     // Orange
-        { "Medium", SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6")) },   // Blue
-        { "Low", SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981")) }       // Green
+        { "Critical", ThemeColorHelper.GetSKColor("ColorDanger", "#EF4444") },    // Red
+        { "High", ThemeColorHelper.GetSKColor("ColorWarning", "#F59E0B") },        // Orange
+        { "Medium", ThemeColorHelper.GetSKColor("AccentBlue", "#3B82F6") },        // Blue
+        { "Low", ThemeColorHelper.GetSKColor("ColorSuccess", "#10B981") }          // Green
     };
 
     public ThreatsChartsViewModel() : this(new InsecurePortDetector())
@@ -106,8 +106,8 @@ public partial class ThreatsChartsViewModel : ObservableObject
             new Axis
             {
                 Name = "Time",
-                NamePaint = new SolidColorPaint(SKColors.Gray),
-                LabelsPaint = new SolidColorPaint(SKColors.Gray)
+                NamePaint = ThemeColorHelper.GrayPaint,
+                LabelsPaint = ThemeColorHelper.GrayPaint
             }
         };
 
@@ -116,8 +116,8 @@ public partial class ThreatsChartsViewModel : ObservableObject
             new Axis
             {
                 Name = "Count",
-                NamePaint = new SolidColorPaint(SKColors.Gray),
-                LabelsPaint = new SolidColorPaint(SKColors.Gray)
+                NamePaint = ThemeColorHelper.GrayPaint,
+                LabelsPaint = ThemeColorHelper.GrayPaint
             }
         };
     }
@@ -350,8 +350,8 @@ public partial class ThreatsChartsViewModel : ObservableObject
                 MinLimit = minTime.Ticks,
                 MaxLimit = maxTime.Ticks,
                 TextSize = 10,
-                LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
-                SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D")))
+                LabelsPaint = ThemeColorHelper.GetSolidColorPaint("TextMuted", "#8B949E"),
+                SeparatorsPaint = ThemeColorHelper.GetSolidColorPaint("BorderSubtle", "#21262D")
             }
         };
 
@@ -362,8 +362,8 @@ public partial class ThreatsChartsViewModel : ObservableObject
                 Name = "Threats/Second",
                 Labeler = value => $"{value:F2}/s",
                 TextSize = 10,
-                LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
-                SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D"))),
+                LabelsPaint = ThemeColorHelper.GetSolidColorPaint("TextMuted", "#8B949E"),
+                SeparatorsPaint = ThemeColorHelper.GetSolidColorPaint("BorderSubtle", "#21262D"),
                 MinLimit = 0
             }
         };
@@ -394,7 +394,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
             Values = topPorts.Select(p => (double)p.Count).ToArray(),
             Name = "Threats by Port",
             Fill = new SolidColorPaint(SKColors.OrangeRed),
-            DataLabelsPaint = new SolidColorPaint(SKColors.White),
+            DataLabelsPaint = ThemeColorHelper.WhitePaint,
             DataLabelsSize = 10,
             DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Middle,
             DataLabelsFormatter = point => topPorts[(int)point.Index].Count.ToString()
@@ -410,7 +410,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
                     $"{p.Port}\n{(p.Profile != null ? p.Profile.ServiceName : "Unknown")}").ToArray(),
                 LabelsRotation = -45,
                 TextSize = 10,
-                LabelsPaint = new SolidColorPaint(SKColors.Gray)
+                LabelsPaint = ThemeColorHelper.GrayPaint
             }
         };
     }
@@ -434,7 +434,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
             Values = categoryData.Select(c => c.Count).ToArray(),
             Name = "Threats by Category",
             Fill = new SolidColorPaint(SKColors.Purple),
-            DataLabelsPaint = new SolidColorPaint(SKColors.White),
+            DataLabelsPaint = ThemeColorHelper.WhitePaint,
             DataLabelsSize = 10,
             DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Middle,
             DataLabelsFormatter = point => categoryData[(int)point.Index].Count.ToString()
@@ -448,7 +448,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
             {
                 Labels = categoryData.Select(c => c.Category).ToArray(),
                 TextSize = 11,
-                LabelsPaint = new SolidColorPaint(SKColors.Gray)
+                LabelsPaint = ThemeColorHelper.GrayPaint
             }
         };
     }
@@ -517,7 +517,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
         for (int i = 0; i < portThreats.Count && i < colors.Length; i++)
         {
             var portData = portThreats[i];
-            var color = SKColor.Parse(colors[i]);
+            var color = ThemeColorHelper.ParseSKColor(colors[i]);
 
             // Create time buckets for this port
             var timeBuckets = CreateTimeBuckets(minTime, maxTime, bucketSize);
@@ -596,8 +596,8 @@ public partial class ThreatsChartsViewModel : ObservableObject
                 MinLimit = minTime.Ticks,
                 MaxLimit = maxTime.Ticks,
                 TextSize = 10,
-                LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
-                SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D")))
+                LabelsPaint = ThemeColorHelper.GetSolidColorPaint("TextMuted", "#8B949E"),
+                SeparatorsPaint = ThemeColorHelper.GetSolidColorPaint("BorderSubtle", "#21262D")
             }
         };
 
@@ -608,20 +608,15 @@ public partial class ThreatsChartsViewModel : ObservableObject
                 Name = ShowThreatPortActivityAsThroughput ? "Occurrences/Second" : "Threats/Second",
                 Labeler = value => $"{value:F2}/s",
                 TextSize = 10,
-                LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
-                SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D"))),
+                LabelsPaint = ThemeColorHelper.GetSolidColorPaint("TextMuted", "#8B949E"),
+                SeparatorsPaint = ThemeColorHelper.GetSolidColorPaint("BorderSubtle", "#21262D"),
                 MinLimit = 0
             }
         };
     }
 
     private static string FormatBytesPerSecond(long bytesPerSecond)
-    {
-        if (bytesPerSecond >= 1_000_000_000) return $"{bytesPerSecond / 1_000_000_000.0:F1} GB/s";
-        if (bytesPerSecond >= 1_000_000) return $"{bytesPerSecond / 1_000_000.0:F1} MB/s";
-        if (bytesPerSecond >= 1_000) return $"{bytesPerSecond / 1_000.0:F1} KB/s";
-        return $"{bytesPerSecond} B/s";
-    }
+        => Core.Utilities.NumberFormatter.FormatBytesPerSecond(bytesPerSecond);
 
     /// <summary>
     /// Generates SVG markup for the severity pie chart (for HTML reports)

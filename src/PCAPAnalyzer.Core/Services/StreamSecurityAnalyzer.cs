@@ -1,6 +1,9 @@
 using System;
+using System.Buffers;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Security;
 
@@ -18,21 +21,19 @@ public class StreamSecurityAnalyzer
     private const int MIN_PACKETS_FOR_BEACONING = 10;
     private const long LARGE_TRANSFER_THRESHOLD = 10 * 1024 * 1024; // 10MB
 
-    // Protocol detection sets (static for performance)
-    private static readonly HashSet<string> EncryptedProtocolKeywords = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "TLS", "SSL", "HTTPS", "SRTP", "DTLS", "QUIC", "SSH", "WIREGUARD", "OPENVPN", "IPSEC", "ESP"
-    };
+    // Protocol detection sets (FrozenSet for optimized static lookup)
+    private static readonly FrozenSet<string> UnencryptedProtocols = FrozenSet.ToFrozenSet(
+        ["HTTP", "FTP", "TELNET", "SMTP", "POP3", "IMAP", "DNS", "SNMP", "RTP", "RTCP"],
+        StringComparer.OrdinalIgnoreCase);
 
-    private static readonly HashSet<string> UnencryptedProtocols = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "HTTP", "FTP", "TELNET", "SMTP", "POP3", "IMAP", "DNS", "SNMP", "RTP", "RTCP"
-    };
+    private static readonly FrozenSet<int> EncryptedPorts = FrozenSet.ToFrozenSet([443, 993, 995, 465, 587, 636, 989, 990, 992, 8443]);
+    private static readonly FrozenSet<int> UnencryptedPorts = FrozenSet.ToFrozenSet([80, 21, 23, 25, 110, 143, 389, 1433, 3306, 5432]);
 
-    private static readonly HashSet<int> EncryptedPorts = new() { 443, 993, 995, 465, 587, 636, 989, 990, 992, 8443 };
-    private static readonly HashSet<int> UnencryptedPorts = new() { 80, 21, 23, 25, 110, 143, 389, 1433, 3306, 5432 };
-
-    private static readonly string[] EncryptionProtocolNames = { "TLS", "TLSV1.2", "TLSV1.3", "SSL", "HTTPS", "SRTP", "DTLS", "SSH", "WIREGUARD", "ESP" };
+    // SearchValues for SIMD-optimized substring matching in protocol strings
+    // Covers both keyword detection (TLS, SSL, etc.) and protocol version detection (TLSV1.2, TLSV1.3)
+    private static readonly SearchValues<string> EncryptionProtocolSearchValues = SearchValues.Create(
+        ["TLS", "TLSV1.2", "TLSV1.3", "SSL", "HTTPS", "SRTP", "DTLS", "QUIC", "SSH", "WIREGUARD", "OPENVPN", "IPSEC", "ESP"],
+        StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Performs comprehensive security analysis on a stream of packets.
@@ -125,12 +126,8 @@ public class StreamSecurityAnalyzer
 
     private static bool ContainsEncryptedKeyword(string protocol)
     {
-        foreach (var keyword in EncryptedProtocolKeywords)
-        {
-            if (protocol.Contains(keyword, StringComparison.Ordinal))
-                return true;
-        }
-        return false;
+        // Use SIMD-optimized SearchValues for substring matching
+        return protocol.AsSpan().ContainsAny(EncryptionProtocolSearchValues);
     }
 
     private static string? GetEncryptionProtocol(List<PacketInfo> packets)
@@ -138,13 +135,10 @@ public class StreamSecurityAnalyzer
         foreach (var packet in packets)
         {
             if (string.IsNullOrEmpty(packet.L7Protocol)) continue;
-            var upper = packet.L7Protocol.ToUpperInvariant();
 
-            foreach (var proto in EncryptionProtocolNames)
-            {
-                if (upper.Contains(proto, StringComparison.Ordinal))
-                    return packet.L7Protocol;
-            }
+            // Use SIMD-optimized SearchValues for substring matching
+            if (packet.L7Protocol.AsSpan().ContainsAny(EncryptionProtocolSearchValues))
+                return packet.L7Protocol;
         }
 
         return null;
@@ -315,7 +309,7 @@ public class StreamSecurityAnalyzer
                 Type = StreamFindingType.DataExfiltration,
                 Severity = exfiltration.IsLargeTransfer ? StreamFindingSeverity.High : StreamFindingSeverity.Medium,
                 Title = "Potential Data Exfiltration",
-                Description = $"Upload/Download ratio of {exfiltration.Ratio:F1}:1 with {FormatBytes(exfiltration.BytesToDestination)} outbound.",
+                Description = $"Upload/Download ratio of {exfiltration.Ratio:F1}:1 with {exfiltration.BytesToDestination.ToFormattedBytes()} outbound.",
                 Recommendation = "Verify if this data transfer is authorized and investigate destination."
             });
         }
@@ -326,7 +320,7 @@ public class StreamSecurityAnalyzer
                 Type = StreamFindingType.DataExfiltration,
                 Severity = StreamFindingSeverity.Low,
                 Title = "Large Data Transfer",
-                Description = $"Total transfer of {FormatBytes(exfiltration.BytesToDestination + exfiltration.BytesToSource)}.",
+                Description = $"Total transfer of {(exfiltration.BytesToDestination + exfiltration.BytesToSource).ToFormattedBytes()}.",
                 Recommendation = "Verify this transfer is expected."
             });
         }
@@ -415,15 +409,6 @@ public class StreamSecurityAnalyzer
             >= 10 => StreamRiskLevel.Low,
             _ => StreamRiskLevel.Safe
         };
-    }
-
-    private static string FormatBytes(long bytes)
-    {
-        string[] sizes = { "B", "KB", "MB", "GB" };
-        double len = bytes;
-        int order = 0;
-        while (len >= 1024 && order < sizes.Length - 1) { order++; len /= 1024; }
-        return $"{len:F1} {sizes[order]}";
     }
 
     // Internal analysis classes

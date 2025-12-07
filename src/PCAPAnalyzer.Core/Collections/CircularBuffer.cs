@@ -14,7 +14,7 @@ namespace PCAPAnalyzer.Core.Collections
         private int _start;
         private int _end;
         private int _count;
-        private readonly object _lock = new object();
+        private readonly Lock _lock = new();
         
         public CircularBuffer(int capacity)
         {
@@ -24,20 +24,20 @@ namespace PCAPAnalyzer.Core.Collections
             _buffer = new T[capacity];
         }
         
-        public int Count 
-        { 
-            get { lock (_lock) return _count; } 
+        public int Count
+        {
+            get { using (_lock.EnterScope()) return _count; }
         }
         
         public int Capacity => _buffer.Length;
         
         public void Add(T item)
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 _buffer[_end] = item;
                 _end = (_end + 1) % _buffer.Length;
-                
+
                 if (_count < _buffer.Length)
                 {
                     _count++;
@@ -60,7 +60,7 @@ namespace PCAPAnalyzer.Core.Collections
         
         public void Clear()
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 _start = 0;
                 _end = 0;
@@ -71,11 +71,11 @@ namespace PCAPAnalyzer.Core.Collections
         
         public T[] ToArray()
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 var result = new T[_count];
                 if (_count == 0) return result;
-                
+
                 if (_start < _end)
                 {
                     Array.Copy(_buffer, _start, result, 0, _count);
@@ -87,19 +87,18 @@ namespace PCAPAnalyzer.Core.Collections
                     Array.Copy(_buffer, _start, result, 0, firstPartLength);
                     Array.Copy(_buffer, 0, result, firstPartLength, _end);
                 }
-                
+
                 return result;
             }
         }
         
         public IEnumerator<T> GetEnumerator()
         {
-            lock (_lock)
+            // Lock.Scope cannot cross yield boundaries, so snapshot array first
+            var snapshot = ToArray();
+            foreach (var item in snapshot)
             {
-                for (int i = 0; i < _count; i++)
-                {
-                    yield return _buffer[(_start + i) % _buffer.Length];
-                }
+                yield return item;
             }
         }
         

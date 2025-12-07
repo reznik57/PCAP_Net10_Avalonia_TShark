@@ -235,11 +235,8 @@ public partial class AnomaliesView : UserControl
                 {
                     Values = new ObservableCollection<DateTimePoint> { new(timestamp, maxValue) },
                     GeometrySize = ChartConstants.HighlightDotSize,
-                    Fill = new SolidColorPaint(SKColor.Parse(ChartConstants.HighlightFillColor)),
-                    Stroke = new SolidColorPaint(SKColor.Parse(ChartConstants.HighlightStrokeColor))
-                    {
-                        StrokeThickness = ChartConstants.HighlightDotStrokeThickness
-                    },
+                    Fill = ChartConstants.HighlightFillPaint,
+                    Stroke = ChartConstants.HighlightStrokePaint,
                     Name = "Highlight",
                     IsVisibleAtLegend = false,
                     ZIndex = ChartConstants.HighlightScatterZIndex,
@@ -260,10 +257,7 @@ public partial class AnomaliesView : UserControl
                         new(timestamp, _cachedMinY),
                         new(timestamp, _cachedMaxY)
                     },
-                    Stroke = new SolidColorPaint(SKColor.Parse(ChartConstants.HighlightFillColor))
-                    {
-                        StrokeThickness = ChartConstants.HighlightLineStrokeThickness
-                    },
+                    Stroke = ChartConstants.HighlightLinePaint,
                     Fill = null,
                     GeometrySize = 0,
                     LineSmoothness = 0,

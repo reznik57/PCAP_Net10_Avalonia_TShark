@@ -10,6 +10,7 @@ using Avalonia.Threading;
 using NetTopologySuite.Features;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.IO;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Helpers;
@@ -643,7 +644,7 @@ public class ShapefileWorldMapControl : Control
         yOffset += 16;
 
         // Bytes row
-        DrawStatRow(context, "💾 Bytes:", FormatBytes(stats.TotalBytes), tooltipX + 12, yOffset, tooltipWidth - 24, typefaceNormal, dimColor, brightColor);
+        DrawStatRow(context, "💾 Bytes:", stats.TotalBytes.ToFormattedBytes(), tooltipX + 12, yOffset, tooltipWidth - 24, typefaceNormal, dimColor, brightColor);
         yOffset += 16;
 
         // Unique IPs row
@@ -1025,14 +1026,6 @@ public class ShapefileWorldMapControl : Control
         var colorIndex = (int)(intensity * (TrafficColors.Length - 1));
         colorIndex = Math.Clamp(colorIndex, 0, TrafficColors.Length - 1);
         return new SolidColorBrush(TrafficColors[colorIndex]);
-    }
-
-    private static string FormatBytes(long bytes)
-    {
-        if (bytes < 1024) return $"{bytes} B";
-        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
-        if (bytes < 1024 * 1024 * 1024) return $"{bytes / (1024.0 * 1024):F1} MB";
-        return $"{bytes / (1024.0 * 1024 * 1024):F2} GB";
     }
 
     /// <summary>

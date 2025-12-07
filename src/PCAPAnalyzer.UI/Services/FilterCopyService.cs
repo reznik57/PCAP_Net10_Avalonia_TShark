@@ -14,7 +14,7 @@ namespace PCAPAnalyzer.UI.Services
     public class FilterCopyService
     {
         private readonly Dictionary<string, IFilterableTab> _registeredTabs = new();
-        private readonly object _lock = new();
+        private readonly Lock _lock = new();
 
         /// <summary>
         /// Register a tab to participate in filter copying operations
@@ -29,7 +29,7 @@ namespace PCAPAnalyzer.UI.Services
             if (tab == null)
                 throw new ArgumentNullException(nameof(tab));
 
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 _registeredTabs[tabName] = tab;
                 DebugLogger.Log($"[FilterCopyService] Registered tab: {tabName}");
@@ -45,7 +45,7 @@ namespace PCAPAnalyzer.UI.Services
             if (string.IsNullOrWhiteSpace(tabName))
                 return;
 
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 if (_registeredTabs.Remove(tabName))
                 {
@@ -74,7 +74,7 @@ namespace PCAPAnalyzer.UI.Services
                 return false;
             }
 
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 if (!_registeredTabs.TryGetValue(sourceTabName, out var sourceTab))
                 {
@@ -118,7 +118,7 @@ namespace PCAPAnalyzer.UI.Services
         /// <returns>List of tab names that filters can be copied to</returns>
         public IEnumerable<string> GetAvailableTargetTabs(string currentTabName)
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 return _registeredTabs.Keys
                     .Where(name => name != currentTabName)
@@ -132,7 +132,7 @@ namespace PCAPAnalyzer.UI.Services
         /// </summary>
         public bool IsTabRegistered(string tabName)
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 return _registeredTabs.ContainsKey(tabName);
             }
@@ -145,7 +145,7 @@ namespace PCAPAnalyzer.UI.Services
         {
             get
             {
-                lock (_lock)
+                using (_lock.EnterScope())
                 {
                     return _registeredTabs.Count;
                 }

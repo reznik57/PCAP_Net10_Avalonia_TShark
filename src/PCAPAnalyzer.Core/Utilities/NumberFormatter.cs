@@ -71,4 +71,41 @@ public static class NumberFormatter
 
         return $"{size:F2} {sizes[order]}";
     }
+
+    /// <summary>
+    /// Formats bytes per second with appropriate unit (B/s, KB/s, MB/s, GB/s).
+    /// </summary>
+    /// <param name="bytesPerSecond">Bytes per second rate</param>
+    /// <returns>Formatted string with rate unit</returns>
+    public static string FormatBytesPerSecond(long bytesPerSecond)
+    {
+        if (bytesPerSecond >= 1_000_000_000) return $"{bytesPerSecond / 1_000_000_000.0:F1} GB/s";
+        if (bytesPerSecond >= 1_000_000) return $"{bytesPerSecond / 1_000_000.0:F1} MB/s";
+        if (bytesPerSecond >= 1_000) return $"{bytesPerSecond / 1_000.0:F1} KB/s";
+        return $"{bytesPerSecond} B/s";
+    }
+
+    /// <summary>
+    /// Formats bytes with European/German thousand separators (dots).
+    /// Example: 1106937 bytes → "1,08 MB" (using comma as decimal separator)
+    /// </summary>
+    /// <param name="bytes">Number of bytes</param>
+    /// <returns>Formatted string with German locale</returns>
+    public static string FormatBytesGerman(long bytes)
+    {
+        if (bytes == 0) return "0 B";
+
+        var germanCulture = new System.Globalization.CultureInfo("de-DE");
+        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
+        int order = 0;
+        double size = bytes;
+
+        while (size >= 1000 && order < sizes.Length - 1)
+        {
+            order++;
+            size /= 1000;
+        }
+
+        return $"{size.ToString("F2", germanCulture)} {sizes[order]}";
+    }
 }

@@ -688,49 +688,12 @@ namespace PCAPAnalyzer.UI.ViewModels
             TopCountriesByBytes = new ObservableCollection<CountryTableItem>(byBytes);
         }
         
-        private string GetContinentForCountry(string countryCode)
-        {
-            // Map country codes to continents
-            if (ContinentData.CountryToContinentMap.TryGetValue(countryCode, out var continentCode))
-            {
-                if (ContinentData.Continents.TryGetValue(continentCode, out var continent))
-                {
-                    return continent.DisplayName;
-                }
-            }
-            return "Unknown";
-        }
+        private static string GetContinentForCountry(string countryCode)
+            => ContinentData.GetContinentDisplayName(countryCode);
 
-        // Helper methods
-        private string GetCountryFlag(string countryCode)
-        {
-            // Convert country code to flag emoji
-            // This is a simplified version - you'd want a proper mapping
-            return countryCode switch
-            {
-                "US" => "🇺🇸",
-                "CN" => "🇨🇳",
-                "RU" => "🇷🇺",
-                "DE" => "🇩🇪",
-                "GB" => "🇬🇧",
-                "FR" => "🇫🇷",
-                "JP" => "🇯🇵",
-                "IN" => "🇮🇳",
-                "BR" => "🇧🇷",
-                "CA" => "🇨🇦",
-                "AU" => "🇦🇺",
-                "IT" => "🇮🇹",
-                "ES" => "🇪🇸",
-                "KR" => "🇰🇷",
-                "NL" => "🇳🇱",
-                "PL" => "🇵🇱",
-                "IE" => "🇮🇪",
-                "RO" => "🇷🇴",
-                "AT" => "🇦🇹",
-                "IP6" => "🛰",
-                _ => "🏳️"
-            };
-        }
+        // Helper methods - delegate to Core
+        private static string GetCountryFlag(string countryCode)
+            => Core.Data.CountryGeographicData.GetCountryFlag(countryCode);
         
         private (double, double)? GetCountryLocation(string countryCode)
         {

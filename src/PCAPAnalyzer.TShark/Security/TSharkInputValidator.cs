@@ -259,15 +259,16 @@ public sealed class TSharkInputValidator
 
     /// <summary>
     /// Validates multiple field names at once.
+    /// Uses params ReadOnlySpan for zero-allocation calls with small field counts.
     /// </summary>
     /// <param name="fields">The field names to validate</param>
     /// <returns>Array of validated field names</returns>
     /// <exception cref="ArgumentException">Thrown when any field name is invalid</exception>
-    public string[] ValidateFields(params string[] fields)
+    public string[] ValidateFields(params ReadOnlySpan<string> fields)
     {
-        if (fields == null || fields.Length == 0)
+        if (fields.IsEmpty)
         {
-            return Array.Empty<string>();
+            return [];
         }
 
         var validatedFields = new string[fields.Length];

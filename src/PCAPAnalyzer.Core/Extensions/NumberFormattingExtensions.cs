@@ -65,6 +65,40 @@ public static class NumberFormattingExtensions
 
     #endregion
 
+    #region Throughput Formatting
+
+    /// <summary>
+    /// Formats bytes per second to human-readable throughput (B/s, KB/s, MB/s, GB/s).
+    /// </summary>
+    public static string ToFormattedBytesPerSecond(this long bytesPerSecond)
+    {
+        if (bytesPerSecond >= 1_000_000_000) return $"{bytesPerSecond / 1_000_000_000.0:F1} GB/s";
+        if (bytesPerSecond >= 1_000_000) return $"{bytesPerSecond / 1_000_000.0:F1} MB/s";
+        if (bytesPerSecond >= 1_000) return $"{bytesPerSecond / 1_000.0:F1} KB/s";
+        return $"{bytesPerSecond} B/s";
+    }
+
+    /// <summary>
+    /// Formats bytes per second to human-readable throughput (B/s, KB/s, MB/s, GB/s).
+    /// </summary>
+    public static string ToFormattedBytesPerSecond(this int bytesPerSecond) =>
+        ((long)bytesPerSecond).ToFormattedBytesPerSecond();
+
+    /// <summary>
+    /// Formats KB/s to human-readable throughput (KB/s, MB/s, GB/s).
+    /// Input is already in KB/s units.
+    /// </summary>
+    public static string ToFormattedKBps(this double kbps)
+    {
+        if (kbps >= 1024 * 1024)
+            return $"{kbps / 1024 / 1024:F2} GB/s";
+        if (kbps >= 1024)
+            return $"{kbps / 1024:F2} MB/s";
+        return $"{kbps:F2} KB/s";
+    }
+
+    #endregion
+
     #region TimeSpan Formatting
 
     /// <summary>
@@ -73,6 +107,13 @@ public static class NumberFormattingExtensions
     /// </summary>
     public static string ToFormattedTime(this TimeSpan timeSpan) =>
         NumberFormatter.FormatTimeSpan(timeSpan);
+
+    /// <summary>
+    /// Formats TimeSpan as seconds with 1 decimal place (e.g., "14.1s").
+    /// Useful for short durations like connection times.
+    /// </summary>
+    public static string ToFormattedSeconds(this TimeSpan duration) =>
+        $"{duration.TotalSeconds:F1}s";
 
     #endregion
 }

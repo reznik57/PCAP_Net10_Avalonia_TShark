@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 
@@ -439,20 +440,7 @@ public class StreamAnalyzer
     /// <summary>
     /// Checks if an IP address is in a private/reserved range.
     /// </summary>
-    private static bool IsPrivateIP(string ip)
-    {
-        if (!System.Net.IPAddress.TryParse(ip, out var addr))
-            return false;
-
-        var bytes = addr.GetAddressBytes();
-        if (bytes.Length != 4) // IPv4 only
-            return false;
-
-        return bytes[0] == 10 ||                                          // 10.0.0.0/8
-               (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) ||   // 172.16.0.0/12
-               (bytes[0] == 192 && bytes[1] == 168) ||                     // 192.168.0.0/16
-               (bytes[0] == 127);                                          // 127.0.0.0/8 (loopback)
-    }
+    private static bool IsPrivateIP(string ip) => PrivateNetworkHandler.IsPrivateIP(ip);
 
     /// <summary>
     /// Calculates overall risk level based on port and GeoIP security indicators.
@@ -532,7 +520,7 @@ public class StreamAnalyzer
                 Port = clientPort,
                 BytesSent = clientBytes,
                 PacketsSent = clientPackets,
-                BytesSentFormatted = FormatBytes(clientBytes)
+                BytesSentFormatted = clientBytes.ToFormattedBytes()
             },
             Server = new EndpointMetrics
             {
@@ -540,7 +528,7 @@ public class StreamAnalyzer
                 Port = serverPort,
                 BytesSent = serverBytes,
                 PacketsSent = serverPackets,
-                BytesSentFormatted = FormatBytes(serverBytes)
+                BytesSentFormatted = serverBytes.ToFormattedBytes()
             },
             RequestResponseRatio = ratio,
             DominantDirection = direction,
@@ -548,17 +536,6 @@ public class StreamAnalyzer
             StreamPositionTotal = packets.Count,
             ConnectionAge = connectionAge
         };
-    }
-
-    /// <summary>
-    /// Formats byte count into human-readable string.
-    /// </summary>
-    private static string FormatBytes(long bytes)
-    {
-        if (bytes < 1024) return $"{bytes} B";
-        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
-        if (bytes < 1024 * 1024 * 1024) return $"{bytes / (1024.0 * 1024.0):F2} MB";
-        return $"{bytes / (1024.0 * 1024.0 * 1024.0):F2} GB";
     }
 
     #endregion

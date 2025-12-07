@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Media;
-using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Data;
+using PCAPAnalyzer.Core.Extensions;
+using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.UI.Controls.Maps.Data;
 using PCAPAnalyzer.UI.Utilities;
@@ -275,7 +276,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Interaction
                 (countryDisplay, true, null),
                 ("━━━━━━━━━━━━━━━━━━━━━", false, Color.FromRgb(100, 100, 100)),
                 ($"📦 {stats.TotalPackets:N0} packets ({iconInfo.PacketPercentage:F1}%)", false, null),
-                ($"💾 {FormatBytes(stats.TotalBytes)} ({iconInfo.BytePercentage:F1}%)", false, null),
+                ($"💾 {stats.TotalBytes.ToFormattedBytes()} ({iconInfo.BytePercentage:F1}%)", false, null),
                 ($"🌐 {stats.UniqueIPs.Count} unique IPs", false, null)
             };
 
@@ -361,20 +362,6 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Interaction
             return null;
         }
 
-        private static string FormatBytes(long bytes)
-        {
-            string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-            double size = bytes;
-            int order = 0;
-
-            while (size >= 1024 && order < sizes.Length - 1)
-            {
-                order++;
-                size /= 1024;
-            }
-
-            return $"{size:F1} {sizes[order]}";
-        }
     }
 
     /// <summary>

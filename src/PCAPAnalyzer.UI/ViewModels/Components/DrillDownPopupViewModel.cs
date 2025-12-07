@@ -2,9 +2,11 @@ using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Helpers;
 using Avalonia;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
@@ -65,7 +67,7 @@ public partial class DrillDownPopupViewModel : ObservableObject
         // Use pre-calculated stats for consistency
         TotalPackets = (int)preCalculatedPacketCount;
         TotalBytes = preCalculatedByteCount;
-        TotalBytesFormatted = FormatBytes(TotalBytes);
+        TotalBytesFormatted = TotalBytes.ToFormattedBytes();
         CalculateTimeStats(packets);
 
         // Calculate breakdowns from already-filtered packets
@@ -95,7 +97,7 @@ public partial class DrillDownPopupViewModel : ObservableObject
         // Use pre-calculated stats from Dashboard table for consistency
         TotalPackets = (int)preCalculatedPacketCount;
         TotalBytes = preCalculatedByteCount;
-        TotalBytesFormatted = FormatBytes(TotalBytes);
+        TotalBytesFormatted = TotalBytes.ToFormattedBytes();
         CalculateTimeStats(packets);
 
         CalculatePortBreakdown(packets);
@@ -151,7 +153,7 @@ public partial class DrillDownPopupViewModel : ObservableObject
         // Use pre-calculated stats from Dashboard table for consistency
         TotalPackets = (int)preCalculatedPacketCount;
         TotalBytes = preCalculatedByteCount;
-        TotalBytesFormatted = FormatBytes(TotalBytes);
+        TotalBytesFormatted = TotalBytes.ToFormattedBytes();
         CalculateTimeStats(packets);
 
         CalculateConnectedEndpointsForPort(packets, port);
@@ -268,7 +270,7 @@ public partial class DrillDownPopupViewModel : ObservableObject
         // Use pre-calculated stats for consistency with table display
         TotalPackets = preCalculatedPacketCount;
         TotalBytes = preCalculatedByteCount;
-        TotalBytesFormatted = FormatBytes(TotalBytes);
+        TotalBytesFormatted = TotalBytes.ToFormattedBytes();
         CalculateTimeStats(packets);
 
         // For port-specific streams, show just the 2 ports (should be ~50% each direction)
@@ -279,9 +281,9 @@ public partial class DrillDownPopupViewModel : ObservableObject
             var dstPortPackets = packets.Where(p => p.SourcePort == destPort || p.DestinationPort == destPort).ToList();
 
             if (sourcePort > 0)
-                portItems.Add(new PortBreakdownItem { Port = sourcePort, ServiceName = GetServiceName(sourcePort), PacketCount = srcPortPackets.Count, Bytes = srcPortPackets.Sum(p => (long)p.Length), Percentage = packets.Count > 0 ? srcPortPackets.Count * 100.0 / packets.Count : 0 });
+                portItems.Add(new PortBreakdownItem { Port = sourcePort, ServiceName = ThreatDisplayHelpers.GetServiceName(sourcePort), PacketCount = srcPortPackets.Count, Bytes = srcPortPackets.Sum(p => (long)p.Length), Percentage = packets.Count > 0 ? srcPortPackets.Count * 100.0 / packets.Count : 0 });
             if (destPort > 0 && destPort != sourcePort)
-                portItems.Add(new PortBreakdownItem { Port = destPort, ServiceName = GetServiceName(destPort), PacketCount = dstPortPackets.Count, Bytes = dstPortPackets.Sum(p => (long)p.Length), Percentage = packets.Count > 0 ? dstPortPackets.Count * 100.0 / packets.Count : 0 });
+                portItems.Add(new PortBreakdownItem { Port = destPort, ServiceName = ThreatDisplayHelpers.GetServiceName(destPort), PacketCount = dstPortPackets.Count, Bytes = dstPortPackets.Sum(p => (long)p.Length), Percentage = packets.Count > 0 ? dstPortPackets.Count * 100.0 / packets.Count : 0 });
 
             TopPorts = new ObservableCollection<PortBreakdownItem>(portItems.OrderByDescending(p => p.PacketCount));
         }
@@ -445,7 +447,7 @@ public partial class DrillDownPopupViewModel : ObservableObject
     {
         TotalPackets = packets.Count;
         TotalBytes = packets.Sum(p => (long)p.Length);
-        TotalBytesFormatted = FormatBytes(TotalBytes);
+        TotalBytesFormatted = TotalBytes.ToFormattedBytes();
         CalculateTimeStats(packets);
     }
 
@@ -507,7 +509,7 @@ public partial class DrillDownPopupViewModel : ObservableObject
             .Select(kv => new PortBreakdownItem
             {
                 Port = kv.Key,
-                ServiceName = GetServiceName(kv.Key),
+                ServiceName = ThreatDisplayHelpers.GetServiceName(kv.Key),
                 PacketCount = kv.Value.Count,
                 Bytes = kv.Value.Bytes,
                 Percentage = packets.Count > 0 ? (kv.Value.Count * 100.0 / packets.Count) : 0
@@ -652,7 +654,7 @@ public partial class DrillDownPopupViewModel : ObservableObject
             .Select(kv => new PortBreakdownItem
             {
                 Port = kv.Key,
-                ServiceName = GetServiceName(kv.Key),
+                ServiceName = ThreatDisplayHelpers.GetServiceName(kv.Key),
                 PacketCount = kv.Value.Count,
                 Bytes = kv.Value.Bytes,
                 Percentage = packets.Count > 0 ? (kv.Value.Count * 100.0 / packets.Count) : 0
@@ -704,15 +706,6 @@ public partial class DrillDownPopupViewModel : ObservableObject
 
         ConnectedEndpoints = new ObservableCollection<EndpointBreakdownItem>(endpoints);
     }
-
-    // Use shared NumberFormatter.FormatBytes() for consistency with Dashboard
-    private static string FormatBytes(long bytes) => NumberFormatter.FormatBytes(bytes);
-
-    private static string GetServiceName(int port)
-    {
-        // Use the comprehensive PortDatabase for service name lookup
-        return PCAPAnalyzer.Core.Security.PortDatabase.GetServiceName((ushort)port, true) ?? "";
-    }
 }
 
 public enum DrillDownEntityType
@@ -731,16 +724,7 @@ public class PortBreakdownItem
     public int PacketCount { get; set; }
     public long Bytes { get; set; }
     public double Percentage { get; set; }
-    public string BytesFormatted => FormatBytes(Bytes);
-
-    private static string FormatBytes(long bytes)
-    {
-        string[] sizes = { "B", "KB", "MB", "GB" };
-        double len = bytes;
-        int order = 0;
-        while (len >= 1024 && order < sizes.Length - 1) { order++; len /= 1024; }
-        return $"{len:F1} {sizes[order]}";
-    }
+    public string BytesFormatted => Bytes.ToFormattedBytes();
 }
 
 public class EndpointBreakdownItem
@@ -749,16 +733,7 @@ public class EndpointBreakdownItem
     public int PacketCount { get; set; }
     public long Bytes { get; set; }
     public double Percentage { get; set; }
-    public string BytesFormatted => FormatBytes(Bytes);
-
-    private static string FormatBytes(long bytes)
-    {
-        string[] sizes = { "B", "KB", "MB", "GB" };
-        double len = bytes;
-        int order = 0;
-        while (len >= 1024 && order < sizes.Length - 1) { order++; len /= 1024; }
-        return $"{len:F1} {sizes[order]}";
-    }
+    public string BytesFormatted => Bytes.ToFormattedBytes();
 }
 
 public class ConversationBreakdownItem
@@ -770,15 +745,6 @@ public class ConversationBreakdownItem
     public int PacketCount { get; set; }
     public long Bytes { get; set; }
     public double Percentage { get; set; }
-    public string BytesFormatted => FormatBytes(Bytes);
+    public string BytesFormatted => Bytes.ToFormattedBytes();
     public string DisplayText => $"{SourceIP}:{SourcePort} ↔ {DestinationIP}:{DestinationPort}";
-
-    private static string FormatBytes(long bytes)
-    {
-        string[] sizes = { "B", "KB", "MB", "GB" };
-        double len = bytes;
-        int order = 0;
-        while (len >= 1024 && order < sizes.Length - 1) { order++; len /= 1024; }
-        return $"{len:F1} {sizes[order]}";
-    }
 }

@@ -97,7 +97,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                     },
                     LabelsRotation = 45,
                     TextSize = 10,
-                    SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D")).WithAlpha(50)),
+                    SeparatorsPaint = ThemeColorHelper.GetSolidColorPaint("BorderSubtle", "#21262D", 50),
                     Name = "Time",
                     MinStep = TimeSpan.FromSeconds(1).Ticks
                 }
@@ -111,10 +111,10 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                     Position = LiveChartsCore.Measure.AxisPosition.Start,
                     Labeler = value => $"{value:N0}",
                     TextSize = 10,
-                    SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D")).WithAlpha(50)),
+                    SeparatorsPaint = ThemeColorHelper.GetSolidColorPaint("BorderSubtle", "#21262D", 50),
                     MinLimit = 0,
-                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950"))),
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950")))
+                    NamePaint = ThemeColorHelper.GetSolidColorPaint("ColorSuccess", "#3FB950"),
+                    LabelsPaint = ThemeColorHelper.GetSolidColorPaint("ColorSuccess", "#3FB950")
                 },
                 new Axis
                 {
@@ -124,8 +124,8 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
                     Labeler = value => $"{value:F1} ms",
                     TextSize = 10,
                     MinLimit = 0,
-                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6"))),
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6")))
+                    NamePaint = ThemeColorHelper.GetSolidColorPaint("AccentPurple", "#8B5CF6"),
+                    LabelsPaint = ThemeColorHelper.GetSolidColorPaint("AccentPurple", "#8B5CF6")
                 }
             };
         }
@@ -274,7 +274,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
             if (!data.Any())
                 return;
 
-            var skColor = SKColor.Parse(color);
+            var skColor = ThemeColorHelper.ParseSKColor(color);
             var lineSeries = new LineSeries<DateTimePoint>
             {
                 Values = data,

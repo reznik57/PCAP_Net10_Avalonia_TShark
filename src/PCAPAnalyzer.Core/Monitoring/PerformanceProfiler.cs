@@ -169,7 +169,7 @@ namespace PCAPAnalyzer.Core.Monitoring
         private class ProfileSection
         {
             private readonly string _name;
-            private readonly object _lock = new();
+            private readonly Lock _lock = new();
             private readonly List<ProfileMeasurement> _measurements = new();
             private DateTime _lastAccessed;
 
@@ -183,10 +183,10 @@ namespace PCAPAnalyzer.Core.Monitoring
 
             public void RecordMeasurement(TimeSpan duration, Dictionary<string, object>? metadata)
             {
-                lock (_lock)
+                using (_lock.EnterScope())
                 {
                     _lastAccessed = DateTime.UtcNow;
-                    
+
                     _measurements.Add(new ProfileMeasurement
                     {
                         Duration = duration,
@@ -204,7 +204,7 @@ namespace PCAPAnalyzer.Core.Monitoring
 
             public ProfileReport GenerateReport()
             {
-                lock (_lock)
+                using (_lock.EnterScope())
                 {
                     if (_measurements.Count == 0)
                     {
@@ -212,7 +212,7 @@ namespace PCAPAnalyzer.Core.Monitoring
                     }
 
                     var durations = _measurements.Select(m => m.Duration).ToList();
-                    
+
                     return new ProfileReport
                     {
                         Name = _name,

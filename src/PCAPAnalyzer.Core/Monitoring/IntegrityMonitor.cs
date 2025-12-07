@@ -7,11 +7,11 @@ namespace PCAPAnalyzer.Core.Monitoring
     public static class IntegrityMonitor
     {
         private static readonly Dictionary<string, long> _counters = new();
-        private static readonly object _lock = new();
+        private static readonly Lock _lock = new();
         
         public static void Increment(string counter)
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 if (!_counters.ContainsKey(counter))
                     _counters[counter] = 0;
@@ -21,7 +21,7 @@ namespace PCAPAnalyzer.Core.Monitoring
         
         public static void Report()
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 DebugLogger.Log("\n[INTEGRITY] Data Flow Report:");
                 DebugLogger.Log("==============================");
@@ -29,9 +29,9 @@ namespace PCAPAnalyzer.Core.Monitoring
                 {
                     DebugLogger.Log($"  {kvp.Key}: {kvp.Value}");
                 }
-                
+
                 // Check for data loss
-                if (_counters.ContainsKey("PacketsReceived") && 
+                if (_counters.ContainsKey("PacketsReceived") &&
                     _counters.ContainsKey("PacketsProcessed"))
                 {
                     var lost = _counters["PacketsReceived"] - _counters["PacketsProcessed"];
@@ -49,7 +49,7 @@ namespace PCAPAnalyzer.Core.Monitoring
         
         public static long GetCounter(string name)
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 return _counters.ContainsKey(name) ? _counters[name] : 0;
             }

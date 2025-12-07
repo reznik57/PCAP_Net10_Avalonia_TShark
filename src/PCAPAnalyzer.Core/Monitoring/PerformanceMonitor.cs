@@ -192,7 +192,7 @@ namespace PCAPAnalyzer.Core.Monitoring
 
     public class PerformanceMetric
     {
-        private readonly object _lock = new();
+        private readonly Lock _lock = new();
         private readonly string _name;
         private readonly string _unit;
         private double _sum;
@@ -208,7 +208,7 @@ namespace PCAPAnalyzer.Core.Monitoring
 
         public void Record(double value)
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 _sum += value;
                 _count++;
@@ -219,7 +219,7 @@ namespace PCAPAnalyzer.Core.Monitoring
 
         public MetricSummary GetSummary()
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 return new MetricSummary
                 {

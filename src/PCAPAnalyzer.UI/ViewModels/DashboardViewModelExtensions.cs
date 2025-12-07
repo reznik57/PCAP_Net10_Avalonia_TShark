@@ -243,8 +243,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                 new Axis
                 {
                     Labeler = _ => string.Empty,
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
-                    SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D"))),
+                    LabelsPaint = ThemeColorHelper.GetSolidColorPaint("TextMuted", "#8B949E"),
+                    SeparatorsPaint = ThemeColorHelper.GetSolidColorPaint("BorderSubtle", "#21262D"),
                     TextSize = 10
                 }
             };
@@ -254,8 +254,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                 {
                     Name = "Packets/Second",
                     Labeler = value => $"{value:F0} pkt/s",
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
-                    SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D"))),
+                    LabelsPaint = ThemeColorHelper.GetSolidColorPaint("TextMuted", "#8B949E"),
+                    SeparatorsPaint = ThemeColorHelper.GetSolidColorPaint("BorderSubtle", "#21262D"),
                     TextSize = 10,
                     MinLimit = 0
                 }
@@ -508,12 +508,13 @@ namespace PCAPAnalyzer.UI.ViewModels
                         UnitWidth = TimeSpan.FromMinutes(5).Ticks,
                         MinStep = TimeSpan.FromMinutes(5).Ticks,
                         TextSize = 10,
-                        LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
-                        SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D")))
+                        LabelsPaint = ThemeColorHelper.GetSolidColorPaint("TextMuted", "#8B949E"),
+                        SeparatorsPaint = ThemeColorHelper.GetSolidColorPaint("BorderSubtle", "#21262D")
                     }
                 };
 
                 // LINEAR scale - show actual packet/byte rates without logarithmic transformation
+                var yAxisColor = ShowPortActivityAsThroughput ? ("ColorSuccess", "#10B981") : ("AccentBlue", "#3B82F6");
                 PortActivityYAxes = new Axis[]
                 {
                     new Axis
@@ -528,9 +529,9 @@ namespace PCAPAnalyzer.UI.ViewModels
                         },
                         TextSize = 10,
                         MinLimit = 0,
-                        NamePaint = new SolidColorPaint(SKColor.Parse(ShowPortActivityAsThroughput ? ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981") : ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"))),
-                        LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E"))),
-                        SeparatorsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BorderSubtle", "#21262D")))
+                        NamePaint = ThemeColorHelper.GetSolidColorPaint(yAxisColor.Item1, yAxisColor.Item2),
+                        LabelsPaint = ThemeColorHelper.GetSolidColorPaint("TextMuted", "#8B949E"),
+                        SeparatorsPaint = ThemeColorHelper.GetSolidColorPaint("BorderSubtle", "#21262D")
                     }
                 };
 
@@ -579,7 +580,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     for (int i = 0; i < topPorts.Count && i < colors.Length; i++)
                     {
                         var port = topPorts[i];
-                        var color = SKColor.Parse(colors[i]);
+                        var color = ThemeColorHelper.ParseSKColor(colors[i]);
                         var points = GeneratePortActivityData(port, i, ShowPortActivityAsThroughput);
 
                         newSeries.Add(new LineSeries<ObservablePoint>
@@ -634,10 +635,8 @@ namespace PCAPAnalyzer.UI.ViewModels
             }
         }
 
-        private string FormatBytesPerSecond(long bytesPerSecond)
-        {
-            return Core.Utilities.NumberFormatter.FormatBytes(bytesPerSecond) + "/s";
-        }
+        private static string FormatBytesPerSecond(long bytesPerSecond)
+            => Core.Utilities.NumberFormatter.FormatBytesPerSecond(bytesPerSecond);
         
         private ObservablePoint[] GeneratePortActivityData(PortStatistics port, int index, bool showThroughput)
         {

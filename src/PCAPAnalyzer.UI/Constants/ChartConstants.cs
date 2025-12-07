@@ -41,6 +41,20 @@ public static class ChartConstants
     /// <summary>Stroke color for highlight dot (orange)</summary>
     public static string HighlightStrokeColor => ThemeColorHelper.HighlightOrangeHex;
 
+    // ==================== HIGHLIGHT SOLID COLOR PAINTS ====================
+
+    /// <summary>Fill paint for highlight dot (gold)</summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint HighlightFillPaint
+        => ThemeColorHelper.ParseSolidColorPaint(HighlightFillColor);
+
+    /// <summary>Stroke paint for highlight dot (orange with stroke)</summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint HighlightStrokePaint
+        => ThemeColorHelper.ParseSolidColorPaint(HighlightStrokeColor, HighlightDotStrokeThickness);
+
+    /// <summary>Stroke paint for vertical highlight line (gold with line thickness)</summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint HighlightLinePaint
+        => ThemeColorHelper.ParseSolidColorPaint(HighlightFillColor, HighlightLineStrokeThickness);
+
     // ==================== CHART LAYOUT ====================
 
     /// <summary>Left offset for plot area calculations</summary>

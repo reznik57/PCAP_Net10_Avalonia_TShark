@@ -20,7 +20,7 @@ public class OneClassSvmModel : IMLAnomalyModel
 {
     private SupportVectorMachine<Gaussian>? _svm;
     private ModelMetrics _metrics = new();
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     public string ModelName => "OneClassSVM";
     public string Version => "1.0.0";
@@ -35,7 +35,7 @@ public class OneClassSvmModel : IMLAnomalyModel
     {
         await Task.Run(() =>
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 var startTime = DateTime.UtcNow;
                 var dataList = trainingData.ToList();
@@ -85,7 +85,7 @@ public class OneClassSvmModel : IMLAnomalyModel
             throw new InvalidOperationException("Model must be trained before prediction");
         }
 
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             var features = ExtractFeatures(flow);
             var decision = _svm.Score(features);
@@ -120,7 +120,7 @@ public class OneClassSvmModel : IMLAnomalyModel
 
         await Task.Run(() =>
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 var modelData = new OneClassSvmModelData
                 {
@@ -147,7 +147,7 @@ public class OneClassSvmModel : IMLAnomalyModel
     {
         await Task.Run(() =>
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 // Load model data
                 var jsonPath = path + ".json";

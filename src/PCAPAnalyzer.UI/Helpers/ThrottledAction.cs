@@ -14,7 +14,7 @@ namespace PCAPAnalyzer.UI.Helpers
         private readonly Action _action;
         private readonly DispatcherTimer _timer;
         private bool _isPending;
-        private readonly object _lock = new object();
+        private readonly Lock _lock = new();
         
         public ThrottledAction(TimeSpan throttleInterval, Action action)
         {
@@ -33,7 +33,7 @@ namespace PCAPAnalyzer.UI.Helpers
         /// </summary>
         public void Request()
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 _isPending = true;
                 if (!_timer.IsEnabled)
@@ -45,7 +45,7 @@ namespace PCAPAnalyzer.UI.Helpers
         
         private void OnTimerTick(object? sender, EventArgs e)
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 _timer.Stop();
                 if (_isPending)
@@ -58,7 +58,7 @@ namespace PCAPAnalyzer.UI.Helpers
         
         public void Stop()
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 _timer.Stop();
                 _isPending = false;
@@ -75,7 +75,7 @@ namespace PCAPAnalyzer.UI.Helpers
         private readonly TimeSpan _throttleInterval;
         private readonly Func<Task> _action;
         private CancellationTokenSource? _cts;
-        private readonly object _lock = new object();
+        private readonly Lock _lock = new();
         
         public ThrottledAsyncAction(TimeSpan throttleInterval, Func<Task> action)
         {
@@ -89,8 +89,8 @@ namespace PCAPAnalyzer.UI.Helpers
         public async Task RequestAsync()
         {
             CancellationTokenSource cts;
-            
-            lock (_lock)
+
+            using (_lock.EnterScope())
             {
                 _cts?.Cancel();
                 _cts = new CancellationTokenSource();
@@ -114,7 +114,7 @@ namespace PCAPAnalyzer.UI.Helpers
         
         public void Cancel()
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 _cts?.Cancel();
             }

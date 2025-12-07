@@ -54,7 +54,7 @@ public interface IUnifiedAnomalyDetectionService
 public class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionService
 {
     private readonly List<IAnomalyDetector> _detectors = new();
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     public UnifiedAnomalyDetectionService(IGeoIPService? geoIPService = null)
     {
@@ -103,7 +103,7 @@ public class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionService
         // Expected savings: 4.8s per batch, ~57.6s total across all batches
 
         List<IAnomalyDetector> activeDetectors;
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             activeDetectors = _detectors.ToList();
         }
@@ -193,7 +193,7 @@ public class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionService
             return new List<NetworkAnomaly>();
 
         List<IAnomalyDetector> categoryDetectors;
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             categoryDetectors = _detectors.Where(d => d.Category == category).ToList();
         }
@@ -228,7 +228,7 @@ public class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionService
         if (detector == null)
             return;
 
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             if (!_detectors.Any(d => d.Name == detector.Name))
             {
@@ -242,7 +242,7 @@ public class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionService
         if (string.IsNullOrEmpty(detectorName))
             return;
 
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             _detectors.RemoveAll(d => d.Name == detectorName);
         }
@@ -250,7 +250,7 @@ public class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionService
 
     public IReadOnlyList<IAnomalyDetector> GetRegisteredDetectors()
     {
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             return _detectors.ToList().AsReadOnly();
         }

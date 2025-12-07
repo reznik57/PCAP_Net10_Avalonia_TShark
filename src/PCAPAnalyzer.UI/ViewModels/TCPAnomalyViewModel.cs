@@ -5,9 +5,11 @@ using System.Linq;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels
@@ -48,7 +50,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             Type = anomaly.Type.ToString();
             Description = anomaly.Description;
             Severity = anomaly.Severity.ToString();
-            SeverityColor = GetSeverityColor(anomaly.Severity);
+            SeverityColor = ThreatDisplayHelpers.GetSeverityColor(anomaly.Severity);
             DetectedAt = anomaly.DetectedAt;
             SourceEndpoint = $"{anomaly.SourceIP}:{anomaly.SourcePort}";
             DestinationEndpoint = $"{anomaly.DestinationIP}:{anomaly.DestinationPort}";
@@ -61,18 +63,6 @@ namespace PCAPAnalyzer.UI.ViewModels
         private void ViewDetails()
         {
             OnViewDetails?.Invoke(this);
-        }
-
-        private string GetSeverityColor(AnomalySeverity severity)
-        {
-            return severity switch
-            {
-                AnomalySeverity.Critical => ColorCritical,
-                AnomalySeverity.High => ColorHigh,
-                AnomalySeverity.Medium => ColorMedium,
-                AnomalySeverity.Low => ColorLow,
-                _ => ColorMuted
-            };
         }
     }
 
@@ -110,7 +100,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             PacketCount = port.PacketCount;
             PacketCountFormatted = Core.Utilities.NumberFormatter.FormatCount(port.PacketCount);
             ByteCount = port.ByteCount;
-            ByteCountFormatted = Core.Utilities.NumberFormatter.FormatBytes(port.ByteCount);
+            ByteCountFormatted = port.ByteCount.ToFormattedBytes();
             UniqueHostCount = port.UniqueHosts.Count;
             Percentage = port.Percentage;
             IsWellKnown = port.IsWellKnown;
@@ -167,11 +157,11 @@ namespace PCAPAnalyzer.UI.ViewModels
             SourceEndpoint = stream.SourceEndpoint;
             DestinationEndpoint = stream.DestinationEndpoint;
             TotalPackets = stream.TotalPackets;
-            TotalBytesFormatted = Core.Utilities.NumberFormatter.FormatBytes(stream.TotalBytes);
+            TotalBytesFormatted = stream.TotalBytes.ToFormattedBytes();
             RetransmissionRate = stream.RetransmissionRate;
             PacketLossRate = stream.PacketLossRate;
-            ThroughputFormatted = Core.Utilities.NumberFormatter.FormatBytes((long)stream.Throughput) + "/s";
-            Duration = FormatDuration(stream.EndTime - stream.StartTime);
+            ThroughputFormatted = ((long)stream.Throughput).ToFormattedBytesPerSecond();
+            Duration = (stream.EndTime - stream.StartTime).ToFormattedSeconds();
             State = stream.State.ToString();
             StateColor = GetStateColor(stream.State);
             AnomalyCount = stream.Anomalies.Count;
@@ -200,9 +190,5 @@ namespace PCAPAnalyzer.UI.ViewModels
             };
         }
 
-        private string FormatDuration(TimeSpan duration)
-        {
-            return Helpers.TimeFormatter.FormatAsSeconds(duration);
-        }
     }
 }

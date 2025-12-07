@@ -13,7 +13,7 @@ public class OptimizedPacketProcessor : IDisposable
 {
     private readonly Channel<PacketInfo> _packetChannel;
     private readonly List<PacketInfo> _summaryPackets;
-    private readonly object _lockObj = new();
+    private readonly Lock _lockObj = new();
     private long _totalPacketsProcessed;
     private long _totalBytesProcessed;
     private bool _isDisposed;
@@ -52,14 +52,14 @@ public class OptimizedPacketProcessor : IDisposable
             // Keep a sample of packets for UI display
             if (_totalPacketsProcessed <= PerformanceSettings.MaxPacketsInUI)
             {
-                lock (_lockObj)
+                using (_lockObj.EnterScope())
                 {
                     _summaryPackets.Add(packet);
                 }
             }
             else if (_totalPacketsProcessed % 100 == 0) // Sample every 100th packet after limit
             {
-                lock (_lockObj)
+                using (_lockObj.EnterScope())
                 {
                     if (_summaryPackets.Count < PerformanceSettings.MaxPacketsInUI)
                     {
@@ -157,13 +157,13 @@ public class OptimizedPacketProcessor : IDisposable
 
     public List<PacketInfo> GetDisplayPackets(int maxCount = -1)
     {
-        lock (_lockObj)
+        using (_lockObj.EnterScope())
         {
             if (maxCount <= 0 || maxCount >= _summaryPackets.Count)
             {
                 return _summaryPackets.ToList();
             }
-            
+
             return _summaryPackets.Take(maxCount).ToList();
         }
     }
@@ -181,12 +181,12 @@ public class OptimizedPacketProcessor : IDisposable
 
     public void ClearMemory()
     {
-        lock (_lockObj)
+        using (_lockObj.EnterScope())
         {
             _summaryPackets.Clear();
             _summaryPackets.TrimExcess();
         }
-        
+
         GC.Collect();
         GC.WaitForPendingFinalizers();
         GC.Collect();

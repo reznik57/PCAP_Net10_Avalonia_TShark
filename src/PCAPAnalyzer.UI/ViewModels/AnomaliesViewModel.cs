@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Services;
+using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.UI.Models;
 using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.ViewModels.Components;
@@ -276,7 +277,7 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
             .Select(g => new AnomalyPortViewModel
             {
                 Port = g.Key,
-                ServiceName = GetServiceName(g.Key),
+                ServiceName = ThreatDisplayHelpers.GetServiceName(g.Key),
                 AnomalyCount = g.Count(),
                 Percentage = (double)g.Count() / anomalies.Count * 100,
                 HighestSeverity = g.Max(a => a.Severity),
@@ -306,77 +307,6 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
             .OrderByDescending(c => c.Count)
             .ToList();
     }
-
-    private static string GetServiceName(int port) => port switch
-    {
-        20 => "FTP-Data",
-        21 => "FTP",
-        22 => "SSH",
-        23 => "Telnet",
-        25 => "SMTP",
-        53 => "DNS",
-        67 => "DHCP",
-        68 => "DHCP",
-        69 => "TFTP",
-        80 => "HTTP",
-        88 => "Kerberos",
-        110 => "POP3",
-        111 => "RPC",
-        123 => "NTP",
-        135 => "RPC-Loc",
-        137 => "NetBIOS",
-        138 => "NetBIOS",
-        139 => "NetBIOS",
-        143 => "IMAP",
-        161 => "SNMP",
-        162 => "SNMP-Trap",
-        389 => "LDAP",
-        443 => "HTTPS",
-        445 => "SMB",
-        464 => "Kerberos",
-        465 => "SMTPS",
-        500 => "IKE",
-        514 => "Syslog",
-        515 => "LPR",
-        520 => "RIP",
-        587 => "SMTP",
-        636 => "LDAPS",
-        993 => "IMAPS",
-        995 => "POP3S",
-        1080 => "SOCKS",
-        1194 => "OpenVPN",
-        1433 => "MSSQL",
-        1434 => "MSSQL-UDP",
-        1521 => "Oracle",
-        1723 => "PPTP",
-        1883 => "MQTT",
-        2049 => "NFS",
-        2082 => "cPanel",
-        2083 => "cPanel-SSL",
-        2181 => "ZooKeeper",
-        3306 => "MySQL",
-        3389 => "RDP",
-        4060 => "DT-Mgmt",
-        5060 => "SIP",
-        5061 => "SIP-TLS",
-        5432 => "PostgreSQL",
-        5672 => "AMQP",
-        5683 => "CoAP",
-        5900 => "VNC",
-        5985 => "WinRM",
-        5986 => "WinRM-SSL",
-        6379 => "Redis",
-        6443 => "K8s-API",
-        7680 => "WUDO",
-        8080 => "HTTP-Alt",
-        8443 => "HTTPS-Alt",
-        8883 => "MQTT-SSL",
-        9000 => "SonarQube",
-        9092 => "Kafka",
-        9200 => "Elastic",
-        27017 => "MongoDB",
-        _ => ""
-    };
 
     private void OnFiltersChanged(object? sender, EventArgs e)
     {

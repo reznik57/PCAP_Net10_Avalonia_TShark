@@ -429,26 +429,11 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     }
 
     /// <summary>
-    /// Gets continent code/name for a country code using ContinentData mapping.
+    /// Gets continent display name for a country code.
+    /// Delegates to centralized ContinentData.GetContinentDisplayName.
     /// </summary>
     private static string GetContinentForCountry(string countryCode)
-    {
-        if (string.IsNullOrEmpty(countryCode))
-            return "Unknown";
-
-        if (countryCode == "INTERNAL") return "Internal";
-        if (countryCode == "IPV6" || countryCode == "IP6") return "IPv6";
-
-        if (ContinentData.CountryToContinentMap.TryGetValue(countryCode.ToUpperInvariant(), out var continentCode))
-        {
-            // Return both code and name for flexible matching
-            return ContinentData.Continents.TryGetValue(continentCode, out var continent)
-                ? continent.DisplayName
-                : continentCode;
-        }
-
-        return "Unknown";
-    }
+        => ContinentData.GetContinentDisplayName(countryCode);
 
     /// <summary>
     /// Shows detailed information for a country using inline drill-down popup (Dashboard style)

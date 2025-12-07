@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.UI.Models;
 using PCAPAnalyzer.UI.ViewModels.Components;
 using PCAPAnalyzer.UI.Utilities;
@@ -124,7 +125,7 @@ public partial class ThreatsStatisticsViewModel : ObservableObject
             {
                 Port = g.Key.Port,
                 Protocol = g.Key.Protocol ?? "TCP",
-                ServiceName = GetServiceName(g.Key.Port),
+                ServiceName = ThreatDisplayHelpers.GetServiceName(g.Key.Port),
                 ThreatCount = g.Count(),
                 SeverityScore = g.Average(t => (int)t.Severity)
             })
@@ -149,7 +150,7 @@ public partial class ThreatsStatisticsViewModel : ObservableObject
             {
                 Port = g.Key.Port,
                 Protocol = g.Key.Protocol ?? "TCP",
-                ServiceName = GetServiceName(g.Key.Port),
+                ServiceName = ThreatDisplayHelpers.GetServiceName(g.Key.Port),
                 ThreatCount = g.Count(),
                 SeverityScore = g.Max(t => (int)t.Severity) + g.Average(t => (int)t.Severity)
             })
@@ -215,26 +216,6 @@ public partial class ThreatsStatisticsViewModel : ObservableObject
         TopDestinationIPs = new ObservableCollection<AffectedIPViewModel>(destIPs);
     }
 
-    private static string GetServiceName(int port) => port switch
-    {
-        20 or 21 => "FTP",
-        22 => "SSH",
-        23 => "Telnet",
-        25 => "SMTP",
-        53 => "DNS",
-        80 => "HTTP",
-        110 => "POP3",
-        143 => "IMAP",
-        443 => "HTTPS",
-        445 => "SMB",
-        993 => "IMAPS",
-        995 => "POP3S",
-        3306 => "MySQL",
-        3389 => "RDP",
-        5432 => "PostgreSQL",
-        8080 => "HTTP-Alt",
-        _ => "Unknown"
-    };
 
     /// <summary>
     /// Applies the selected sort option to the threat list

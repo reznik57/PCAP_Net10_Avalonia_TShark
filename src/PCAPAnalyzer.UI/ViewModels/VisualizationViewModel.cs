@@ -85,8 +85,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                 new DateTimeAxis(TimeSpan.FromSeconds(1), date => date.ToString("HH:mm:ss"))
                 {
                     Name = "Time",
-                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextPrimary", "#E6EDF3"))),
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E")))
+                    NamePaint = ThemeColorHelper.GetSolidColorPaint("TextPrimary", "#E6EDF3"),
+                    LabelsPaint = ThemeColorHelper.GetSolidColorPaint("TextMuted", "#8B949E")
                 }
             };
 
@@ -95,8 +95,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                 new Axis
                 {
                     Name = "Value",
-                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextPrimary", "#E6EDF3"))),
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextMuted", "#8B949E")))
+                    NamePaint = ThemeColorHelper.GetSolidColorPaint("TextPrimary", "#E6EDF3"),
+                    LabelsPaint = ThemeColorHelper.GetSolidColorPaint("TextMuted", "#8B949E")
                 }
             };
         }
@@ -162,7 +162,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                         return new LiveChartsCore.Kernel.Coordinate(index, point.Value);
                     },
                     Fill = null,
-                    Stroke = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6")), 2),
+                    Stroke = ThemeColorHelper.GetSolidColorPaint("AccentBlue", "#3B82F6", 2),
                     GeometrySize = 0,
                     LineSmoothness = 0,
                     Name = "Throughput"
@@ -233,7 +233,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     {
                         return new LiveChartsCore.Kernel.Coordinate(index, bar.Count);
                     },
-                    Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"))),
+                    Fill = ThemeColorHelper.GetSolidColorPaint("ColorSuccess", "#10B981"),
                     Name = "Packet Size Distribution"
                 };
 

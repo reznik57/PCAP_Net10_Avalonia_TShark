@@ -108,11 +108,8 @@ public partial class DashboardView
         {
             Values = new ObservableCollection<DateTimePoint>(),
             GeometrySize = ChartConstants.HighlightDotSize,
-            Fill = new SolidColorPaint(SKColor.Parse(ChartConstants.HighlightFillColor)),
-            Stroke = new SolidColorPaint(SKColor.Parse(ChartConstants.HighlightStrokeColor))
-            {
-                StrokeThickness = ChartConstants.HighlightDotStrokeThickness
-            },
+            Fill = ChartConstants.HighlightFillPaint,
+            Stroke = ChartConstants.HighlightStrokePaint,
             Name = "Highlight",
             IsVisibleAtLegend = false,
             ZIndex = ChartConstants.HighlightScatterZIndex,
@@ -131,10 +128,7 @@ public partial class DashboardView
         var line = new LineSeries<DateTimePoint>
         {
             Values = new ObservableCollection<DateTimePoint>(),
-            Stroke = new SolidColorPaint(SKColor.Parse(ChartConstants.HighlightFillColor))
-            {
-                StrokeThickness = ChartConstants.HighlightLineStrokeThickness
-            },
+            Stroke = ChartConstants.HighlightLinePaint,
             Fill = null,
             GeometrySize = 0,
             LineSmoothness = 0,

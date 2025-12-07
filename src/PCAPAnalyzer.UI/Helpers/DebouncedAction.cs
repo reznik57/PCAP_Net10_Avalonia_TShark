@@ -12,7 +12,7 @@ public class DebouncedAction : IDisposable
 {
     private readonly int _delayMilliseconds;
     private CancellationTokenSource? _cancellationTokenSource;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     /// <summary>
     /// Creates a debounced action with specified delay
@@ -29,7 +29,7 @@ public class DebouncedAction : IDisposable
     /// <param name="action">Action to execute after delay</param>
     public void Debounce(Action action)
     {
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             // Cancel previous pending action
             _cancellationTokenSource?.Cancel();
@@ -54,7 +54,7 @@ public class DebouncedAction : IDisposable
     /// </summary>
     public void Dispose()
     {
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();

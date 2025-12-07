@@ -505,49 +505,6 @@ public class GeoThreatDetector : ISpecializedDetector
         return cache.TryGetValue(ip, out var country) ? country : "UNKNOWN";
     }
 
-    private static bool IsPrivateIP(string ip)
-    {
-        if (string.IsNullOrEmpty(ip)) return false;
-
-        try
-        {
-            if (!IPAddress.TryParse(ip, out var addr))
-                return false;
-
-            var bytes = addr.GetAddressBytes();
-
-            // IPv4 private ranges
-            if (bytes.Length == 4)
-            {
-                // 10.0.0.0/8
-                if (bytes[0] == 10) return true;
-                // 172.16.0.0/12
-                if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return true;
-                // 192.168.0.0/16
-                if (bytes[0] == 192 && bytes[1] == 168) return true;
-                // 127.0.0.0/8 (loopback)
-                if (bytes[0] == 127) return true;
-                // 169.254.0.0/16 (link-local)
-                if (bytes[0] == 169 && bytes[1] == 254) return true;
-            }
-
-            // IPv6 private
-            if (bytes.Length == 16)
-            {
-                // fe80::/10 (link-local)
-                if (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80) return true;
-                // fc00::/7 (unique local)
-                if ((bytes[0] & 0xfe) == 0xfc) return true;
-                // ::1 (loopback)
-                if (bytes.Take(15).All(b => b == 0) && bytes[15] == 1) return true;
-            }
-
-            return false;
-        }
-        catch
-        {
-            return false;
-        }
-    }
+    private static bool IsPrivateIP(string ip) => PrivateNetworkHandler.IsPrivateIP(ip);
 
 }

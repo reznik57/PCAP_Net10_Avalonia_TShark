@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
+using SkiaSharp;
 
 namespace PCAPAnalyzer.UI.Utilities;
 
@@ -405,6 +406,33 @@ public static class ThemeColorHelper
     public static string ChartPurpleHex => GetColorHex("ChartPurple", "#8B5CF6");
     public static string ChartTealHex => GetColorHex("ChartTeal", "#14B8A6");
 
+    // ==================== STREAM COLORS (for timeline charts) ====================
+
+    private static string[]? _streamColorsCache;
+
+    /// <summary>
+    /// Gets the stream color palette for timeline charts (10 colors for Top 10 support).
+    /// Used by MainWindowChartsViewModel, MainWindow.ChartHandlers, etc.
+    /// </summary>
+    public static string[] StreamColors => _streamColorsCache ??= new[]
+    {
+        GetColorHex("AccentBlue", "#3B82F6"),
+        GetColorHex("ColorSuccess", "#10B981"),
+        GetColorHex("ColorWarning", "#F59E0B"),
+        GetColorHex("ColorDanger", "#EF4444"),
+        GetColorHex("AccentPurple", "#8B5CF6"),
+        GetColorHex("AccentCyan", "#06B6D4"),
+        GetColorHex("AccentPink", "#EC4899"),
+        GetColorHex("ColorOrange", "#F97316"),
+        GetColorHex("ColorLime", "#84CC16"),
+        GetColorHex("AccentIndigo", "#6366F1")
+    };
+
+    /// <summary>
+    /// Gets a stream color by index (cycles through palette).
+    /// </summary>
+    public static string GetStreamColorHex(int index) => StreamColors[index % StreamColors.Length];
+
     // ==================== COMPARE VIEW COLORS ====================
 
     public static SolidColorBrush CompareFileABrush => GetBrushFromColor("CompareFileA", "#F85149");
@@ -678,4 +706,157 @@ public static class ThemeColorHelper
         _jitterMaxBrush = null;
         _separatorBrush = null;
     }
+
+    // ==================== SKIA SHARP COLOR SUPPORT ====================
+
+    /// <summary>
+    /// Gets an SKColor from theme resources with fallback.
+    /// Eliminates repetitive SKColor.Parse(GetColorHex(...)) patterns.
+    /// </summary>
+    public static SKColor GetSKColor(string resourceKey, string fallbackHex)
+    {
+        var hex = GetColorHex(resourceKey, fallbackHex);
+        return SKColor.Parse(hex);
+    }
+
+    /// <summary>
+    /// Parses hex string directly to SKColor. Use when hex is already known.
+    /// </summary>
+    public static SKColor ParseSKColor(string hex) => SKColor.Parse(hex);
+
+    /// <summary>
+    /// Gets SKColor for chart series by index (cycles through palette).
+    /// </summary>
+    public static SKColor GetChartSKColor(int index) => SKColor.Parse(GetChartColorHex(index));
+
+    /// <summary>
+    /// Gets SKColor for protocol display.
+    /// </summary>
+    public static SKColor GetProtocolSKColor(string protocol) => SKColor.Parse(GetProtocolColorHex(protocol));
+
+    /// <summary>
+    /// Gets SKColor for threat severity display.
+    /// </summary>
+    public static SKColor GetThreatSeveritySKColor(string severity) => SKColor.Parse(GetThreatSeverityColorHex(severity));
+
+    /// <summary>
+    /// Gets SKColor for anomaly severity display.
+    /// </summary>
+    public static SKColor GetAnomalySeveritySKColor(string severity) => SKColor.Parse(GetAnomalySeverityColorHex(severity));
+
+    /// <summary>
+    /// Gets SKColor for VoiceQoS series by name.
+    /// </summary>
+    public static SKColor GetSeriesSKColor(string seriesName) => SKColor.Parse(GetSeriesColorHex(seriesName));
+
+    /// <summary>
+    /// Gets SKColor for map traffic intensity.
+    /// </summary>
+    public static SKColor GetMapTrafficSKColor(double normalizedValue) => SKColor.Parse(GetMapTrafficColorHex(normalizedValue));
+
+    /// <summary>
+    /// Gets SKColor for security rating display.
+    /// </summary>
+    public static SKColor GetSecurityRatingSKColor(string rating) => SKColor.Parse(GetSecurityRatingColorHex(rating));
+
+    // Common chart colors as SKColor
+    public static SKColor ChartBlueSK => SKColor.Parse(ChartThroughputColorHex);
+    public static SKColor ChartGreenSK => SKColor.Parse(ChartPacketsColorHex);
+    public static SKColor ChartAmberSK => SKColor.Parse(ChartAnomaliesColorHex);
+    public static SKColor ChartRedSK => SKColor.Parse(ChartThreatsColorHex);
+    public static SKColor ChartGraySK => SKColor.Parse(ChartGrayHex);
+    public static SKColor ChartPurpleSK => SKColor.Parse(ChartPurpleHex);
+    public static SKColor ChartTealSK => SKColor.Parse(ChartTealHex);
+
+    // Highlight colors as SKColor
+    public static SKColor HighlightYellowSK => SKColor.Parse(HighlightYellowHex);
+    public static SKColor HighlightOrangeSK => SKColor.Parse(HighlightOrangeHex);
+
+    // ==================== SOLID COLOR PAINT SUPPORT ====================
+
+    /// <summary>
+    /// Creates a SolidColorPaint from theme resources with fallback.
+    /// Eliminates repetitive new SolidColorPaint(SKColor.Parse(GetColorHex(...))) patterns.
+    /// </summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint GetSolidColorPaint(string resourceKey, string fallbackHex)
+        => new(GetSKColor(resourceKey, fallbackHex));
+
+    /// <summary>
+    /// Creates a SolidColorPaint from theme resources with fallback and stroke thickness.
+    /// </summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint GetSolidColorPaint(string resourceKey, string fallbackHex, float strokeThickness)
+        => new(GetSKColor(resourceKey, fallbackHex)) { StrokeThickness = strokeThickness };
+
+    /// <summary>
+    /// Creates a SolidColorPaint directly from hex string.
+    /// </summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint ParseSolidColorPaint(string hex)
+        => new(SKColor.Parse(hex));
+
+    /// <summary>
+    /// Creates a SolidColorPaint directly from hex string with stroke thickness.
+    /// </summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint ParseSolidColorPaint(string hex, float strokeThickness)
+        => new(SKColor.Parse(hex)) { StrokeThickness = strokeThickness };
+
+    /// <summary>
+    /// Creates a SolidColorPaint directly from hex string with custom alpha.
+    /// </summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint ParseSolidColorPaint(string hex, byte alpha)
+        => new(SKColor.Parse(hex).WithAlpha(alpha));
+
+    /// <summary>
+    /// Creates a SolidColorPaint from theme resources with fallback and custom alpha.
+    /// </summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint GetSolidColorPaint(string resourceKey, string fallbackHex, byte alpha)
+        => new(GetSKColor(resourceKey, fallbackHex).WithAlpha(alpha));
+
+    /// <summary>
+    /// Creates a SolidColorPaint for chart series by index.
+    /// </summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint GetChartSolidColorPaint(int index)
+        => new(GetChartSKColor(index));
+
+    /// <summary>
+    /// Creates a SolidColorPaint for protocol display.
+    /// </summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint GetProtocolSolidColorPaint(string protocol)
+        => new(GetProtocolSKColor(protocol));
+
+    // Common chart paints (cached for performance)
+    private static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint? _chartBluePaint;
+    private static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint? _chartGreenPaint;
+    private static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint? _chartAmberPaint;
+    private static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint? _chartRedPaint;
+    private static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint? _chartGrayPaint;
+    private static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint? _chartPurplePaint;
+
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint ChartBluePaint
+        => _chartBluePaint ??= new(ChartBlueSK);
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint ChartGreenPaint
+        => _chartGreenPaint ??= new(ChartGreenSK);
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint ChartAmberPaint
+        => _chartAmberPaint ??= new(ChartAmberSK);
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint ChartRedPaint
+        => _chartRedPaint ??= new(ChartRedSK);
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint ChartGrayPaint
+        => _chartGrayPaint ??= new(ChartGraySK);
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint ChartPurplePaint
+        => _chartPurplePaint ??= new(ChartPurpleSK);
+
+    // ==================== COMMON SKCOLORS PAINTS ====================
+
+    // Cached paints for frequently used SKColors (data labels, separators, etc.)
+    private static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint? _whitePaint;
+    private static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint? _grayPaint;
+    private static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint? _lightGrayAlpha50Paint;
+
+    /// <summary>White paint for data labels</summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint WhitePaint => _whitePaint ??= new(SKColors.White);
+
+    /// <summary>Gray paint for axis labels</summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint GrayPaint => _grayPaint ??= new(SKColors.Gray);
+
+    /// <summary>Light gray with 50 alpha for separators</summary>
+    public static LiveChartsCore.SkiaSharpView.Painting.SolidColorPaint LightGrayAlpha50Paint => _lightGrayAlpha50Paint ??= new(SKColors.LightGray.WithAlpha(50));
 }

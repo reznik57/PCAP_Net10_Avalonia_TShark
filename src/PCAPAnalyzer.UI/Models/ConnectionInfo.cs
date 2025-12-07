@@ -1,4 +1,5 @@
 using System;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Utilities;
 
 namespace PCAPAnalyzer.UI.Models
@@ -16,16 +17,11 @@ namespace PCAPAnalyzer.UI.Models
         public DateTime LastSeen { get; set; }
         
         // Calculated properties
-        public string BytesFormatted => NumberFormatter.FormatBytes(ByteCount);
-        public string Duration => FormatDuration();
+        public string BytesFormatted => ByteCount.ToFormattedBytes();
+        public string Duration => (LastSeen - FirstSeen).ToFormattedSeconds();
         public double TrafficPercentage { get; set; } // Set by ViewModel based on max traffic
         public double Percentage { get; set; } // Set by ViewModel based on total traffic
 
-        private string FormatDuration()
-        {
-            var duration = LastSeen - FirstSeen;
-            return PCAPAnalyzer.UI.Helpers.TimeFormatter.FormatAsSeconds(duration);
-        }
     }
     
     public class PortInfo
@@ -39,7 +35,7 @@ namespace PCAPAnalyzer.UI.Models
 
         public string DisplayValue { get; set; } = string.Empty; // Will be set based on view mode
 
-        public string FormatBytes() => NumberFormatter.FormatBytes(ByteCount);
+        public string FormatBytes() => ByteCount.ToFormattedBytes();
     }
     
     public class PortTimelinePoint

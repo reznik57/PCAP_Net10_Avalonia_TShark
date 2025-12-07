@@ -14,7 +14,7 @@ namespace PCAPAnalyzer.Core.Services
         private T? _pendingEventArgs;
         private object? _pendingSender;
         private bool _hasPendingEvent;
-        private readonly object _lock = new();
+        private readonly Lock _lock = new();
         private bool _disposed;
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace PCAPAnalyzer.Core.Services
             if (_disposed)
                 return;
 
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 _pendingSender = sender;
                 _pendingEventArgs = eventArgs;
@@ -61,7 +61,7 @@ namespace PCAPAnalyzer.Core.Services
             T? argsToRaise = null;
             object? senderToRaise = null;
 
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 if (_hasPendingEvent)
                 {

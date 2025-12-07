@@ -19,7 +19,7 @@ public class AutoencoderModel : IMLAnomalyModel
     private MLContext _mlContext = new MLContext(seed: 42);
     private ITransformer? _model;
     private ModelMetrics _metrics = new();
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private double _reconstructionThreshold = 0.5;
 
     public string ModelName => "Autoencoder";
@@ -30,7 +30,7 @@ public class AutoencoderModel : IMLAnomalyModel
     {
         await Task.Run(() =>
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 var startTime = DateTime.UtcNow;
                 var dataList = trainingData.ToList();
@@ -104,7 +104,7 @@ public class AutoencoderModel : IMLAnomalyModel
             throw new InvalidOperationException("Model must be trained before prediction");
         }
 
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             var dataView = _mlContext.Data.LoadFromEnumerable(new[] { flow });
             var predictions = _model.Transform(dataView);
@@ -135,7 +135,7 @@ public class AutoencoderModel : IMLAnomalyModel
             throw new InvalidOperationException("Model must be trained before prediction");
         }
 
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             var dataView = _mlContext.Data.LoadFromEnumerable(flows);
             var predictions = _model.Transform(dataView);
@@ -169,7 +169,7 @@ public class AutoencoderModel : IMLAnomalyModel
 
         await Task.Run(() =>
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 _mlContext.Model.Save(_model, null, path);
             }
@@ -180,7 +180,7 @@ public class AutoencoderModel : IMLAnomalyModel
     {
         await Task.Run(() =>
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 if (!File.Exists(path))
                 {

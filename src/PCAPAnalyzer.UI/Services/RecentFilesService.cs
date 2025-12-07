@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Utilities;
 
 namespace PCAPAnalyzer.UI.Services;
@@ -272,7 +273,7 @@ public record RecentFileInfo(
     /// <summary>
     /// Human-readable file size (e.g., "2.5 MB")
     /// </summary>
-    public string FileSizeFormatted => FormatFileSize(FileSize);
+    public string FileSizeFormatted => FileSize.ToFormattedBytes();
 
     /// <summary>
     /// Human-readable packet count (e.g., "1,234 packets")
@@ -327,18 +328,4 @@ public record RecentFileInfo(
         {(IsPinned ? "📌 Pinned" : "")}
         """;
 
-    private static string FormatFileSize(long bytes)
-    {
-        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-        double len = bytes;
-        int order = 0;
-
-        while (len >= 1024 && order < sizes.Length - 1)
-        {
-            order++;
-            len /= 1024;
-        }
-
-        return $"{len:F2} {sizes[order]}";
-    }
 }

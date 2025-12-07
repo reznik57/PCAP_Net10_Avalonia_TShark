@@ -126,38 +126,9 @@ namespace PCAPAnalyzer.Core.Services.Reporting
 
         /// <summary>
         /// Determines if an IP address is private (RFC 1918).
+        /// Delegates to PrivateNetworkHandler for comprehensive IPv4/IPv6 support.
         /// </summary>
-        public static bool IsPrivateIP(string ip)
-        {
-            if (string.IsNullOrWhiteSpace(ip))
-                return false;
-
-            var parts = ip.Split('.');
-            if (parts.Length != 4)
-                return false;
-
-            if (!int.TryParse(parts[0], out int firstOctet) ||
-                !int.TryParse(parts[1], out int secondOctet))
-                return false;
-
-            // 10.0.0.0/8
-            if (firstOctet == 10)
-                return true;
-
-            // 172.16.0.0/12
-            if (firstOctet == 172 && secondOctet >= 16 && secondOctet <= 31)
-                return true;
-
-            // 192.168.0.0/16
-            if (firstOctet == 192 && secondOctet == 168)
-                return true;
-
-            // Loopback and link-local
-            if (firstOctet == 127 || firstOctet == 169)
-                return true;
-
-            return false;
-        }
+        public static bool IsPrivateIP(string ip) => PrivateNetworkHandler.IsPrivateIP(ip);
 
         /// <summary>
         /// Classifies IP type (Public, Private, Loopback, Link-Local, Multicast).

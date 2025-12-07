@@ -19,23 +19,23 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 /// </summary>
 public partial class AnomaliesChartsViewModel : ObservableObject
 {
-    // Severity colors - resolved from theme
-    private static SKColor CriticalColor => SKColor.Parse(ThemeColorHelper.GetAnomalySeverityColorHex("critical"));
-    private static SKColor HighColor => SKColor.Parse(ThemeColorHelper.GetAnomalySeverityColorHex("high"));
-    private static SKColor MediumColor => SKColor.Parse(ThemeColorHelper.GetAnomalySeverityColorHex("medium"));
-    private static SKColor LowColor => SKColor.Parse(ThemeColorHelper.GetAnomalySeverityColorHex("low"));
+    // Severity colors - delegate to ThemeColorHelper SKColor API
+    private static SKColor CriticalColor => ThemeColorHelper.GetAnomalySeveritySKColor("critical");
+    private static SKColor HighColor => ThemeColorHelper.GetAnomalySeveritySKColor("high");
+    private static SKColor MediumColor => ThemeColorHelper.GetAnomalySeveritySKColor("medium");
+    private static SKColor LowColor => ThemeColorHelper.GetAnomalySeveritySKColor("low");
 
-    // Category colors - resolved from theme
+    // Category colors - delegate to ThemeColorHelper SKColor API
     private static SKColor GetCategoryColor(AnomalyCategory category) => category switch
     {
-        AnomalyCategory.Network => SKColor.Parse(ThemeColorHelper.GetChartColorHex(0)),    // Blue
-        AnomalyCategory.TCP => SKColor.Parse(ThemeColorHelper.GetChartColorHex(1)),        // Green
-        AnomalyCategory.Application => SKColor.Parse(ThemeColorHelper.GetChartColorHex(2)), // Amber
-        AnomalyCategory.VoIP => SKColor.Parse(ThemeColorHelper.GetChartColorHex(4)),       // Purple
-        AnomalyCategory.IoT => SKColor.Parse(ThemeColorHelper.GetChartColorHex(6)),        // Cyan
-        AnomalyCategory.Security => SKColor.Parse(ThemeColorHelper.GetChartColorHex(3)),   // Red
-        AnomalyCategory.Malformed => SKColor.Parse(ThemeColorHelper.GetChartColorHex(5)),  // Pink
-        _ => SKColor.Parse(ThemeColorHelper.ChartGrayHex)
+        AnomalyCategory.Network => ThemeColorHelper.GetChartSKColor(0),    // Blue
+        AnomalyCategory.TCP => ThemeColorHelper.GetChartSKColor(1),        // Green
+        AnomalyCategory.Application => ThemeColorHelper.GetChartSKColor(2), // Amber
+        AnomalyCategory.VoIP => ThemeColorHelper.GetChartSKColor(4),       // Purple
+        AnomalyCategory.IoT => ThemeColorHelper.GetChartSKColor(6),        // Cyan
+        AnomalyCategory.Security => ThemeColorHelper.GetChartSKColor(3),   // Red
+        AnomalyCategory.Malformed => ThemeColorHelper.GetChartSKColor(5),  // Pink
+        _ => ThemeColorHelper.ChartGraySK
     };
 
     // Timeline chart - ObservableCollection for dynamic highlight series
@@ -66,7 +66,7 @@ public partial class AnomaliesChartsViewModel : ObservableObject
 
     private void InitializeAxes()
     {
-        var axisLabelColor = SKColor.Parse(ThemeColorHelper.ChartGrayHex);
+        var axisLabelColor = ThemeColorHelper.ChartGraySK;
 
         TimelineXAxes = new Axis[]
         {
@@ -258,9 +258,9 @@ public partial class AnomaliesChartsViewModel : ObservableObject
             new RowSeries<int>
             {
                 Values = portList.Select(p => p.AnomalyCount).ToArray(),
-                Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetChartColorHex(0))),
+                Fill = ThemeColorHelper.GetChartSolidColorPaint(0),
                 Stroke = null,
-                DataLabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("PopupText", "#F0F6FC"))),
+                DataLabelsPaint = ThemeColorHelper.GetSolidColorPaint("PopupText", "#F0F6FC"),
                 DataLabelsSize = 11,
                 DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.End
             }

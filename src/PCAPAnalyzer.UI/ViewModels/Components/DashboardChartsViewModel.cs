@@ -52,10 +52,10 @@ public partial class DashboardChartsViewModel : ObservableObject
     [ObservableProperty] private ObservableCollection<ProtocolLegendItem> _protocolLegendItems = new();
     [ObservableProperty] private ObservableCollection<ProtocolPortItem> _protocolPortItems = new();
 
-    public SolidColorPaint TooltipBackground { get; } = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BackgroundLevel1", "#161B22"))) { StrokeThickness = 1 };
-    public SolidColorPaint TooltipTextPaint { get; } = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextPrimary", "#F0F6FC")));
-    public SolidColorPaint LegendBackgroundPaint { get; } = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("BackgroundLevel1", "#161B22"))) { StrokeThickness = 1 };
-    public SolidColorPaint LegendTextPaint { get; } = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("TextPrimary", "#F0F6FC")));
+    public SolidColorPaint TooltipBackground { get; } = ThemeColorHelper.GetSolidColorPaint("BackgroundLevel1", "#161B22", 1);
+    public SolidColorPaint TooltipTextPaint { get; } = ThemeColorHelper.GetSolidColorPaint("TextPrimary", "#F0F6FC");
+    public SolidColorPaint LegendBackgroundPaint { get; } = ThemeColorHelper.GetSolidColorPaint("BackgroundLevel1", "#161B22", 1);
+    public SolidColorPaint LegendTextPaint { get; } = ThemeColorHelper.GetSolidColorPaint("TextPrimary", "#F0F6FC");
 
     // ==================== ZOOM PROPERTIES ====================
 
@@ -140,7 +140,7 @@ public partial class DashboardChartsViewModel : ObservableObject
                     },
                     LabelsRotation = 45,
                     TextSize = 10,
-                    SeparatorsPaint = new SolidColorPaint(SKColors.LightGray.WithAlpha(50))
+                    SeparatorsPaint = ThemeColorHelper.LightGrayAlpha50Paint
                 }
             };
 
@@ -152,10 +152,10 @@ public partial class DashboardChartsViewModel : ObservableObject
                     Position = LiveChartsCore.Measure.AxisPosition.Start,
                     Labeler = value => $"{value:N0}",
                     TextSize = 10,
-                    SeparatorsPaint = new SolidColorPaint(SKColors.LightGray.WithAlpha(50)),
+                    SeparatorsPaint = ThemeColorHelper.LightGrayAlpha50Paint,
                     MinLimit = 0,  // Start at 0 baseline
-                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950"))),  // Green to match series
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950")))
+                    NamePaint = ThemeColorHelper.GetSolidColorPaint("ColorSuccess", "#3FB950"),  // Green to match series
+                    LabelsPaint = ThemeColorHelper.GetSolidColorPaint("ColorSuccess", "#3FB950")
                 },
                 new Axis
                 {
@@ -165,8 +165,8 @@ public partial class DashboardChartsViewModel : ObservableObject
                     Labeler = value => $"{value:N0}",
                     TextSize = 10,
                     MinLimit = 0,  // Start at 0 baseline
-                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"))),  // Blue to match series
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF")))
+                    NamePaint = ThemeColorHelper.GetSolidColorPaint("AccentBlue", "#58A6FF"),  // Blue to match series
+                    LabelsPaint = ThemeColorHelper.GetSolidColorPaint("AccentBlue", "#58A6FF")
                 },
                 new Axis
                 {
@@ -177,8 +177,8 @@ public partial class DashboardChartsViewModel : ObservableObject
                     MinLimit = 0,  // Start at 0 baseline
                     TextSize = 9,
                     NameTextSize = 9,
-                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorDanger", "#F85149"))),  // Red to match series
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorDanger", "#F85149")))
+                    NamePaint = ThemeColorHelper.GetSolidColorPaint("ColorDanger", "#F85149"),  // Red to match series
+                    LabelsPaint = ThemeColorHelper.GetSolidColorPaint("ColorDanger", "#F85149")
                 },
                 new Axis
                 {
@@ -189,8 +189,8 @@ public partial class DashboardChartsViewModel : ObservableObject
                     MinLimit = 0,  // Start at 0 baseline
                     TextSize = 9,
                     NameTextSize = 9,
-                    NamePaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentPurple", "#A855F7"))),  // Purple to differentiate from red anomalies
-                    LabelsPaint = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentPurple", "#A855F7")))
+                    NamePaint = ThemeColorHelper.GetSolidColorPaint("AccentPurple", "#A855F7"),  // Purple to differentiate from red anomalies
+                    LabelsPaint = ThemeColorHelper.GetSolidColorPaint("AccentPurple", "#A855F7")
                 }
             };
 
@@ -481,7 +481,7 @@ public partial class DashboardChartsViewModel : ObservableObject
             YAxes[0].MaxLimit = maxThroughput * 1.05;
         }
 
-        var throughputColor = SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950"));
+        var throughputColor = ThemeColorHelper.GetSKColor("ColorSuccess", "#3FB950");
         newSeries.Add(new LineSeries<LiveChartsCore.Defaults.DateTimePoint>
         {
             Values = throughputValues,
@@ -519,7 +519,7 @@ public partial class DashboardChartsViewModel : ObservableObject
             YAxes[1].MaxLimit = maxPackets * 1.05;
         }
 
-        var packetsColor = SKColor.Parse(ThemeColorHelper.GetColorHex("AccentBlue", "#58A6FF"));
+        var packetsColor = ThemeColorHelper.GetSKColor("AccentBlue", "#58A6FF");
         newSeries.Add(new LineSeries<LiveChartsCore.Defaults.DateTimePoint>
         {
             Values = ppsValues,
@@ -560,7 +560,7 @@ public partial class DashboardChartsViewModel : ObservableObject
             YAxes[2].MaxLimit = maxAnomalies * 1.05; // Fixed 5% padding
         }
 
-        var anomaliesColor = SKColor.Parse(ThemeColorHelper.GetColorHex("ColorDanger", "#F85149"));
+        var anomaliesColor = ThemeColorHelper.GetSKColor("ColorDanger", "#F85149");
         newSeries.Add(new LineSeries<LiveChartsCore.Defaults.DateTimePoint>
         {
             Values = anomaliesValues,
@@ -603,7 +603,7 @@ public partial class DashboardChartsViewModel : ObservableObject
             YAxes[3].MaxLimit = maxThreats * 1.05; // Fixed 5% padding
         }
 
-        var threatsColor = SKColor.Parse(ThemeColorHelper.GetColorHex("AccentPurple", "#A855F7"));
+        var threatsColor = ThemeColorHelper.GetSKColor("AccentPurple", "#A855F7");
         newSeries.Add(new LineSeries<LiveChartsCore.Defaults.DateTimePoint>
         {
             Values = threatsValues,
@@ -687,8 +687,8 @@ public partial class DashboardChartsViewModel : ObservableObject
                 {
                     Values = new[] { (double)protocol.PacketCount },
                     Name = $"{protocol.Protocol} ({protocol.Percentage:F1}%)",
-                    Fill = new SolidColorPaint(SKColor.Parse(color)),
-                    DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                    Fill = ThemeColorHelper.ParseSolidColorPaint(color),
+                    DataLabelsPaint = ThemeColorHelper.WhitePaint,
                     DataLabelsSize = 12,
                     DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Outer,
                     InnerRadius = 80
@@ -744,7 +744,7 @@ public partial class DashboardChartsViewModel : ObservableObject
                 {
                     Values = topByBytes.Select(p => p.ByteCount / 1024.0 / 1024.0).ToArray(),
                     Name = "Traffic (MB)",
-                    Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6"))),
+                    Fill = ThemeColorHelper.GetSolidColorPaint("AccentPurple", "#8B5CF6"),
                     MaxBarWidth = 40
                 };
 
@@ -768,7 +768,7 @@ public partial class DashboardChartsViewModel : ObservableObject
                 {
                     Values = topByPackets.Select(p => (double)p.PacketCount).ToArray(),
                     Name = "Packets",
-                    Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"))),
+                    Fill = ThemeColorHelper.GetSolidColorPaint("ColorSuccess", "#10B981"),
                     MaxBarWidth = 40
                 };
 
@@ -891,9 +891,9 @@ public partial class DashboardChartsViewModel : ObservableObject
             {
                 Values = buckets.Select(b => (double)b.PacketCount).ToArray(),
                 Name = "Packet Count",
-                Fill = new SolidColorPaint(SKColor.Parse(ThemeColorHelper.GetColorHex("ColorSuccess", "#3FB950"))),
+                Fill = ThemeColorHelper.GetSolidColorPaint("ColorSuccess", "#3FB950"),
                 MaxBarWidth = 50,
-                DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                DataLabelsPaint = ThemeColorHelper.WhitePaint,
                 DataLabelsSize = 10,
                 DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.Top,
                 DataLabelsFormatter = point => $"{point.Coordinate.PrimaryValue:N0}"

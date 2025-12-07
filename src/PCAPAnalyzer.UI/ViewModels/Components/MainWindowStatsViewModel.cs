@@ -197,21 +197,6 @@ public class MainWindowStatsViewModel
     /// <summary>
     /// Format bytes with German number formatting.
     /// </summary>
-    private string FormatBytesGerman(long bytes)
-    {
-        if (bytes == 0) return "0 B";
-
-        var germanCulture = new System.Globalization.CultureInfo("de-DE");
-        string[] sizes = { "B", "KB", "MB", "GB", "TB" };
-        int order = 0;
-        double size = bytes;
-
-        while (size >= 1024 && order < sizes.Length - 1)
-        {
-            order++;
-            size /= 1024;
-        }
-
-        return $"{size.ToString("F2", germanCulture)} {sizes[order]}";
-    }
+    private static string FormatBytesGerman(long bytes)
+        => Core.Utilities.NumberFormatter.FormatBytesGerman(bytes);
 }

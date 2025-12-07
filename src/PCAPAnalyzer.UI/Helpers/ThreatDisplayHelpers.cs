@@ -10,9 +10,17 @@ namespace PCAPAnalyzer.UI.Helpers;
 public static class ThreatDisplayHelpers
 {
     /// <summary>
-    /// Gets severity color for UI display (from theme resources)
+    /// Gets severity color for ThreatSeverity (from theme resources)
     /// </summary>
     public static string GetSeverityColor(ThreatSeverity severity)
+    {
+        return ThemeColorHelper.GetThreatSeverityColorHex(severity.ToString());
+    }
+
+    /// <summary>
+    /// Gets severity color for AnomalySeverity (from theme resources)
+    /// </summary>
+    public static string GetSeverityColor(AnomalySeverity severity)
     {
         return ThemeColorHelper.GetThreatSeverityColorHex(severity.ToString());
     }
@@ -50,32 +58,16 @@ public static class ThreatDisplayHelpers
 
     /// <summary>
     /// Maps common ports to service names for credential threat display.
+    /// Uses PortDatabase for comprehensive lookup, falls back to common ports.
     /// </summary>
-    public static string GetServiceName(ushort port) => port switch
-    {
-        21 => "FTP",
-        22 => "SSH",
-        23 => "Telnet",
-        25 => "SMTP",
-        80 => "HTTP",
-        110 => "POP3",
-        143 => "IMAP",
-        161 => "SNMP",
-        389 => "LDAP",
-        443 => "HTTPS",
-        445 => "SMB",
-        465 => "SMTPS",
-        587 => "SMTP",
-        636 => "LDAPS",
-        993 => "IMAPS",
-        995 => "POP3S",
-        1433 => "MSSQL",
-        3306 => "MySQL",
-        3389 => "RDP",
-        5432 => "PostgreSQL",
-        5900 => "VNC",
-        8080 => "HTTP-ALT",
-        8443 => "HTTPS-ALT",
-        _ => $"Port {port}"
-    };
+    public static string GetServiceName(ushort port) =>
+        Core.Security.PortDatabase.GetServiceName(port, true) ?? $"Port {port}";
+
+    /// <summary>
+    /// Maps common ports to service names (int overload for convenience).
+    /// </summary>
+    public static string GetServiceName(int port) =>
+        port >= 0 && port <= 65535
+            ? GetServiceName((ushort)port)
+            : $"Port {port}";
 }

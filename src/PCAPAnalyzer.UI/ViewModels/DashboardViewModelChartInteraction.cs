@@ -9,6 +9,7 @@ using LiveChartsCore.Kernel.Sketches;
 using LiveChartsCore.SkiaSharpView;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.Core.Services;
 using Avalonia.Controls;
@@ -83,7 +84,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     {
                         Port = kv.Key,
                         Protocol = kv.Value.Protocol,
-                        ServiceName = GetServiceName(kv.Key),
+                        ServiceName = ThreatDisplayHelpers.GetServiceName(kv.Key),
                         PacketCount = kv.Value.Count,
                         ByteCount = kv.Value.Bytes,
                         Percentage = windowPackets.Count > 0 ? (kv.Value.Count * 100.0) / windowPackets.Count : 0
@@ -204,7 +205,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     {
                         Port = kv.Key,
                         Protocol = kv.Value.Protocol,
-                        ServiceName = GetServiceName(kv.Key),
+                        ServiceName = ThreatDisplayHelpers.GetServiceName(kv.Key),
                         PacketCount = kv.Value.Count,
                         ByteCount = kv.Value.Bytes,
                         Percentage = windowPackets.Count > 0 ? (kv.Value.Count * 100.0) / windowPackets.Count : 0

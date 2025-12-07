@@ -22,7 +22,7 @@ namespace PCAPAnalyzer.Core.Performance
         private readonly ConcurrentDictionary<string, PerformanceCounter?> _counters = new();
 
         private readonly ConcurrentDictionary<string, List<PerformanceMetric>> _metrics = new();
-        private readonly object _lock = new();
+        private readonly Lock _lock = new();
         private readonly bool _isWindowsPlatform = OperatingSystem.IsWindows();
         private bool _disposed;
 
@@ -118,7 +118,7 @@ namespace PCAPAnalyzer.Core.Performance
                 _ => new List<PerformanceMetric> { metric },
                 (_, list) =>
                 {
-                    lock (_lock)
+                    using (_lock.EnterScope())
                     {
                         list.Add(metric);
                         // Keep only last 1000 measurements per metric
@@ -179,7 +179,7 @@ namespace PCAPAnalyzer.Core.Performance
                 return null;
             }
 
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 var values = metricsList.Select(m => m.Value).ToList();
 
@@ -205,7 +205,7 @@ namespace PCAPAnalyzer.Core.Performance
         /// <returns>Dictionary of metric names and their measurements</returns>
         public Dictionary<string, List<PerformanceMetric>> GetAllMetrics()
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 return _metrics.ToDictionary(
                     kvp => kvp.Key,
@@ -219,7 +219,7 @@ namespace PCAPAnalyzer.Core.Performance
         /// </summary>
         public void ClearMetrics()
         {
-            lock (_lock)
+            using (_lock.EnterScope())
             {
                 _metrics.Clear();
             }

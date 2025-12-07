@@ -3,7 +3,9 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.UI.ViewModels;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Utilities;
@@ -621,7 +623,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
                     Duration = conv.Duration,
                     SourceDisplay = $"{conv.SourceAddress}:{conv.SourcePort}",
                     DestinationDisplay = $"{conv.DestinationAddress}:{conv.DestinationPort}",
-                    DurationFormatted = FormatDuration(conv.Duration),
+                    DurationFormatted = conv.Duration.ToFormattedSeconds(),
                     Percentage = statistics.TotalPackets > 0 ? (double)conv.PacketCount / statistics.TotalPackets * 100 : 0,
                     BytesFormatted = Core.Utilities.NumberFormatter.FormatBytes(conv.ByteCount)
                 });
@@ -646,7 +648,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
                     Duration = conv.Duration,
                     SourceDisplay = $"{conv.SourceAddress}:{conv.SourcePort}",
                     DestinationDisplay = $"{conv.DestinationAddress}:{conv.DestinationPort}",
-                    DurationFormatted = FormatDuration(conv.Duration),
+                    DurationFormatted = conv.Duration.ToFormattedSeconds(),
                     Percentage = (double)conv.ByteCount / statistics.TotalBytes * 100,
                     BytesFormatted = Core.Utilities.NumberFormatter.FormatBytes(conv.ByteCount)
                 });
@@ -761,7 +763,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
                     Type = threat.Type,
                     Description = threat.Description,
                     Severity = threat.Severity.ToString(),
-                    SeverityColor = GetSeverityColor(threat.Severity),
+                    SeverityColor = ThreatDisplayHelpers.GetSeverityColor(threat.Severity),
                     DetectedAt = threat.DetectedAt,
                     SourceAddress = threat.SourceAddress ?? "N/A",
                     DestinationAddress = threat.DestinationAddress ?? "N/A"
@@ -772,27 +774,11 @@ public partial class DashboardStatisticsViewModel : ObservableObject
 
     // ==================== HELPER METHODS ====================
 
-    private string FormatDuration(TimeSpan duration)
-    {
-        return Helpers.TimeFormatter.FormatAsSeconds(duration);
-    }
-
     private string GenerateAnalysisSummary(NetworkStatistics statistics)
     {
-        return $"Analyzed {statistics.TotalPackets:N0} packets ({Core.Utilities.NumberFormatter.FormatBytes(statistics.TotalBytes)}) across {statistics.ProtocolStats.Count} protocols";
+        return $"Analyzed {statistics.TotalPackets:N0} packets ({statistics.TotalBytes.ToFormattedBytes()}) across {statistics.ProtocolStats.Count} protocols";
     }
 
-    private string GetSeverityColor(ThreatSeverity severity)
-    {
-        return severity switch
-        {
-            ThreatSeverity.Critical => ThemeColorHelper.GetColorHex("ColorDanger", "#DC2626"),
-            ThreatSeverity.High => ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
-            ThreatSeverity.Medium => ThemeColorHelper.GetColorHex("AccentYellow", "#FCD34D"),
-            ThreatSeverity.Low => ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
-            _ => ThemeColorHelper.GetColorHex("TextMuted", "#6B7280")
-        };
-    }
 }
 
 // Note: ViewModel classes moved to TableViewModels.cs in main ViewModels namespace

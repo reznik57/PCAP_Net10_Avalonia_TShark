@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Linq;
 using PCAPAnalyzer.Core.Extensions;
@@ -15,9 +16,8 @@ public class CryptoMiningDetector : ISpecializedDetector
     private const int MINING_CONNECTION_THRESHOLD = 5; // Minimum concurrent connections to mining pools
     private const int MINING_TRAFFIC_BYTES_THRESHOLD = 1024 * 1024; // 1MB of traffic to mining pools
 
-    // Common mining pool ports
-    private static readonly HashSet<int> MiningPorts = new()
-    {
+    // Common mining pool ports (FrozenSet for optimized static lookup)
+    private static readonly FrozenSet<int> MiningPorts = FrozenSet.ToFrozenSet([
         3333, 3334, 3335, 3336, // Stratum protocol
         4444, // Monero
         5555, 5556, // Alternative Stratum
@@ -25,7 +25,7 @@ public class CryptoMiningDetector : ISpecializedDetector
         9332, 9999, // Various pools
         14444, 14433, // Zcash
         45560, 45700 // Monero/XMR
-    };
+    ]);
 
     public string Name => "Cryptocurrency Mining Detector";
     public AnomalyCategory Category => AnomalyCategory.Security;

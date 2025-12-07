@@ -20,7 +20,7 @@ namespace PCAPAnalyzer.Core.Services;
 public class SessionAnalysisCacheService : ISessionAnalysisCache
 {
     private AnalysisResult? _current;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     /// <summary>
     /// Sets the current analysis result in cache.
@@ -32,7 +32,7 @@ public class SessionAnalysisCacheService : ISessionAnalysisCache
         if (result == null)
             throw new ArgumentNullException(nameof(result));
 
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             _current = result;
             DebugLogger.Log($"[SessionAnalysisCache] Cached {result.TotalPackets:N0} packets, " +
@@ -48,7 +48,7 @@ public class SessionAnalysisCacheService : ISessionAnalysisCache
     /// <returns>Cached result or null</returns>
     public AnalysisResult? Get()
     {
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             return _current;
         }
@@ -65,7 +65,7 @@ public class SessionAnalysisCacheService : ISessionAnalysisCache
         if (string.IsNullOrEmpty(fileHash))
             return false;
 
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             return _current != null && _current.FileHash == fileHash;
         }
@@ -84,7 +84,7 @@ public class SessionAnalysisCacheService : ISessionAnalysisCache
     /// </summary>
     public void Clear()
     {
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             if (_current != null)
             {
@@ -113,7 +113,7 @@ public class SessionAnalysisCacheService : ISessionAnalysisCache
     /// <returns>Cache statistics snapshot</returns>
     public CacheStatistics GetStatistics()
     {
-        lock (_lock)
+        using (_lock.EnterScope())
         {
             return new CacheStatistics
             {

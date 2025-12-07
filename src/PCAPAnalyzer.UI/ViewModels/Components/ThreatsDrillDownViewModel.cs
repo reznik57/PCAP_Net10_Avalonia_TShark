@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
@@ -87,7 +88,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
         // Set header
         ThreatName = threat.ThreatName;
         Severity = threat.Severity.ToString();
-        SeverityColor = GetSeverityColor(threat.Severity);
+        SeverityColor = ThreatDisplayHelpers.GetSeverityColor(threat.Severity);
         Category = threat.Category.ToString();
         Port = threat.Port;
         Protocol = threat.Protocol;
@@ -406,7 +407,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
                     {
                         ThreatName = t.ThreatName,
                         Severity = t.Severity.ToString(),
-                        SeverityColor = GetSeverityColor(t.Severity),
+                        SeverityColor = ThreatDisplayHelpers.GetSeverityColor(t.Severity),
                         Port = t.Port
                     }))
             });
@@ -430,7 +431,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
                         {
                             ThreatName = t.ThreatName,
                             Severity = t.Severity.ToString(),
-                            SeverityColor = GetSeverityColor(t.Severity),
+                            SeverityColor = ThreatDisplayHelpers.GetSeverityColor(t.Severity),
                             Port = t.Port
                         }))
                 });
@@ -455,7 +456,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
                     {
                         ThreatName = t.ThreatName,
                         Severity = t.Severity.ToString(),
-                        SeverityColor = GetSeverityColor(t.Severity),
+                        SeverityColor = ThreatDisplayHelpers.GetSeverityColor(t.Severity),
                         Port = t.Port
                     }))
             });
@@ -478,7 +479,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
                     {
                         ThreatName = t.ThreatName,
                         Severity = t.Severity.ToString(),
-                        SeverityColor = GetSeverityColor(t.Severity),
+                        SeverityColor = ThreatDisplayHelpers.GetSeverityColor(t.Severity),
                         Port = t.Port
                     }))
             });
@@ -563,16 +564,6 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
         Mitigations = new ObservableCollection<MitigationItem>(mitigationItems);
     }
 
-    private static string GetSeverityColor(ThreatSeverity severity) => severity switch
-    {
-        ThreatSeverity.Critical => ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"),
-        ThreatSeverity.High => ThemeColorHelper.GetColorHex("ColorOrange", "#F97316"),
-        ThreatSeverity.Medium => ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
-        ThreatSeverity.Low => ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
-        ThreatSeverity.Info => ThemeColorHelper.GetColorHex("TextMuted", "#6B7280"),
-        _ => ThemeColorHelper.GetColorHex("TextMuted", "#6B7280")
-    };
-
     private string GenerateMiniTimelineSvg(List<DateTime> times, ThreatSeverity severity)
     {
         if (!times.Any()) return "";
@@ -587,7 +578,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
         var timeRange = (maxTime - minTime).TotalSeconds;
         if (timeRange < 60) timeRange = 120;
 
-        var color = GetSeverityColor(severity);
+        var color = ThreatDisplayHelpers.GetSeverityColor(severity);
 
         var sb = new System.Text.StringBuilder();
         sb.AppendLine($"<svg width=\"{width}\" height=\"{height}\" xmlns=\"http://www.w3.org/2000/svg\">");

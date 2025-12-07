@@ -30,20 +30,8 @@ public partial class CountryVisualizationViewModel : ObservableObject
     private static readonly string ColorMediumTraffic = ThemeColorHelper.GetColorHex("ColorOrange", "#F97316");
     private static readonly string ColorLowTraffic = ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6");
 
-    // Chart colors
-    private static readonly string[] ChartColors = new[]
-    {
-        ThemeColorHelper.GetColorHex("AccentBlue", "#3B82F6"),
-        ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"),
-        ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"),
-        ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"),
-        ThemeColorHelper.GetColorHex("AccentPurple", "#8B5CF6"),
-        ThemeColorHelper.GetColorHex("AccentPink", "#EC4899"),
-        ThemeColorHelper.GetColorHex("AccentTeal", "#14B8A6"),
-        ThemeColorHelper.GetColorHex("ColorOrange", "#F97316"),
-        ThemeColorHelper.GetColorHex("AccentIndigo", "#6366F1"),
-        ThemeColorHelper.GetColorHex("AccentLime", "#84CC16")
-    };
+    // Chart colors - delegate to centralized palette
+    private static string[] ChartColors => ThemeColorHelper.GetChartColorPalette();
 
     // Chart data
     [ObservableProperty] private ObservableCollection<ISeries> _countryChartSeries = new();
@@ -106,7 +94,7 @@ public partial class CountryVisualizationViewModel : ObservableObject
                 {
                     Values = new[] { 1.0 },
                     Name = "No Data",
-                    Fill = new SolidColorPaint(SKColor.Parse(ColorMuted))
+                    Fill = ThemeColorHelper.ParseSolidColorPaint(ColorMuted)
                 }
             };
             DebugLogger.Log("[CountryVisualizationViewModel] No country statistics - showing 'No Data' chart");
@@ -137,8 +125,8 @@ public partial class CountryVisualizationViewModel : ObservableObject
             {
                 Values = new[] { (double)country.TotalPackets },
                 Name = $"{country.CountryName} ({country.Percentage:F1}%)",
-                Fill = new SolidColorPaint(SKColor.Parse(color)),
-                DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                Fill = ThemeColorHelper.ParseSolidColorPaint(color),
+                DataLabelsPaint = ThemeColorHelper.WhitePaint,
                 DataLabelsSize = 12,
                 DataLabelsPosition = LiveChartsCore.Measure.PolarLabelsPosition.Middle,
                 DataLabelsFormatter = point => country.Percentage > 5 ? country.CountryCode : "",
@@ -157,8 +145,8 @@ public partial class CountryVisualizationViewModel : ObservableObject
             {
                 Values = new[] { (double)otherPackets },
                 Name = $"Others ({othersPercentage:F1}%)",
-                Fill = new SolidColorPaint(SKColor.Parse(ColorMuted)),
-                DataLabelsPaint = new SolidColorPaint(SKColors.White),
+                Fill = ThemeColorHelper.ParseSolidColorPaint(ColorMuted),
+                DataLabelsPaint = ThemeColorHelper.WhitePaint,
                 DataLabelsSize = 12,
                 InnerRadius = 60
             });
