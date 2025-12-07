@@ -12,7 +12,7 @@ public sealed class SimplePacketStore : IPacketStore
 {
     private readonly List<PacketInfo> _packets = new();
     private readonly List<FlowRecord> _flows = new();
-    private readonly object _sync = new();
+    private readonly Lock _sync = new();
 
     public Task InitializeAsync(string databasePath, CancellationToken cancellationToken = default)
     {

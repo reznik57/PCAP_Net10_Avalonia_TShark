@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Microsoft.Extensions.Logging;
 using PCAPAnalyzer.Core.Models;
 
@@ -12,7 +13,7 @@ namespace PCAPAnalyzer.UI.Services;
 public class AnomalyFrameIndexService : IAnomalyFrameIndexService
 {
     private readonly ILogger<AnomalyFrameIndexService> _logger;
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
 
     private List<NetworkAnomaly> _allAnomalies = new();
     private Dictionary<long, List<NetworkAnomaly>> _frameToAnomalies = new();

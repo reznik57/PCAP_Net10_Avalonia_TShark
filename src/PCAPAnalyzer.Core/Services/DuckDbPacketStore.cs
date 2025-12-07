@@ -19,7 +19,7 @@ public sealed class DuckDbPacketStore : IPacketStore
 
     private DuckDBConnection? _connection;
     private string _databasePath = string.Empty;
-    private readonly object _sync = new();
+    private readonly Lock _sync = new();
 
     public async Task InitializeAsync(string databasePath, CancellationToken cancellationToken = default)
     {

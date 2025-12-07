@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using PCAPAnalyzer.Core.Models;
 
 namespace PCAPAnalyzer.Core.Services;
@@ -15,7 +16,7 @@ public sealed class StreamingStatisticsAggregator
     private const int MaxFlowEntries = 10000;
     private const int MaxThroughputBuckets = int.MaxValue; // Preserve full capture history for throughput analysis
 
-    private readonly object _sync = new();
+    private readonly Lock _sync = new();
     private readonly Dictionary<string, ProtocolAccumulator> _protocols = new();
     private readonly Dictionary<string, EndpointAccumulator> _sources = new();
     private readonly Dictionary<string, EndpointAccumulator> _destinations = new();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using System.Threading;
 
 namespace PCAPAnalyzer.UI.Helpers;
 
@@ -10,7 +11,7 @@ internal sealed class ProcessingMetrics
 {
     private readonly List<ProcessingSample> _samples = new();
     private readonly Stopwatch _stopwatch = new();
-    private readonly object _sync = new();
+    private readonly Lock _sync = new();
 
     private string _pcapFile = string.Empty;
     private long _expectedPackets;
