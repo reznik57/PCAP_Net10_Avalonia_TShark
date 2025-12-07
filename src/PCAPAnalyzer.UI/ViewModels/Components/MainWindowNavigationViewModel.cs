@@ -17,7 +17,8 @@ public class MainWindowNavigationViewModel
 
     public MainWindowNavigationViewModel(ITabFilterService packetAnalysisFilterService)
     {
-        _packetAnalysisFilterService = packetAnalysisFilterService ?? throw new ArgumentNullException(nameof(packetAnalysisFilterService));
+        ArgumentNullException.ThrowIfNull(packetAnalysisFilterService);
+        _packetAnalysisFilterService = packetAnalysisFilterService;
     }
 
     /// <summary>

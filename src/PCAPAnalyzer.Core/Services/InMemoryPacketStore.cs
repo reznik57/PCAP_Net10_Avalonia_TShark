@@ -87,8 +87,7 @@ public sealed class InMemoryPacketStore : IPacketStore
 
     public Task<PacketQueryResult> QueryPacketsAsync(PacketQuery query, CancellationToken cancellationToken = default)
     {
-        if (query is null)
-            throw new ArgumentNullException(nameof(query));
+        ArgumentNullException.ThrowIfNull(query);
 
         _lock.EnterReadLock();
         try

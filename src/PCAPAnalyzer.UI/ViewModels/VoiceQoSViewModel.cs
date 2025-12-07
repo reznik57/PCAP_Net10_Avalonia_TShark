@@ -193,7 +193,8 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
     public VoiceQoSViewModel(IDispatcherService dispatcher)
         : base(App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService())
     {
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        ArgumentNullException.ThrowIfNull(dispatcher);
+        _dispatcher = dispatcher;
         _filterService = new TabFilterService("Voice/QoS", new FilterServiceCore());
         _cacheService = App.Services?.GetService<PCAPAnalyzer.Core.Services.Cache.IAnalysisCacheService>();
         _filterCopyService = App.Services?.GetService<FilterCopyService>();

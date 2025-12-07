@@ -51,7 +51,8 @@ public partial class PaginationViewModel : ObservableObject
 
     public PaginationViewModel(Action onPageChanged)
     {
-        _onPageChanged = onPageChanged ?? throw new ArgumentNullException(nameof(onPageChanged));
+        ArgumentNullException.ThrowIfNull(onPageChanged);
+        _onPageChanged = onPageChanged;
     }
 
     /// <summary>

@@ -64,11 +64,16 @@ namespace PCAPAnalyzer.Core.Services
             IInsecurePortDetector? insecurePortDetector = null,
             IPacketSizeAnalyzer? packetSizeAnalyzer = null)
         {
-            _geoIPService = geoIPService ?? throw new ArgumentNullException(nameof(geoIPService));
-            _statisticsCalculator = statisticsCalculator ?? throw new ArgumentNullException(nameof(statisticsCalculator));
-            _geoIPEnricher = geoIPEnricher ?? throw new ArgumentNullException(nameof(geoIPEnricher));
-            _threatDetector = threatDetector ?? throw new ArgumentNullException(nameof(threatDetector));
-            _timeSeriesGenerator = timeSeriesGenerator ?? throw new ArgumentNullException(nameof(timeSeriesGenerator));
+            ArgumentNullException.ThrowIfNull(geoIPService);
+            ArgumentNullException.ThrowIfNull(statisticsCalculator);
+            ArgumentNullException.ThrowIfNull(geoIPEnricher);
+            ArgumentNullException.ThrowIfNull(threatDetector);
+            ArgumentNullException.ThrowIfNull(timeSeriesGenerator);
+            _geoIPService = geoIPService;
+            _statisticsCalculator = statisticsCalculator;
+            _geoIPEnricher = geoIPEnricher;
+            _threatDetector = threatDetector;
+            _timeSeriesGenerator = timeSeriesGenerator;
             _insecurePortDetector = insecurePortDetector ?? new InsecurePortDetector();
             _packetSizeAnalyzer = packetSizeAnalyzer ?? new PacketSizeAnalyzer();
         }
@@ -242,8 +247,7 @@ namespace PCAPAnalyzer.Core.Services
 
         public async Task<NetworkStatistics> EnrichWithGeoAsync(NetworkStatistics statistics, IEnumerable<PacketInfo> packets, IProgress<AnalysisProgress>? progress = null)
         {
-            if (statistics is null)
-                throw new ArgumentNullException(nameof(statistics));
+            ArgumentNullException.ThrowIfNull(statistics);
 
             if (_geoIPService is null)
                 return statistics;

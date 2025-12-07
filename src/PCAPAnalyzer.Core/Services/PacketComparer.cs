@@ -22,7 +22,8 @@ public class PacketComparer : IPacketComparer
 
     public PacketComparer(IPacketLoader packetLoader, ILogger<PacketComparer>? logger = null)
     {
-        _packetLoader = packetLoader ?? throw new ArgumentNullException(nameof(packetLoader));
+        ArgumentNullException.ThrowIfNull(packetLoader);
+        _packetLoader = packetLoader;
         _logger = logger ?? NullLogger<PacketComparer>.Instance;
     }
 

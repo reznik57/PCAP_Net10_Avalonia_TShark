@@ -171,8 +171,7 @@ namespace PCAPAnalyzer.Core.Services
 
         public void ApplyFilter(PacketFilter filter)
         {
-            if (filter is null)
-                throw new ArgumentNullException(nameof(filter));
+            ArgumentNullException.ThrowIfNull(filter);
 
             // Save to history
             if (!_currentFilter.IsEmpty)

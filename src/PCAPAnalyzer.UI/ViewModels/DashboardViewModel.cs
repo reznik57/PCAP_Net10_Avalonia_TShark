@@ -244,7 +244,8 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         Action<string>? navigateToTab = null)
         : base(filterBuilder ?? new SmartFilterBuilderService())
     {
-        _dispatcher = dispatcherService ?? throw new ArgumentNullException(nameof(dispatcherService));
+        ArgumentNullException.ThrowIfNull(dispatcherService);
+        _dispatcher = dispatcherService;
         _statisticsService = statisticsService;
         _anomalyService = anomalyService;
         _filterService = filterService;

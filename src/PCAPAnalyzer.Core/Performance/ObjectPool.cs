@@ -51,7 +51,8 @@ namespace PCAPAnalyzer.Core.Performance
             int maxPoolSize = 100,
             int preAllocate = 0)
         {
-            _objectFactory = objectFactory ?? throw new ArgumentNullException(nameof(objectFactory));
+            ArgumentNullException.ThrowIfNull(objectFactory);
+            _objectFactory = objectFactory;
             _resetAction = resetAction;
             _maxPoolSize = maxPoolSize > 0 ? maxPoolSize : 100;
             _objects = new ConcurrentBag<T>();

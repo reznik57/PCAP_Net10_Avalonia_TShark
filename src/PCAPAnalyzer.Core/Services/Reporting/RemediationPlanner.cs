@@ -17,7 +17,8 @@ namespace PCAPAnalyzer.Core.Services.Reporting
 
         public RemediationPlanner(ILogger<RemediationPlanner> logger)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(logger);
+            _logger = logger;
         }
 
         /// <summary>

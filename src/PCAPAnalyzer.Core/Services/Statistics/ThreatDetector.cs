@@ -25,7 +25,8 @@ namespace PCAPAnalyzer.Core.Services.Statistics
         /// <param name="protocolOptions">Protocol configuration from IOptions pattern (optional).</param>
         public ThreatDetector(ITimeSeriesGenerator timeSeriesGenerator, IOptions<ProtocolConfiguration>? protocolOptions = null)
         {
-            _timeSeriesGenerator = timeSeriesGenerator ?? throw new ArgumentNullException(nameof(timeSeriesGenerator));
+            ArgumentNullException.ThrowIfNull(timeSeriesGenerator);
+            _timeSeriesGenerator = timeSeriesGenerator;
             _protocolConfig = protocolOptions?.Value ?? new ProtocolConfiguration();
         }
 

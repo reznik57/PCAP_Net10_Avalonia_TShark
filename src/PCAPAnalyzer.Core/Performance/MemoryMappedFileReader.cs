@@ -101,8 +101,7 @@ namespace PCAPAnalyzer.Core.Performance
             if (offset < 0 || offset >= _fileSize)
                 throw new ArgumentOutOfRangeException(nameof(offset));
 
-            if (buffer is null)
-                throw new ArgumentNullException(nameof(buffer));
+            ArgumentNullException.ThrowIfNull(buffer);
 
             // Adjust count if it would exceed file size
             long bytesAvailable = _fileSize - offset;

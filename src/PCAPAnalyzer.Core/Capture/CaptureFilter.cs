@@ -40,7 +40,8 @@ namespace PCAPAnalyzer.Core.Capture
         /// <param name="filterExpression">BPF filter expression</param>
         public CaptureFilter(string filterExpression)
         {
-            _filterExpression = filterExpression ?? throw new ArgumentNullException(nameof(filterExpression));
+            ArgumentNullException.ThrowIfNull(filterExpression);
+            _filterExpression = filterExpression;
             _tokens = new List<FilterToken>();
             Validate();
         }

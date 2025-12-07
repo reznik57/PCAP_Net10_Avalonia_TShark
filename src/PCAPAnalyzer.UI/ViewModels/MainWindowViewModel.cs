@@ -179,11 +179,15 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         ISessionAnalysisCache? sessionCache = null)
         : base(filterBuilder ?? App.Services?.GetService<ISmartFilterBuilder>() ?? new SmartFilterBuilderService())
     {
-        _dispatcher = dispatcherService ?? throw new ArgumentNullException(nameof(dispatcherService));
-        _tsharkService = tsharkService ?? throw new ArgumentNullException(nameof(tsharkService));
+        ArgumentNullException.ThrowIfNull(dispatcherService);
+        ArgumentNullException.ThrowIfNull(tsharkService);
+        ArgumentNullException.ThrowIfNull(geoIpService);
+        ArgumentNullException.ThrowIfNull(statisticsService);
+        _dispatcher = dispatcherService;
+        _tsharkService = tsharkService;
         _insecurePortDetector = insecurePortDetector ?? new InsecurePortDetector();
-        _geoIpService = geoIpService ?? throw new ArgumentNullException(nameof(geoIpService), "GeoIPService must be provided via DI");
-        _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService), "StatisticsService must be provided via DI");
+        _geoIpService = geoIpService;
+        _statisticsService = statisticsService;
         _anomalyService = anomalyService ?? new UnifiedAnomalyDetectionService();
         _packetStatsCalculator = packetStatsCalculator ?? App.Services?.GetService<IPacketStatisticsCalculator>() ?? new PacketStatisticsCalculator();
         _orchestrator = orchestrator;

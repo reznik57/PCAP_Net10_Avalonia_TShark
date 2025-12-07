@@ -87,7 +87,8 @@ public partial class CompareViewModel : ObservableObject, IDisposable
 
     public CompareViewModel(IPacketComparer packetComparer, IFileDialogService? fileDialogService = null)
     {
-        _packetComparer = packetComparer ?? throw new ArgumentNullException(nameof(packetComparer));
+        ArgumentNullException.ThrowIfNull(packetComparer);
+        _packetComparer = packetComparer;
         _fileDialogService = fileDialogService;
 
         DebugLogger.Log("[CompareViewModel] Initialized");

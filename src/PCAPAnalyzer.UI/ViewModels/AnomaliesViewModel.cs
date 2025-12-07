@@ -60,7 +60,8 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
         IGeoIPService geoIPService,
         ILogger<AnomaliesViewModel> logger)
     {
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        ArgumentNullException.ThrowIfNull(dispatcher);
+        _dispatcher = dispatcher;
         _frameIndexService = frameIndexService;
         _globalFilterState = globalFilterState;
         _geoIPService = geoIPService;

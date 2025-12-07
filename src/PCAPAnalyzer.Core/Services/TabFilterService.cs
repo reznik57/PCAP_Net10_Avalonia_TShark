@@ -18,8 +18,10 @@ namespace PCAPAnalyzer.Core.Services
 
         public TabFilterService(string tabName, IFilterServiceCore filterLogic)
         {
-            TabName = tabName ?? throw new ArgumentNullException(nameof(tabName));
-            _filterLogic = filterLogic ?? throw new ArgumentNullException(nameof(filterLogic));
+            ArgumentNullException.ThrowIfNull(tabName);
+            ArgumentNullException.ThrowIfNull(filterLogic);
+            TabName = tabName;
+            _filterLogic = filterLogic;
 
             // Forward events from FilterLogic
             _filterLogic.FilterChanged += (s, e) => FilterChanged?.Invoke(this, e);
@@ -48,8 +50,7 @@ namespace PCAPAnalyzer.Core.Services
         /// </summary>
         public void CopyFilterFrom(ITabFilterService sourceTab)
         {
-            if (sourceTab is null)
-                throw new ArgumentNullException(nameof(sourceTab));
+            ArgumentNullException.ThrowIfNull(sourceTab);
 
             DebugLogger.Log($"[{TabName}] Copying filter from [{sourceTab.TabName}]");
             ApplyFilter(sourceTab.CurrentFilter);

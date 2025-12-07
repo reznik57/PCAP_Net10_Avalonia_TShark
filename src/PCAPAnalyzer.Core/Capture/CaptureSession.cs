@@ -103,8 +103,10 @@ namespace PCAPAnalyzer.Core.Capture
             CaptureConfiguration configuration,
             NetworkInterface networkInterface)
         {
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _interface = networkInterface ?? throw new ArgumentNullException(nameof(networkInterface));
+            ArgumentNullException.ThrowIfNull(configuration);
+            ArgumentNullException.ThrowIfNull(networkInterface);
+            _configuration = configuration;
+            _interface = networkInterface;
 
             _sessionId = Guid.NewGuid().ToString("N");
             _statistics = new();

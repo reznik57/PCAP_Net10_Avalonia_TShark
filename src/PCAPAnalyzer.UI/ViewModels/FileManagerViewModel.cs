@@ -257,7 +257,8 @@ public partial class FileManagerViewModel : ObservableObject
     /// <exception cref="ArgumentNullException">Thrown when fileAnalysisViewModel is null</exception>
     public FileManagerViewModel(FileAnalysisViewModel fileAnalysisViewModel)
     {
-        _fileAnalysisViewModel = fileAnalysisViewModel ?? throw new ArgumentNullException(nameof(fileAnalysisViewModel));
+        ArgumentNullException.ThrowIfNull(fileAnalysisViewModel);
+        _fileAnalysisViewModel = fileAnalysisViewModel;
 
         // Subscribe to FileAnalysisViewModel property changes
         _fileAnalysisViewModel.PropertyChanged += OnFileAnalysisViewModelPropertyChanged;

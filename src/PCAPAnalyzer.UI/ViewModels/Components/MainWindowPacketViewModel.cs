@@ -117,8 +117,10 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
 
     public MainWindowPacketViewModel(ITabFilterService filterService, PacketDetailsViewModel packetDetailsViewModel)
     {
-        _filterService = filterService ?? throw new ArgumentNullException(nameof(filterService));
-        PacketDetails = packetDetailsViewModel ?? throw new ArgumentNullException(nameof(packetDetailsViewModel));
+        ArgumentNullException.ThrowIfNull(filterService);
+        ArgumentNullException.ThrowIfNull(packetDetailsViewModel);
+        _filterService = filterService;
+        PacketDetails = packetDetailsViewModel;
 
         // Subscribe to filter by stream event
         PacketDetails.FilterByStreamRequested += OnFilterByStreamRequested;

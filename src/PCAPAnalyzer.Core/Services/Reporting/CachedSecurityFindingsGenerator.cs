@@ -37,11 +37,16 @@ namespace PCAPAnalyzer.Core.Services.Reporting
             CacheConfiguration configuration,
             ILogger<CachedSecurityFindingsGenerator> logger)
         {
-            _innerGenerator = innerGenerator ?? throw new ArgumentNullException(nameof(innerGenerator));
-            _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-            _keyGenerator = keyGenerator ?? throw new ArgumentNullException(nameof(keyGenerator));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(innerGenerator);
+            ArgumentNullException.ThrowIfNull(cacheService);
+            ArgumentNullException.ThrowIfNull(keyGenerator);
+            ArgumentNullException.ThrowIfNull(configuration);
+            ArgumentNullException.ThrowIfNull(logger);
+            _innerGenerator = innerGenerator;
+            _cacheService = cacheService;
+            _keyGenerator = keyGenerator;
+            _configuration = configuration;
+            _logger = logger;
         }
 
         /// <summary>
@@ -55,10 +60,8 @@ namespace PCAPAnalyzer.Core.Services.Reporting
             NetworkStatistics statistics,
             List<SecurityThreat> threats)
         {
-            if (statistics is null)
-                throw new ArgumentNullException(nameof(statistics));
-            if (threats is null)
-                throw new ArgumentNullException(nameof(threats));
+            ArgumentNullException.ThrowIfNull(statistics);
+            ArgumentNullException.ThrowIfNull(threats);
 
             // If caching is disabled, bypass cache entirely
             if (!_configuration.Enabled)
@@ -127,8 +130,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
         /// <returns>Cached or freshly generated security findings for insecure services.</returns>
         public async Task<List<SecurityFinding>> AnalyzeInsecureServicesAsync(NetworkStatistics statistics)
         {
-            if (statistics is null)
-                throw new ArgumentNullException(nameof(statistics));
+            ArgumentNullException.ThrowIfNull(statistics);
 
             // If caching is disabled, bypass cache
             if (!_configuration.Enabled)
@@ -182,8 +184,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
         /// <returns>Cached or freshly generated security findings for suspicious patterns.</returns>
         public async Task<List<SecurityFinding>> AnalyzeSuspiciousPatternsAsync(NetworkStatistics statistics)
         {
-            if (statistics is null)
-                throw new ArgumentNullException(nameof(statistics));
+            ArgumentNullException.ThrowIfNull(statistics);
 
             // If caching is disabled, bypass cache
             if (!_configuration.Enabled)

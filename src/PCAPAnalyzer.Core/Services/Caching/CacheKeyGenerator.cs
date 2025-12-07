@@ -26,10 +26,8 @@ namespace PCAPAnalyzer.Core.Services.Caching
         /// <exception cref="ArgumentNullException">Thrown when required parameters are null.</exception>
         public string GenerateForSecurityFindings(NetworkStatistics statistics, List<SecurityThreat> threats)
         {
-            if (statistics is null)
-                throw new ArgumentNullException(nameof(statistics));
-            if (threats is null)
-                throw new ArgumentNullException(nameof(threats));
+            ArgumentNullException.ThrowIfNull(statistics);
+            ArgumentNullException.ThrowIfNull(threats);
 
             var contentBuilder = new StringBuilder();
 
@@ -85,10 +83,8 @@ namespace PCAPAnalyzer.Core.Services.Caching
         /// <exception cref="ArgumentNullException">Thrown when required parameters are null.</exception>
         public string GenerateForRemediationPlan(List<SecurityFinding> findings, List<Recommendation> recommendations)
         {
-            if (findings is null)
-                throw new ArgumentNullException(nameof(findings));
-            if (recommendations is null)
-                throw new ArgumentNullException(nameof(recommendations));
+            ArgumentNullException.ThrowIfNull(findings);
+            ArgumentNullException.ThrowIfNull(recommendations);
 
             var contentBuilder = new StringBuilder();
 

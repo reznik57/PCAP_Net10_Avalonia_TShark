@@ -23,7 +23,8 @@ public partial class RecentFilesViewModel : ObservableObject
 
     public RecentFilesViewModel(RecentFilesService recentFilesService)
     {
-        _recentFilesService = recentFilesService ?? throw new ArgumentNullException(nameof(recentFilesService));
+        ArgumentNullException.ThrowIfNull(recentFilesService);
+        _recentFilesService = recentFilesService;
 
         // Subscribe to service events
         _recentFilesService.RecentFileSelected += OnFileSelectedFromService;

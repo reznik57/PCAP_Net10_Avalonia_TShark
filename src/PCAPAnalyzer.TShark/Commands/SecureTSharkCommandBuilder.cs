@@ -26,7 +26,8 @@ public sealed class SecureTSharkCommandBuilder
 
     public SecureTSharkCommandBuilder(TSharkInputValidator validator)
     {
-        _validator = validator ?? throw new ArgumentNullException(nameof(validator));
+        ArgumentNullException.ThrowIfNull(validator);
+        _validator = validator;
     }
 
     /// <summary>

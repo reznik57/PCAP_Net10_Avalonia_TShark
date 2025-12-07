@@ -110,8 +110,7 @@ namespace PCAPAnalyzer.Core.Capture
             CaptureConfiguration configuration,
             CancellationToken cancellationToken = default)
         {
-            if (configuration is null)
-                throw new ArgumentNullException(nameof(configuration));
+            ArgumentNullException.ThrowIfNull(configuration);
 
             configuration.Validate();
 
@@ -191,8 +190,7 @@ namespace PCAPAnalyzer.Core.Capture
             string sessionId,
             CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrWhiteSpace(sessionId))
-                throw new ArgumentNullException(nameof(sessionId));
+            ArgumentNullException.ThrowIfNull(sessionId);
 
             await _sessionLock.WaitAsync(cancellationToken);
             try

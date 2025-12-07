@@ -29,7 +29,8 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             IStatisticsService inner,
             StatisticsCacheConfiguration? config = null)
         {
-            _inner = inner ?? throw new ArgumentNullException(nameof(inner));
+            ArgumentNullException.ThrowIfNull(inner);
+            _inner = inner;
             _config = config ?? StatisticsCacheConfiguration.Default;
             _config.Validate();
 
@@ -42,8 +43,10 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             IMemoryCache cache,
             StatisticsCacheConfiguration? config = null)
         {
-            _inner = inner ?? throw new ArgumentNullException(nameof(inner));
-            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            ArgumentNullException.ThrowIfNull(inner);
+            ArgumentNullException.ThrowIfNull(cache);
+            _inner = inner;
+            _cache = cache;
             _config = config ?? StatisticsCacheConfiguration.Default;
             _config.Validate();
             _metrics = new();
@@ -127,8 +130,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
 
         public async Task<NetworkStatistics> EnrichWithGeoAsync(NetworkStatistics statistics, IEnumerable<PacketInfo> packets, IProgress<AnalysisProgress>? progress = null)
         {
-            if (statistics is null)
-                throw new ArgumentNullException(nameof(statistics));
+            ArgumentNullException.ThrowIfNull(statistics);
 
             if (!_config.Enabled || !_config.CacheGeoEnrichment)
                 return await _inner.EnrichWithGeoAsync(statistics, packets, progress);

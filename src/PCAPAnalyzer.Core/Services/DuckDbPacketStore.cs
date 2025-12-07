@@ -137,8 +137,7 @@ public sealed class DuckDbPacketStore : IPacketStore
 
     public Task<PacketQueryResult> QueryPacketsAsync(PacketQuery query, CancellationToken cancellationToken = default)
     {
-        if (query is null)
-            throw new ArgumentNullException(nameof(query));
+        ArgumentNullException.ThrowIfNull(query);
         if (_connection is null)
             throw new InvalidOperationException("Packet store is not initialized");
 

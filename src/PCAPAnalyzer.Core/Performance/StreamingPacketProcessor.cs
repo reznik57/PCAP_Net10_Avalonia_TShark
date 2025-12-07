@@ -79,8 +79,7 @@ namespace PCAPAnalyzer.Core.Performance
         /// <param name="packetHandler">Function to process each packet</param>
         public void StartProcessing(Func<PacketData, Task<ProcessingResult>> packetHandler)
         {
-            if (packetHandler is null)
-                throw new ArgumentNullException(nameof(packetHandler));
+            ArgumentNullException.ThrowIfNull(packetHandler);
 
             if (_isProcessing)
                 throw new InvalidOperationException("Processing already started");

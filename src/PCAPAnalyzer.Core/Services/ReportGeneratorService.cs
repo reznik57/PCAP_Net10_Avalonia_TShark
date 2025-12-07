@@ -80,12 +80,18 @@ namespace PCAPAnalyzer.Core.Services
             IPdfReportGenerator pdfReportGenerator,
             ILogger<ReportGeneratorService> logger)
         {
-            _securityFindingsGenerator = securityFindingsGenerator ?? throw new ArgumentNullException(nameof(securityFindingsGenerator));
-            _remediationPlanner = remediationPlanner ?? throw new ArgumentNullException(nameof(remediationPlanner));
-            _htmlReportGenerator = htmlReportGenerator ?? throw new ArgumentNullException(nameof(htmlReportGenerator));
-            _jsonReportGenerator = jsonReportGenerator ?? throw new ArgumentNullException(nameof(jsonReportGenerator));
-            _pdfReportGenerator = pdfReportGenerator ?? throw new ArgumentNullException(nameof(pdfReportGenerator));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(securityFindingsGenerator);
+            ArgumentNullException.ThrowIfNull(remediationPlanner);
+            ArgumentNullException.ThrowIfNull(htmlReportGenerator);
+            ArgumentNullException.ThrowIfNull(jsonReportGenerator);
+            ArgumentNullException.ThrowIfNull(pdfReportGenerator);
+            ArgumentNullException.ThrowIfNull(logger);
+            _securityFindingsGenerator = securityFindingsGenerator;
+            _remediationPlanner = remediationPlanner;
+            _htmlReportGenerator = htmlReportGenerator;
+            _jsonReportGenerator = jsonReportGenerator;
+            _pdfReportGenerator = pdfReportGenerator;
+            _logger = logger;
         }
 
         /// <summary>

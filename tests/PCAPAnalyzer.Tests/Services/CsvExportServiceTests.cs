@@ -560,13 +560,13 @@ public class CsvExportServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ExportToCsvAsync_WithNullColumnMappings_ThrowsArgumentException()
+    public async Task ExportToCsvAsync_WithNullColumnMappings_ThrowsArgumentNullException()
     {
         // Arrange
         var testData = new[] { new { Value = "test" } };
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
             await _service.ExportToCsvAsync(testData, GetTestFilePath("test.csv"), null!));
     }
 

@@ -31,8 +31,10 @@ public partial class PacketFilterViewModel : ObservableObject
 
     public PacketFilterViewModel(ITabFilterService filterService, Action<PacketFilter> onFilterApplied)
     {
-        _filterService = filterService ?? throw new ArgumentNullException(nameof(filterService));
-        _onFilterApplied = onFilterApplied ?? throw new ArgumentNullException(nameof(onFilterApplied));
+        ArgumentNullException.ThrowIfNull(filterService);
+        ArgumentNullException.ThrowIfNull(onFilterApplied);
+        _filterService = filterService;
+        _onFilterApplied = onFilterApplied;
 
         // Initialize component ViewModels
         BasicFilters = new();

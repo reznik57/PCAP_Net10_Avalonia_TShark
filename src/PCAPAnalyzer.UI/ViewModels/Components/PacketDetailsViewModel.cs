@@ -132,8 +132,10 @@ public partial class PacketDetailsViewModel : ObservableObject
         StreamAnalyzer streamAnalyzer,
         ProtocolDeepDiveService? deepDiveService = null)
     {
-        _protocolParser = protocolParser ?? throw new ArgumentNullException(nameof(protocolParser));
-        _streamAnalyzer = streamAnalyzer ?? throw new ArgumentNullException(nameof(streamAnalyzer));
+        ArgumentNullException.ThrowIfNull(protocolParser);
+        ArgumentNullException.ThrowIfNull(streamAnalyzer);
+        _protocolParser = protocolParser;
+        _streamAnalyzer = streamAnalyzer;
         _deepDiveService = deepDiveService; // Optional - deep dive disabled if null
     }
 

@@ -68,7 +68,8 @@ namespace PCAPAnalyzer.Core.Capture
         /// </summary>
         public RollingFileWriter(CaptureConfiguration configuration)
         {
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            ArgumentNullException.ThrowIfNull(configuration);
+            _configuration = configuration;
 
             if (string.IsNullOrWhiteSpace(_configuration.OutputFilePath))
             {

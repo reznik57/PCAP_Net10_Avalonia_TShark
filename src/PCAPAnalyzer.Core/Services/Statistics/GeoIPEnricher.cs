@@ -18,7 +18,8 @@ namespace PCAPAnalyzer.Core.Services.Statistics
 
         public GeoIPEnricher(IGeoIPService geoIPService)
         {
-            _geoIPService = geoIPService ?? throw new ArgumentNullException(nameof(geoIPService));
+            ArgumentNullException.ThrowIfNull(geoIPService);
+            _geoIPService = geoIPService;
         }
 
         public List<PacketInfo> SamplePackets(List<PacketInfo> packets, int maxSamples)

@@ -37,11 +37,16 @@ namespace PCAPAnalyzer.Core.Services.Reporting
             CacheConfiguration configuration,
             ILogger<CachedRemediationPlanner> logger)
         {
-            _innerPlanner = innerPlanner ?? throw new ArgumentNullException(nameof(innerPlanner));
-            _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-            _keyGenerator = keyGenerator ?? throw new ArgumentNullException(nameof(keyGenerator));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(innerPlanner);
+            ArgumentNullException.ThrowIfNull(cacheService);
+            ArgumentNullException.ThrowIfNull(keyGenerator);
+            ArgumentNullException.ThrowIfNull(configuration);
+            ArgumentNullException.ThrowIfNull(logger);
+            _innerPlanner = innerPlanner;
+            _cacheService = cacheService;
+            _keyGenerator = keyGenerator;
+            _configuration = configuration;
+            _logger = logger;
         }
 
         /// <summary>
@@ -55,10 +60,8 @@ namespace PCAPAnalyzer.Core.Services.Reporting
             List<SecurityFinding> findings,
             List<Recommendation> recommendations)
         {
-            if (findings is null)
-                throw new ArgumentNullException(nameof(findings));
-            if (recommendations is null)
-                throw new ArgumentNullException(nameof(recommendations));
+            ArgumentNullException.ThrowIfNull(findings);
+            ArgumentNullException.ThrowIfNull(recommendations);
 
             // If caching is disabled, bypass cache entirely
             if (!_configuration.Enabled)
@@ -147,10 +150,8 @@ namespace PCAPAnalyzer.Core.Services.Reporting
             List<SecurityFinding> findings,
             List<PerformanceIssue> performanceIssues)
         {
-            if (findings is null)
-                throw new ArgumentNullException(nameof(findings));
-            if (performanceIssues is null)
-                throw new ArgumentNullException(nameof(performanceIssues));
+            ArgumentNullException.ThrowIfNull(findings);
+            ArgumentNullException.ThrowIfNull(performanceIssues);
 
             // If caching is disabled, bypass cache
             if (!_configuration.Enabled)

@@ -35,8 +35,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
         /// <exception cref="JsonException">Thrown when serialization fails</exception>
         public async Task<string> GenerateAsync(NetworkAnalysisReport report)
         {
-            if (report is null)
-                throw new ArgumentNullException(nameof(report));
+            ArgumentNullException.ThrowIfNull(report);
 
             try
             {

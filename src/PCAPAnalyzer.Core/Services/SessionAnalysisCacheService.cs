@@ -29,8 +29,7 @@ public class SessionAnalysisCacheService : ISessionAnalysisCache
     /// <param name="result">Complete analysis result to cache</param>
     public void Set(AnalysisResult result)
     {
-        if (result is null)
-            throw new ArgumentNullException(nameof(result));
+        ArgumentNullException.ThrowIfNull(result);
 
         using (_lock.EnterScope())
         {

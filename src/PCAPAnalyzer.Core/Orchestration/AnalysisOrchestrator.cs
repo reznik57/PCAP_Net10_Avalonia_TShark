@@ -45,12 +45,18 @@ namespace PCAPAnalyzer.Core.Orchestration
             ISessionAnalysisCache sessionCache,
             PCAPAnalyzer.Core.Services.OsFingerprinting.IOsFingerprintService osFingerprintService)
         {
-            _tsharkService = tsharkService ?? throw new ArgumentNullException(nameof(tsharkService));
-            _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService));
-            _anomalyService = anomalyService ?? throw new ArgumentNullException(nameof(anomalyService));
-            _geoIPService = geoIPService ?? throw new ArgumentNullException(nameof(geoIPService));
-            _sessionCache = sessionCache ?? throw new ArgumentNullException(nameof(sessionCache));
-            _osFingerprintService = osFingerprintService ?? throw new ArgumentNullException(nameof(osFingerprintService));
+            ArgumentNullException.ThrowIfNull(tsharkService);
+            ArgumentNullException.ThrowIfNull(statisticsService);
+            ArgumentNullException.ThrowIfNull(anomalyService);
+            ArgumentNullException.ThrowIfNull(geoIPService);
+            ArgumentNullException.ThrowIfNull(sessionCache);
+            ArgumentNullException.ThrowIfNull(osFingerprintService);
+            _tsharkService = tsharkService;
+            _statisticsService = statisticsService;
+            _anomalyService = anomalyService;
+            _geoIPService = geoIPService;
+            _sessionCache = sessionCache;
+            _osFingerprintService = osFingerprintService;
         }
 
         /// <summary>

@@ -274,7 +274,8 @@ namespace PCAPAnalyzer.UI.ViewModels
             Components.UnifiedFilterPanelViewModel? unifiedFilterPanel = null)
             : base(filterBuilder ?? new SmartFilterBuilderService())
         {
-            _dispatcher = dispatcherService ?? throw new ArgumentNullException(nameof(dispatcherService));
+            ArgumentNullException.ThrowIfNull(dispatcherService);
+            _dispatcher = dispatcherService;
             _insecurePortDetector = insecurePortDetector;
             _anomalyService = anomalyService;
             _credentialService = credentialService;

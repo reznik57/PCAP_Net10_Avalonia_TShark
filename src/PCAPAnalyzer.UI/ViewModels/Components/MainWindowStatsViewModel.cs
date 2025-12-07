@@ -17,7 +17,8 @@ public class MainWindowStatsViewModel
 
     public MainWindowStatsViewModel(IPacketStatisticsCalculator packetStatsCalculator)
     {
-        _packetStatsCalculator = packetStatsCalculator ?? throw new ArgumentNullException(nameof(packetStatsCalculator));
+        ArgumentNullException.ThrowIfNull(packetStatsCalculator);
+        _packetStatsCalculator = packetStatsCalculator;
     }
 
     /// <summary>

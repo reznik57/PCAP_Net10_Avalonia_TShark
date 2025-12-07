@@ -37,8 +37,10 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
         ILogger<ParallelTSharkService> logger,
         WiresharkToolInfo editcapInfo)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _editcapInfo = editcapInfo ?? throw new ArgumentNullException(nameof(editcapInfo));
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
+        ArgumentNullException.ThrowIfNull(editcapInfo);
+        _editcapInfo = editcapInfo;
 
         // Also detect tshark with same execution mode preference
         _tsharkInfo = WiresharkToolDetector.DetectTShark();

@@ -35,8 +35,7 @@ public sealed class SimplePacketStore : IPacketStore
 
     public Task<PacketQueryResult> QueryPacketsAsync(PacketQuery query, CancellationToken cancellationToken = default)
     {
-        if (query is null)
-            throw new ArgumentNullException(nameof(query));
+        ArgumentNullException.ThrowIfNull(query);
 
         return Task.Run(() =>
         {

@@ -128,8 +128,10 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
 
     public MainWindowAnalysisViewModel(IDispatcherService dispatcher, ITSharkService tsharkService)
     {
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
-        _tsharkService = tsharkService ?? throw new ArgumentNullException(nameof(tsharkService));
+        ArgumentNullException.ThrowIfNull(dispatcher);
+        ArgumentNullException.ThrowIfNull(tsharkService);
+        _dispatcher = dispatcher;
+        _tsharkService = tsharkService;
 
         InitializeAnalysisStages();
         ResetAnalysisStages();

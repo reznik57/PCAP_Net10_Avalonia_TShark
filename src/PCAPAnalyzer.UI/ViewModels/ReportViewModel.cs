@@ -89,7 +89,8 @@ namespace PCAPAnalyzer.UI.ViewModels
         /// <param name="reportService">The report generator service injected by DI container.</param>
         public ReportViewModel(IReportGeneratorService reportService)
         {
-            _reportService = reportService ?? throw new ArgumentNullException(nameof(reportService));
+            ArgumentNullException.ThrowIfNull(reportService);
+            _reportService = reportService;
         }
         
         public async Task UpdateData(NetworkStatistics statistics, List<SecurityThreat> threats)

@@ -25,7 +25,8 @@ public sealed class SecureTSharkExecutor
 
     public SecureTSharkExecutor(ILogger<SecureTSharkExecutor> logger, ILoggerFactory? loggerFactory = null)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(logger);
+        _logger = logger;
 
         // Create a properly typed logger for the validator if factory is available
         var validatorLogger = loggerFactory?.CreateLogger<TSharkInputValidator>();

@@ -17,13 +17,15 @@ public class ThreadSafeObservableCollection<T> : ObservableCollection<T>
 
     public ThreadSafeObservableCollection(IDispatcherService dispatcher)
     {
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        ArgumentNullException.ThrowIfNull(dispatcher);
+        _dispatcher = dispatcher;
     }
 
     public ThreadSafeObservableCollection(IDispatcherService dispatcher, IEnumerable<T> collection)
         : base(collection)
     {
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        ArgumentNullException.ThrowIfNull(dispatcher);
+        _dispatcher = dispatcher;
     }
 
     /// <summary>

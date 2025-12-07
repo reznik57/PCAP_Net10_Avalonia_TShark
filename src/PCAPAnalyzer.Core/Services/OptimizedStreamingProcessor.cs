@@ -24,7 +24,8 @@ namespace PCAPAnalyzer.Core.Services
 
         public OptimizedStreamingProcessor(IStatisticsService statisticsService, int chunkSize = 50000) // Increased for better performance
         {
-            _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService));
+            ArgumentNullException.ThrowIfNull(statisticsService);
+            _statisticsService = statisticsService;
             _chunkSize = chunkSize;
             _processingChannel = Channel.CreateUnbounded<PacketChunk>(new UnboundedChannelOptions
             {

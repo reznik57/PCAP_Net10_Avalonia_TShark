@@ -20,8 +20,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
         /// <exception cref="ArgumentNullException">Thrown when report is null</exception>
         public async Task<string> GenerateAsync(NetworkAnalysisReport report)
         {
-            if (report is null)
-                throw new ArgumentNullException(nameof(report));
+            ArgumentNullException.ThrowIfNull(report);
 
             var html = new StringBuilder();
 

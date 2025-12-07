@@ -150,9 +150,10 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
         Services.IFileDialogService? fileDialogService = null,
         AnalysisOrchestrator? orchestrator = null)
     {
+        ArgumentNullException.ThrowIfNull(sessionCache);
         _fileDialogService = fileDialogService;
         _tsharkService = tsharkService;
-        _sessionCache = sessionCache ?? throw new ArgumentNullException(nameof(sessionCache));
+        _sessionCache = sessionCache;
         _orchestrator = orchestrator;
 
         // Initialize component ViewModels

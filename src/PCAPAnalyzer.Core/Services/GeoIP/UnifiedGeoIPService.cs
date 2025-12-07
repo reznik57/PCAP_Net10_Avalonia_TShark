@@ -53,7 +53,8 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
         /// </summary>
         public UnifiedGeoIPService(GeoIPConfiguration configuration, ILogger? logger = null, TimeProvider? timeProvider = null)
         {
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            ArgumentNullException.ThrowIfNull(configuration);
+            _configuration = configuration;
             _logger = logger;
             _timeProvider = timeProvider ?? TimeProvider.System;
             _lastCacheLogTime = _timeProvider.GetUtcNow().UtcDateTime;

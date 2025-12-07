@@ -31,8 +31,10 @@ public class MainWindowDashboardViewModel : IDisposable
 
     public MainWindowDashboardViewModel(IStatisticsService statisticsService, IGeoIPService geoIpService)
     {
-        _statisticsService = statisticsService ?? throw new ArgumentNullException(nameof(statisticsService));
-        _geoIpService = geoIpService ?? throw new ArgumentNullException(nameof(geoIpService));
+        ArgumentNullException.ThrowIfNull(statisticsService);
+        ArgumentNullException.ThrowIfNull(geoIpService);
+        _statisticsService = statisticsService;
+        _geoIpService = geoIpService;
     }
 
     /// <summary>

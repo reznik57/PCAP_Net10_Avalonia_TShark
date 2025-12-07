@@ -42,8 +42,7 @@ namespace PCAPAnalyzer.UI.Collections
         /// </summary>
         public void AddRange(IEnumerable<T> items)
         {
-            if (items is null)
-                throw new ArgumentNullException(nameof(items));
+            ArgumentNullException.ThrowIfNull(items);
                 
             BeginBatchUpdate();
             try
@@ -64,8 +63,7 @@ namespace PCAPAnalyzer.UI.Collections
         /// </summary>
         public void ReplaceAll(IEnumerable<T> items)
         {
-            if (items is null)
-                throw new ArgumentNullException(nameof(items));
+            ArgumentNullException.ThrowIfNull(items);
                 
             BeginBatchUpdate();
             try

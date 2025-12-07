@@ -194,7 +194,8 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     public CountryTrafficViewModel(IDispatcherService dispatcher, IGeoIPService geoIPService, ITabFilterService? filterService, ISmartFilterBuilder? filterBuilder = null, GlobalFilterState? globalFilterState = null)
         : base(filterBuilder ?? new SmartFilterBuilderService())
     {
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        ArgumentNullException.ThrowIfNull(dispatcher);
+        _dispatcher = dispatcher;
         _geoIPService = geoIPService;
         _filterService = filterService;
         _filterCopyService = App.Services?.GetService<FilterCopyService>();

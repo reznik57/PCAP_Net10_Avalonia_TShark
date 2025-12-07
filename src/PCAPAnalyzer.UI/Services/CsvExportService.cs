@@ -77,11 +77,10 @@ public class CsvExportService : ICsvExportService
         Dictionary<string, Func<T, object?>> columnMappings,
         bool includeHeaders = true)
     {
-        if (data is null)
-            throw new ArgumentNullException(nameof(data));
-        if (string.IsNullOrWhiteSpace(filePath))
-            throw new ArgumentException("File path cannot be empty", nameof(filePath));
-        if (columnMappings is null || columnMappings.Count == 0)
+        ArgumentNullException.ThrowIfNull(data);
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        ArgumentNullException.ThrowIfNull(columnMappings);
+        if (columnMappings.Count == 0)
             throw new ArgumentException("Column mappings cannot be empty", nameof(columnMappings));
 
         // Security audit: Log export attempt with sanitized path

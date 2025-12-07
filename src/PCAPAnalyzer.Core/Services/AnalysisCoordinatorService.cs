@@ -44,8 +44,10 @@ public class AnalysisCoordinatorService : IAnalysisCoordinator
         ISessionAnalysisCache sessionCache,
         IAnalysisCacheService? cacheService = null)
     {
-        _orchestrator = orchestrator ?? throw new ArgumentNullException(nameof(orchestrator));
-        _sessionCache = sessionCache ?? throw new ArgumentNullException(nameof(sessionCache));
+        ArgumentNullException.ThrowIfNull(orchestrator);
+        ArgumentNullException.ThrowIfNull(sessionCache);
+        _orchestrator = orchestrator;
+        _sessionCache = sessionCache;
         _cacheService = cacheService;
     }
 

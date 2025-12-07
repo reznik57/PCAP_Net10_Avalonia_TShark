@@ -187,7 +187,8 @@ public partial class FileSelectionControlViewModel : ObservableObject, IDisposab
 
     public FileSelectionControlViewModel(FileAnalysisViewModel fileAnalysisViewModel)
     {
-        _fileAnalysisViewModel = fileAnalysisViewModel ?? throw new ArgumentNullException(nameof(fileAnalysisViewModel));
+        ArgumentNullException.ThrowIfNull(fileAnalysisViewModel);
+        _fileAnalysisViewModel = fileAnalysisViewModel;
 
         // Subscribe to FileAnalysisViewModel state changes
         _fileAnalysisViewModel.PropertyChanged += OnFileAnalysisViewModelPropertyChanged;

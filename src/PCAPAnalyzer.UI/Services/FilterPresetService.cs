@@ -218,10 +218,7 @@ public class FilterPresetService : IFilterPresetService
     /// <inheritdoc />
     public FilterPreset CreateFromViewModel(string name, string description, DashboardViewModel viewModel)
     {
-        if (viewModel is null)
-        {
-            throw new ArgumentNullException(nameof(viewModel));
-        }
+        ArgumentNullException.ThrowIfNull(viewModel);
 
         return new FilterPreset
         {

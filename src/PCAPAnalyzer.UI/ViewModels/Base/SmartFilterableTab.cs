@@ -248,7 +248,8 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
         /// <param name="filterBuilder">Singleton service for building PacketFilters from groups/chips</param>
         protected SmartFilterableTab(ISmartFilterBuilder filterBuilder)
         {
-            FilterBuilder = filterBuilder ?? throw new ArgumentNullException(nameof(filterBuilder));
+            ArgumentNullException.ThrowIfNull(filterBuilder);
+            FilterBuilder = filterBuilder;
 
             // Forward property change notifications from NetworkQuickFilters to UI
             // Critical for mode toggle UI updates (border color, mode label)

@@ -23,11 +23,8 @@ namespace PCAPAnalyzer.UI.Services
         /// <param name="tab">Tab instance implementing IFilterableTab</param>
         public void RegisterTab(string tabName, IFilterableTab tab)
         {
-            if (string.IsNullOrWhiteSpace(tabName))
-                throw new ArgumentNullException(nameof(tabName));
-
-            if (tab is null)
-                throw new ArgumentNullException(nameof(tab));
+            ArgumentException.ThrowIfNullOrWhiteSpace(tabName);
+            ArgumentNullException.ThrowIfNull(tab);
 
             using (_lock.EnterScope())
             {

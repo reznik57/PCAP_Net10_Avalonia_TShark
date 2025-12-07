@@ -18,8 +18,9 @@ namespace PCAPAnalyzer.UI.Helpers
         
         public ThrottledAction(TimeSpan throttleInterval, Action action)
         {
+            ArgumentNullException.ThrowIfNull(action);
             _throttleInterval = throttleInterval;
-            _action = action ?? throw new ArgumentNullException(nameof(action));
+            _action = action;
             
             _timer = new DispatcherTimer
             {
@@ -79,8 +80,9 @@ namespace PCAPAnalyzer.UI.Helpers
         
         public ThrottledAsyncAction(TimeSpan throttleInterval, Func<Task> action)
         {
+            ArgumentNullException.ThrowIfNull(action);
             _throttleInterval = throttleInterval;
-            _action = action ?? throw new ArgumentNullException(nameof(action));
+            _action = action;
         }
         
         /// <summary>

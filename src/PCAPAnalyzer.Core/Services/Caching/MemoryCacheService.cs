@@ -37,9 +37,12 @@ namespace PCAPAnalyzer.Core.Services.Caching
             CacheConfiguration configuration,
             ILogger<MemoryCacheService> logger)
         {
-            _memoryCache = memoryCache ?? throw new ArgumentNullException(nameof(memoryCache));
-            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(memoryCache);
+            ArgumentNullException.ThrowIfNull(configuration);
+            ArgumentNullException.ThrowIfNull(logger);
+            _memoryCache = memoryCache;
+            _configuration = configuration;
+            _logger = logger;
 
             _configuration.Validate();
 
@@ -109,10 +112,7 @@ namespace PCAPAnalyzer.Core.Services.Caching
             ThrowIfDisposed();
             ValidateKey(key);
 
-            if (value is null)
-            {
-                throw new ArgumentNullException(nameof(value), "Cannot cache null value");
-            }
+            ArgumentNullException.ThrowIfNull(value);
 
             if (!_configuration.Enabled)
             {
