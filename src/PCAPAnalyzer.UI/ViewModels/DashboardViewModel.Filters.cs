@@ -23,7 +23,7 @@ public partial class DashboardViewModel
     /// </summary>
     public void ApplyGlobalFilters()
     {
-        if (_globalFilterState == null)
+        if (_globalFilterState is null)
         {
             DebugLogger.Log("[DashboardViewModel] GlobalFilterState not available");
             return;
@@ -38,7 +38,7 @@ public partial class DashboardViewModel
         foreach (var group in _globalFilterState.IncludeGroups)
         {
             var groupFilter = BuildFilterFromGroup(group);
-            if (groupFilter != null)
+            if (groupFilter is not null)
             {
                 includeFilters.Add(groupFilter);
                 DebugLogger.Log($"[DashboardViewModel] Include group filter: {groupFilter.Description}");
@@ -48,7 +48,7 @@ public partial class DashboardViewModel
         foreach (var group in _globalFilterState.ExcludeGroups)
         {
             var groupFilter = BuildFilterFromGroup(group);
-            if (groupFilter != null)
+            if (groupFilter is not null)
             {
                 excludeFilters.Add(groupFilter);
                 DebugLogger.Log($"[DashboardViewModel] Exclude group filter: {groupFilter.Description}");
@@ -57,14 +57,14 @@ public partial class DashboardViewModel
 
         // Process flat filters (legacy - OR within category, AND between categories)
         var flatIncludeFilter = BuildGroupedFilters(_globalFilterState.IncludeFilters, isExclude: false);
-        if (flatIncludeFilter != null)
+        if (flatIncludeFilter is not null)
         {
             includeFilters.Add(flatIncludeFilter);
             DebugLogger.Log($"[DashboardViewModel] Include flat filter: {flatIncludeFilter.Description}");
         }
 
         var flatExcludeFilter = BuildGroupedFilters(_globalFilterState.ExcludeFilters, isExclude: true);
-        if (flatExcludeFilter != null)
+        if (flatExcludeFilter is not null)
         {
             excludeFilters.Add(flatExcludeFilter);
         }
@@ -87,13 +87,13 @@ public partial class DashboardViewModel
 
         // Combine: INCLUDE AND NOT(EXCLUDE)
         var filters = new List<PacketFilter>();
-        if (includeFilter != null)
+        if (includeFilter is not null)
         {
             filters.Add(includeFilter);
             DebugLogger.Log($"[DashboardViewModel] Include filter: {includeFilter.Description}");
         }
 
-        if (excludeFilter != null)
+        if (excludeFilter is not null)
         {
             var invertedExclude = InvertFilter(excludeFilter);
             filters.Add(invertedExclude);
@@ -186,7 +186,7 @@ public partial class DashboardViewModel
         {
             var quickFilterPredicates = group.QuickFilters
                 .Select(qf => BuildQuickFilterPredicate(qf))
-                .Where(p => p != null)
+                .Where(p => p is not null)
                 .ToList();
 
             if (quickFilterPredicates.Count > 0)
@@ -338,7 +338,7 @@ public partial class DashboardViewModel
         foreach (var qf in criteria.QuickFilters)
         {
             var predicate = BuildQuickFilterPredicate(qf);
-            if (predicate != null)
+            if (predicate is not null)
             {
                 quickFilters.Add(new PacketFilter
                 {

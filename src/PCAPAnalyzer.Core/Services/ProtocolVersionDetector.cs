@@ -340,7 +340,7 @@ namespace PCAPAnalyzer.Core.Services
                                     $"{v.Protocol} {v.Version}" == detectedVersion ||
                                     $"{v.Protocol}-{v.Version}" == detectedVersion);
 
-            if (versionInfo != null)
+            if (versionInfo is not null)
             {
                 result.SecurityRisk = versionInfo.RiskLevel;
                 result.SecurityAssessment = versionInfo.SecurityNotes;

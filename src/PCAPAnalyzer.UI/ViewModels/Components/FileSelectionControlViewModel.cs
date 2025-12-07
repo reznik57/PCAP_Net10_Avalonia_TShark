@@ -269,7 +269,7 @@ public partial class FileSelectionControlViewModel : ObservableObject, IDisposab
         var currentStage = _fileAnalysisViewModel.Stages
             .LastOrDefault(s => s.State == AnalysisStageState.Active || s.State == AnalysisStageState.Completed);
 
-        if (currentStage != null)
+        if (currentStage is not null)
         {
             var progressPercent = (int)Math.Round(ProgressPercentage);
 

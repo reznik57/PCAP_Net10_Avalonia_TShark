@@ -166,13 +166,13 @@ namespace PCAPAnalyzer.Core.Capture
         /// </summary>
         public async Task WritePacketAsync(byte[] packetData, CancellationToken cancellationToken = default)
         {
-            if (packetData == null || packetData.Length == 0)
+            if (packetData is null || packetData.Length == 0)
                 return;
 
             await _fileLock.WaitAsync(cancellationToken);
             try
             {
-                if (_currentFileStream == null)
+                if (_currentFileStream is null)
                 {
                     throw new InvalidOperationException("Writer not initialized. Call InitializeAsync first.");
                 }
@@ -202,13 +202,13 @@ namespace PCAPAnalyzer.Core.Capture
         /// </summary>
         public async Task WritePacketBatchAsync(byte[][] packets, CancellationToken cancellationToken = default)
         {
-            if (packets == null || packets.Length == 0)
+            if (packets is null || packets.Length == 0)
                 return;
 
             await _fileLock.WaitAsync(cancellationToken);
             try
             {
-                if (_currentFileStream == null)
+                if (_currentFileStream is null)
                 {
                     throw new InvalidOperationException("Writer not initialized. Call InitializeAsync first.");
                 }
@@ -306,7 +306,7 @@ namespace PCAPAnalyzer.Core.Capture
             var oldPacketCount = _currentFilePacketCount;
 
             // Close current file
-            if (_currentFileStream != null)
+            if (_currentFileStream is not null)
             {
                 await _currentFileStream.FlushAsync(cancellationToken);
                 _currentFileStream.Close();
@@ -493,7 +493,7 @@ namespace PCAPAnalyzer.Core.Capture
             await _fileLock.WaitAsync(cancellationToken);
             try
             {
-                if (_currentFileStream != null)
+                if (_currentFileStream is not null)
                 {
                     await _currentFileStream.FlushAsync(cancellationToken);
                 }

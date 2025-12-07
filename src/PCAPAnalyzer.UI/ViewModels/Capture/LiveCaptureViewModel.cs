@@ -165,7 +165,7 @@ public partial class LiveCaptureViewModel : ViewModelBase, IDisposable
         ResumeCaptureCommand = new AsyncRelayCommand(ResumeCaptureAsync, () => IsPaused);
         ConfigureCaptureCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(OpenConfigurationDialog, () => !IsCapturing);
         ClearPacketsCommand = new CommunityToolkit.Mvvm.Input.RelayCommand(ClearPackets);
-        ExportCaptureCommand = new AsyncRelayCommand(ExportCaptureAsync, () => IsCapturing || _captureService.CurrentSession != null);
+        ExportCaptureCommand = new AsyncRelayCommand(ExportCaptureAsync, () => IsCapturing || _captureService.CurrentSession is not null);
 
         // Subscribe to capture service events
         _captureService.PacketCaptured += OnPacketCaptured;
@@ -190,7 +190,7 @@ public partial class LiveCaptureViewModel : ViewModelBase, IDisposable
     {
         IsConfigDialogOpen = false;
 
-        if (confirmed && ConfigurationViewModel != null)
+        if (confirmed && ConfigurationViewModel is not null)
         {
             var (isValid, errorMsg) = ConfigurationViewModel.ValidateConfiguration();
             if (!isValid)
@@ -216,7 +216,7 @@ public partial class LiveCaptureViewModel : ViewModelBase, IDisposable
     /// </summary>
     private async Task StartCaptureAsync()
     {
-        if (_currentConfiguration == null)
+        if (_currentConfiguration is null)
         {
             OpenConfigurationDialog();
             return;

@@ -36,7 +36,7 @@ public partial class MainWindowFileViewModel : ObservableObject
 
         // ✅ DIAGNOSTIC: Log file selection and CanAnalyze status
         DebugLogger.Log($"[MainWindowFileViewModel] File changed: {value}");
-        DebugLogger.Log($"[MainWindowFileViewModel] HasFile: {HasFile}, CanAnalyze: {CanAnalyze}, File.Exists: {(value != null && File.Exists(value))}");
+        DebugLogger.Log($"[MainWindowFileViewModel] HasFile: {HasFile}, CanAnalyze: {CanAnalyze}, File.Exists: {(value is not null && File.Exists(value))}");
     }
 
     partial void OnHasFileChanged(bool value)
@@ -59,7 +59,7 @@ public partial class MainWindowFileViewModel : ObservableObject
                 ? desktop.MainWindow
                 : null;
 
-            if (topLevel == null)
+            if (topLevel is null)
             {
                 DebugLogger.Log("[MainWindowFileViewModel] Error: Unable to get main window");
                 return;

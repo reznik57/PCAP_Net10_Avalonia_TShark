@@ -194,7 +194,7 @@ namespace PCAPAnalyzer.Core.Capture
                 _cancellationSource.Cancel();
 
                 // Stop TShark process gracefully
-                if (_tsharkProcess != null && !_tsharkProcess.HasExited)
+                if (_tsharkProcess is not null && !_tsharkProcess.HasExited)
                 {
                     try
                     {
@@ -225,7 +225,7 @@ namespace PCAPAnalyzer.Core.Capture
                 }
 
                 // Wait for monitor task
-                if (_monitorTask != null)
+                if (_monitorTask is not null)
                 {
                     try
                     {
@@ -371,7 +371,7 @@ namespace PCAPAnalyzer.Core.Capture
         /// </summary>
         private async Task MonitorProcessAsync(CancellationToken cancellationToken)
         {
-            if (_tsharkProcess == null) return;
+            if (_tsharkProcess is null) return;
 
             try
             {
@@ -481,7 +481,7 @@ namespace PCAPAnalyzer.Core.Capture
             _cancellationSource.Dispose();
 
             // Unsubscribe from process events to prevent memory leaks
-            if (_tsharkProcess != null)
+            if (_tsharkProcess is not null)
             {
                 _tsharkProcess.Exited -= OnProcessExited;
                 _tsharkProcess.Dispose();

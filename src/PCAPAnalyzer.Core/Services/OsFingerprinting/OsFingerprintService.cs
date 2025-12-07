@@ -105,7 +105,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
             if (isSource && IsTcpSyn(tcpFlags) && fields.HasTcpFingerprintData)
             {
                 var tcpFingerprint = ExtractTcpFingerprint(fields, frameNumber);
-                if (tcpFingerprint != null)
+                if (tcpFingerprint is not null)
                 {
                     host.TcpFingerprints.Add(tcpFingerprint);
                 }
@@ -115,7 +115,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
             if (isSource && fields.HasJa3Data && fields.TlsHandshakeType == "1")
             {
                 var ja3Fingerprint = ExtractJa3Fingerprint(fields, frameNumber);
-                if (ja3Fingerprint != null)
+                if (ja3Fingerprint is not null)
                 {
                     host.Ja3Fingerprints.Add(ja3Fingerprint);
                 }
@@ -125,7 +125,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
             if (fields.HasDhcpData)
             {
                 var dhcpFingerprint = ExtractDhcpFingerprint(fields, frameNumber);
-                if (dhcpFingerprint != null)
+                if (dhcpFingerprint is not null)
                 {
                     host.DhcpFingerprint = dhcpFingerprint;
                     if (!string.IsNullOrEmpty(dhcpFingerprint.Hostname))
@@ -156,7 +156,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
             if (!string.IsNullOrEmpty(fields.HttpServer))
             {
                 var existing = host.ServerBanners.FirstOrDefault(b => b.Protocol == "HTTP" && b.Port == port);
-                if (existing == null)
+                if (existing is null)
                 {
                     var (productName, version, osHint) = ParseHttpServerBanner(fields.HttpServer);
                     host.ServerBanners.Add(new ServerBanner
@@ -176,7 +176,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
     private void ProcessSshBanner(HostFingerprint host, string sshProtocol, uint frameNumber, ushort port)
     {
         var existing = host.ServerBanners.FirstOrDefault(b => b.Protocol == "SSH" && b.Port == port);
-        if (existing == null)
+        if (existing is null)
         {
             var (productName, version, osHint) = ParseSshBanner(sshProtocol);
             host.ServerBanners.Add(new ServerBanner
@@ -396,7 +396,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
 
     private string? LookupMacVendor(string macAddress)
     {
-        if (_macVendors == null || string.IsNullOrEmpty(macAddress))
+        if (_macVendors is null || string.IsNullOrEmpty(macAddress))
             return null;
 
         // Extract OUI prefix (first 3 octets)
@@ -503,7 +503,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
         if (host.TcpFingerprints.Count > 0)
         {
             var tcpResult = MatchTcpFingerprint(host.TcpFingerprints[0]);
-            if (tcpResult != null)
+            if (tcpResult is not null)
             {
                 candidates.Add((tcpResult, tcpResult.ConfidenceScore));
             }
@@ -513,17 +513,17 @@ public sealed class OsFingerprintService : IOsFingerprintService
         if (host.Ja3Fingerprints.Count > 0)
         {
             var ja3Result = MatchJa3Fingerprint(host.Ja3Fingerprints[0]);
-            if (ja3Result != null)
+            if (ja3Result is not null)
             {
                 candidates.Add((ja3Result, ja3Result.ConfidenceScore));
             }
         }
 
         // 3. MAC vendor hints
-        if (!string.IsNullOrEmpty(host.MacAddress) && _macVendors != null)
+        if (!string.IsNullOrEmpty(host.MacAddress) && _macVendors is not null)
         {
             var macResult = GetMacVendorOsHint(host.MacAddress);
-            if (macResult != null)
+            if (macResult is not null)
             {
                 candidates.Add((macResult, macResult.ConfidenceScore));
             }
@@ -569,7 +569,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
 
     private OsDetectionResult? MatchTcpFingerprint(TcpFingerprintData tcpFp)
     {
-        if (_tcpSignatures == null)
+        if (_tcpSignatures is null)
             return null;
 
         OsDetectionResult? bestMatch = null;
@@ -675,7 +675,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
 
     private OsDetectionResult? MatchJa3Fingerprint(Ja3FingerprintData ja3Fp)
     {
-        if (_ja3Signatures == null || string.IsNullOrEmpty(ja3Fp.Ja3Hash))
+        if (_ja3Signatures is null || string.IsNullOrEmpty(ja3Fp.Ja3Hash))
             return null;
 
         if (_ja3Signatures.TryGetValue(ja3Fp.Ja3Hash, out var sig))
@@ -697,7 +697,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
 
     private OsDetectionResult? GetMacVendorOsHint(string macAddress)
     {
-        if (_macVendors == null)
+        if (_macVendors is null)
             return null;
 
         var parts = macAddress.Split(':');
@@ -723,11 +723,11 @@ public sealed class OsFingerprintService : IOsFingerprintService
 
     private void PerformJa3Verification(HostFingerprint host)
     {
-        if (host.OsDetection == null || host.Ja3Fingerprints.Count == 0)
+        if (host.OsDetection is null || host.Ja3Fingerprints.Count == 0)
             return;
 
         var ja3Hash = host.Ja3Fingerprints[0].Ja3Hash;
-        if (string.IsNullOrEmpty(ja3Hash) || _ja3Signatures == null)
+        if (string.IsNullOrEmpty(ja3Hash) || _ja3Signatures is null)
             return;
 
         if (_ja3Signatures.TryGetValue(ja3Hash, out var sig))
@@ -778,7 +778,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
         var resourcePath = "PCAPAnalyzer.Core.Data.OsFingerprinting.TcpSignatures.json";
 
         using var stream = assembly.GetManifestResourceStream(resourcePath);
-        if (stream != null)
+        if (stream is not null)
         {
             using var reader = new StreamReader(stream);
             var json = reader.ReadToEnd();
@@ -817,7 +817,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
         var resourcePath = "PCAPAnalyzer.Core.Data.OsFingerprinting.Ja3Signatures.json";
 
         using var stream = assembly.GetManifestResourceStream(resourcePath);
-        if (stream != null)
+        if (stream is not null)
         {
             using var reader = new StreamReader(stream);
             var json = reader.ReadToEnd();
@@ -857,7 +857,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
         var resourcePath = "PCAPAnalyzer.Core.Data.OsFingerprinting.MacVendors.json";
 
         using var stream = assembly.GetManifestResourceStream(resourcePath);
-        if (stream != null)
+        if (stream is not null)
         {
             using var reader = new StreamReader(stream);
             var json = reader.ReadToEnd();

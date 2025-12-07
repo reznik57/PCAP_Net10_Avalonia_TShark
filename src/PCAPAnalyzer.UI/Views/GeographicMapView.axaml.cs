@@ -42,7 +42,7 @@ namespace PCAPAnalyzer.UI.Views
         {
             try
             {
-                if (_mapControl == null) 
+                if (_mapControl is null) 
                 {
                     DebugLogger.Log($"[EnhancedMapView] Map control is null, cannot take screenshot");
                     return;

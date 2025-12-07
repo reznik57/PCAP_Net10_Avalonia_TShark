@@ -117,7 +117,7 @@ public class MainWindowStatsViewModel
         long totalPackets = 0;
         long totalBytes = 0;
 
-        if (packetManager?.CachedDashboardPackets != null)
+        if (packetManager?.CachedDashboardPackets is not null)
         {
             var allPackets = packetManager.CachedDashboardPackets;
             totalPackets = allPackets.Count;
@@ -145,7 +145,7 @@ public class MainWindowStatsViewModel
     /// </summary>
     private (int Total, int Filtered) CalculateUniqueIPs(MainWindowPacketViewModel? packetManager)
     {
-        if (packetManager?.CachedDashboardPackets == null || packetManager.CachedDashboardPackets.Count == 0)
+        if (packetManager?.CachedDashboardPackets is null || packetManager.CachedDashboardPackets.Count == 0)
             return (0, 0);
 
         var totalIPs = _packetStatsCalculator.CalculateUniqueIPs(packetManager.CachedDashboardPackets);
@@ -163,7 +163,7 @@ public class MainWindowStatsViewModel
     /// </summary>
     private (int Total, int Filtered) CalculateDestinationPorts(MainWindowPacketViewModel? packetManager)
     {
-        if (packetManager?.CachedDashboardPackets == null || packetManager.CachedDashboardPackets.Count == 0)
+        if (packetManager?.CachedDashboardPackets is null || packetManager.CachedDashboardPackets.Count == 0)
             return (0, 0);
 
         var totalPorts = _packetStatsCalculator.CalculateUniqueDestinationPorts(packetManager.CachedDashboardPackets);
@@ -181,7 +181,7 @@ public class MainWindowStatsViewModel
     /// </summary>
     private (int Total, int Filtered) CalculateTCPConversations(MainWindowPacketViewModel? packetManager)
     {
-        if (packetManager?.CachedDashboardPackets == null || packetManager.CachedDashboardPackets.Count == 0)
+        if (packetManager?.CachedDashboardPackets is null || packetManager.CachedDashboardPackets.Count == 0)
             return (0, 0);
 
         var totalConversations = _packetStatsCalculator.CalculateTCPConversations(packetManager.CachedDashboardPackets);

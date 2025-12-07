@@ -108,7 +108,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         
         partial void OnSelectedPacketChanged(PacketDetailItem? value)
         {
-            HasSelectedPacket = value != null;
+            HasSelectedPacket = value is not null;
         }
         
         private string GetProtocolStack(PacketInfo packet)
@@ -194,10 +194,10 @@ namespace PCAPAnalyzer.UI.ViewModels
                     ? desktop.MainWindow
                     : null;
                     
-                if (mainWindow != null)
+                if (mainWindow is not null)
                 {
                     var topLevel = TopLevel.GetTopLevel(mainWindow);
-                    if (topLevel != null)
+                    if (topLevel is not null)
                     {
                         var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
                         {
@@ -212,7 +212,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                             SuggestedFileName = $"packets_export_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
                         });
                         
-                        if (file != null)
+                        if (file is not null)
                         {
                             // Export logic here
                             StatusMessage = $"Exported {MatchingPackets} packets to {file.Name}";
@@ -228,7 +228,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         
         private async void CopyDetails()
         {
-            if (SelectedPacket == null)
+            if (SelectedPacket is null)
                 return;
                 
             var details = new StringBuilder();
@@ -247,10 +247,10 @@ namespace PCAPAnalyzer.UI.ViewModels
                     ? desktop.MainWindow
                     : null;
                     
-                if (mainWindow != null)
+                if (mainWindow is not null)
                 {
                     var topLevel = TopLevel.GetTopLevel(mainWindow);
-                    if (topLevel?.Clipboard != null)
+                    if (topLevel?.Clipboard is not null)
                     {
                         await topLevel.Clipboard.SetTextAsync(details.ToString());
                         StatusMessage = "Packet details copied to clipboard";

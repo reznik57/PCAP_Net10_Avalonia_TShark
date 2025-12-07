@@ -170,16 +170,16 @@ public partial class FileAnalysisProgressViewModel : ObservableObject
     /// </summary>
     private void UpdateStageStatusFromProgress(AnalysisProgress progress)
     {
-        if (_stages == null) return;
+        if (_stages is null) return;
 
         bool stagesMutated = false;
 
         var (activeStageKey, stageRelativePercent) = ProgressCoordinator.GetActiveStageFromOverall(progress.Percent);
 
-        if (activeStageKey != null)
+        if (activeStageKey is not null)
         {
             var stage = _stages.FirstOrDefault(s => s.Key == activeStageKey);
-            if (stage != null)
+            if (stage is not null)
             {
                 var wasActive = stage.State == AnalysisStageState.Active;
 

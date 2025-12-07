@@ -29,7 +29,7 @@ public class DashboardFilterService : IDashboardFilterService
         bool useAndMode = true,
         bool useNotMode = false)
     {
-        if (packets == null || !filters.HasActiveFilters)
+        if (packets is null || !filters.HasActiveFilters)
             return packets ?? Enumerable.Empty<PacketInfo>();
 
         var predicate = BuildCompiledPredicate(filters, anomalyFrames, useAndMode);
@@ -59,7 +59,7 @@ public class DashboardFilterService : IDashboardFilterService
         IProgress<double>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        if (packets == null || packets.Count == 0)
+        if (packets is null || packets.Count == 0)
             return new List<PacketInfo>();
 
         if (!filters.HasActiveFilters)

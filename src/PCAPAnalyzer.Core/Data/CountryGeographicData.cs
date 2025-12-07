@@ -47,12 +47,12 @@ namespace PCAPAnalyzer.Core.Data
         /// </summary>
         public static string? GetContinentForCountry(string countryCode)
         {
-            if (GetEuropePosition(countryCode) != null) return "EU";
-            if (GetAsiaPosition(countryCode) != null) return "AS";
-            if (GetAfricaPosition(countryCode) != null) return "AF";
-            if (GetNorthAmericaPosition(countryCode) != null) return "NA";
-            if (GetSouthAmericaPosition(countryCode) != null) return "SA";
-            if (GetOceaniaPosition(countryCode) != null) return "OC";
+            if (GetEuropePosition(countryCode) is not null) return "EU";
+            if (GetAsiaPosition(countryCode) is not null) return "AS";
+            if (GetAfricaPosition(countryCode) is not null) return "AF";
+            if (GetNorthAmericaPosition(countryCode) is not null) return "NA";
+            if (GetSouthAmericaPosition(countryCode) is not null) return "SA";
+            if (GetOceaniaPosition(countryCode) is not null) return "OC";
             return null;
         }
 

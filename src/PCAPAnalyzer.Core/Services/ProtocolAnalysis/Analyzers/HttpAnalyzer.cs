@@ -72,7 +72,7 @@ public class HttpAnalyzer : IProtocolAnalyzer
     private static void ExtractBasicAuth(CleartextContent content, List<string> rawParts, string value)
     {
         var decoded = ProtocolAnalysisHelpers.DecodeBase64Credentials(value[6..].Trim());
-        if (decoded == null) return;
+        if (decoded is null) return;
 
         var parts = decoded.Split(':', 2);
         content.Credentials.Add(new CleartextCredential

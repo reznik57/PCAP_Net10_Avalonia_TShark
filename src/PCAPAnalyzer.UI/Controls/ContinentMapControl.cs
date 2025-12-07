@@ -121,7 +121,7 @@ namespace PCAPAnalyzer.UI.Controls
 
         protected override void RenderMap(DrawingContext context, Rect bounds)
         {
-            if (_isDrillDownMode && _selectedContinent != null)
+            if (_isDrillDownMode && _selectedContinent is not null)
             {
                 RenderContinentView(context, bounds, _selectedContinent);
             }
@@ -171,7 +171,7 @@ namespace PCAPAnalyzer.UI.Controls
             _renderer.IconManager.Clear();
 
             // Render countries geographically with flag icons and collision detection
-            if (TrafficData != null)
+            if (TrafficData is not null)
             {
                 var continentCountries = TrafficData
                     .Where(kvp => GetContinentForCountry(kvp.Key) == continent.Code)
@@ -219,7 +219,7 @@ namespace PCAPAnalyzer.UI.Controls
                 var sourceContinentCode = GetContinentForCountry(flow.Flow.SourceCountryCode);
                 var destContinentCode = GetContinentForCountry(flow.Flow.DestinationCountryCode);
 
-                if (sourceContinentCode == null || destContinentCode == null)
+                if (sourceContinentCode is null || destContinentCode is null)
                     continue;
 
                 if (!_renderer.ContinentVisuals.TryGetValue(sourceContinentCode, out var sourceVisual) ||
@@ -290,7 +290,7 @@ namespace PCAPAnalyzer.UI.Controls
             var transformedPos = new Point(transformedX, transformedY);
 
             // In drill-down mode, check for country icon clicks first
-            if (_isDrillDownMode && _selectedContinent != null)
+            if (_isDrillDownMode && _selectedContinent is not null)
             {
                 var clickedCountry = _renderer.IconManager.HitTestCountryIcon(transformedPos);
                 if (!string.IsNullOrEmpty(clickedCountry))
@@ -298,7 +298,7 @@ namespace PCAPAnalyzer.UI.Controls
                     DebugLogger.Log($"[ContinentMapControl] Country clicked: {clickedCountry}");
 
                     // Invoke country clicked callback
-                    if (CountryClicked != null)
+                    if (CountryClicked is not null)
                     {
                         DebugLogger.Log($"[ContinentMapControl] Invoking CountryClicked with code: {clickedCountry}");
                         CountryClicked.Invoke(clickedCountry);
@@ -328,9 +328,9 @@ namespace PCAPAnalyzer.UI.Controls
                 if (visual.Bounds.Contains(transformedPos))
                 {
                     DebugLogger.Log($"[ContinentMapControl] Continent clicked: {visual.Continent.Code} ('{visual.Continent.DisplayName}')");
-                    DebugLogger.Log($"[ContinentMapControl] ContinentClicked delegate is {(ContinentClicked == null ? "NULL" : "ASSIGNED")}");
+                    DebugLogger.Log($"[ContinentMapControl] ContinentClicked delegate is {(ContinentClicked is null ? "NULL" : "ASSIGNED")}");
 
-                    if (ContinentClicked != null)
+                    if (ContinentClicked is not null)
                     {
                         DebugLogger.Log($"[ContinentMapControl] Invoking ContinentClicked with code: {visual.Continent.Code}");
                         ContinentClicked.Invoke(visual.Continent.Code);
@@ -349,7 +349,7 @@ namespace PCAPAnalyzer.UI.Controls
         protected override void OnCountryClicked(string countryCode)
         {
             var continentCode = GetContinentForCountry(countryCode);
-            if (continentCode != null)
+            if (continentCode is not null)
             {
                 FocusContinent = continentCode;
                 ContinentClicked?.Invoke(continentCode);
@@ -366,7 +366,7 @@ namespace PCAPAnalyzer.UI.Controls
             string? newHovered = null;
             string? newHoveredCountry = null;
 
-            if (_isDrillDownMode && _selectedContinent != null)
+            if (_isDrillDownMode && _selectedContinent is not null)
             {
                 // Drill-down mode - check country icon hits
                 newHoveredCountry = _renderer.IconManager.HitTestCountryIcon(transformedPos);
@@ -459,7 +459,7 @@ namespace PCAPAnalyzer.UI.Controls
             control._trafficFlows.Clear();
 
             var flows = e.NewValue as List<GeographicTrafficFlow>;
-            if (flows != null)
+            if (flows is not null)
             {
                 foreach (var flow in flows.Take(20)) // Limit for performance
                 {

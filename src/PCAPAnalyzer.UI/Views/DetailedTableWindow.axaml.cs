@@ -18,7 +18,7 @@ public partial class DetailedTableWindow : Window
         base.OnOpened(e);
         
         // Set window size to 90% of parent window or screen
-        if (Owner != null)
+        if (Owner is not null)
         {
             Width = Owner.Bounds.Width * 0.9;
             Height = Owner.Bounds.Height * 0.9;
@@ -27,7 +27,7 @@ public partial class DetailedTableWindow : Window
         {
             // Fallback to screen size
             var screen = Screens.Primary;
-            if (screen != null)
+            if (screen is not null)
             {
                 Width = screen.WorkingArea.Width * 0.8;
                 Height = screen.WorkingArea.Height * 0.8;

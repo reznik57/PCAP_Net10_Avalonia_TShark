@@ -65,7 +65,7 @@ public class FilterPresetService : IFilterPresetService
     {
         try
         {
-            if (preset == null)
+            if (preset is null)
             {
                 DebugLogger.Log("[FilterPresetService] Cannot save null preset");
                 return false;
@@ -145,7 +145,7 @@ public class FilterPresetService : IFilterPresetService
     /// <inheritdoc />
     public void ApplyPreset(FilterPreset preset, DashboardViewModel viewModel)
     {
-        if (preset == null || viewModel == null)
+        if (preset is null || viewModel is null)
         {
             DebugLogger.Log("[FilterPresetService] Cannot apply preset: null parameter");
             return;
@@ -218,7 +218,7 @@ public class FilterPresetService : IFilterPresetService
     /// <inheritdoc />
     public FilterPreset CreateFromViewModel(string name, string description, DashboardViewModel viewModel)
     {
-        if (viewModel == null)
+        if (viewModel is null)
         {
             throw new ArgumentNullException(nameof(viewModel));
         }
@@ -304,7 +304,7 @@ public class FilterPresetService : IFilterPresetService
             var json = await File.ReadAllTextAsync(_settingsPath);
             var presets = JsonSerializer.Deserialize<List<FilterPreset>>(json);
 
-            if (presets != null)
+            if (presets is not null)
             {
                 // Filter out any that conflict with built-in names (defensive)
                 _userPresets = presets

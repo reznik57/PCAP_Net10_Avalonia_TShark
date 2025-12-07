@@ -26,7 +26,7 @@ namespace PCAPAnalyzer.UI.Services
             if (string.IsNullOrWhiteSpace(tabName))
                 throw new ArgumentNullException(nameof(tabName));
 
-            if (tab == null)
+            if (tab is null)
                 throw new ArgumentNullException(nameof(tab));
 
             using (_lock.EnterScope())

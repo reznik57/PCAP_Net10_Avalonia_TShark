@@ -38,7 +38,7 @@ namespace PCAPAnalyzer.UI.Views
                 var chart = sender as CartesianChart;
                 var tooltipText = this.FindControl<TextBlock>("TrafficTooltipText");
 
-                if (chart == null || tooltipText == null)
+                if (chart is null || tooltipText is null)
                 {
                     DebugLogger.Log("[DashboardView] Traffic chart or tooltip not found");
                     return;
@@ -60,7 +60,7 @@ namespace PCAPAnalyzer.UI.Views
             try
             {
                 var tooltipText = this.FindControl<TextBlock>("TrafficTooltipText");
-                if (tooltipText != null)
+                if (tooltipText is not null)
                 {
                     tooltipText.Text = "";
                 }
@@ -82,7 +82,7 @@ namespace PCAPAnalyzer.UI.Views
                 var chart = sender as CartesianChart;
                 var tooltipText = this.FindControl<TextBlock>("PortActivityTooltipText");
 
-                if (chart == null || tooltipText == null)
+                if (chart is null || tooltipText is null)
                 {
                     DebugLogger.Log("[DashboardView] Port chart or tooltip not found");
                     return;
@@ -104,7 +104,7 @@ namespace PCAPAnalyzer.UI.Views
             try
             {
                 var tooltipText = this.FindControl<TextBlock>("PortActivityTooltipText");
-                if (tooltipText != null)
+                if (tooltipText is not null)
                 {
                     tooltipText.Text = "";
                 }
@@ -201,11 +201,11 @@ namespace PCAPAnalyzer.UI.Views
                 }
 
                 // If we still don't have data, try direct access
-                if (timestamp == null && DataContext is DashboardViewModel vm && vm.TimelineSeries != null)
+                if (timestamp is null && DataContext is DashboardViewModel vm && vm.TimelineSeries is not null)
                 {
                     foreach (var s in vm.TimelineSeries)
                     {
-                        if (s is LineSeries<DateTimePoint> dateTimeSeries && dateTimeSeries.Values != null)
+                        if (s is LineSeries<DateTimePoint> dateTimeSeries && dateTimeSeries.Values is not null)
                         {
                             var values = dateTimeSeries.Values.Cast<DateTimePoint>().ToList();
                             if (values.Count > 0)
@@ -214,7 +214,7 @@ namespace PCAPAnalyzer.UI.Views
                                 dataIndex = Math.Max(0, Math.Min(values.Count - 1, dataIndex));
                                 var point = values[dataIndex];
 
-                                if (timestamp == null)
+                                if (timestamp is null)
                                 {
                                     timestamp = point.DateTime;
                                 }
@@ -350,7 +350,7 @@ namespace PCAPAnalyzer.UI.Views
                 double maxValue = 0; // Track the max value for highlighting
 
                 // First, try to get data directly from the ViewModel (most reliable)
-                if (DataContext is DashboardViewModel vm && vm.PortActivitySeries != null && vm.PortActivitySeries.Count > 0)
+                if (DataContext is DashboardViewModel vm && vm.PortActivitySeries is not null && vm.PortActivitySeries.Count > 0)
                 {
                     // Skip the highlight and vertical line series
                     var dataSeries = vm.PortActivitySeries.Where(s => s.Name != "Highlight" && s.Name != "VerticalLine").ToList();
@@ -359,7 +359,7 @@ namespace PCAPAnalyzer.UI.Views
                     {
                         var name = s.Name ?? "Port";
 
-                        if (s is LineSeries<DateTimePoint> dateTimeSeries && dateTimeSeries.Values != null)
+                        if (s is LineSeries<DateTimePoint> dateTimeSeries && dateTimeSeries.Values is not null)
                         {
                             var seriesValues = dateTimeSeries.Values.Cast<DateTimePoint>().ToList();
                             if (seriesValues.Count > 0)
@@ -379,7 +379,7 @@ namespace PCAPAnalyzer.UI.Views
                                 tooltipParts.Add($"{name}: {value:F2}");
                             }
                         }
-                        else if (s is LineSeries<ObservablePoint> observableSeries && observableSeries.Values != null)
+                        else if (s is LineSeries<ObservablePoint> observableSeries && observableSeries.Values is not null)
                         {
                             var seriesValues = observableSeries.Values.Cast<ObservablePoint>().ToList();
                             if (seriesValues.Count > 0)

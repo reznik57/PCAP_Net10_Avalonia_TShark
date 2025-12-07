@@ -76,14 +76,14 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                 return await _inner.CalculateStatisticsAsync(packets, geoIPStage, flowStage);
 
             var packetList = packets?.ToList();
-            if (packetList == null || !packetList.Any())
+            if (packetList is null || !packetList.Any())
                 return new NetworkStatistics();
 
             var cacheKey = GenerateCacheKey("statistics", packetList);
             var estimatedSize = EstimateNetworkStatisticsSize(packetList.Count);
 
             // Try to get from cache
-            if (_cache.TryGetValue<NetworkStatistics>(cacheKey, out var cached) && cached != null)
+            if (_cache.TryGetValue<NetworkStatistics>(cacheKey, out var cached) && cached is not null)
             {
                 if (_config.EnableMetrics)
                     _metrics.RecordHit();
@@ -101,7 +101,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             try
             {
                 // Double-check after acquiring lock
-                if (_cache.TryGetValue<NetworkStatistics>(cacheKey, out cached) && cached != null)
+                if (_cache.TryGetValue<NetworkStatistics>(cacheKey, out cached) && cached is not null)
                 {
                     if (_config.EnableMetrics)
                         _metrics.RecordHit();
@@ -127,7 +127,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
 
         public async Task<NetworkStatistics> EnrichWithGeoAsync(NetworkStatistics statistics, IEnumerable<PacketInfo> packets, IProgress<AnalysisProgress>? progress = null)
         {
-            if (statistics == null)
+            if (statistics is null)
                 throw new ArgumentNullException(nameof(statistics));
 
             if (!_config.Enabled || !_config.CacheGeoEnrichment)
@@ -143,7 +143,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                 statistics.FirstPacketTime.Ticks);
             var estimatedSize = EstimateNetworkStatisticsSize(packetList.Count);
 
-            if (_cache.TryGetValue<NetworkStatistics>(cacheKey, out var cached) && cached != null)
+            if (_cache.TryGetValue<NetworkStatistics>(cacheKey, out var cached) && cached is not null)
             {
                 if (_config.EnableMetrics)
                     _metrics.RecordHit();
@@ -156,7 +156,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             await _calculationSemaphore.WaitAsync();
             try
             {
-                if (_cache.TryGetValue<NetworkStatistics>(cacheKey, out cached) && cached != null)
+                if (_cache.TryGetValue<NetworkStatistics>(cacheKey, out cached) && cached is not null)
                 {
                     if (_config.EnableMetrics)
                         _metrics.RecordHit();
@@ -179,13 +179,13 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                 return _inner.GenerateTimeSeries(packets, interval);
 
             var packetList = packets?.ToList();
-            if (packetList == null || !packetList.Any())
+            if (packetList is null || !packetList.Any())
                 return new List<TimeSeriesDataPoint>();
 
             var cacheKey = GenerateCacheKey("timeseries", packetList, interval.TotalSeconds);
             var estimatedSize = EstimateTimeSeriesSize(packetList.Count, interval);
 
-            if (_cache.TryGetValue<List<TimeSeriesDataPoint>>(cacheKey, out var cached) && cached != null)
+            if (_cache.TryGetValue<List<TimeSeriesDataPoint>>(cacheKey, out var cached) && cached is not null)
             {
                 if (_config.EnableMetrics)
                     _metrics.RecordHit();
@@ -206,13 +206,13 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                 return _inner.DetectThreats(packets);
 
             var packetList = packets?.ToList();
-            if (packetList == null || !packetList.Any())
+            if (packetList is null || !packetList.Any())
                 return new List<SecurityThreat>();
 
             var cacheKey = GenerateCacheKey("threats", packetList);
             var estimatedSize = EstimateThreatListSize(packetList.Count);
 
-            if (_cache.TryGetValue<List<SecurityThreat>>(cacheKey, out var cached) && cached != null)
+            if (_cache.TryGetValue<List<SecurityThreat>>(cacheKey, out var cached) && cached is not null)
             {
                 if (_config.EnableMetrics)
                     _metrics.RecordHit();

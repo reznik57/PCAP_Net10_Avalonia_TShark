@@ -171,7 +171,7 @@ namespace PCAPAnalyzer.Core.Services
 
         public void ApplyFilter(PacketFilter filter)
         {
-            if (filter == null)
+            if (filter is null)
                 throw new ArgumentNullException(nameof(filter));
 
             // Save to history
@@ -194,7 +194,7 @@ namespace PCAPAnalyzer.Core.Services
 
         public IEnumerable<PacketInfo> GetFilteredPackets(IEnumerable<PacketInfo> allPackets)
         {
-            if (allPackets == null)
+            if (allPackets is null)
                 return Enumerable.Empty<PacketInfo>();
 
             if (_currentFilter.IsEmpty)
@@ -205,7 +205,7 @@ namespace PCAPAnalyzer.Core.Services
 
         public FilterStatistics GetFilterStatistics(IEnumerable<PacketInfo> allPackets)
         {
-            if (allPackets == null)
+            if (allPackets is null)
                 return new FilterStatistics();
 
             var allPacketsList = allPackets.ToList();

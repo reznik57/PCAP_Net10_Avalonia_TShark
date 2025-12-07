@@ -62,21 +62,21 @@ public class PacketFilter
         !StartTime.HasValue &&
         !EndTime.HasValue &&
         string.IsNullOrWhiteSpace(InfoSearchText) &&
-        CustomPredicate == null &&
-        (CombinedFilters == null || CombinedFilters.Count == 0);
+        CustomPredicate is null &&
+        (CombinedFilters is null || CombinedFilters.Count == 0);
 
     [SuppressMessage("Maintainability", "CA1502:Avoid excessive complexity",
         Justification = "Packet filtering requires comprehensive checks across IP, port, protocol, time range, length, and content fields with proper negation support")]
     public bool MatchesPacket(PacketInfo packet)
     {
         // Custom predicate takes precedence
-        if (CustomPredicate != null)
+        if (CustomPredicate is not null)
         {
             return CustomPredicate(packet);
         }
         
         // Handle combined filters
-        if (CombinedFilters != null && CombinedFilters.Count > 0)
+        if (CombinedFilters is not null && CombinedFilters.Count > 0)
         {
             if (CombineMode == FilterCombineMode.And)
             {
@@ -144,7 +144,7 @@ public class PacketFilter
         // Info text search with negation support
         if (!string.IsNullOrWhiteSpace(InfoSearchText))
         {
-            var matches = packet.Info != null && packet.Info.Contains(InfoSearchText, StringComparison.OrdinalIgnoreCase);
+            var matches = packet.Info is not null && packet.Info.Contains(InfoSearchText, StringComparison.OrdinalIgnoreCase);
             if (NegateInfo ? matches : !matches)
                 return false;
         }

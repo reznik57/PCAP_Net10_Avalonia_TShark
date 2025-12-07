@@ -63,7 +63,7 @@ namespace PCAPAnalyzer.UI.Services.Visualization
 
         public List<TimeSeriesDataPoint> AggregateTimeSeries(List<TimeSeriesDataPoint> data, TimeSpan interval)
         {
-            if (data == null || !data.Any())
+            if (data is null || !data.Any())
                 return new List<TimeSeriesDataPoint>();
 
             var aggregated = data
@@ -84,7 +84,7 @@ namespace PCAPAnalyzer.UI.Services.Visualization
 
         public Dictionary<string, int> CreateHistogram(List<PacketInfo> packets, Func<PacketInfo, double> valueSelector, int bucketCount)
         {
-            if (packets == null || !packets.Any() || bucketCount <= 0)
+            if (packets is null || !packets.Any() || bucketCount <= 0)
                 return new Dictionary<string, int>();
 
             var values = packets.Select(valueSelector).Where(v => !double.IsNaN(v) && !double.IsInfinity(v)).ToList();
@@ -114,7 +114,7 @@ namespace PCAPAnalyzer.UI.Services.Visualization
 
         public Dictionary<string, Dictionary<string, double>> CalculateCorrelationMatrix(List<PacketInfo> packets)
         {
-            if (packets == null || !packets.Any())
+            if (packets is null || !packets.Any())
                 return new Dictionary<string, Dictionary<string, double>>();
 
             var metrics = new Dictionary<string, List<double>>
@@ -139,7 +139,7 @@ namespace PCAPAnalyzer.UI.Services.Visualization
 
         public HeatmapData CreateHeatmap(List<PacketInfo> packets, string xDimension, string yDimension)
         {
-            if (packets == null || !packets.Any())
+            if (packets is null || !packets.Any())
                 return new HeatmapData();
 
             var grouped = packets
@@ -164,7 +164,7 @@ namespace PCAPAnalyzer.UI.Services.Visualization
 
         public SankeyData CreateSankeyFlow(List<ConversationStatistics> conversations, int maxNodes)
         {
-            if (conversations == null || !conversations.Any())
+            if (conversations is null || !conversations.Any())
                 return new SankeyData();
 
             var topConversations = conversations
@@ -199,7 +199,7 @@ namespace PCAPAnalyzer.UI.Services.Visualization
 
         public NetworkGraphData CreateNetworkGraph(List<ConversationStatistics> conversations, int maxNodes)
         {
-            if (conversations == null || !conversations.Any())
+            if (conversations is null || !conversations.Any())
                 return new NetworkGraphData();
 
             var topConversations = conversations
@@ -255,7 +255,7 @@ namespace PCAPAnalyzer.UI.Services.Visualization
 
         public StatisticalDistribution CalculateDistribution(List<double> values)
         {
-            if (values == null || !values.Any())
+            if (values is null || !values.Any())
                 return new StatisticalDistribution();
 
             var sorted = values.OrderBy(v => v).ToList();

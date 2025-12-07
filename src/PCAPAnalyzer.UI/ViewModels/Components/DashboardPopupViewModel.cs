@@ -72,7 +72,7 @@ public partial class DashboardPopupViewModel : ObservableObject
             PopupTitle = "Top 30 Source IP Addresses - Detailed View";
             PopupSubtitle = $"Showing top 30 source IPs from {_currentStatistics?.TotalPackets:N0} total packets";
 
-            if (_currentStatistics?.TopSources == null || !_currentStatistics.TopSources.Any())
+            if (_currentStatistics?.TopSources is null || !_currentStatistics.TopSources.Any())
             {
                 PopupContent = CreateErrorMessage("No source data available");
                 HasPopupActions = false;
@@ -124,7 +124,7 @@ public partial class DashboardPopupViewModel : ObservableObject
             PopupTitle = "Top 30 Destination IP Addresses - Detailed View";
             PopupSubtitle = $"Showing top 30 destination IPs from {_currentStatistics?.TotalPackets:N0} total packets";
 
-            if (_currentStatistics?.TopDestinations == null || !_currentStatistics.TopDestinations.Any())
+            if (_currentStatistics?.TopDestinations is null || !_currentStatistics.TopDestinations.Any())
             {
                 ShowError("No destination data available");
                 return;
@@ -172,7 +172,7 @@ public partial class DashboardPopupViewModel : ObservableObject
             PopupTitle = "Top 30 Network Conversations - Detailed View";
             PopupSubtitle = $"Showing top 30 conversations";
 
-            if (_currentStatistics?.TopConversations == null || !_currentStatistics.TopConversations.Any())
+            if (_currentStatistics?.TopConversations is null || !_currentStatistics.TopConversations.Any())
             {
                 ShowError("No conversation data available");
                 return;
@@ -224,7 +224,7 @@ public partial class DashboardPopupViewModel : ObservableObject
             PopupTitle = "Top 30 Service Statistics - Detailed View";
             PopupSubtitle = $"Analyzing {_currentStatistics?.ProtocolStats.Count ?? 0} protocols";
 
-            if (_currentStatistics?.ServiceStats == null || !_currentStatistics.ServiceStats.Any())
+            if (_currentStatistics?.ServiceStats is null || !_currentStatistics.ServiceStats.Any())
             {
                 ShowError("No service data available");
                 return;
@@ -338,7 +338,7 @@ public partial class DashboardPopupViewModel : ObservableObject
             return;
         }
 
-        if (parameter is EndpointViewModel endpoint && _currentPackets != null)
+        if (parameter is EndpointViewModel endpoint && _currentPackets is not null)
         {
             var viewModel = new IPDetailsViewModel(endpoint, _currentPackets, isSource: true);
             var window = new Views.IPDetailsWindow
@@ -348,7 +348,7 @@ public partial class DashboardPopupViewModel : ObservableObject
 
             if (Avalonia.Application.Current?.ApplicationLifetime is
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
-                desktop.MainWindow != null)
+                desktop.MainWindow is not null)
             {
                 await WindowAnimations.ShowDialogWithAnimation(window, desktop.MainWindow);
             }
@@ -369,7 +369,7 @@ public partial class DashboardPopupViewModel : ObservableObject
             return;
         }
 
-        if (parameter is PCAPAnalyzer.UI.ViewModels.TopPortViewModel portInfo && _currentPackets != null)
+        if (parameter is PCAPAnalyzer.UI.ViewModels.TopPortViewModel portInfo && _currentPackets is not null)
         {
             DebugLogger.Log($"[DashboardPopupViewModel] Opening PortDetailsWindow for port {portInfo.DisplayName}");
             var viewModel = new PortDetailsViewModel(portInfo, _currentPackets);
@@ -380,7 +380,7 @@ public partial class DashboardPopupViewModel : ObservableObject
 
             if (Avalonia.Application.Current?.ApplicationLifetime is
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
-                desktop.MainWindow != null)
+                desktop.MainWindow is not null)
             {
                 await WindowAnimations.ShowDialogWithAnimation(window, desktop.MainWindow);
             }
@@ -402,7 +402,7 @@ public partial class DashboardPopupViewModel : ObservableObject
             return;
         }
 
-        if (parameter is ConversationViewModel conversation && _currentPackets != null)
+        if (parameter is ConversationViewModel conversation && _currentPackets is not null)
         {
             // Populate Dashboard filters before opening details window (Quick Win!)
             _parentViewModel?.FilterByConnectionCommand.Execute(conversation);
@@ -428,7 +428,7 @@ public partial class DashboardPopupViewModel : ObservableObject
 
             if (Avalonia.Application.Current?.ApplicationLifetime is
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
-                desktop.MainWindow != null)
+                desktop.MainWindow is not null)
             {
                 await WindowAnimations.ShowDialogWithAnimation(window, desktop.MainWindow);
             }

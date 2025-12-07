@@ -161,7 +161,7 @@ namespace PCAPAnalyzer.Core.Performance
         /// <returns>Cached or newly created value</returns>
         public TValue GetOrAdd(TKey key, Func<TKey, TValue> valueFactory)
         {
-            if (TryGetValue(key, out var value) && value != null)
+            if (TryGetValue(key, out var value) && value is not null)
             {
                 return value;
             }

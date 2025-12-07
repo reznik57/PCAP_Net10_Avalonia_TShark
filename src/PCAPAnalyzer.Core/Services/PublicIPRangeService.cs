@@ -282,7 +282,7 @@ namespace PCAPAnalyzer.Core.Services
             }
             
             var countryCode = await GetCountryCodeAsync(ipAddress);
-            if (countryCode == null)
+            if (countryCode is null)
                 return null;
             
             var location = new GeoLocation
@@ -353,7 +353,7 @@ namespace PCAPAnalyzer.Core.Services
                 var json = await File.ReadAllTextAsync(filePath);
                 var data = JsonSerializer.Deserialize<IPRangeData>(json);
                 
-                if (data?.Ranges != null)
+                if (data?.Ranges is not null)
                 {
                     _ipv4Ranges = data.Ranges.OrderBy(r => r.StartNumeric).ToList();
                 }

@@ -31,7 +31,7 @@ public class ThreadSafeObservableCollection<T> : ObservableCollection<T>
     /// </summary>
     public async Task AddRangeAsync(IEnumerable<T> items)
     {
-        if (items == null) return;
+        if (items is null) return;
 
         await _dispatcher.InvokeAsync(() =>
         {
@@ -51,7 +51,7 @@ public class ThreadSafeObservableCollection<T> : ObservableCollection<T>
         await _dispatcher.InvokeAsync(() =>
         {
             Clear();
-            if (items != null)
+            if (items is not null)
             {
                 foreach (var item in items)
                 {

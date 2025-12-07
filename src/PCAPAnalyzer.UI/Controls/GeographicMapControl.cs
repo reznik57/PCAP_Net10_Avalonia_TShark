@@ -231,7 +231,7 @@ namespace PCAPAnalyzer.UI.Controls
 
         private void RenderCountryMarkers(DrawingContext context, Rect bounds)
         {
-            if (CountryData == null) return;
+            if (CountryData is null) return;
 
             foreach (var kvp in CountryData)
             {
@@ -277,7 +277,7 @@ namespace PCAPAnalyzer.UI.Controls
 
         private void RenderCountryLabels(DrawingContext context, Rect bounds)
         {
-            if (CountryData == null || !ShowCountryLabels) return;
+            if (CountryData is null || !ShowCountryLabels) return;
 
             var typeface = new Typeface("Segoe UI");
 
@@ -325,7 +325,7 @@ namespace PCAPAnalyzer.UI.Controls
         {
             _trafficFlows.Clear();
 
-            if (ProtocolData == null) return;
+            if (ProtocolData is null) return;
 
             foreach (var protocolPackets in ProtocolData)
             {
@@ -372,7 +372,7 @@ namespace PCAPAnalyzer.UI.Controls
 
         private double CalculateIntensity(CountryTrafficStatistics stats)
         {
-            if (CountryData == null) return 0;
+            if (CountryData is null) return 0;
             var maxPackets = CountryData.Values.Max(s => s.TotalPackets);
             if (maxPackets == 0) return 0;
             return Math.Min(1.0, stats.TotalPackets / (double)maxPackets);

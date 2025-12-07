@@ -31,7 +31,7 @@ public partial class DashboardViewModel
     public long FilteredTotalPackets => Statistics.FilteredTotalPackets;
     public double FilteredPacketsPercentage => Statistics.TotalPackets > 0 ? (Statistics.FilteredTotalPackets * 100.0 / Statistics.TotalPackets) : 0;
     public string FilteredTotalBytesFormatted => Statistics.FilteredTotalBytesFormatted;
-    public double FilteredTrafficPercentage => (_unfilteredStatistics != null && _filteredStatistics != null && _unfilteredStatistics.TotalBytes > 0)
+    public double FilteredTrafficPercentage => (_unfilteredStatistics is not null && _filteredStatistics is not null && _unfilteredStatistics.TotalBytes > 0)
         ? (_filteredStatistics.TotalBytes * 100.0 / _unfilteredStatistics.TotalBytes) : 0;
     public int FilteredUniqueIPs => Statistics.FilteredUniqueIPs;
     public double FilteredIPsPercentage => Statistics.UniqueIPs > 0 ? (Statistics.FilteredUniqueIPs * 100.0 / Statistics.UniqueIPs) : 0;
@@ -87,7 +87,7 @@ public partial class DashboardViewModel
 
     public void UpdateThroughputChart()
     {
-        if (_currentStatistics != null)
+        if (_currentStatistics is not null)
         {
             Charts.UpdateThroughputChart(_currentStatistics);
         }

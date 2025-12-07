@@ -122,7 +122,7 @@ public class PcapAnalysisService : IPcapAnalysisService
                     File.Delete(fileInfo.FilePath);
 
                 var directory = Path.GetDirectoryName(fileInfo.FilePath);
-                if (directory != null && Directory.Exists(directory))
+                if (directory is not null && Directory.Exists(directory))
                     Directory.Delete(directory, true);
 
                 _analysisJobs.TryRemove(pcapId, out _);

@@ -127,7 +127,7 @@ public partial class PacketFilterViewModel : ObservableObject
         foreach (var filterName in quickFilterNames)
         {
             var filter = GetPredefinedFilterByName(filterName);
-            if (filter != null)
+            if (filter is not null)
                 filters.Add(filter);
         }
 
@@ -136,7 +136,7 @@ public partial class PacketFilterViewModel : ObservableObject
         foreach (var protocol in protocolNames)
         {
             var filter = GetProtocolFilter(protocol);
-            if (filter != null)
+            if (filter is not null)
                 filters.Add(filter);
         }
 
@@ -144,7 +144,7 @@ public partial class PacketFilterViewModel : ObservableObject
         if (BasicFilters.HasActiveFilters)
         {
             var basicFilter = CreateBasicFilter();
-            if (basicFilter != null)
+            if (basicFilter is not null)
                 filters.Add(basicFilter);
         }
 

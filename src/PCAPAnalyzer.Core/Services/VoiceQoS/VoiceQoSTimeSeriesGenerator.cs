@@ -463,7 +463,7 @@ namespace PCAPAnalyzer.Core.Services.VoiceQoS
             }
             finally
             {
-                if (intervalArray != null)
+                if (intervalArray is not null)
                 {
                     ArrayPool<double>.Shared.Return(intervalArray);
                 }
@@ -516,7 +516,7 @@ namespace PCAPAnalyzer.Core.Services.VoiceQoS
             }
             finally
             {
-                if (intervalArray != null)
+                if (intervalArray is not null)
                 {
                     ArrayPool<double>.Shared.Return(intervalArray);
                 }
@@ -586,7 +586,7 @@ namespace PCAPAnalyzer.Core.Services.VoiceQoS
                 }
                 finally
                 {
-                    if (jitterArray != null)
+                    if (jitterArray is not null)
                     {
                         ArrayPool<double>.Shared.Return(jitterArray);
                     }
@@ -594,7 +594,7 @@ namespace PCAPAnalyzer.Core.Services.VoiceQoS
             }
             finally
             {
-                if (intervalArray != null)
+                if (intervalArray is not null)
                 {
                     ArrayPool<double>.Shared.Return(intervalArray);
                 }

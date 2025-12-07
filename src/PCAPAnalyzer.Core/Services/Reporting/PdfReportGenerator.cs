@@ -23,7 +23,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
         /// <exception cref="NotImplementedException">PDF generation requires QuestPDF library (not yet implemented)</exception>
         public async Task<byte[]> GenerateAsync(NetworkAnalysisReport report)
         {
-            if (report == null)
+            if (report is null)
                 throw new ArgumentNullException(nameof(report));
 
             // TODO: Implement PDF generation using QuestPDF

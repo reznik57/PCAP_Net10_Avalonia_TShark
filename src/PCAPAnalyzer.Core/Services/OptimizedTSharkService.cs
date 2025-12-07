@@ -270,7 +270,7 @@ namespace PCAPAnalyzer.Core.Services
             var packets = new List<RawPacketData>();
             
             using var process = Process.Start(processInfo);
-            if (process == null)
+            if (process is null)
                 return Array.Empty<RawPacketData>();
             
             // Read output in parallel with process execution
@@ -278,7 +278,7 @@ namespace PCAPAnalyzer.Core.Services
             {
                 using var reader = process.StandardOutput;
                 string? line;
-                while ((line = await reader.ReadLineAsync()) != null)
+                while ((line = await reader.ReadLineAsync()) is not null)
                 {
                     if (string.IsNullOrWhiteSpace(line))
                         continue;

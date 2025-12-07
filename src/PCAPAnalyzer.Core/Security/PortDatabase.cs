@@ -146,7 +146,7 @@ public static class PortDatabase
     public static IEnumerable<string> GetCategories()
     {
         return Database.Values
-            .Where(v => v.Category != null)
+            .Where(v => v.Category is not null)
             .Select(v => v.Category!)
             .Distinct();
     }

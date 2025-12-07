@@ -37,7 +37,7 @@ public partial class AnomalySummaryViewModel : ObservableObject
     /// </summary>
     public void UpdateFromAnomalies(IReadOnlyList<NetworkAnomaly>? anomalies)
     {
-        if (anomalies == null || anomalies.Count == 0)
+        if (anomalies is null || anomalies.Count == 0)
         {
             CriticalCount = HighCount = MediumCount = LowCount = 0;
             TopThreats.Clear();

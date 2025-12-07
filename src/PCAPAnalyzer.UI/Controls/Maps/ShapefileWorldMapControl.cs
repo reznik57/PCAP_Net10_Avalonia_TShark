@@ -270,7 +270,7 @@ public class ShapefileWorldMapControl : Control
             while (reader.Read())
             {
                 var geometry = reader.Geometry;
-                if (geometry == null) continue;
+                if (geometry is null) continue;
 
                 // Get country attributes - DBF fields are fixed-width with NULL padding
                 var isoA2 = isoA2Index >= 0 ? reader.GetString(isoA2Index + 1)?.Trim().TrimEnd('\0') : null;
@@ -329,7 +329,7 @@ public class ShapefileWorldMapControl : Control
             return;
 
         // Log TrafficData once to verify binding
-        if (!_loggedTrafficData && TrafficData != null && TrafficData.Count > 0)
+        if (!_loggedTrafficData && TrafficData is not null && TrafficData.Count > 0)
         {
             _loggedTrafficData = true;
             var keys = string.Join(", ", TrafficData.Keys.Take(15));
@@ -368,7 +368,7 @@ public class ShapefileWorldMapControl : Control
             var hoveredCountry = _countries.FirstOrDefault(c =>
                 c.IsoCode?.Trim().TrimEnd('\0').Equals(_hoveredCountryCode, StringComparison.OrdinalIgnoreCase) == true);
 
-            if (hoveredCountry != null)
+            if (hoveredCountry is not null)
             {
                 DrawCountryHighlight(context, hoveredCountry, projection);
             }
@@ -444,7 +444,7 @@ public class ShapefileWorldMapControl : Control
         // Internal Traffic indicator (data key is "Internal" not "INT")
         _internalTrafficRect = new Rect(startX, startY, boxWidth, boxHeight);
         var intStats = TrafficData?.GetValueOrDefault("Internal");
-        var intColor = intStats != null ? GetIntensityBrush(GetTrafficIntensityForStats(intStats)) : bgBrush;
+        var intColor = intStats is not null ? GetIntensityBrush(GetTrafficIntensityForStats(intStats)) : bgBrush;
         var isIntHovered = _hoveredCountryCode == "INT";
 
         // Draw INT box
@@ -458,7 +458,7 @@ public class ShapefileWorldMapControl : Control
             FlowDirection.LeftToRight, labelTypeface, 10, Brushes.White);
         context.DrawText(intLabel, new AvaloniaPoint(startX + (boxWidth - intLabel.Width) / 2, startY + 8));
 
-        var intValue = intStats != null ? $"{intStats.TotalPackets:N0}" : "0";
+        var intValue = intStats is not null ? $"{intStats.TotalPackets:N0}" : "0";
         var intValueText = new FormattedText(intValue, System.Globalization.CultureInfo.CurrentCulture,
             FlowDirection.LeftToRight, valueTypeface, 11, dimColor);
         context.DrawText(intValueText, new AvaloniaPoint(startX + (boxWidth - intValueText.Width) / 2, startY + 28));
@@ -466,7 +466,7 @@ public class ShapefileWorldMapControl : Control
         // IPv6 Traffic indicator (data key is "IP6_LINK" not "IP6")
         _ipv6TrafficRect = new Rect(startX + boxWidth + spacing, startY, boxWidth, boxHeight);
         var ip6Stats = TrafficData?.GetValueOrDefault("IP6_LINK");
-        var ip6Color = ip6Stats != null ? GetIntensityBrush(GetTrafficIntensityForStats(ip6Stats)) : bgBrush;
+        var ip6Color = ip6Stats is not null ? GetIntensityBrush(GetTrafficIntensityForStats(ip6Stats)) : bgBrush;
         var isIp6Hovered = _hoveredCountryCode == "IP6";
 
         // Draw IP6 box
@@ -480,7 +480,7 @@ public class ShapefileWorldMapControl : Control
             FlowDirection.LeftToRight, labelTypeface, 10, Brushes.White);
         context.DrawText(ip6Label, new AvaloniaPoint(startX + boxWidth + spacing + (boxWidth - ip6Label.Width) / 2, startY + 8));
 
-        var ip6Value = ip6Stats != null ? $"{ip6Stats.TotalPackets:N0}" : "0";
+        var ip6Value = ip6Stats is not null ? $"{ip6Stats.TotalPackets:N0}" : "0";
         var ip6ValueText = new FormattedText(ip6Value, System.Globalization.CultureInfo.CurrentCulture,
             FlowDirection.LeftToRight, valueTypeface, 11, dimColor);
         context.DrawText(ip6ValueText, new AvaloniaPoint(startX + boxWidth + spacing + (boxWidth - ip6ValueText.Width) / 2, startY + 28));
@@ -529,7 +529,7 @@ public class ShapefileWorldMapControl : Control
     private void DrawCountry(DrawingContext context, CountryShape country, ProjectionParams projection)
     {
         var avaloniaGeometry = ConvertToAvaloniaGeometry(country.NtsGeometry, projection);
-        if (avaloniaGeometry == null) return;
+        if (avaloniaGeometry is null) return;
 
         var brush = GetCountryBrush(country.IsoCode);
         var pen = new Pen(BorderBrush, 0.5);
@@ -556,7 +556,7 @@ public class ShapefileWorldMapControl : Control
     private void DrawCountryHighlight(DrawingContext context, CountryShape country, ProjectionParams projection)
     {
         var geometry = country.CachedGeometry ?? ConvertToAvaloniaGeometry(country.NtsGeometry, projection);
-        if (geometry == null) return;
+        if (geometry is null) return;
 
         // Glow effect
         var glowPen = new Pen(new SolidColorBrush(Color.FromArgb(100, 255, 255, 255)), 3);
@@ -590,7 +590,7 @@ public class ShapefileWorldMapControl : Control
 
         // Calculate tooltip dimensions based on content
         var tooltipWidth = 220;
-        var tooltipHeight = stats != null ? 130 : 50;
+        var tooltipHeight = stats is not null ? 130 : 50;
 
         // Position tooltip on the RIGHT side of the map (doesn't obscure map)
         var tooltipX = bounds.Width - tooltipWidth - 15;
@@ -617,7 +617,7 @@ public class ShapefileWorldMapControl : Control
             FlowDirection.LeftToRight, typefaceNormal, 10, dimColor);
         context.DrawText(codeText, new AvaloniaPoint(tooltipX + 14 + titleText.Width, tooltipY + 12));
 
-        if (stats == null)
+        if (stats is null)
         {
             var noDataText = new FormattedText("No traffic data", System.Globalization.CultureInfo.CurrentCulture,
                 FlowDirection.LeftToRight, typefaceNormal, 10, dimColor);
@@ -822,7 +822,7 @@ public class ShapefileWorldMapControl : Control
             // Update exposed properties for XAML binding
             HoveredCountryCode = _hoveredCountryCode;
 
-            if (_hoveredCountryCode != null)
+            if (_hoveredCountryCode is not null)
             {
                 // Special handling for INT and IP6
                 if (_hoveredCountryCode == "INT")
@@ -845,7 +845,7 @@ public class ShapefileWorldMapControl : Control
                 var dataKey = MapToDataKey(_hoveredCountryCode);
                 HoveredCountryStats = TrafficData?.GetValueOrDefault(dataKey);
 
-                if (TrafficData != null)
+                if (TrafficData is not null)
                 {
                     var hasTrafficData = TrafficData.ContainsKey(dataKey);
                     DebugLogger.Log($"[ShapefileWorldMap] Hover: '{_hoveredCountryCode}' -> dataKey='{dataKey}', name='{HoveredCountryName}', hasData={hasTrafficData}");
@@ -857,7 +857,7 @@ public class ShapefileWorldMapControl : Control
                 HoveredCountryStats = null;
             }
 
-            Cursor = _hoveredCountryCode != null ? new Cursor(StandardCursorType.Hand) : Cursor.Default;
+            Cursor = _hoveredCountryCode is not null ? new Cursor(StandardCursorType.Hand) : Cursor.Default;
             InvalidateVisual();
         }
     }
@@ -915,7 +915,7 @@ public class ShapefileWorldMapControl : Control
             return;
         }
 
-        DebugLogger.Log($"[ShapefileWorldMap] OnPointerPressed: hovered={_hoveredCountryCode ?? "null"}, leftButton={isLeftButton}, handlerBound={CountryClicked != null}");
+        DebugLogger.Log($"[ShapefileWorldMap] OnPointerPressed: hovered={_hoveredCountryCode ?? "null"}, leftButton={isLeftButton}, handlerBound={CountryClicked is not null}");
 
         if (!string.IsNullOrEmpty(_hoveredCountryCode) && isLeftButton)
         {
@@ -1010,7 +1010,7 @@ public class ShapefileWorldMapControl : Control
     {
         // Trim country code - shapefile DBF fields are fixed-width with padding
         var trimmedCode = countryCode?.Trim();
-        if (string.IsNullOrEmpty(trimmedCode) || TrafficData == null || !TrafficData.TryGetValue(trimmedCode, out var stats))
+        if (string.IsNullOrEmpty(trimmedCode) || TrafficData is null || !TrafficData.TryGetValue(trimmedCode, out var stats))
             return 0;
 
         var percentage = stats.Percentage;

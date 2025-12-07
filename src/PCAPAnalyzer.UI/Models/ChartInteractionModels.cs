@@ -231,17 +231,17 @@ namespace PCAPAnalyzer.UI.Models
             "Destination IPs"
         };
         
-        public string TimeWindowDisplay => PointData != null 
+        public string TimeWindowDisplay => PointData is not null 
             ? $"{PointData.Timestamp:HH:mm:ss} - {PointData.Timestamp.AddSeconds(1):HH:mm:ss}"
             : "";
         
-        public string TrafficSummary => PointData != null
+        public string TrafficSummary => PointData is not null
             ? $"{PointData.PacketCount:N0} packets ({NumberFormatter.FormatBytes(PointData.ByteCount)})"
             : "";
 
         private void UpdateDisplayItems()
         {
-            if (PointData == null)
+            if (PointData is null)
             {
                 DisplayItems.Clear();
                 return;

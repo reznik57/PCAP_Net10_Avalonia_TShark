@@ -247,7 +247,7 @@ public partial class MainWindowUIStateViewModel : ObservableObject
                 ? desktop.MainWindow as Views.MainWindow
                 : null;
 
-            if (mainWindow == null)
+            if (mainWindow is null)
             {
                 Status = "Cannot access main window";
                 StatusColor = ColorError;
@@ -323,7 +323,7 @@ public partial class MainWindowUIStateViewModel : ObservableObject
                 ? desktop.MainWindow as Views.MainWindow
                 : null;
 
-            if (mainWindow == null)
+            if (mainWindow is null)
             {
                 Status = "Cannot access main window";
                 StatusColor = ColorError;

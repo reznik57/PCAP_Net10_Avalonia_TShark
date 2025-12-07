@@ -81,7 +81,7 @@ public sealed class DuckDbPacketStore : IPacketStore
 
     public Task InsertPacketsAsync(IEnumerable<PacketInfo> packets, CancellationToken cancellationToken = default)
     {
-        if (_connection == null)
+        if (_connection is null)
             throw new InvalidOperationException("Packet store is not initialized");
 
         var packetList = packets as IList<PacketInfo> ?? packets.ToList();
@@ -137,9 +137,9 @@ public sealed class DuckDbPacketStore : IPacketStore
 
     public Task<PacketQueryResult> QueryPacketsAsync(PacketQuery query, CancellationToken cancellationToken = default)
     {
-        if (query == null)
+        if (query is null)
             throw new ArgumentNullException(nameof(query));
-        if (_connection == null)
+        if (_connection is null)
             throw new InvalidOperationException("Packet store is not initialized");
 
         var pageSize = query.PageSize <= 0 ? 100 : query.PageSize; // No upper limit - let caller decide page size
@@ -211,7 +211,7 @@ public sealed class DuckDbPacketStore : IPacketStore
 
     public Task InsertFlowsAsync(IEnumerable<FlowRecord> flows, CancellationToken cancellationToken = default)
     {
-        if (_connection == null)
+        if (_connection is null)
             throw new InvalidOperationException("Packet store is not initialized");
 
         return Task.Run(() =>
@@ -252,7 +252,7 @@ public sealed class DuckDbPacketStore : IPacketStore
 
     public Task ClearAsync(CancellationToken cancellationToken = default)
     {
-        if (_connection == null)
+        if (_connection is null)
             return Task.CompletedTask;
 
         lock (_sync)
@@ -271,7 +271,7 @@ public sealed class DuckDbPacketStore : IPacketStore
     /// </summary>
     public (long TotalCount, uint MinFrame, uint MaxFrame) GetFrameNumberDiagnostics()
     {
-        if (_connection == null)
+        if (_connection is null)
             throw new InvalidOperationException("Packet store is not initialized");
 
         lock (_sync)
@@ -298,7 +298,7 @@ public sealed class DuckDbPacketStore : IPacketStore
     {
         using var command = CreateCommand(sql, parameterValues);
         var result = command.ExecuteScalar();
-        if (result == null || result is DBNull)
+        if (result is null || result is DBNull)
             return 0;
         return Convert.ToInt64(result);
     }
@@ -379,7 +379,7 @@ public sealed class DuckDbPacketStore : IPacketStore
 
     private DuckDBCommand CreateCommand(string sql, IReadOnlyList<object?> parameterValues)
     {
-        if (_connection == null)
+        if (_connection is null)
             throw new InvalidOperationException("Packet store is not initialized");
 
         var command = _connection.CreateCommand();
@@ -439,25 +439,25 @@ public sealed class DuckDbPacketStore : IPacketStore
     private static (string Clause, List<object?> Parameters) BuildWhereClause(PacketFilter? filter)
     {
         var parameters = new List<object?>();
-        if (filter == null || filter.IsEmpty)
+        if (filter is null || filter.IsEmpty)
             return (string.Empty, parameters);
 
-        if (filter.CustomPredicate != null || (filter.CombinedFilters != null && filter.CombinedFilters.Count > 0))
+        if (filter.CustomPredicate is not null || (filter.CombinedFilters is not null && filter.CombinedFilters.Count > 0))
             throw new NotSupportedException("Complex packet filters are not supported by the persistent packet store.");
 
         var conditions = new List<string>();
 
         var sourceIp = BuildIpCondition("src_ip", filter.SourceIpFilter, filter.NegateSourceIp, parameters);
-        if (sourceIp != null) conditions.Add(sourceIp);
+        if (sourceIp is not null) conditions.Add(sourceIp);
 
         var destinationIp = BuildIpCondition("dst_ip", filter.DestinationIpFilter, filter.NegateDestinationIp, parameters);
-        if (destinationIp != null) conditions.Add(destinationIp);
+        if (destinationIp is not null) conditions.Add(destinationIp);
 
         var sourcePort = BuildPortCondition("src_port", filter.SourcePortFilter, filter.NegateSourcePort, parameters);
-        if (sourcePort != null) conditions.Add(sourcePort);
+        if (sourcePort is not null) conditions.Add(sourcePort);
 
         var destinationPort = BuildPortCondition("dst_port", filter.DestinationPortFilter, filter.NegateDestinationPort, parameters);
-        if (destinationPort != null) conditions.Add(destinationPort);
+        if (destinationPort is not null) conditions.Add(destinationPort);
 
         if (filter.ProtocolFilter.HasValue)
         {

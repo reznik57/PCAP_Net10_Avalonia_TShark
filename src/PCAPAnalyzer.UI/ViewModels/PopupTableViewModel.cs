@@ -66,7 +66,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
         private void ApplyFilter()
         {
-            if (TableData == null)
+            if (TableData is null)
             {
                 FilteredTableData = null;
                 return;
@@ -83,7 +83,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
             foreach (var item in TableData)
             {
-                if (item == null) continue;
+                if (item is null) continue;
 
                 var matchFound = false;
 
@@ -93,7 +93,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     if (prop.PropertyType == typeof(string))
                     {
                         var value = prop.GetValue(item) as string;
-                        if (value != null && value.Contains(filter, System.StringComparison.OrdinalIgnoreCase))
+                        if (value is not null && value.Contains(filter, System.StringComparison.OrdinalIgnoreCase))
                         {
                             matchFound = true;
                             break;
@@ -104,7 +104,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                              prop.PropertyType == typeof(double) || prop.PropertyType == typeof(decimal))
                     {
                         var value = prop.GetValue(item)?.ToString();
-                        if (value != null && value.Contains(filter, System.StringComparison.OrdinalIgnoreCase))
+                        if (value is not null && value.Contains(filter, System.StringComparison.OrdinalIgnoreCase))
                         {
                             matchFound = true;
                             break;

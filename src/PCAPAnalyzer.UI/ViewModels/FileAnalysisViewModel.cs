@@ -179,7 +179,7 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
         };
 
         // Wire up analysis VM for global overlay
-        if (analysisVm != null)
+        if (analysisVm is not null)
             StagesViewModel.SetAnalysisViewModel(analysisVm);
 
         // Wire up stage change notifications
@@ -238,7 +238,7 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
     {
         DebugLogger.Log("[FileAnalysisViewModel] Browse requested");
 
-        if (_fileDialogService == null)
+        if (_fileDialogService is null)
         {
             DebugLogger.Log("[FileAnalysisViewModel] FileDialogService not available");
             return;
@@ -341,7 +341,7 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
 
         // ✅ PERFORMANCE FIX: Use orchestrator when available for complete analysis including VoiceQoS
         // This ensures VoiceQoS data is cached, preventing 25s re-analysis during tab population
-        if (_orchestrator != null)
+        if (_orchestrator is not null)
         {
             await AnalyzeWithOrchestratorAsync(overallStartTime);
             return;
@@ -441,12 +441,12 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
             var result = await _orchestrator!.AnalyzeFileAsync(SelectedFilePath!, progress, _analysisCts!.Token);
 
             // Cache is already set by orchestrator, but ensure it's there
-            if (_sessionCache.Get() == null)
+            if (_sessionCache.Get() is null)
             {
                 _sessionCache.Set(result);
             }
 
-            DebugLogger.Log($"[FileAnalysisViewModel] ⚡ Orchestrator complete: {result.TotalPackets:N0} packets, VoiceQoS={result.VoiceQoSData != null}");
+            DebugLogger.Log($"[FileAnalysisViewModel] ⚡ Orchestrator complete: {result.TotalPackets:N0} packets, VoiceQoS={result.VoiceQoSData is not null}");
 
             // ✅ FIX: Set UI properties from orchestrator result (was missing - caused 00:00:00 duration)
             TotalPackets = result.TotalPackets;

@@ -45,7 +45,7 @@ public class ProtocolAnalyzerRegistry
 
         // Find first matching analyzer
         var analyzer = _analyzers.FirstOrDefault(a => a.CanAnalyze(layerName));
-        if (analyzer == null)
+        if (analyzer is null)
             return null;
 
         return analyzer.Analyze(layer);

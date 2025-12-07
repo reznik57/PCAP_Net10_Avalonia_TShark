@@ -189,7 +189,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
     {
         _currentFilter = filter;
 
-        if (_filterService != null && !filter.Equals(_filterService.CurrentFilter))
+        if (_filterService is not null && !filter.Equals(_filterService.CurrentFilter))
         {
             _filterService.ApplyFilter(filter);
             return;
@@ -361,7 +361,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
         // 1. Different file is loaded (file hash changes)
         // 2. New analysis session starts (session ID changes)
         // 3. Incremental analysis updates (same file hash + session ID = valid cache)
-        if (_dashboardPacketCache != null && _cacheMetadata != null)
+        if (_dashboardPacketCache is not null && _cacheMetadata is not null)
         {
             bool isSameFile = _cacheMetadata.FileHash == _currentFileHash;
             bool isSameSession = _cacheMetadata.SessionId == _currentAnalysisSessionId;
@@ -486,7 +486,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
         {
             List<PacketInfo> packetList;
 
-            if (_activePacketStore != _nullPacketStore && statistics != null)
+            if (_activePacketStore != _nullPacketStore && statistics is not null)
             {
                 var allPackets = await LoadAllPacketsForDashboardAsync(statistics, CancellationToken.None).ConfigureAwait(false);
                 packetList = new List<PacketInfo>(allPackets);
@@ -713,12 +713,12 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
             if (colonIdx > 0 && int.TryParse(part.AsSpan(colonIdx + 1), out var port))
             {
                 var ip = part[..colonIdx];
-                if (ip1 == null) { ip1 = ip; port1 = port; }
+                if (ip1 is null) { ip1 = ip; port1 = port; }
                 else { ip2 = ip; port2 = port; }
             }
             else
             {
-                if (ip1 == null) ip1 = part;
+                if (ip1 is null) ip1 = part;
                 else ip2 = part;
             }
         }
@@ -731,7 +731,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
     /// </summary>
     private static bool MatchesStreamPattern(PacketInfo packet, string? ip1, int? port1, string? ip2, int? port2)
     {
-        if (ip2 != null)
+        if (ip2 is not null)
         {
             // Bidirectional conversation match
             var fwdMatch = MatchesEndpoint(packet.SourceIP, packet.SourcePort, ip1, port1) &&
@@ -740,7 +740,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
                            MatchesEndpoint(packet.DestinationIP, packet.DestinationPort, ip1, port1);
             return fwdMatch || revMatch;
         }
-        else if (ip1 != null)
+        else if (ip1 is not null)
         {
             // Single endpoint match
             return MatchesEndpoint(packet.SourceIP, packet.SourcePort, ip1, port1) ||
@@ -751,7 +751,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
 
     private static bool MatchesEndpoint(string ip, int port, string? searchIp, int? searchPort)
     {
-        if (searchIp == null) return false;
+        if (searchIp is null) return false;
         if (!ip.Equals(searchIp, StringComparison.OrdinalIgnoreCase)) return false;
         if (searchPort.HasValue && port != searchPort.Value) return false;
         return true;

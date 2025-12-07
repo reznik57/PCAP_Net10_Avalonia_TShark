@@ -38,23 +38,23 @@ public static partial class ProtocolSecurityEvaluator
         
         // Check for secure protocols first
         var secureAssessment = CheckSecureProtocols(protocol, port);
-        if (secureAssessment != null) return secureAssessment;
+        if (secureAssessment is not null) return secureAssessment;
 
         // Check for critically insecure protocols
         var criticalAssessment = CheckCriticalProtocols(protocol, port);
-        if (criticalAssessment != null) return criticalAssessment;
+        if (criticalAssessment is not null) return criticalAssessment;
 
         // Check for high-risk protocols
         var highRiskAssessment = CheckHighRiskProtocols(protocol, port);
-        if (highRiskAssessment != null) return highRiskAssessment;
+        if (highRiskAssessment is not null) return highRiskAssessment;
 
         // Check for medium-risk protocols
         var mediumRiskAssessment = CheckMediumRiskProtocols(protocol, port);
-        if (mediumRiskAssessment != null) return mediumRiskAssessment;
+        if (mediumRiskAssessment is not null) return mediumRiskAssessment;
 
         // Check for low-risk protocols
         var lowRiskAssessment = CheckLowRiskProtocols(protocol, port);
-        if (lowRiskAssessment != null) return lowRiskAssessment;
+        if (lowRiskAssessment is not null) return lowRiskAssessment;
 
         // Default assessment based on common patterns
         return GetDefaultAssessment(protocol, port);

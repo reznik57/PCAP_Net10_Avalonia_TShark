@@ -86,7 +86,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
 
                 // Test the API with a known IP
                 var testResult = await LookupAsync("8.8.8.8");
-                _isReady = testResult != null;
+                _isReady = testResult is not null;
 
                 if (_isReady)
                 {

@@ -14,7 +14,7 @@ public partial class DashboardViewModel
 {
     private async Task LoadPresetsAsync()
     {
-        if (_filterPresetService == null)
+        if (_filterPresetService is null)
         {
             DebugLogger.Log("[DashboardViewModel] FilterPresetService not available");
             return;
@@ -49,7 +49,7 @@ public partial class DashboardViewModel
     [RelayCommand]
     private async Task ApplyPresetAsync()
     {
-        if (SelectedPreset == null || _filterPresetService == null)
+        if (SelectedPreset is null || _filterPresetService is null)
             return;
 
         try
@@ -74,7 +74,7 @@ public partial class DashboardViewModel
     [RelayCommand]
     private async Task SaveCurrentAsPresetAsync(string? presetName)
     {
-        if (_filterPresetService == null)
+        if (_filterPresetService is null)
         {
             ExportStatusMessage = "Preset service not available";
             ExportStatusColor = ThemeColorHelper.GetColorHex("ColorDanger", "#DC2626");
@@ -127,7 +127,7 @@ public partial class DashboardViewModel
     [RelayCommand]
     private async Task DeletePresetAsync(FilterPreset? preset)
     {
-        if (preset == null || _filterPresetService == null)
+        if (preset is null || _filterPresetService is null)
             return;
 
         if (preset.IsBuiltIn)

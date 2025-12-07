@@ -130,7 +130,7 @@ namespace PCAPAnalyzer.Core.Services
             };
             
             using var process = Process.Start(processInfo);
-            if (process == null)
+            if (process is null)
                 throw new InvalidOperationException("Failed to start TShark process");
             
             var reader = process.StandardOutput;
@@ -138,7 +138,7 @@ namespace PCAPAnalyzer.Core.Services
             var packetNumber = 0;
             var buffer = new List<PacketDisplayInfo>(1000);
             
-            while ((line = await reader.ReadLineAsync()) != null)
+            while ((line = await reader.ReadLineAsync()) is not null)
             {
                 if (cancellationToken.IsCancellationRequested)
                     break;
@@ -149,7 +149,7 @@ namespace PCAPAnalyzer.Core.Services
                 packetNumber++;
                 var packet = ParsePacketLine(line, packetNumber);
                 
-                if (packet != null)
+                if (packet is not null)
                 {
                     buffer.Add(packet);
                     

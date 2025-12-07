@@ -88,7 +88,7 @@ public sealed class PcapInspectionService
             stream.Seek(payloadSkip, SeekOrigin.Current);
             bytesRead += payloadSkip;
 
-            if (progress != null && reportStopwatch.ElapsedMilliseconds >= 200)
+            if (progress is not null && reportStopwatch.ElapsedMilliseconds >= 200)
             {
                 ReportProgress(progress, bytesRead, fileLength, packetCount, totalStopwatch.Elapsed);
                 reportStopwatch.Restart();
@@ -169,7 +169,7 @@ public sealed class PcapInspectionService
             stream.Seek(remainingBytes, SeekOrigin.Current);
             bytesRead += remainingBytes;
 
-            if (progress != null && reportStopwatch.ElapsedMilliseconds >= 200)
+            if (progress is not null && reportStopwatch.ElapsedMilliseconds >= 200)
             {
                 ReportProgress(progress, bytesRead, fileLength, packetCount, totalStopwatch.Elapsed);
                 reportStopwatch.Restart();
@@ -183,7 +183,7 @@ public sealed class PcapInspectionService
 
     private static void ReportProgress(IProgress<PcapInspectionProgress>? progress, long bytesRead, long fileLength, long packetCount, TimeSpan elapsed, bool force = false)
     {
-        if (progress == null)
+        if (progress is null)
         {
             return;
         }

@@ -28,7 +28,7 @@ public static class WorldMapCountryPaths
             return geometry;
 
         geometry = CreateCountryGeometry(countryCode);
-        if (geometry != null)
+        if (geometry is not null)
             _countryGeometries[countryCode] = geometry;
 
         return geometry;
@@ -699,7 +699,7 @@ public static class WorldMapCountryPaths
     {
         // Try to get from geometry first
         var geometry = GetCountryGeometry(countryCode);
-        if (geometry != null)
+        if (geometry is not null)
         {
             var bounds = geometry.Bounds;
             return new Point(bounds.X + bounds.Width / 2, bounds.Y + bounds.Height / 2);

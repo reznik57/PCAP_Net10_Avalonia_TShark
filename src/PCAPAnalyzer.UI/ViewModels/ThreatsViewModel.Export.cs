@@ -78,7 +78,7 @@ public partial class ThreatsViewModel
                 ? desktop.MainWindow
                 : null;
 
-            if (topLevel == null)
+            if (topLevel is null)
             {
                 DebugLogger.Log("[ThreatsViewModel] Export failed - no main window found");
                 return;
@@ -87,7 +87,7 @@ public partial class ThreatsViewModel
             var storageProvider = topLevel.StorageProvider;
             var file = await storageProvider.SaveFilePickerAsync(saveFileDialog);
 
-            if (file == null) return;
+            if (file is null) return;
 
             await using var stream = await file.OpenWriteAsync();
             await using var writer = new System.IO.StreamWriter(stream);

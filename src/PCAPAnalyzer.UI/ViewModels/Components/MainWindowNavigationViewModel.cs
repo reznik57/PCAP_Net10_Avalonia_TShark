@@ -127,7 +127,7 @@ public class MainWindowNavigationViewModel
     {
         try
         {
-            if (frameNumbers == null || frameNumbers.Count == 0)
+            if (frameNumbers is null || frameNumbers.Count == 0)
             {
                 DebugLogger.Log("[Navigation] No frame numbers to filter - showing all packets");
                 return;

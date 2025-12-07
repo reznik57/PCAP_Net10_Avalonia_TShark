@@ -124,7 +124,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Rendering
             double scale, double offsetX, double offsetY, Dictionary<string, CountryTrafficStatistics>? trafficData,
             HashSet<string> excludedCountries, bool showCountryLabels, bool showAnimations, double animationPhase)
         {
-            if (geometry == null || excludedCountries.Contains(continentCode))
+            if (geometry is null || excludedCountries.Contains(continentCode))
                 return;
 
             if (!_continentVisuals.TryGetValue(continentCode, out var visual))
@@ -333,7 +333,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Rendering
             var shapeBrush = new SolidColorBrush(shapeColor);
 
             var geometry = ContinentGeometry.GetGeometry(continentCode);
-            if (geometry == null)
+            if (geometry is null)
                 return;
 
             var scaleX = bounds.Width / 800.0;
@@ -381,7 +381,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Rendering
 
         private double GetContinentTrafficValue(string continentCode, Dictionary<string, CountryTrafficStatistics>? trafficData)
         {
-            if (trafficData == null) return 0;
+            if (trafficData is null) return 0;
 
             var continentTraffic = trafficData
                 .Where(kvp => CountryGeographicData.GetContinentForCountry(kvp.Key) == continentCode)
@@ -396,7 +396,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Rendering
 
         private double GetContinentGlobalPercentage(string continentCode, Dictionary<string, CountryTrafficStatistics>? trafficData)
         {
-            if (trafficData == null || !trafficData.Values.Any())
+            if (trafficData is null || !trafficData.Values.Any())
                 return 0;
 
             var continentTraffic = trafficData

@@ -92,7 +92,7 @@ public partial class PacketNumbersDetailViewModel : ObservableObject
         try
         {
             var desktop = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
-            if (desktop?.MainWindow != null)
+            if (desktop?.MainWindow is not null)
             {
                 var storageProvider = desktop.MainWindow.StorageProvider;
                 var file = await storageProvider.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
@@ -107,7 +107,7 @@ public partial class PacketNumbersDetailViewModel : ObservableObject
                     }
                 });
 
-                if (file != null)
+                if (file is not null)
                 {
                     var content = string.Join(Environment.NewLine, 
                         _allPacketNumbers.Select(p => p.Number.ToString()));
@@ -130,7 +130,7 @@ public partial class PacketNumbersDetailViewModel : ObservableObject
         {
             var numbers = string.Join(", ", _allPacketNumbers.Select(p => p.Number.ToString()));
             var desktop = Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
-            if (desktop?.MainWindow?.Clipboard != null)
+            if (desktop?.MainWindow?.Clipboard is not null)
             {
                 await desktop.MainWindow.Clipboard.SetTextAsync(numbers);
             }

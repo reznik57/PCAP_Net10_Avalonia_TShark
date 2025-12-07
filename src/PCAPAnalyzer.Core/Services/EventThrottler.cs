@@ -73,7 +73,7 @@ namespace PCAPAnalyzer.Core.Services
                 }
             }
 
-            if (argsToRaise != null)
+            if (argsToRaise is not null)
             {
                 try
                 {

@@ -95,7 +95,7 @@ public class SparklineControl : Control
         context.DrawRectangle(BackgroundBrush, null, new Rect(0, 0, bounds.Width, bounds.Height), 2, 2);
 
         var values = Values;
-        if (values == null || values.Count == 0)
+        if (values is null || values.Count == 0)
             return;
 
         // Calculate bar dimensions

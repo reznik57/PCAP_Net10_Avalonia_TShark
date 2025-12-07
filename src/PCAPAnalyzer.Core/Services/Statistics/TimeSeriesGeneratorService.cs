@@ -90,7 +90,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             TimeSpan interval)
         {
             var series = new List<TimeSeriesDataPoint>();
-            if (packets == null || !packets.Any() || startTime >= endTime)
+            if (packets is null || !packets.Any() || startTime >= endTime)
                 return series;
 
             var currentTime = startTime;
@@ -119,7 +119,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
 
         public int CountNetworkAnomalies(List<PacketInfo> packets)
         {
-            if (packets == null || packets.Count == 0)
+            if (packets is null || packets.Count == 0)
                 return 0;
 
             var count = 0;

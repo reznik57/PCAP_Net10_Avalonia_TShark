@@ -184,7 +184,7 @@ public static class PacketSizeAnalysisExtensions
     /// </summary>
     public static string GetSummary(this PacketSizeDistribution distribution)
     {
-        if (distribution == null || distribution.TotalPackets == 0)
+        if (distribution is null || distribution.TotalPackets == 0)
             return "No packets analyzed";
 
         return $"Packets: {distribution.TotalPackets.ToString("N0", CultureInfo.InvariantCulture)} | " +
@@ -198,7 +198,7 @@ public static class PacketSizeAnalysisExtensions
     /// </summary>
     public static string GetDetailedStats(this PacketSizeDistribution distribution)
     {
-        if (distribution == null || distribution.TotalPackets == 0)
+        if (distribution is null || distribution.TotalPackets == 0)
             return "No data available";
 
         return $"Total Packets: {distribution.TotalPackets.ToString("N0", CultureInfo.InvariantCulture)}\n" +
@@ -239,12 +239,12 @@ public static class PacketSizeAnalysisExtensions
     /// </summary>
     public static string ClassifyDistribution(this PacketSizeDistribution distribution)
     {
-        if (distribution == null || distribution.TotalPackets == 0)
+        if (distribution is null || distribution.TotalPackets == 0)
             return "Unknown";
 
         // Check for normal distribution patterns
         var mostCommon = distribution.MostCommonBucket;
-        if (mostCommon == null)
+        if (mostCommon is null)
             return "Unknown";
 
         // Typical patterns:
@@ -255,14 +255,14 @@ public static class PacketSizeAnalysisExtensions
         var tinyPackets = distribution.Buckets?.FirstOrDefault(b => b.Category == PacketSizeCategory.Tiny);
         var jumboPackets = distribution.Buckets?.FirstOrDefault(b => b.Category == PacketSizeCategory.Jumbo);
 
-        if (tinyPackets != null && tinyPackets.PacketPercentage > 60)
+        if (tinyPackets is not null && tinyPackets.PacketPercentage > 60)
             return "Control-Heavy (High ACK traffic)";
 
-        if (jumboPackets != null && jumboPackets.PacketPercentage > 50)
+        if (jumboPackets is not null && jumboPackets.PacketPercentage > 50)
             return "Data-Heavy (Large file transfers)";
 
-        if (tinyPackets != null && tinyPackets.PacketPercentage > 40 &&
-            jumboPackets != null && jumboPackets.PacketPercentage > 20)
+        if (tinyPackets is not null && tinyPackets.PacketPercentage > 40 &&
+            jumboPackets is not null && jumboPackets.PacketPercentage > 20)
             return "Typical Mixed Traffic";
 
         return "Varied Distribution";

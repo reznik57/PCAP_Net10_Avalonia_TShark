@@ -26,10 +26,10 @@ public static class GlobalFilterStateHelper
             var criteria = group.GetThreatCriteria();
             if (criteria.HasValue)
             {
-                if (criteria.Value.Severities != null)
+                if (criteria.Value.Severities is not null)
                     foreach (var s in criteria.Value.Severities)
                         includeSeverities.Add(s);
-                if (criteria.Value.Categories != null)
+                if (criteria.Value.Categories is not null)
                     foreach (var c in criteria.Value.Categories)
                         includeCategories.Add(c);
             }
@@ -43,10 +43,10 @@ public static class GlobalFilterStateHelper
             var criteria = group.GetThreatCriteria();
             if (criteria.HasValue)
             {
-                if (criteria.Value.Severities != null)
+                if (criteria.Value.Severities is not null)
                     foreach (var s in criteria.Value.Severities)
                         excludeSeverities.Add(s);
-                if (criteria.Value.Categories != null)
+                if (criteria.Value.Categories is not null)
                     foreach (var c in criteria.Value.Categories)
                         excludeCategories.Add(c);
             }
@@ -71,10 +71,10 @@ public static class GlobalFilterStateHelper
             var criteria = group.GetVoiceQoSCriteria();
             if (criteria.HasValue)
             {
-                if (criteria.Value.Codecs != null)
+                if (criteria.Value.Codecs is not null)
                     foreach (var c in criteria.Value.Codecs)
                         includeCodecs.Add(c);
-                if (criteria.Value.Qualities != null)
+                if (criteria.Value.Qualities is not null)
                     foreach (var q in criteria.Value.Qualities)
                         includeQualities.Add(q);
             }
@@ -88,10 +88,10 @@ public static class GlobalFilterStateHelper
             var criteria = group.GetVoiceQoSCriteria();
             if (criteria.HasValue)
             {
-                if (criteria.Value.Codecs != null)
+                if (criteria.Value.Codecs is not null)
                     foreach (var c in criteria.Value.Codecs)
                         excludeCodecs.Add(c);
-                if (criteria.Value.Qualities != null)
+                if (criteria.Value.Qualities is not null)
                     foreach (var q in criteria.Value.Qualities)
                         excludeQualities.Add(q);
             }
@@ -116,10 +116,10 @@ public static class GlobalFilterStateHelper
             var criteria = group.GetCountryCriteria();
             if (criteria.HasValue)
             {
-                if (criteria.Value.Countries != null)
+                if (criteria.Value.Countries is not null)
                     foreach (var c in criteria.Value.Countries)
                         includeCountries.Add(c);
-                if (criteria.Value.Regions != null)
+                if (criteria.Value.Regions is not null)
                     foreach (var r in criteria.Value.Regions)
                         includeRegions.Add(r);
             }
@@ -133,10 +133,10 @@ public static class GlobalFilterStateHelper
             var criteria = group.GetCountryCriteria();
             if (criteria.HasValue)
             {
-                if (criteria.Value.Countries != null)
+                if (criteria.Value.Countries is not null)
                     foreach (var c in criteria.Value.Countries)
                         excludeCountries.Add(c);
-                if (criteria.Value.Regions != null)
+                if (criteria.Value.Regions is not null)
                     foreach (var r in criteria.Value.Regions)
                         excludeRegions.Add(r);
             }

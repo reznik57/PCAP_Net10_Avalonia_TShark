@@ -8,7 +8,7 @@ namespace PCAPAnalyzer.UI.Converters
     {
         public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            if (value == null || parameter == null)
+            if (value is null || parameter is null)
                 return false;
                 
             return value.ToString() == parameter.ToString();

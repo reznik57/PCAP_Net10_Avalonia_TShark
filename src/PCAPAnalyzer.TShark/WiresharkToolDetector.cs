@@ -267,7 +267,7 @@ public static class WiresharkToolDetector
             };
 
             using var process = Process.Start(psi);
-            if (process == null)
+            if (process is null)
                 return false;
 
             process.WaitForExit(2000);
@@ -295,7 +295,7 @@ public static class WiresharkToolDetector
         {
             var psi = toolInfo.CreateProcessStartInfo("--version");
             using var process = Process.Start(psi);
-            if (process == null)
+            if (process is null)
                 return false;
 
             var output = process.StandardOutput.ReadToEnd();
@@ -310,7 +310,7 @@ public static class WiresharkToolDetector
             // Try -h for tools that don't support --version
             psi = toolInfo.CreateProcessStartInfo("-h");
             using var process2 = Process.Start(psi);
-            if (process2 == null)
+            if (process2 is null)
                 return false;
 
             process2.WaitForExit(2000);

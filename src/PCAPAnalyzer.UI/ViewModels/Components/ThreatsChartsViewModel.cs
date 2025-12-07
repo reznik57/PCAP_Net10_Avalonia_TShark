@@ -371,7 +371,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
 
     private void UpdatePortRiskChart(SecurityMetrics? metrics)
     {
-        if (metrics == null || !metrics.ThreatsByPort.Any())
+        if (metrics is null || !metrics.ThreatsByPort.Any())
         {
             PortRiskSeries = new ObservableCollection<ISeries>();
             PortRiskXAxes = new[] { new Axis { Labels = Array.Empty<string>() } };
@@ -407,7 +407,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
             new Axis
             {
                 Labels = topPorts.Select(p =>
-                    $"{p.Port}\n{(p.Profile != null ? p.Profile.ServiceName : "Unknown")}").ToArray(),
+                    $"{p.Port}\n{(p.Profile is not null ? p.Profile.ServiceName : "Unknown")}").ToArray(),
                 LabelsRotation = -45,
                 TextSize = 10,
                 LabelsPaint = ThemeColorHelper.GrayPaint
@@ -417,7 +417,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
 
     private void UpdateCategoryChart(SecurityMetrics? metrics)
     {
-        if (metrics == null || !metrics.ThreatsByCategory.Any())
+        if (metrics is null || !metrics.ThreatsByCategory.Any())
         {
             ThreatCategorySeries = new ObservableCollection<ISeries>();
             ThreatCategoryYAxes = new[] { new Axis { Labels = Array.Empty<string>() } };
@@ -459,7 +459,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
     /// </summary>
     private void UpdateThreatPortActivityChart(List<EnhancedSecurityThreat> allThreats)
     {
-        if (allThreats == null || !allThreats.Any())
+        if (allThreats is null || !allThreats.Any())
         {
             ThreatPortActivitySeries = new ObservableCollection<ISeries>();
             ThreatPortActivityXAxes = new[] { new Axis() };

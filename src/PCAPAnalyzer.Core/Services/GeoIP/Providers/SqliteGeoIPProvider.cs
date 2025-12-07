@@ -172,7 +172,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
                 using (var cmd = new SqliteCommand("SELECT COUNT(*) FROM ip_ranges", connection))
                 {
                     var result = await cmd.ExecuteScalarAsync();
-                    stats.TotalRecords = result != null ? Convert.ToInt32(result) : 0;
+                    stats.TotalRecords = result is not null ? Convert.ToInt32(result) : 0;
                 }
 
                 // Get database file size

@@ -102,7 +102,7 @@ namespace PCAPAnalyzer.Core.Monitoring
         {
             var sb = new StringBuilder($"Operation: {operation}, Duration: {duration.TotalMilliseconds:F2}ms");
             
-            if (metrics != null)
+            if (metrics is not null)
             {
                 foreach (var metric in metrics)
                 {
@@ -170,7 +170,7 @@ namespace PCAPAnalyzer.Core.Monitoring
             var levelStr = entry.Level.ToString().ToUpper().PadRight(8);
             DebugLogger.Log($"[{entry.Timestamp:HH:mm:ss}] [{levelStr}] [{entry.Category}] {entry.Message}");
             
-            if (entry.Exception != null)
+            if (entry.Exception is not null)
             {
                 DebugLogger.Log($"  Exception: {entry.Exception}");
             }
@@ -188,14 +188,14 @@ namespace PCAPAnalyzer.Core.Monitoring
                     InitializeLogFile();
                 }
 
-                if (_currentLogWriter == null) return;
+                if (_currentLogWriter is null) return;
 
                 foreach (var entry in entries)
                 {
                     var line = FormatLogEntry(entry);
                     _currentLogWriter.WriteLine(line);
                     
-                    if (entry.Exception != null)
+                    if (entry.Exception is not null)
                     {
                         _currentLogWriter.WriteLine($"  Exception: {entry.Exception}");
                     }

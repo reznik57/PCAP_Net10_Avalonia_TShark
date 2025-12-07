@@ -47,7 +47,7 @@ public sealed class YaraService
         psi.ArgumentList.Add(outputPath);
 
         using var process = Process.Start(psi);
-        if (process == null)
+        if (process is null)
             throw new InvalidOperationException("Failed to launch YARA helper script");
 
         await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);

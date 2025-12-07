@@ -34,7 +34,7 @@ public partial class RecentFilesPanel : UserControl
             try
             {
                 var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-                if (clipboard != null)
+                if (clipboard is not null)
                 {
                     _ = clipboard.SetTextAsync(fileInfo.FilePath);
                     DebugLogger.Log($"[RecentFilesPanel] Copied path to clipboard: {fileInfo.FilePath}");

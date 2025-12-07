@@ -38,7 +38,7 @@ public class RtspAnalyzer : IProtocolAnalyzer
                 if (field.Value.StartsWith("Basic ", StringComparison.OrdinalIgnoreCase))
                 {
                     var decoded = ProtocolAnalysisHelpers.DecodeBase64Credentials(field.Value[6..].Trim());
-                    if (decoded != null)
+                    if (decoded is not null)
                     {
                         var parts = decoded.Split(':', 2);
                         content.Credentials.Add(new CleartextCredential

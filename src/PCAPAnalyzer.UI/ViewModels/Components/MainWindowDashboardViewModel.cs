@@ -85,7 +85,7 @@ public class MainWindowDashboardViewModel : IDisposable
             analysis.ReportTabProgress(analysis.GetDashboardStageKey(), 30, "Loading packet data...");
 
             List<PacketInfo> allPackets;
-            if (packetManager.CachedDashboardPackets != null && packetManager.CachedDashboardPackets.Count > 0)
+            if (packetManager.CachedDashboardPackets is not null && packetManager.CachedDashboardPackets.Count > 0)
             {
                 allPackets = packetManager.CachedDashboardPackets;
                 DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [UpdateDashboardAsync] STEP 2: Using cached {allPackets.Count:N0} packets");
@@ -119,7 +119,7 @@ public class MainWindowDashboardViewModel : IDisposable
             analysis.ReportTabProgress(analysis.GetDashboardStageKey(), 75, "Updating dashboard...");
             await Dispatcher.InvokeAsync(async () =>
             {
-                if (dashboardViewModel != null)
+                if (dashboardViewModel is not null)
                 {
                     await dashboardViewModel.UpdateStatistics(statistics, allPackets);
                 }
@@ -150,7 +150,7 @@ public class MainWindowDashboardViewModel : IDisposable
     {
         var step4Start = DateTime.Now;
 
-        var hasCompleteStats = preliminaryStats != null &&
+        var hasCompleteStats = preliminaryStats is not null &&
                                preliminaryStats.TotalPackets > 0 &&
                                preliminaryStats.CountryStatistics?.Count > 0;
 

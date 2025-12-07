@@ -133,7 +133,7 @@ public partial class TopTalkersViewModel : ObservableObject
     /// </summary>
     private Task UpdateTopTalkersDisplay()
     {
-        if (_currentStatistics == null) return Task.CompletedTask;
+        if (_currentStatistics is null) return Task.CompletedTask;
 
         var talkers = new List<TopTalkerViewModel>();
 
@@ -185,7 +185,7 @@ public partial class TopTalkersViewModel : ObservableObject
         var talkers = new Dictionary<string, TopTalkerViewModel>();
 
         // Add sources
-        if (statistics.TopSources != null)
+        if (statistics.TopSources is not null)
         {
             foreach (var source in statistics.TopSources)
             {
@@ -207,7 +207,7 @@ public partial class TopTalkersViewModel : ObservableObject
         }
 
         // Add destinations
-        if (statistics.TopDestinations != null)
+        if (statistics.TopDestinations is not null)
         {
             foreach (var dest in statistics.TopDestinations)
             {
@@ -236,7 +236,7 @@ public partial class TopTalkersViewModel : ObservableObject
     /// </summary>
     private List<TopTalkerViewModel> BuildSourcesView(NetworkStatistics statistics)
     {
-        if (statistics.TopSources == null) return new List<TopTalkerViewModel>();
+        if (statistics.TopSources is null) return new List<TopTalkerViewModel>();
 
         return statistics.TopSources.Select(s => new TopTalkerViewModel
         {
@@ -256,7 +256,7 @@ public partial class TopTalkersViewModel : ObservableObject
     /// </summary>
     private List<TopTalkerViewModel> BuildDestinationsView(NetworkStatistics statistics)
     {
-        if (statistics.TopDestinations == null) return new List<TopTalkerViewModel>();
+        if (statistics.TopDestinations is null) return new List<TopTalkerViewModel>();
 
         return statistics.TopDestinations.Select(d => new TopTalkerViewModel
         {
@@ -276,7 +276,7 @@ public partial class TopTalkersViewModel : ObservableObject
     /// </summary>
     private void UpdateConversationsView(NetworkStatistics statistics)
     {
-        if (statistics.TopConversations == null)
+        if (statistics.TopConversations is null)
         {
             TopConversations = new ObservableCollection<ConversationDetailViewModel>();
             return;
@@ -318,13 +318,13 @@ public partial class TopTalkersViewModel : ObservableObject
     [RelayCommand]
     private async Task SelectTalker(TopTalkerViewModel talker)
     {
-        if (talker == null || _currentStatistics == null) return;
+        if (talker is null || _currentStatistics is null) return;
 
         SelectedTalker = talker;
 
         // Find protocol breakdown for this talker
         var source = _currentStatistics.TopSources?.FirstOrDefault(s => s.Address == talker.Address);
-        if (source?.ProtocolBreakdown != null)
+        if (source?.ProtocolBreakdown is not null)
         {
             var breakdown = source.ProtocolBreakdown
                 .Select(kvp => new ProtocolBreakdownViewModel
@@ -340,7 +340,7 @@ public partial class TopTalkersViewModel : ObservableObject
         }
 
         // Find conversations involving this talker
-        if (_currentStatistics.TopConversations != null)
+        if (_currentStatistics.TopConversations is not null)
         {
             var conversations = _currentStatistics.TopConversations
                 .Where(c => c.SourceAddress == talker.Address || c.DestinationAddress == talker.Address)
@@ -388,7 +388,7 @@ public partial class TopTalkersViewModel : ObservableObject
     [RelayCommand]
     private async Task ExportTopTalkers()
     {
-        if (_csvExportService == null || _fileDialogService == null || TopTalkers.Count == 0)
+        if (_csvExportService is null || _fileDialogService is null || TopTalkers.Count == 0)
         {
             DebugLogger.Log("[TopTalkersViewModel] Export services not available or no data");
             return;
@@ -438,7 +438,7 @@ public partial class TopTalkersViewModel : ObservableObject
     [RelayCommand]
     private async Task ExportConversations()
     {
-        if (_csvExportService == null || _fileDialogService == null || TopConversations.Count == 0)
+        if (_csvExportService is null || _fileDialogService is null || TopConversations.Count == 0)
         {
             DebugLogger.Log("[TopTalkersViewModel] Export services not available or no data");
             return;

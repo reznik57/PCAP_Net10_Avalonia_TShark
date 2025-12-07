@@ -35,7 +35,7 @@ public partial class ProtocolLegend : UserControl
         }).ToList();
 
         var commonList = this.FindControl<ItemsControl>("CommonProtocolsList");
-        if (commonList != null)
+        if (commonList is not null)
         {
             commonList.ItemsSource = commonItems;
         }
@@ -53,7 +53,7 @@ public partial class ProtocolLegend : UserControl
             .ToList();
 
         var allList = this.FindControl<ItemsControl>("AllProtocolsList");
-        if (allList != null)
+        if (allList is not null)
         {
             allList.ItemsSource = allItems;
         }
@@ -81,7 +81,7 @@ public partial class ProtocolLegend : UserControl
             .ToList();
 
         var categoryList = this.FindControl<ItemsControl>("CategoryList");
-        if (categoryList != null)
+        if (categoryList is not null)
         {
             categoryList.ItemsSource = categories;
         }
@@ -90,7 +90,7 @@ public partial class ProtocolLegend : UserControl
     private void UpdateFooter(int commonCount, int totalCount)
     {
         var footer = this.FindControl<TextBlock>("FooterText");
-        if (footer != null)
+        if (footer is not null)
         {
             footer.Text = $"{commonCount} common protocols • {totalCount} total protocols supported";
         }
@@ -107,10 +107,10 @@ public partial class ProtocolLegend : UserControl
             var allPanel = this.FindControl<StackPanel>("AllProtocolsPanel");
             var categoryPanel = this.FindControl<StackPanel>("CategoryPanel");
 
-            if (allPanel != null)
+            if (allPanel is not null)
                 allPanel.IsVisible = !value && !ShowByCategory;
 
-            if (categoryPanel != null)
+            if (categoryPanel is not null)
                 categoryPanel.IsVisible = !value && ShowByCategory;
         }
     }
@@ -125,10 +125,10 @@ public partial class ProtocolLegend : UserControl
             var allPanel = this.FindControl<StackPanel>("AllProtocolsPanel");
             var categoryPanel = this.FindControl<StackPanel>("CategoryPanel");
 
-            if (allPanel != null)
+            if (allPanel is not null)
                 allPanel.IsVisible = !ShowCommonOnly && !value;
 
-            if (categoryPanel != null)
+            if (categoryPanel is not null)
                 categoryPanel.IsVisible = !ShowCommonOnly && value;
         }
     }

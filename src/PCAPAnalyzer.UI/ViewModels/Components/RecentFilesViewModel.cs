@@ -43,7 +43,7 @@ public partial class RecentFilesViewModel : ObservableObject
     [RelayCommand]
     private void SelectFile(RecentFileInfo file)
     {
-        if (file == null) return;
+        if (file is null) return;
 
         _recentFilesService.SelectRecentFile(file);
         SelectedRecentFile = file;
@@ -55,7 +55,7 @@ public partial class RecentFilesViewModel : ObservableObject
     [RelayCommand]
     private async Task TogglePin(RecentFileInfo file)
     {
-        if (file == null) return;
+        if (file is null) return;
 
         await _recentFilesService.TogglePinAsync(file);
     }
@@ -66,7 +66,7 @@ public partial class RecentFilesViewModel : ObservableObject
     [RelayCommand]
     private async Task RemoveFile(RecentFileInfo file)
     {
-        if (file == null) return;
+        if (file is null) return;
 
         await _recentFilesService.RemoveRecentFileAsync(file);
     }

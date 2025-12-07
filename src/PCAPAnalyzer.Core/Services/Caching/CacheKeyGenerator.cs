@@ -26,9 +26,9 @@ namespace PCAPAnalyzer.Core.Services.Caching
         /// <exception cref="ArgumentNullException">Thrown when required parameters are null.</exception>
         public string GenerateForSecurityFindings(NetworkStatistics statistics, List<SecurityThreat> threats)
         {
-            if (statistics == null)
+            if (statistics is null)
                 throw new ArgumentNullException(nameof(statistics));
-            if (threats == null)
+            if (threats is null)
                 throw new ArgumentNullException(nameof(threats));
 
             var contentBuilder = new StringBuilder();
@@ -40,7 +40,7 @@ namespace PCAPAnalyzer.Core.Services.Caching
             contentBuilder.Append($"LastPacket:{statistics.LastPacketTime:O}|");
 
             // Include protocol distribution
-            if (statistics.ProtocolStats != null && statistics.ProtocolStats.Any())
+            if (statistics.ProtocolStats is not null && statistics.ProtocolStats.Any())
             {
                 var protocolHash = string.Join(";", statistics.ProtocolStats
                     .OrderBy(p => p.Key)
@@ -49,7 +49,7 @@ namespace PCAPAnalyzer.Core.Services.Caching
             }
 
             // Include top ports
-            if (statistics.TopPorts != null && statistics.TopPorts.Any())
+            if (statistics.TopPorts is not null && statistics.TopPorts.Any())
             {
                 var portsHash = string.Join(";", statistics.TopPorts
                     .OrderBy(p => p.Port)
@@ -85,9 +85,9 @@ namespace PCAPAnalyzer.Core.Services.Caching
         /// <exception cref="ArgumentNullException">Thrown when required parameters are null.</exception>
         public string GenerateForRemediationPlan(List<SecurityFinding> findings, List<Recommendation> recommendations)
         {
-            if (findings == null)
+            if (findings is null)
                 throw new ArgumentNullException(nameof(findings));
-            if (recommendations == null)
+            if (recommendations is null)
                 throw new ArgumentNullException(nameof(recommendations));
 
             var contentBuilder = new StringBuilder();
@@ -146,12 +146,12 @@ namespace PCAPAnalyzer.Core.Services.Caching
             var contentBuilder = new StringBuilder();
             contentBuilder.Append($"Service:{serviceName}|Operation:{operation}|");
 
-            if (parameters != null && parameters.Length > 0)
+            if (parameters is not null && parameters.Length > 0)
             {
                 for (int i = 0; i < parameters.Length; i++)
                 {
                     var param = parameters[i];
-                    if (param != null)
+                    if (param is not null)
                     {
                         contentBuilder.Append($"Param{i}:{param}|");
                     }

@@ -26,7 +26,7 @@ public static class WindowAnimations
     {
         PrepareForAnimation(window);
 
-        if (owner != null)
+        if (owner is not null)
             window.Show(owner);
         else
             window.Show();

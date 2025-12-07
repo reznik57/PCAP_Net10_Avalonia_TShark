@@ -147,7 +147,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
     partial void OnShowStreamActivityAsThroughputChanged(bool value)
     {
         // Rebuild chart with throughput or packet data (force update - display mode changed)
-        if (_lastFilteredPackets != null)
+        if (_lastFilteredPackets is not null)
         {
             UpdatePacketsOverTimeChart(_lastFilteredPackets, forceUpdate: true);
         }
@@ -157,7 +157,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
     {
         StreamTimelineDisplayCount = value ? 10 : 5;
         // Rebuild chart with new stream count (force update - display mode changed)
-        if (_lastFilteredPackets != null)
+        if (_lastFilteredPackets is not null)
         {
             UpdatePacketsOverTimeChart(_lastFilteredPackets, forceUpdate: true);
         }
@@ -393,7 +393,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
                 return;
             }
 
-            if (filteredPackets == null || filteredPackets.Count == 0)
+            if (filteredPackets is null || filteredPackets.Count == 0)
             {
                 PacketsOverTimeSeries.Clear();
                 HasPacketData = false;
@@ -851,13 +851,13 @@ public partial class MainWindowChartsViewModel : ObservableObject
 
     private void ApplyPacketsZoomToChart()
     {
-        if (PacketsOverTimeXAxes == null || PacketsOverTimeXAxes.Length == 0 ||
-            PacketsOverTimeSeries == null || PacketsOverTimeSeries.Count == 0 ||
+        if (PacketsOverTimeXAxes is null || PacketsOverTimeXAxes.Length == 0 ||
+            PacketsOverTimeSeries is null || PacketsOverTimeSeries.Count == 0 ||
             !_zoomInitialized)
             return;
 
         var axis = PacketsOverTimeXAxes[0];
-        if (axis == null) return;
+        if (axis is null) return;
 
         // Calculate zoom
         var zoomFactor = 100.0 / PacketsTimelineZoomLevel;
@@ -898,7 +898,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
     {
         try
         {
-            if (PacketsOverTimeSeries == null || seriesIndex < 0 || seriesIndex >= PacketsOverTimeSeries.Count)
+            if (PacketsOverTimeSeries is null || seriesIndex < 0 || seriesIndex >= PacketsOverTimeSeries.Count)
                 return;
 
             PacketsOverTimeSeries[seriesIndex].IsVisible = isVisible;
@@ -920,7 +920,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
     {
         try
         {
-            if (PacketsOverTimeSeries == null || PacketsOverTimeSeries.Count == 0)
+            if (PacketsOverTimeSeries is null || PacketsOverTimeSeries.Count == 0)
                 return;
 
             double maxY = 0;
@@ -935,7 +935,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
                 if (series.Name == "Highlight" || series.Name == "VerticalLine")
                     continue;
 
-                if (series is LineSeries<ObservablePoint> lineSeries && lineSeries.Values != null)
+                if (series is LineSeries<ObservablePoint> lineSeries && lineSeries.Values is not null)
                 {
                     foreach (var point in lineSeries.Values)
                     {
@@ -949,7 +949,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
             maxY = maxY > 0 ? maxY * 1.1 : 100;
 
             // Update Y-axis
-            if (PacketsOverTimeYAxes != null && PacketsOverTimeYAxes.Length > 0)
+            if (PacketsOverTimeYAxes is not null && PacketsOverTimeYAxes.Length > 0)
             {
                 PacketsOverTimeYAxes[0].MaxLimit = maxY;
                 _cachedMaxY = maxY;
@@ -994,7 +994,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
     /// </summary>
     public void ShowStreamPopup(PacketsTimelineDataPoint dataPoint)
     {
-        if (dataPoint == null)
+        if (dataPoint is null)
             return;
 
         var streams = new ObservableCollection<StreamPopupItem>();
@@ -1044,7 +1044,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
                         ? desktop.MainWindow?.Clipboard
                         : null;
 
-                    if (clipboard != null)
+                    if (clipboard is not null)
                     {
                         await clipboard.SetTextAsync(clipboardText);
                         DebugLogger.Log("[MainWindowChartsViewModel] Stream data copied to clipboard");
@@ -1078,7 +1078,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
     [RelayCommand]
     private void ShowStreamDetails(TopStreamTableItem? item)
     {
-        if (item == null || _lastFilteredPackets == null || DrillDown == null) return;
+        if (item is null || _lastFilteredPackets is null || DrillDown is null) return;
 
         DebugLogger.Log($"[Charts] ShowStreamDetails: {item.SourceIP} ↔ {item.DestinationIP}");
 

@@ -50,7 +50,7 @@ public partial class MainWindow : Window
             DebugLogger.Log($"[MainWindow] Error in constructor: {ex.Message}");
             DebugLogger.Log($"[MainWindow] Stack trace: {ex.StackTrace}");
 
-            if (ex.InnerException != null)
+            if (ex.InnerException is not null)
             {
                 DebugLogger.Log($"[MainWindow] Inner exception: {ex.InnerException.Message}");
                 DebugLogger.Log($"[MainWindow] Inner stack trace: {ex.InnerException.StackTrace}");
@@ -99,13 +99,13 @@ public partial class MainWindow : Window
 
         // Find the TabControl and add selection changed handler
         var tabControl = this.FindControl<TabControl>("MainTabControl");
-        if (tabControl != null)
+        if (tabControl is not null)
         {
             tabControl.SelectionChanged += OnTabSelectionChanged;
         }
 
         // Subscribe to Charts ViewModel property changes to reset highlight when series are rebuilt
-        if (DataContext is MainWindowViewModel vm && vm.Charts != null)
+        if (DataContext is MainWindowViewModel vm && vm.Charts is not null)
         {
             vm.Charts.PropertyChanged += OnChartsPropertyChanged;
         }
@@ -136,7 +136,7 @@ public partial class MainWindow : Window
 
                 // Continue with original logic
                 selectedTab = tabControl.SelectedItem as TabItem;
-                if (selectedTab != null)
+                if (selectedTab is not null)
                 {
                     var header = selectedTab.Header?.ToString() ?? "";
                     var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
@@ -148,7 +148,7 @@ public partial class MainWindow : Window
                         DebugLogger.Log("[MainWindow] Dashboard tab selected");
 
                         // Ensure dashboard is initialized
-                        if (viewModel.DashboardViewModel == null)
+                        if (viewModel.DashboardViewModel is null)
                         {
                             DebugLogger.Log("[MainWindow] Dashboard not initialized, creating new instance");
                             try
@@ -177,7 +177,7 @@ public partial class MainWindow : Window
                                     await System.Threading.Tasks.Task.Delay(100);
 
                                     // Check again that we should update
-                                    if (viewModel.DashboardViewModel != null && !viewModel.IsAnalyzing)
+                                    if (viewModel.DashboardViewModel is not null && !viewModel.IsAnalyzing)
                                     {
                                         DebugLogger.Log("[MainWindow] Executing dashboard update command");
                                         await viewModel.UpdateDashboardCommand.ExecuteAsync(null);
@@ -247,7 +247,7 @@ public partial class MainWindow : Window
         try
         {
             var topLevel = TopLevel.GetTopLevel(this);
-            if (topLevel == null || DataContext is not MainWindowViewModel viewModel)
+            if (topLevel is null || DataContext is not MainWindowViewModel viewModel)
             {
                 DebugLogger.Log("[MainWindow] TopLevel or ViewModel not available");
                 return;
@@ -359,7 +359,7 @@ public partial class MainWindow : Window
         {
             // Find the TabControl
             var tabControl = this.FindControl<TabControl>("MainTabControl");
-            if (tabControl == null)
+            if (tabControl is null)
             {
                 DebugLogger.Log("[MainWindow] Cannot find tab control for screenshot");
                 return false;
@@ -367,7 +367,7 @@ public partial class MainWindow : Window
             
             // Get the selected tab content
             var selectedTab = tabControl.SelectedItem as TabItem;
-            if (selectedTab?.Content == null)
+            if (selectedTab?.Content is null)
             {
                 DebugLogger.Log("[MainWindow] No tab selected for screenshot");
                 return false;
@@ -375,7 +375,7 @@ public partial class MainWindow : Window
             
             // Get the content control
             var content = selectedTab.Content as Control;
-            if (content == null)
+            if (content is null)
             {
                 DebugLogger.Log("[MainWindow] Cannot capture tab content");
                 return false;
@@ -414,7 +414,7 @@ public partial class MainWindow : Window
                 SuggestedFileName = $"PCAPAnalyzer_Screenshot_{DateTime.Now:yyyyMMdd_HHmmss}.jpg"
             });
 
-            if (file == null)
+            if (file is null)
             {
                 DebugLogger.Log("[MainWindow] Screenshot save cancelled");
                 return false;
@@ -468,7 +468,7 @@ public partial class MainWindow : Window
         {
             // Find the TabControl
             var tabControl = this.FindControl<TabControl>("MainTabControl");
-            if (tabControl == null)
+            if (tabControl is null)
             {
                 DebugLogger.Log("[MainWindow] Cannot find tab control for screenshot");
                 return false;
@@ -484,7 +484,7 @@ public partial class MainWindow : Window
 
             // Show save dialog
             var storageProvider = this.StorageProvider;
-            if (storageProvider == null)
+            if (storageProvider is null)
             {
                 DebugLogger.Log("[MainWindow] Storage provider not available");
                 return false;
@@ -512,7 +512,7 @@ public partial class MainWindow : Window
                 SuggestedFileName = defaultFileName
             });
 
-            if (file == null)
+            if (file is null)
             {
                 DebugLogger.Log("[MainWindow] User cancelled save dialog");
                 return false;
@@ -524,7 +524,7 @@ public partial class MainWindow : Window
 
             try
             {
-                if (scrollViewer != null && scrollViewer.Content is Control scrollContent)
+                if (scrollViewer is not null && scrollViewer.Content is Control scrollContent)
                 {
                     DebugLogger.Log("[MainWindow] Found ScrollViewer, capturing full scrollable content");
 
@@ -574,7 +574,7 @@ public partial class MainWindow : Window
                     bitmap.Render(visualContent);
                 }
 
-                if (bitmap == null)
+                if (bitmap is null)
                 {
                     DebugLogger.Log("[MainWindow] Failed to capture visual");
                     return false;
@@ -605,7 +605,7 @@ public partial class MainWindow : Window
         {
             // Find the TabControl
             var tabControl = this.FindControl<TabControl>("MainTabControl");
-            if (tabControl == null)
+            if (tabControl is null)
             {
                 DebugLogger.Log("[MainWindow] Cannot find tab control for screenshot");
                 return false;
@@ -624,7 +624,7 @@ public partial class MainWindow : Window
             
             // Get the selected tab content
             var selectedTab = tabControl.SelectedItem as TabItem;
-            if (selectedTab?.Content == null)
+            if (selectedTab?.Content is null)
             {
                 DebugLogger.Log("[MainWindow] No tab selected for screenshot");
                 return false;
@@ -632,7 +632,7 @@ public partial class MainWindow : Window
             
             // Get the content control
             var content = selectedTab.Content as Control;
-            if (content == null)
+            if (content is null)
             {
                 DebugLogger.Log("[MainWindow] Cannot capture tab content");
                 return false;
@@ -646,7 +646,7 @@ public partial class MainWindow : Window
                 // Check if the content is or contains a ScrollViewer
                 var scrollViewer = content as ScrollViewer ?? FindScrollViewer(content);
 
-                if (scrollViewer != null && scrollViewer.Content is Control scrollContent)
+                if (scrollViewer is not null && scrollViewer.Content is Control scrollContent)
                 {
                     DebugLogger.Log("[MainWindow] Found ScrollViewer, capturing full scrollable content");
 
@@ -743,7 +743,7 @@ public partial class MainWindow : Window
 
                 // Show save dialog
                 var storage = StorageProvider;
-                if (storage == null)
+                if (storage is null)
                 {
                     DebugLogger.Log("[MainWindow] Storage provider not available");
                     return false;
@@ -761,7 +761,7 @@ public partial class MainWindow : Window
                     SuggestedFileName = GetScreenshotFileName(targetTabIndex >= 0 ? targetTabIndex : tabControl.SelectedIndex)
                 });
 
-                if (file == null)
+                if (file is null)
                 {
                     DebugLogger.Log("[MainWindow] Screenshot save cancelled");
                     // Restore original tab
@@ -808,7 +808,7 @@ public partial class MainWindow : Window
                 if (child is Control childControl)
                 {
                     var result = FindScrollViewer(childControl);
-                    if (result != null)
+                    if (result is not null)
                         return result;
                 }
             }
@@ -881,7 +881,7 @@ public partial class MainWindow : Window
     /// </summary>
     private void OnDrillDownOverlayPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (DataContext is MainWindowViewModel vm && vm.Charts?.DrillDown != null)
+        if (DataContext is MainWindowViewModel vm && vm.Charts?.DrillDown is not null)
         {
             vm.Charts.DrillDown.IsVisible = false;
         }

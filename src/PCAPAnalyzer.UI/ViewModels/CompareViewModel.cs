@@ -113,7 +113,7 @@ public partial class CompareViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task BrowseFileBAsync()
     {
-        if (_fileDialogService == null)
+        if (_fileDialogService is null)
         {
             StatusMessage = "File dialog service not available";
             return;

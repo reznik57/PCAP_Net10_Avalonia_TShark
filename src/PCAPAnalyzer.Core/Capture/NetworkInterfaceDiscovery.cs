@@ -51,7 +51,7 @@ namespace PCAPAnalyzer.Core.Capture
             try
             {
                 // Check cache
-                if (!forceRefresh && _cachedInterfaces != null && DateTime.UtcNow < _cacheExpiration)
+                if (!forceRefresh && _cachedInterfaces is not null && DateTime.UtcNow < _cacheExpiration)
                 {
                     return _cachedInterfaces.ToList();
                 }
@@ -110,7 +110,7 @@ namespace PCAPAnalyzer.Core.Capture
             try
             {
                 var iface = await GetInterfaceByIdAsync(interfaceId, cancellationToken);
-                return iface != null && iface.IsUp && iface.Status == InterfaceStatus.Up;
+                return iface is not null && iface.IsUp && iface.Status == InterfaceStatus.Up;
             }
             catch
             {
@@ -250,7 +250,7 @@ namespace PCAPAnalyzer.Core.Capture
                     try
                     {
                         var ipData = JsonSerializer.Deserialize<JsonElement[]>(ipOutput);
-                        if (ipData != null)
+                        if (ipData is not null)
                         {
                             foreach (var iface in interfaces)
                             {
@@ -417,7 +417,7 @@ namespace PCAPAnalyzer.Core.Capture
                     };
 
                     using var process = Process.Start(psi);
-                    if (process != null)
+                    if (process is not null)
                     {
                         process.WaitForExit(1000);
                         if (process.ExitCode == 0)

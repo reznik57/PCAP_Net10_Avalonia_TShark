@@ -52,7 +52,7 @@ namespace PCAPAnalyzer.UI.Controls
             _sizeIndicator = this.FindControl<TextBlock>("SizeIndicator");
             _popupContainer = this.FindControl<Grid>("PopupContainer");
             
-            if (_resizableBorder != null && _sizeIndicator != null)
+            if (_resizableBorder is not null && _sizeIndicator is not null)
             {
                 UpdateSizeIndicator();
                 
@@ -67,7 +67,7 @@ namespace PCAPAnalyzer.UI.Controls
             }
             
             // Setup header drag
-            if (_headerBorder != null)
+            if (_headerBorder is not null)
             {
                 _headerBorder.PointerPressed += OnHeaderPointerPressed;
                 _headerBorder.PointerMoved += OnHeaderPointerMoved;
@@ -75,7 +75,7 @@ namespace PCAPAnalyzer.UI.Controls
             }
             
             // Setup maximize button
-            if (_maximizeButton != null)
+            if (_maximizeButton is not null)
             {
                 _maximizeButton.Click += OnMaximizeClick;
             }
@@ -94,7 +94,7 @@ namespace PCAPAnalyzer.UI.Controls
         private void SetupResizeHandle(string name, string direction)
         {
             var handle = this.FindControl<Border>(name);
-            if (handle != null)
+            if (handle is not null)
             {
                 handle.PointerPressed += (s, e) => OnResizeStart(s, e, direction);
                 handle.PointerMoved += OnResizeMove;
@@ -104,17 +104,17 @@ namespace PCAPAnalyzer.UI.Controls
         
         private void OnResizeStart(object? sender, PointerPressedEventArgs e, string direction)
         {
-            if (_resizableBorder == null || _isMaximized) return;
+            if (_resizableBorder is null || _isMaximized) return;
             
             _isResizing = true;
             _resizeDirection = direction;
             _startPoint = e.GetPosition(this);
             _startSize = new Size(_resizableBorder.Width, _resizableBorder.Height);
             
-            if (_popupContainer != null)
+            if (_popupContainer is not null)
             {
                 var transform = _popupContainer.RenderTransform as TranslateTransform;
-                if (transform != null)
+                if (transform is not null)
                 {
                     _startPosition = new Point(transform.X, transform.Y);
                 }
@@ -133,7 +133,7 @@ namespace PCAPAnalyzer.UI.Controls
         
         private void OnResizeMove(object? sender, PointerEventArgs e)
         {
-            if (!_isResizing || _resizableBorder == null || _popupContainer == null) return;
+            if (!_isResizing || _resizableBorder is null || _popupContainer is null) return;
             
             var currentPoint = e.GetPosition(this);
             var deltaX = currentPoint.X - _startPoint.X;
@@ -226,10 +226,10 @@ namespace PCAPAnalyzer.UI.Controls
             _isDragging = true;
             _startPoint = e.GetPosition(this);
             
-            if (_popupContainer != null)
+            if (_popupContainer is not null)
             {
                 var transform = _popupContainer.RenderTransform as TranslateTransform;
-                if (transform != null)
+                if (transform is not null)
                 {
                     _startPosition = new Point(transform.X, transform.Y);
                 }
@@ -245,7 +245,7 @@ namespace PCAPAnalyzer.UI.Controls
         
         private void OnHeaderPointerMoved(object? sender, PointerEventArgs e)
         {
-            if (!_isDragging || _popupContainer == null) return;
+            if (!_isDragging || _popupContainer is null) return;
             
             var currentPoint = e.GetPosition(this);
             var offsetX = currentPoint.X - _startPoint.X;
@@ -274,7 +274,7 @@ namespace PCAPAnalyzer.UI.Controls
         
         private void ToggleMaximize()
         {
-            if (_resizableBorder == null || _popupContainer == null || _maximizeButton == null) return;
+            if (_resizableBorder is null || _popupContainer is null || _maximizeButton is null) return;
             
             if (_isMaximized)
             {
@@ -285,7 +285,7 @@ namespace PCAPAnalyzer.UI.Controls
                 
                 // Update maximize button icon
                 var path = _maximizeButton.Content as Avalonia.Controls.Shapes.Path;
-                if (path != null)
+                if (path is not null)
                 {
                     path.Data = Geometry.Parse("M 4 4 L 20 4 L 20 20 L 4 20 Z M 4 7 L 20 7");
                 }
@@ -300,7 +300,7 @@ namespace PCAPAnalyzer.UI.Controls
                 _originalHeight = _resizableBorder.Height;
                 
                 var transform = _popupContainer.RenderTransform as TranslateTransform;
-                if (transform != null)
+                if (transform is not null)
                 {
                     _originalLeft = transform.X;
                     _originalTop = transform.Y;
@@ -327,7 +327,7 @@ namespace PCAPAnalyzer.UI.Controls
                 
                 // Update maximize button icon (restore icon)
                 var path = _maximizeButton.Content as Avalonia.Controls.Shapes.Path;
-                if (path != null)
+                if (path is not null)
                 {
                     path.Data = Geometry.Parse("M 4 8 L 8 8 L 8 4 L 20 4 L 20 16 L 16 16 M 4 12 L 4 20 L 16 20 L 16 12 Z");
                 }
@@ -341,7 +341,7 @@ namespace PCAPAnalyzer.UI.Controls
         
         private void UpdateSizeIndicator()
         {
-            if (_sizeIndicator != null && _resizableBorder != null)
+            if (_sizeIndicator is not null && _resizableBorder is not null)
             {
                 _sizeIndicator.Text = $"{_resizableBorder.Width:F0} × {_resizableBorder.Height:F0}";
             }

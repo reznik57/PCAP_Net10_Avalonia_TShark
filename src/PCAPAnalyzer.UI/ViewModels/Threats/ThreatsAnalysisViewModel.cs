@@ -111,7 +111,7 @@ public partial class ThreatsAnalysisViewModel : ObservableObject
     /// </summary>
     public async Task<bool> TryLoadFromCacheAsync(int currentPacketCount, bool isFilterActive)
     {
-        if (_cacheService == null || string.IsNullOrEmpty(_currentFilePath))
+        if (_cacheService is null || string.IsNullOrEmpty(_currentFilePath))
             return false;
 
         try
@@ -126,7 +126,7 @@ public partial class ThreatsAnalysisViewModel : ObservableObject
                 return false;
 
             var cachedThreats = await _cacheService.LoadThreatsAsync(_currentCacheKey);
-            if (cachedThreats == null || cachedThreats.Count == 0)
+            if (cachedThreats is null || cachedThreats.Count == 0)
                 return false;
 
             AllThreats = cachedThreats;
@@ -153,7 +153,7 @@ public partial class ThreatsAnalysisViewModel : ObservableObject
     /// </summary>
     public void TrySaveToCache()
     {
-        if (_cacheService == null || string.IsNullOrEmpty(_currentCacheKey))
+        if (_cacheService is null || string.IsNullOrEmpty(_currentCacheKey))
             return;
 
         _ = Task.Run(async () =>
@@ -272,7 +272,7 @@ public partial class ThreatsAnalysisViewModel : ObservableObject
     public void AddSuricataAlerts(List<SuricataAlert> alerts)
     {
         SuricataAlerts = alerts;
-        if (alerts == null || alerts.Count == 0) return;
+        if (alerts is null || alerts.Count == 0) return;
 
         foreach (var alert in alerts)
         {
@@ -308,7 +308,7 @@ public partial class ThreatsAnalysisViewModel : ObservableObject
     public void AddYaraMatches(List<YaraMatch> matches)
     {
         YaraMatches = matches;
-        if (matches == null || matches.Count == 0) return;
+        if (matches is null || matches.Count == 0) return;
 
         foreach (var match in matches)
         {

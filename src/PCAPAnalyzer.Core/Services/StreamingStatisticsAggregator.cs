@@ -54,7 +54,7 @@ public sealed class StreamingStatisticsAggregator
 
     public void AddBatch(IReadOnlyList<PacketInfo> batch)
     {
-        if (batch == null || batch.Count == 0)
+        if (batch is null || batch.Count == 0)
             return;
 
         lock (_sync)
@@ -193,10 +193,10 @@ public sealed class StreamingStatisticsAggregator
         _uniqueIps.Add(packet.SourceIP);
         _uniqueIps.Add(packet.DestinationIP);
 
-        if (_firstPacket == null || packet.Timestamp < _firstPacket)
+        if (_firstPacket is null || packet.Timestamp < _firstPacket)
             _firstPacket = packet.Timestamp;
 
-        if (_lastPacket == null || packet.Timestamp > _lastPacket)
+        if (_lastPacket is null || packet.Timestamp > _lastPacket)
             _lastPacket = packet.Timestamp;
     }
 

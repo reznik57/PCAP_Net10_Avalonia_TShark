@@ -109,7 +109,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         [RelayCommand]
         private async Task GenerateReport()
         {
-            if (_currentStatistics == null)
+            if (_currentStatistics is null)
             {
                 GenerationStatus = "No data available for report generation";
                 return;
@@ -162,10 +162,10 @@ namespace PCAPAnalyzer.UI.ViewModels
         
         private void UpdateReportDisplay()
         {
-            if (CurrentReport == null) return;
+            if (CurrentReport is null) return;
             
             // Update executive summary
-            if (CurrentReport.ExecutiveSummary != null)
+            if (CurrentReport.ExecutiveSummary is not null)
             {
                 ExecutiveSummaryText = CurrentReport.ExecutiveSummary.Overview;
                 SecurityScore = CurrentReport.ExecutiveSummary.SecurityScore;
@@ -214,7 +214,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             }
             
             // Update risk assessment
-            if (CurrentReport.RiskAssessment != null)
+            if (CurrentReport.RiskAssessment is not null)
             {
                 RiskAssessmentText = $"Overall Risk Score: {CurrentReport.RiskAssessment.OverallRiskScore:F1}/100\n" +
                                    $"Risk Level: {CurrentReport.RiskAssessment.RiskLevel}\n" +
@@ -223,7 +223,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             
             // Update remediation plan
             RemediationPhases.Clear();
-            if (CurrentReport.RemediationPlan?.Phases != null)
+            if (CurrentReport.RemediationPlan?.Phases is not null)
             {
                 foreach (var phase in CurrentReport.RemediationPlan.Phases)
                 {
@@ -244,7 +244,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         [RelayCommand]
         private async Task ExportHtml()
         {
-            if (CurrentReport == null)
+            if (CurrentReport is null)
             {
                 GenerationStatus = "No report to export";
                 return;
@@ -271,7 +271,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         [RelayCommand]
         private Task ExportPdf()
         {
-            if (CurrentReport == null)
+            if (CurrentReport is null)
             {
                 GenerationStatus = "No report to export";
                 return Task.CompletedTask;
@@ -285,7 +285,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         [RelayCommand]
         private async Task ExportJson()
         {
-            if (CurrentReport == null)
+            if (CurrentReport is null)
             {
                 GenerationStatus = "No report to export";
                 return;

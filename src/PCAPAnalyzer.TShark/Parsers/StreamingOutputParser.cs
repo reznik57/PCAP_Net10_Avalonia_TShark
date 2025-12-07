@@ -536,7 +536,7 @@ public sealed class StreamingOutputParser
     private void RecordParseFailure(ReadOnlySpan<char> line)
     {
         _parseFailureCount++;
-        if (_firstParseFailure == null)
+        if (_firstParseFailure is null)
         {
             _firstParseFailure = line.ToString();
         }

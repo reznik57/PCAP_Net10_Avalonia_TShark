@@ -385,7 +385,7 @@ public partial class DrillDownPopupViewModel : ObservableObject
             ? desktop.MainWindow
             : null;
         var clipboard = topLevel?.Clipboard;
-        if (clipboard != null)
+        if (clipboard is not null)
         {
             await clipboard.SetTextAsync(_currentFilterValue);
         }
@@ -434,7 +434,7 @@ public partial class DrillDownPopupViewModel : ObservableObject
     [RelayCommand]
     private void FilterByConversation(ConversationBreakdownItem? conv)
     {
-        if (conv != null)
+        if (conv is not null)
         {
             _navigateWithFilter?.Invoke("PacketAnalysis", $"conversation={conv.SourceIP}:{conv.SourcePort}-{conv.DestinationIP}:{conv.DestinationPort}");
             Close();

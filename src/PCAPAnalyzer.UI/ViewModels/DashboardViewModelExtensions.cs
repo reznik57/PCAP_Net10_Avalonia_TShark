@@ -277,8 +277,8 @@ namespace PCAPAnalyzer.UI.ViewModels
                 }
 
                 // Check if we have data from either source
-                if ((TopConversationsByBytes == null || !TopConversationsByBytes.Any()) &&
-                    (TopConversations == null || !TopConversations.Any()))
+                if ((TopConversationsByBytes is null || !TopConversationsByBytes.Any()) &&
+                    (TopConversations is null || !TopConversations.Any()))
                 {
                     TopConnectionsByBytesDisplay = new ObservableCollection<ConnectionInfo>();
                     TopConnectionsByPacketsDisplay = new ObservableCollection<ConnectionInfo>();
@@ -290,7 +290,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 // Step 1: Aggregate all conversations by IP pair
                 var ipPairStats = new Dictionary<string, (long Bytes, long Packets, string SrcIP, string DstIP, string Protocol)>();
 
-                if (TopConversationsByBytes != null)
+                if (TopConversationsByBytes is not null)
                 {
                     foreach (var c in TopConversationsByBytes)
                     {
@@ -308,7 +308,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 }
 
                 // Also include conversations from packet-sorted list if not already present
-                if (TopConversations != null)
+                if (TopConversations is not null)
                 {
                     foreach (var c in TopConversations)
                     {
@@ -419,7 +419,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     return;
                 }
                 
-                if (_currentStatistics?.TopPorts == null)
+                if (_currentStatistics?.TopPorts is null)
                 {
                     // TopPortsByBytesDisplay = new ObservableCollection  // Now managed by Statistics component<TopPortViewModel>();
                     // TopPortsByPacketsDisplay = new ObservableCollection  // Now managed by Statistics component<TopPortViewModel>();
@@ -543,7 +543,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 // FIX: Always create NEW collection to ensure property change fires
                 var newSeries = new ObservableCollection<ISeries>();
 
-                if (_currentStatistics?.TopPorts != null)
+                if (_currentStatistics?.TopPorts is not null)
                 {
                     // Take top ports based on current display setting (5 or 10 for timeline)
                     var displayCount = PortTimelineDisplayCount;
@@ -711,7 +711,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 DebugLogger.Log($"[DashboardViewModel] UpdateSourcesDisplay - displayCount: {displayCount}");
                 
                 // Update sources by packets
-                if (TopSources != null && TopSources.Any())
+                if (TopSources is not null && TopSources.Any())
                 {
                     DebugLogger.Log($"[DashboardViewModel] TopSources count: {TopSources.Count}, taking: {displayCount}");
                     
@@ -731,7 +731,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 }
                 
                 // Update sources by bytes
-                if (TopSourcesByBytes != null && TopSourcesByBytes.Any())
+                if (TopSourcesByBytes is not null && TopSourcesByBytes.Any())
                 {
                     DebugLogger.Log($"[DashboardViewModel] TopSourcesByBytes count: {TopSourcesByBytes.Count}, taking: {displayCount}");
                     
@@ -771,7 +771,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 DebugLogger.Log($"[DashboardViewModel] UpdateDestinationsDisplay - displayCount: {displayCount}");
                 
                 // Update destinations by packets
-                if (TopDestinations != null && TopDestinations.Any())
+                if (TopDestinations is not null && TopDestinations.Any())
                 {
                     DebugLogger.Log($"[DashboardViewModel] TopDestinations count: {TopDestinations.Count}, taking: {displayCount}");
                     
@@ -791,7 +791,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 }
                 
                 // Update destinations by bytes
-                if (TopDestinationsByBytes != null && TopDestinationsByBytes.Any())
+                if (TopDestinationsByBytes is not null && TopDestinationsByBytes.Any())
                 {
                     DebugLogger.Log($"[DashboardViewModel] TopDestinationsByBytes count: {TopDestinationsByBytes.Count}, taking: {displayCount}");
                     

@@ -303,7 +303,7 @@ public partial class AnomaliesPacketTableViewModel : ObservableObject
     private void SelectPacket(AnomalyPacketViewModel? packet)
     {
         SelectedPacket = packet;
-        if (packet != null)
+        if (packet is not null)
         {
             PacketSelected?.Invoke(this, packet);
         }

@@ -94,7 +94,7 @@ namespace PCAPAnalyzer.Core.Performance
         /// <param name="obj">Object to return</param>
         public void Return(T obj)
         {
-            if (_disposed || obj == null)
+            if (_disposed || obj is null)
             {
                 Interlocked.Increment(ref _totalDiscarded);
                 return;
@@ -200,7 +200,7 @@ namespace PCAPAnalyzer.Core.Performance
         {
             if (_disposed) return;
 
-            if (_object != null)
+            if (_object is not null)
             {
                 _pool.Return(_object);
                 _object = null;
@@ -296,7 +296,7 @@ namespace PCAPAnalyzer.Core.Performance
 
         public void Return(byte[] array)
         {
-            if (array == null || array.Length > _maxArrayLength)
+            if (array is null || array.Length > _maxArrayLength)
                 return;
 
             int bucketIndex = SelectBucketIndex(array.Length);

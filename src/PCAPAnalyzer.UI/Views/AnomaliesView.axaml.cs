@@ -89,7 +89,7 @@ public partial class AnomaliesView : UserControl
     // Chart pointer event handlers for tooltip with colored text matching line colors
     private void OnAnomalyChartPointerMoved(object? sender, PointerEventArgs e)
     {
-        if (sender is not CartesianChart chart || ViewModel?.Charts?.TimelineSeries == null)
+        if (sender is not CartesianChart chart || ViewModel?.Charts?.TimelineSeries is null)
             return;
 
         try
@@ -144,7 +144,7 @@ public partial class AnomaliesView : UserControl
             if (s.Name is "Highlight" or "VerticalLine")
                 continue;
 
-            if (s is not LineSeries<DateTimePoint> dateTimeSeries || dateTimeSeries.Values == null)
+            if (s is not LineSeries<DateTimePoint> dateTimeSeries || dateTimeSeries.Values is null)
                 continue;
 
             var values = dateTimeSeries.Values.ToList();
@@ -220,7 +220,7 @@ public partial class AnomaliesView : UserControl
     {
         try
         {
-            if (ViewModel?.Charts?.TimelineSeriesCollection == null)
+            if (ViewModel?.Charts?.TimelineSeriesCollection is null)
                 return;
 
             // Ensure valid Y range for vertical line
@@ -229,7 +229,7 @@ public partial class AnomaliesView : UserControl
                 _cachedMaxY = _cachedMinY + 1;
 
             // Create or update scatter series for highlight dot
-            if (_highlightScatter == null)
+            if (_highlightScatter is null)
             {
                 _highlightScatter = new ScatterSeries<DateTimePoint>
                 {
@@ -248,7 +248,7 @@ public partial class AnomaliesView : UserControl
             UpdateScatterPoint(_highlightScatter, timestamp, maxValue);
 
             // Create or update line series for vertical line
-            if (_highlightLine == null)
+            if (_highlightLine is null)
             {
                 _highlightLine = new LineSeries<DateTimePoint>
                 {
@@ -301,7 +301,7 @@ public partial class AnomaliesView : UserControl
 
     private static void SetSeriesVisibility(ISeries? series, bool visible)
     {
-        if (series != null)
+        if (series is not null)
             series.IsVisible = visible;
     }
 
@@ -355,7 +355,7 @@ public partial class AnomaliesView : UserControl
     {
         try
         {
-            if (sender is not CartesianChart chart || ViewModel == null)
+            if (sender is not CartesianChart chart || ViewModel is null)
                 return;
 
             var relativeX = CalculateRelativeX(chart, e);
@@ -380,13 +380,13 @@ public partial class AnomaliesView : UserControl
     {
         try
         {
-            if (ViewModel?.Charts?.TimelineSeriesCollection == null)
+            if (ViewModel?.Charts?.TimelineSeriesCollection is null)
                 return;
 
-            if (_highlightScatter != null && ViewModel.Charts.TimelineSeriesCollection.Contains(_highlightScatter))
+            if (_highlightScatter is not null && ViewModel.Charts.TimelineSeriesCollection.Contains(_highlightScatter))
                 ViewModel.Charts.TimelineSeriesCollection.Remove(_highlightScatter);
 
-            if (_highlightLine != null && ViewModel.Charts.TimelineSeriesCollection.Contains(_highlightLine))
+            if (_highlightLine is not null && ViewModel.Charts.TimelineSeriesCollection.Contains(_highlightLine))
                 ViewModel.Charts.TimelineSeriesCollection.Remove(_highlightLine);
 
             _highlightScatter = null;
@@ -411,7 +411,7 @@ public partial class AnomaliesView : UserControl
     {
         try
         {
-            if (ViewModel?.PacketTable == null)
+            if (ViewModel?.PacketTable is null)
                 return;
 
             // Get the AnomalyPacketViewModel from the row's DataContext

@@ -124,7 +124,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             {
                 var dispatcher = App.Services?.GetService<IDispatcherService>();
                 // Ensure we start on UI thread
-                if (dispatcher != null && !dispatcher.CheckAccess())
+                if (dispatcher is not null && !dispatcher.CheckAccess())
                 {
                     await dispatcher.InvokeAsync(async () => await execute());
                 }
@@ -144,7 +144,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             {
                 var dispatcher = App.Services?.GetService<IDispatcherService>();
                 // Ensure we start on UI thread
-                if (dispatcher != null && !dispatcher.CheckAccess())
+                if (dispatcher is not null && !dispatcher.CheckAccess())
                 {
                     await dispatcher.InvokeAsync(async () => await execute(param));
                 }

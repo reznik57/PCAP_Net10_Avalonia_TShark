@@ -21,16 +21,16 @@ public static class TaskExtensions
         Action<Exception>? onError = null,
         bool continueOnCapturedContext = false)
     {
-        if (task == null) return;
+        if (task is null) return;
 
         task.ContinueWith(
             t =>
             {
-                if (t.IsFaulted && t.Exception != null)
+                if (t.IsFaulted && t.Exception is not null)
                 {
                     var ex = t.Exception.GetBaseException();
 
-                    if (onError != null)
+                    if (onError is not null)
                     {
                         onError(ex);
                     }
@@ -55,7 +55,7 @@ public static class TaskExtensions
         this Func<Task> asyncAction,
         Action<Exception>? onError = null)
     {
-        if (asyncAction == null) return;
+        if (asyncAction is null) return;
 
         Task.Run(async () =>
         {
@@ -65,7 +65,7 @@ public static class TaskExtensions
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                if (onError != null)
+                if (onError is not null)
                 {
                     onError(ex);
                 }

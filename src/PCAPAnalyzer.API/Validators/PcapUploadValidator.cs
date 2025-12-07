@@ -46,7 +46,7 @@ public class AnalyzeRequestValidator : AbstractValidator<AnalyzeRequest>
                 .WithMessage($"Analysis type must be one of: {string.Join(", ", ValidAnalysisTypes)}");
         });
 
-        When(x => x.Protocols != null && x.Protocols.Any(), () =>
+        When(x => x.Protocols is not null && x.Protocols.Any(), () =>
         {
             RuleFor(x => x.Protocols)
                 .Must(protocols => protocols!.All(p => !string.IsNullOrWhiteSpace(p)))

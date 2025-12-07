@@ -136,7 +136,7 @@ public class AnalysisCoordinatorService : IAnalysisCoordinator
     public void RegisterTabs(params ITabPopulationTarget[] tabs)
     {
         _tabs.Clear();
-        _tabs.AddRange(tabs.Where(t => t != null));
+        _tabs.AddRange(tabs.Where(t => t is not null));
         DebugLogger.Log($"[AnalysisCoordinator] Registered {_tabs.Count} tabs: {string.Join(", ", _tabs.Select(t => t.TabName))}");
     }
 
@@ -158,7 +158,7 @@ public class AnalysisCoordinatorService : IAnalysisCoordinator
 
         // Find the tab by index mapping
         var tab = GetTabByIndex(tabIndex);
-        if (tab == null)
+        if (tab is null)
         {
             DebugLogger.Log($"[AnalysisCoordinator] No tab registered for index {tabIndex}");
             return false;

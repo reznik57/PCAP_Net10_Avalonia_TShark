@@ -66,13 +66,13 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
                 try
                 {
                     // CRITICAL FIX: Dispose old readers if re-initializing
-                    if (_ipv4Reader != null)
+                    if (_ipv4Reader is not null)
                     {
                         DebugLogger.Log($"[{ProviderName}] Disposing previous IPv4 DatabaseReader to prevent memory leak");
                         _ipv4Reader.Dispose();
                         _ipv4Reader = null;
                     }
-                    if (_ipv6Reader != null)
+                    if (_ipv6Reader is not null)
                     {
                         DebugLogger.Log($"[{ProviderName}] Disposing previous IPv6 DatabaseReader to prevent memory leak");
                         _ipv6Reader.Dispose();
@@ -159,7 +159,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
                     }
 
                     // If IPv6 database not found separately, use IPv4 database for both (MaxMind Country DB supports both)
-                    if (!ipv6Loaded && ipv4Loaded && _ipv4Reader != null)
+                    if (!ipv6Loaded && ipv4Loaded && _ipv4Reader is not null)
                     {
                         DebugLogger.Log($"[{ProviderName}] No separate IPv6 database found, using combined IPv4/IPv6 database");
                         _ipv6Reader = _ipv4Reader; // Same reader supports both IPv4 and IPv6
@@ -222,11 +222,11 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
                         ? _ipv6Reader
                         : _ipv4Reader;
 
-                    if (reader == null)
+                    if (reader is null)
                         return null;
 
                     var response = reader.Country(ipAddress);
-                    if (response?.Country == null)
+                    if (response?.Country is null)
                         return null;
 
                     var countryCode = response.Country.IsoCode ?? "XX";
@@ -314,13 +314,13 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
             {
                 try
                 {
-                    if (_ipv4Reader != null && _ipv4Reader != _ipv6Reader)
+                    if (_ipv4Reader is not null && _ipv4Reader != _ipv6Reader)
                     {
                         _ipv4Reader.Dispose();
                         _ipv4Reader = null;
                     }
 
-                    if (_ipv6Reader != null)
+                    if (_ipv6Reader is not null)
                     {
                         _ipv6Reader.Dispose();
                         _ipv6Reader = null;
@@ -411,12 +411,12 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Providers
             if (disposing)
             {
                 // Dispose managed resources
-                if (_ipv4Reader != null && _ipv4Reader != _ipv6Reader)
+                if (_ipv4Reader is not null && _ipv4Reader != _ipv6Reader)
                 {
                     _ipv4Reader.Dispose();
                 }
 
-                if (_ipv6Reader != null)
+                if (_ipv6Reader is not null)
                 {
                     _ipv6Reader.Dispose();
                 }

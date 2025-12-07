@@ -59,7 +59,7 @@ public partial class App : Application
             HealthMonitor.Initialize();
 
             // Set up synchronization context for async operations
-            if (System.Threading.SynchronizationContext.Current == null)
+            if (System.Threading.SynchronizationContext.Current is null)
             {
                 System.Threading.SynchronizationContext.SetSynchronizationContext(
                     new AvaloniaSynchronizationContext());
@@ -95,7 +95,7 @@ public partial class App : Application
             DebugLogger.Log($"[App] Error in OnFrameworkInitializationCompleted: {ex.Message}");
             DebugLogger.Log($"[App] Stack trace: {ex.StackTrace}");
 
-            if (ex.InnerException != null)
+            if (ex.InnerException is not null)
             {
                 DebugLogger.Log($"[App] Inner exception: {ex.InnerException.Message}");
                 DebugLogger.Log($"[App] Inner stack trace: {ex.InnerException.StackTrace}");
@@ -115,7 +115,7 @@ public partial class App : Application
         {
             DebugLogger.Log("[App] Clearing old analysis cache on startup...");
             var cacheService = Services.GetService<IAnalysisCacheService>();
-            if (cacheService != null)
+            if (cacheService is not null)
             {
                 var deletedCount = await cacheService.ClearAllCacheAsync();
                 DebugLogger.Log($"[App] Cleared {deletedCount} old cache entries on startup");

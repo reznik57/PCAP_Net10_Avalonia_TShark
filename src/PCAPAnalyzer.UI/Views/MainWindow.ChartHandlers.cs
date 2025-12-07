@@ -60,7 +60,7 @@ public partial class MainWindow
             var chart = sender as CartesianChart;
             var tooltipText = this.FindControl<TextBlock>("PacketsOverTimeTooltipText");
 
-            if (chart == null || tooltipText == null || DataContext is not MainWindowViewModel vm)
+            if (chart is null || tooltipText is null || DataContext is not MainWindowViewModel vm)
             {
                 return;
             }
@@ -81,7 +81,7 @@ public partial class MainWindow
         try
         {
             var tooltipText = this.FindControl<TextBlock>("PacketsOverTimeTooltipText");
-            if (tooltipText != null)
+            if (tooltipText is not null)
             {
                 tooltipText.Inlines?.Clear();
                 tooltipText.Text = "";
@@ -105,7 +105,7 @@ public partial class MainWindow
                 return;
 
             var chart = sender as CartesianChart;
-            if (chart == null)
+            if (chart is null)
                 return;
 
             var position = e.GetPosition(chart);
@@ -125,7 +125,7 @@ public partial class MainWindow
             var dataIndex = vm.Charts.GetDataIndexForRelativeX(relativeX);
             var dataPoint = vm.Charts.GetDataPointAtIndex(dataIndex);
 
-            if (dataPoint != null)
+            if (dataPoint is not null)
             {
                 // Show popup with detailed information
                 ShowPacketsChartPopup(dataPoint, vm.Charts.TopStreams);
@@ -163,7 +163,7 @@ public partial class MainWindow
             var dataIndex = vm.Charts.GetDataIndexForRelativeX(relativeX);
             var dataPoint = vm.Charts.GetDataPointAtIndex(dataIndex);
 
-            if (dataPoint != null)
+            if (dataPoint is not null)
             {
                 // Build colored tooltip
                 tooltipText.Inlines?.Clear();
@@ -238,7 +238,7 @@ public partial class MainWindow
             var value = dataPoint.TotalCount;
 
             // Create or update scatter series for highlight dot
-            if (_packetsHighlightScatter == null)
+            if (_packetsHighlightScatter is null)
             {
                 _packetsHighlightScatter = new ScatterSeries<ObservablePoint>
                 {
@@ -258,7 +258,7 @@ public partial class MainWindow
             UpdateObservablePoint(_packetsHighlightScatter, timestamp.Ticks, value);
 
             // Create or update line series for vertical line (thick yellow marker like Dashboard)
-            if (_packetsHighlightLine == null)
+            if (_packetsHighlightLine is null)
             {
                 _packetsHighlightLine = new LineSeries<ObservablePoint>
                 {
@@ -357,7 +357,7 @@ public partial class MainWindow
     /// </summary>
     private static void SetSeriesVisibility(ISeries? series, bool visible)
     {
-        if (series == null) return;
+        if (series is null) return;
         series.IsVisible = visible;
     }
 

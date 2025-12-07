@@ -70,7 +70,7 @@ namespace PCAPAnalyzer.UI.Views
             try
             {
                 var filterCopyService = App.Services?.GetService<FilterCopyService>();
-                if (filterCopyService == null)
+                if (filterCopyService is null)
                 {
                     DebugLogger.Log("[CountryTrafficView] FilterCopyService not available");
                     return;

@@ -18,7 +18,7 @@ public partial class FilterPanelControl : UserControl
             // Get ApplyFiltersCommand from DataContext using reflection
             // This works with any ViewModel that has ApplyFiltersCommand
             var dataContext = DataContext;
-            if (dataContext == null) return;
+            if (dataContext is null) return;
 
             var commandProperty = dataContext.GetType().GetProperty("ApplyFiltersCommand");
             if (commandProperty?.GetValue(dataContext) is ICommand command && command.CanExecute(null))

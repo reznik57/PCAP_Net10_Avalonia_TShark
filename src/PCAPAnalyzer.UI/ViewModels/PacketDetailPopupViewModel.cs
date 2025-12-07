@@ -98,7 +98,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 StatusMessage = "Loading packets...";
                 
                 // Apply initial filter
-                var packets = _initialFilter != null 
+                var packets = _initialFilter is not null 
                     ? _allPackets.Where(_initialFilter).ToList()
                     : _allPackets.ToList();
 
@@ -351,7 +351,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             }
             
             // Add TCP-specific information if available
-            if (packet.Protocol == Protocol.TCP && packet.Info != null)
+            if (packet.Protocol == Protocol.TCP && packet.Info is not null)
             {
                 details.AppendLine();
                 details.AppendLine("TCP Analysis:");
@@ -397,7 +397,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
             if (Avalonia.Application.Current?.ApplicationLifetime is
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
-                desktop.MainWindow != null)
+                desktop.MainWindow is not null)
             {
                 WindowAnimations.ShowWithAnimation(detailWindow, desktop.MainWindow);
             }
@@ -422,7 +422,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
             if (Avalonia.Application.Current?.ApplicationLifetime is
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
-                desktop.MainWindow != null)
+                desktop.MainWindow is not null)
             {
                 WindowAnimations.ShowWithAnimation(detailWindow, desktop.MainWindow);
             }
@@ -444,7 +444,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
             if (Avalonia.Application.Current?.ApplicationLifetime is
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
-                desktop.MainWindow != null)
+                desktop.MainWindow is not null)
             {
                 WindowAnimations.ShowWithAnimation(detailWindow, desktop.MainWindow);
             }

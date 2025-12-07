@@ -55,7 +55,7 @@ public class PacketStreamProcessor : IDisposable
     /// </summary>
     public void Start()
     {
-        if (_processingCts != null)
+        if (_processingCts is not null)
         {
             throw new InvalidOperationException("Processor is already running");
         }
@@ -77,7 +77,7 @@ public class PacketStreamProcessor : IDisposable
     /// </summary>
     public async Task StopAsync()
     {
-        if (_processingCts == null)
+        if (_processingCts is null)
         {
             return;
         }

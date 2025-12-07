@@ -52,7 +52,7 @@ public partial class PacketTableControl : UserControl
         if (DataContext is not MainWindowViewModel viewModel) return;
 
         var packets = viewModel.Packets;
-        if (packets == null || packets.Count == 0) return;
+        if (packets is null || packets.Count == 0) return;
 
         var currentPacket = viewModel.PacketManager.SelectedPacket;
         int currentIndex = -1;
@@ -198,7 +198,7 @@ public partial class PacketTableControl : UserControl
         try
         {
             var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-            if (clipboard != null)
+            if (clipboard is not null)
             {
                 await clipboard.SetTextAsync(text);
                 Console.WriteLine($"[CLIPBOARD] Copied: {text}");

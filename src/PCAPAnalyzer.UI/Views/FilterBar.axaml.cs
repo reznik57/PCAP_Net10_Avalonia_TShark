@@ -32,13 +32,13 @@ namespace PCAPAnalyzer.UI.Views
                 var insecureToggle = this.FindControl<ToggleButton>("InsecureToggle");
                 var anomaliesToggle = this.FindControl<ToggleButton>("AnomaliesToggle");
                 
-                if (rfc1918Toggle != null) rfc1918Toggle.Click += OnPredefinedFilterToggled;
-                if (publicIpToggle != null) publicIpToggle.Click += OnPredefinedFilterToggled;
-                if (multicastToggle != null) multicastToggle.Click += OnPredefinedFilterToggled;
-                if (broadcastToggle != null) broadcastToggle.Click += OnPredefinedFilterToggled;
-                if (anycastToggle != null) anycastToggle.Click += OnPredefinedFilterToggled;
-                if (insecureToggle != null) insecureToggle.Click += OnPredefinedFilterToggled;
-                if (anomaliesToggle != null) anomaliesToggle.Click += OnPredefinedFilterToggled;
+                if (rfc1918Toggle is not null) rfc1918Toggle.Click += OnPredefinedFilterToggled;
+                if (publicIpToggle is not null) publicIpToggle.Click += OnPredefinedFilterToggled;
+                if (multicastToggle is not null) multicastToggle.Click += OnPredefinedFilterToggled;
+                if (broadcastToggle is not null) broadcastToggle.Click += OnPredefinedFilterToggled;
+                if (anycastToggle is not null) anycastToggle.Click += OnPredefinedFilterToggled;
+                if (insecureToggle is not null) insecureToggle.Click += OnPredefinedFilterToggled;
+                if (anomaliesToggle is not null) anomaliesToggle.Click += OnPredefinedFilterToggled;
             };
         }
         

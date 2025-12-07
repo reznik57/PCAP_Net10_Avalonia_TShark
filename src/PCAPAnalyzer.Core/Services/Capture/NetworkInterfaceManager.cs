@@ -35,7 +35,7 @@ public class NetworkInterfaceManager : INetworkInterfaceManager
         try
         {
             // Return cached interfaces if still valid
-            if (_cachedInterfaces != null && DateTime.UtcNow - _lastCacheUpdate < _cacheExpiry)
+            if (_cachedInterfaces is not null && DateTime.UtcNow - _lastCacheUpdate < _cacheExpiry)
             {
                 return _cachedInterfaces;
             }
@@ -67,7 +67,7 @@ public class NetworkInterfaceManager : INetworkInterfaceManager
                 };
 
                 // Get IP addresses
-                if (netIface != null)
+                if (netIface is not null)
                 {
                     var ipProps = netIface.GetIPProperties();
                     captureInterface.Addresses = ipProps.UnicastAddresses
@@ -207,7 +207,7 @@ public class NetworkInterfaceManager : INetworkInterfaceManager
             };
 
             using var process = Process.Start(startInfo);
-            if (process == null)
+            if (process is null)
                 throw new InvalidOperationException("Failed to start TShark process");
 
             var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);
@@ -243,7 +243,7 @@ public class NetworkInterfaceManager : INetworkInterfaceManager
             };
 
             using var process = Process.Start(startInfo);
-            if (process == null)
+            if (process is null)
                 return (false, "Failed to start TShark process");
 
             var error = await process.StandardError.ReadToEndAsync(cancellationToken);
@@ -280,7 +280,7 @@ public class NetworkInterfaceManager : INetworkInterfaceManager
             };
 
             using var process = Process.Start(startInfo);
-            if (process == null)
+            if (process is null)
                 throw new InvalidOperationException("Failed to start TShark process");
 
             var output = await process.StandardOutput.ReadToEndAsync(cancellationToken);

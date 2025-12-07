@@ -308,7 +308,7 @@ public partial class CaptureConfigurationViewModel : ViewModelBase, IDisposable
     /// </summary>
     public CaptureConfiguration BuildConfiguration()
     {
-        if (SelectedInterface == null)
+        if (SelectedInterface is null)
         {
             throw new InvalidOperationException("No network interface selected");
         }
@@ -336,7 +336,7 @@ public partial class CaptureConfigurationViewModel : ViewModelBase, IDisposable
     /// </summary>
     public (bool IsValid, string ErrorMessage) ValidateConfiguration()
     {
-        if (SelectedInterface == null)
+        if (SelectedInterface is null)
             return (false, "Please select a network interface");
 
         if (!IsTSharkAvailable)

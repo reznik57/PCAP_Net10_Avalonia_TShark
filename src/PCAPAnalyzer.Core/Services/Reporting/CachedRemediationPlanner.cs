@@ -55,9 +55,9 @@ namespace PCAPAnalyzer.Core.Services.Reporting
             List<SecurityFinding> findings,
             List<Recommendation> recommendations)
         {
-            if (findings == null)
+            if (findings is null)
                 throw new ArgumentNullException(nameof(findings));
-            if (recommendations == null)
+            if (recommendations is null)
                 throw new ArgumentNullException(nameof(recommendations));
 
             // If caching is disabled, bypass cache entirely
@@ -75,7 +75,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
 
                 // Check cache first
                 var cachedResult = await _cacheService.GetAsync<RemediationPlan>(cacheKey);
-                if (cachedResult != null)
+                if (cachedResult is not null)
                 {
                     _logger.LogInformation(
                         "Cache hit for remediation plan generation (FindingCount={FindingCount}, RecommendationCount={RecommendationCount}, Key={CacheKey})",
@@ -147,9 +147,9 @@ namespace PCAPAnalyzer.Core.Services.Reporting
             List<SecurityFinding> findings,
             List<PerformanceIssue> performanceIssues)
         {
-            if (findings == null)
+            if (findings is null)
                 throw new ArgumentNullException(nameof(findings));
-            if (performanceIssues == null)
+            if (performanceIssues is null)
                 throw new ArgumentNullException(nameof(performanceIssues));
 
             // If caching is disabled, bypass cache
@@ -171,7 +171,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
                     string.Join(",", findings.Select(f => f.Category).Distinct().OrderBy(c => c)));
 
                 var cachedResult = await _cacheService.GetAsync<List<Recommendation>>(cacheKey);
-                if (cachedResult != null)
+                if (cachedResult is not null)
                 {
                     _logger.LogDebug("Cache hit for recommendations generation");
                     return cachedResult;
@@ -211,7 +211,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
         /// <returns>Estimated size in bytes.</returns>
         private static long EstimateSize(RemediationPlan plan)
         {
-            if (plan == null)
+            if (plan is null)
                 return 1024; // Minimum size
 
             // Estimate based on phases and tasks
@@ -229,7 +229,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
         /// <returns>Estimated size in bytes.</returns>
         private static long EstimateRecommendationsSize(List<Recommendation> recommendations)
         {
-            if (recommendations == null || recommendations.Count == 0)
+            if (recommendations is null || recommendations.Count == 0)
                 return 1024; // Minimum size
 
             // Rough estimate: 3KB per recommendation

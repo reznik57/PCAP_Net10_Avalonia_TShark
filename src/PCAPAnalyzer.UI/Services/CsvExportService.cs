@@ -77,11 +77,11 @@ public class CsvExportService : ICsvExportService
         Dictionary<string, Func<T, object?>> columnMappings,
         bool includeHeaders = true)
     {
-        if (data == null)
+        if (data is null)
             throw new ArgumentNullException(nameof(data));
         if (string.IsNullOrWhiteSpace(filePath))
             throw new ArgumentException("File path cannot be empty", nameof(filePath));
-        if (columnMappings == null || columnMappings.Count == 0)
+        if (columnMappings is null || columnMappings.Count == 0)
             throw new ArgumentException("Column mappings cannot be empty", nameof(columnMappings));
 
         // Security audit: Log export attempt with sanitized path
@@ -277,7 +277,7 @@ public class CsvExportService : ICsvExportService
     /// </summary>
     private string FormatValue(object? value)
     {
-        if (value == null)
+        if (value is null)
             return string.Empty;
 
         return value switch
@@ -690,7 +690,7 @@ public class CsvExportService : ICsvExportService
         finally
         {
             // Clean up temporary file if it still exists
-            if (tempPath != null && File.Exists(tempPath))
+            if (tempPath is not null && File.Exists(tempPath))
             {
                 try
                 {

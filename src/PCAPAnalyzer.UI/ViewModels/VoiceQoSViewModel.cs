@@ -169,8 +169,8 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
         !string.IsNullOrWhiteSpace(SearchFilter) ||
         !string.IsNullOrWhiteSpace(SourceIPFilter) ||
         !string.IsNullOrWhiteSpace(DestinationIPFilter) ||
-        SelectedQoSType != null ||
-        SelectedDscpMarking != null;
+        SelectedQoSType is not null ||
+        SelectedDscpMarking is not null;
 
     // Legacy pagination property accessors for XAML compatibility
     public int QosTrafficCurrentPage => QosTrafficPagination.CurrentPage;
@@ -214,13 +214,13 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
         _filterDebouncer = new DebouncedAction(2000);
 
         // Subscribe to filter changes
-        if (_filterService != null)
+        if (_filterService is not null)
         {
             _filterService.FilterChanged += OnFilterServiceChanged;
         }
 
         // Subscribe to GlobalFilterState changes for tab-specific filtering (codec, quality, issues)
-        if (_globalFilterState != null)
+        if (_globalFilterState is not null)
         {
             _globalFilterState.OnFilterChanged += OnGlobalFilterChanged;
         }
@@ -260,7 +260,7 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
     private void OnFilterServiceChanged(object? sender, FilterChangedEventArgs e)
     {
         // FIX: Don't auto-regenerate on every filter change if data is already loaded
-        if (IsDataLoaded && _cachedTimeSeriesData != null && _allQoSTraffic.Count > 0)
+        if (IsDataLoaded && _cachedTimeSeriesData is not null && _allQoSTraffic.Count > 0)
         {
             DebugLogger.Log("[VoiceQoSViewModel] Filter changed - applying local filters only (no regeneration)");
             ApplyLocalFilters();
@@ -333,7 +333,7 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
     [RelayCommand]
     private void ShowTopEndpointDetails(TopEndpointItem item)
     {
-        if (item == null) return;
+        if (item is null) return;
 
         var relatedPackets = GatherRelatedPacketsForEndpoint(item);
         PopupViewModel.ShowTopEndpointDetails(item, relatedPackets);
@@ -386,13 +386,13 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
         _disposed = true;
 
         // Unsubscribe from GlobalFilterState to prevent memory leaks
-        if (_globalFilterState != null)
+        if (_globalFilterState is not null)
         {
             _globalFilterState.OnFilterChanged -= OnGlobalFilterChanged;
         }
 
         // Unsubscribe from filter service events
-        if (_filterService != null)
+        if (_filterService is not null)
         {
             _filterService.FilterChanged -= OnFilterServiceChanged;
         }

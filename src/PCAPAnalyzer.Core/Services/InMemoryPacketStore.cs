@@ -45,7 +45,7 @@ public sealed class InMemoryPacketStore : IPacketStore
 
     public Task InsertPacketsAsync(IEnumerable<PacketInfo> packets, CancellationToken cancellationToken = default)
     {
-        if (packets == null)
+        if (packets is null)
             return Task.CompletedTask;
 
         // Materialize once outside of the lock to avoid holding the lock while enumerating.
@@ -87,14 +87,14 @@ public sealed class InMemoryPacketStore : IPacketStore
 
     public Task<PacketQueryResult> QueryPacketsAsync(PacketQuery query, CancellationToken cancellationToken = default)
     {
-        if (query == null)
+        if (query is null)
             throw new ArgumentNullException(nameof(query));
 
         _lock.EnterReadLock();
         try
         {
             var filter = query.Filter;
-            var hasFilter = filter != null && !filter.IsEmpty;
+            var hasFilter = filter is not null && !filter.IsEmpty;
 
             IList<PacketInfo> workingSet = hasFilter
                 ? _packets.Where(p => filter!.MatchesPacket(p)).ToList()
@@ -155,7 +155,7 @@ public sealed class InMemoryPacketStore : IPacketStore
 
     public Task InsertFlowsAsync(IEnumerable<FlowRecord> flows, CancellationToken cancellationToken = default)
     {
-        if (flows == null)
+        if (flows is null)
             return Task.CompletedTask;
 
         var materialized = flows as IList<FlowRecord> ?? flows.ToList();

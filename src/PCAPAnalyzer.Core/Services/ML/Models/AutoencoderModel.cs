@@ -99,7 +99,7 @@ public class AutoencoderModel : IMLAnomalyModel
 
     public MLAnomalyPrediction Predict(MLNetworkFlow flow)
     {
-        if (!IsTrained || _model == null)
+        if (!IsTrained || _model is null)
         {
             throw new InvalidOperationException("Model must be trained before prediction");
         }
@@ -130,7 +130,7 @@ public class AutoencoderModel : IMLAnomalyModel
 
     public IEnumerable<MLAnomalyPrediction> PredictBatch(IEnumerable<MLNetworkFlow> flows)
     {
-        if (!IsTrained || _model == null)
+        if (!IsTrained || _model is null)
         {
             throw new InvalidOperationException("Model must be trained before prediction");
         }
@@ -162,7 +162,7 @@ public class AutoencoderModel : IMLAnomalyModel
 
     public async Task SaveModelAsync(string path)
     {
-        if (!IsTrained || _model == null)
+        if (!IsTrained || _model is null)
         {
             throw new InvalidOperationException("Cannot save untrained model");
         }
@@ -206,7 +206,7 @@ public class AutoencoderModel : IMLAnomalyModel
 
     private void EvaluateModel(List<MLNetworkFlow> flows, IDataView dataView)
     {
-        if (_model == null) return;
+        if (_model is null) return;
 
         var predictions = _model.Transform(dataView);
         var metrics = _mlContext.AnomalyDetection.Evaluate(predictions);

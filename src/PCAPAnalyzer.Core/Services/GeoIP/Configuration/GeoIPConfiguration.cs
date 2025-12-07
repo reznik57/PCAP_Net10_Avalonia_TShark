@@ -192,7 +192,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP.Configuration
                 errors.Add("MaxDegreeOfParallelism must be greater than zero");
             }
 
-            if (Providers == null || Providers.Count == 0)
+            if (Providers is null || Providers.Count == 0)
             {
                 errors.Add("At least one provider must be configured");
             }

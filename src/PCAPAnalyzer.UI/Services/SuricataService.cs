@@ -52,7 +52,7 @@ public sealed class SuricataService
         psi.ArgumentList.Add(_ruleFile);
 
         using var process = Process.Start(psi);
-        if (process == null)
+        if (process is null)
             throw new InvalidOperationException("Failed to launch Suricata helper script");
 
         await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
@@ -64,7 +64,7 @@ public sealed class SuricataService
         using var stream = File.OpenRead(evePath);
         using var reader = new StreamReader(stream);
         string? line;
-        while ((line = reader.ReadLine()) != null)
+        while ((line = reader.ReadLine()) is not null)
         {
             if (string.IsNullOrWhiteSpace(line))
                 continue;

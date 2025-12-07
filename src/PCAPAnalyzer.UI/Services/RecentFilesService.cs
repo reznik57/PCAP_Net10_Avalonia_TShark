@@ -52,7 +52,7 @@ public class RecentFilesService
             // Remove existing entry if present
             var existing = RecentFilesList.FirstOrDefault(f =>
                 string.Equals(f.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
-            if (existing != null)
+            if (existing is not null)
             {
                 RecentFilesList.Remove(existing);
             }
@@ -75,7 +75,7 @@ public class RecentFilesService
             while (RecentFilesList.Count(f => !f.IsPinned) > MaxRecentFiles)
             {
                 var toRemove = RecentFilesList.LastOrDefault(f => !f.IsPinned);
-                if (toRemove != null)
+                if (toRemove is not null)
                 {
                     RecentFilesList.Remove(toRemove);
                 }
@@ -98,7 +98,7 @@ public class RecentFilesService
         try
         {
             var fileInList = RecentFilesList.FirstOrDefault(f => f.FilePath == file.FilePath);
-            if (fileInList != null)
+            if (fileInList is not null)
             {
                 var index = RecentFilesList.IndexOf(fileInList);
                 var updated = fileInList with { IsPinned = !fileInList.IsPinned };
@@ -209,7 +209,7 @@ public class RecentFilesService
             var json = await File.ReadAllTextAsync(_settingsPath);
             var files = JsonSerializer.Deserialize<List<RecentFileInfo>>(json);
 
-            if (files != null)
+            if (files is not null)
             {
                 // Verify files still exist
                 var validFiles = files.Where(f => File.Exists(f.FilePath)).ToList();

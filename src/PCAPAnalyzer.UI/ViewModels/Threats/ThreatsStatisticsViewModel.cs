@@ -66,7 +66,7 @@ public partial class ThreatsStatisticsViewModel : ObservableObject
     /// </summary>
     public void UpdateFromMetrics(SecurityMetrics? metrics)
     {
-        if (metrics == null) return;
+        if (metrics is null) return;
 
         TotalThreats = metrics.TotalThreats;
         CriticalThreats = metrics.CriticalThreats;

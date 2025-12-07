@@ -83,7 +83,7 @@ public partial class ThreatsReportExportViewModel : ObservableObject
         if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var window = desktop.MainWindow;
-            if (window == null) return;
+            if (window is null) return;
 
             var folderOptions = new FolderPickerOpenOptions
             {
@@ -147,7 +147,7 @@ public partial class ThreatsReportExportViewModel : ObservableObject
         if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var window = desktop.MainWindow;
-            if (window == null) return;
+            if (window is null) return;
 
             var saveOptions = new FilePickerSaveOptions
             {
@@ -161,7 +161,7 @@ public partial class ThreatsReportExportViewModel : ObservableObject
             };
 
             var result = await window.StorageProvider.SaveFilePickerAsync(saveOptions);
-            if (result == null) return;
+            if (result is null) return;
 
             IsExporting = true;
             ShowExportStatus = true;

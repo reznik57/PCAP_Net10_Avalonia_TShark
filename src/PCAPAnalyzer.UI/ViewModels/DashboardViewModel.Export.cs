@@ -128,13 +128,13 @@ public partial class DashboardViewModel
         // Guard against race condition from rapid clicks
         if (IsExporting) return;
 
-        if (_csvExportService == null || _fileDialogService == null)
+        if (_csvExportService is null || _fileDialogService is null)
         {
             ShowExportStatus("Export services not available", isError: true);
             return;
         }
 
-        if (ports == null || !ports.Any())
+        if (ports is null || !ports.Any())
         {
             ShowExportStatus("No port data available to export", isError: true);
             return;
@@ -201,13 +201,13 @@ public partial class DashboardViewModel
         // Guard against race condition from rapid clicks
         if (IsExporting) return;
 
-        if (_csvExportService == null || _fileDialogService == null)
+        if (_csvExportService is null || _fileDialogService is null)
         {
             ShowExportStatus("Export services not available", isError: true);
             return;
         }
 
-        if (endpoints == null || !endpoints.Any())
+        if (endpoints is null || !endpoints.Any())
         {
             ShowExportStatus("No endpoint data available to export", isError: true);
             return;
@@ -276,13 +276,13 @@ public partial class DashboardViewModel
         // Guard against race condition from rapid clicks
         if (IsExporting) return;
 
-        if (_csvExportService == null || _fileDialogService == null)
+        if (_csvExportService is null || _fileDialogService is null)
         {
             ShowExportStatus("Export services not available", isError: true);
             return;
         }
 
-        if (connections == null || !connections.Any())
+        if (connections is null || !connections.Any())
         {
             ShowExportStatus("No connection data available to export", isError: true);
             return;

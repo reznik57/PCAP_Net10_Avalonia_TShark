@@ -98,7 +98,7 @@ public class ProtocolDeepDiveService
             // OPTIMIZATION: Extract single frame with editcap first (MUCH faster for large files)
             // editcap just copies raw bytes, no protocol decoding
             var editcapPath = GetEditcapPath();
-            if (editcapPath != null)
+            if (editcapPath is not null)
             {
                 tempFile = Path.Combine(Path.GetTempPath(), $"deepdive_{frameNumber}_{Guid.NewGuid():N}.pcap");
 
@@ -135,7 +135,7 @@ public class ProtocolDeepDiveService
 
             // Use tshark -V for verbose output (full protocol dissection)
             // If we extracted single frame, this is instant. Otherwise scans entire file.
-            var args = tempFile != null
+            var args = tempFile is not null
                 ? $"-r \"{pcapPath}\" -V"  // Single packet file - no filter needed
                 : $"-r \"{pcapPath}\" -Y \"frame.number=={frameNumber}\" -V";  // Full file - need filter
 
@@ -178,7 +178,7 @@ public class ProtocolDeepDiveService
         finally
         {
             // Cleanup temp file
-            if (tempFile != null && File.Exists(tempFile))
+            if (tempFile is not null && File.Exists(tempFile))
             {
                 try { File.Delete(tempFile); }
                 catch { /* Ignore cleanup errors */ }
@@ -211,7 +211,7 @@ public class ProtocolDeepDiveService
             if (!char.IsWhiteSpace(line[0]) && !line.StartsWith("Frame", StringComparison.Ordinal) && line.Contains(':', StringComparison.Ordinal))
             {
                 // New protocol layer
-                if (currentLayer != null)
+                if (currentLayer is not null)
                     layers.Add(currentLayer);
 
                 var colonIdx = line.IndexOf(':', StringComparison.Ordinal);
@@ -222,22 +222,22 @@ public class ProtocolDeepDiveService
             else if (line.StartsWith("Frame ", StringComparison.Ordinal))
             {
                 // Frame info layer
-                if (currentLayer != null)
+                if (currentLayer is not null)
                     layers.Add(currentLayer);
 
                 currentLayer = new ProtocolLayer { Name = "Frame", Fields = new List<ProtocolField>() };
             }
-            else if (currentLayer != null)
+            else if (currentLayer is not null)
             {
                 // Parse field line
                 var field = ParseFieldLine(line, ref indent);
-                if (field != null)
+                if (field is not null)
                     currentLayer.Fields.Add(field);
             }
         }
 
         // Don't forget the last layer
-        if (currentLayer != null)
+        if (currentLayer is not null)
             layers.Add(currentLayer);
 
         return layers;
@@ -439,7 +439,7 @@ public class ProtocolDeepDiveService
         foreach (var layer in result.Layers)
         {
             var content = _registry.AnalyzeLayer(layer);
-            if (content != null)
+            if (content is not null)
                 contents.Add(content);
         }
 
@@ -461,7 +461,7 @@ public class ProtocolDeepDiveService
             return;
 
         var existingCritical = contents.FirstOrDefault(c => c.Severity == CleartextSeverity.Critical);
-        if (existingCritical != null)
+        if (existingCritical is not null)
         {
             foreach (var cred in additionalCredentials.Credentials)
             {

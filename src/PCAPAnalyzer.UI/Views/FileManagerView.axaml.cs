@@ -35,7 +35,7 @@ public partial class FileManagerView : UserControl
         if (e.Data.Contains(DataFormats.Files))
         {
             var files = e.Data.GetFiles()?.ToList();
-            if (files != null && files.Count == 1)
+            if (files is not null && files.Count == 1)
             {
                 var filePath = files[0].Path.LocalPath;
                 if (FileManagerViewModel.IsValidPcapFile(filePath))
@@ -59,7 +59,7 @@ public partial class FileManagerView : UserControl
         if (e.Data.Contains(DataFormats.Files))
         {
             var files = e.Data.GetFiles()?.ToList();
-            if (files != null && files.Count == 1)
+            if (files is not null && files.Count == 1)
             {
                 var filePath = files[0].Path.LocalPath;
 

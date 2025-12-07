@@ -46,7 +46,7 @@ public class ApplicationAnomalyDetector : IAnomalyDetector
 
         foreach (var packet in dnsPackets)
         {
-            if (packet.Info != null)
+            if (packet.Info is not null)
             {
                 var queryLength = EstimateDNSQueryLength(packet.Info);
                 if (queryLength > DNS_QUERY_LENGTH_THRESHOLD)

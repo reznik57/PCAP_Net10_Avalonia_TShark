@@ -43,7 +43,7 @@ public class SmtpAnalyzer : IProtocolAnalyzer
                 if (parts.Length >= 3)
                 {
                     var decoded = ProtocolAnalysisHelpers.DecodeBase64Credentials(parts[2]);
-                    if (decoded != null)
+                    if (decoded is not null)
                     {
                         // AUTH PLAIN format: \0username\0password
                         var authParts = decoded.Split('\0', StringSplitOptions.RemoveEmptyEntries);

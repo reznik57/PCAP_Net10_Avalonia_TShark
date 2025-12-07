@@ -324,11 +324,11 @@ public partial class DashboardChartsViewModel : ObservableObject
 
     private void ApplyZoomToChart()
     {
-        if (XAxes == null || XAxes.Length == 0 || TimelineSeries == null || TimelineSeries.Count == 0)
+        if (XAxes is null || XAxes.Length == 0 || TimelineSeries is null || TimelineSeries.Count == 0)
             return;
 
         var axis = XAxes[0];
-        if (axis == null) return;
+        if (axis is null) return;
 
         // Store original limits if not initialized
         if (!_zoomInitialized && axis.MinLimit.HasValue && axis.MaxLimit.HasValue)
@@ -379,7 +379,7 @@ public partial class DashboardChartsViewModel : ObservableObject
         var startTime = DateTime.Now;
         try
         {
-            if (statistics == null)
+            if (statistics is null)
             {
                 DebugLogger.Log("[DashboardChartsViewModel] No statistics provided for chart updates");
                 return;
@@ -425,7 +425,7 @@ public partial class DashboardChartsViewModel : ObservableObject
     {
         try
         {
-            if (statistics == null)
+            if (statistics is null)
             {
                 DebugLogger.Log("[DashboardChartsViewModel] No statistics available for throughput chart");
                 InitializeDefaultChartData();
@@ -461,10 +461,10 @@ public partial class DashboardChartsViewModel : ObservableObject
 
     private void AddThroughputSeries(NetworkStatistics statistics, ObservableCollection<ISeries> newSeries, int maxDataPoints)
     {
-        if (statistics.ThroughputTimeSeries == null || !statistics.ThroughputTimeSeries.Any()) return;
+        if (statistics.ThroughputTimeSeries is null || !statistics.ThroughputTimeSeries.Any()) return;
 
         var allData = statistics.ThroughputTimeSeries
-            .Where(p => p != null && p.Timestamp != default && p.Timestamp != DateTime.MinValue)
+            .Where(p => p is not null && p.Timestamp != default && p.Timestamp != DateTime.MinValue)
             .Select(p => new LiveChartsCore.Defaults.DateTimePoint(p.Timestamp, p.Value))
             .OrderBy(p => p.DateTime)
             .ToArray();
@@ -499,10 +499,10 @@ public partial class DashboardChartsViewModel : ObservableObject
 
     private void AddPacketsSeries(NetworkStatistics statistics, ObservableCollection<ISeries> newSeries, int maxDataPoints)
     {
-        if (statistics.PacketsPerSecondTimeSeries == null || !statistics.PacketsPerSecondTimeSeries.Any()) return;
+        if (statistics.PacketsPerSecondTimeSeries is null || !statistics.PacketsPerSecondTimeSeries.Any()) return;
 
         var allPpsData = statistics.PacketsPerSecondTimeSeries
-            .Where(p => p != null && p.Timestamp != default)
+            .Where(p => p is not null && p.Timestamp != default)
             .Select(p => new LiveChartsCore.Defaults.DateTimePoint(p.Timestamp, p.PacketsPerSecond))
             .OrderBy(p => p.DateTime)
             .ToArray();
@@ -537,10 +537,10 @@ public partial class DashboardChartsViewModel : ObservableObject
 
     private void AddAnomaliesSeries(NetworkStatistics statistics, ObservableCollection<ISeries> newSeries, int maxDataPoints)
     {
-        if (statistics.AnomaliesPerSecondTimeSeries == null || !statistics.AnomaliesPerSecondTimeSeries.Any()) return;
+        if (statistics.AnomaliesPerSecondTimeSeries is null || !statistics.AnomaliesPerSecondTimeSeries.Any()) return;
 
         var allAnomaliesData = statistics.AnomaliesPerSecondTimeSeries
-            .Where(p => p != null && p.Timestamp != default)
+            .Where(p => p is not null && p.Timestamp != default)
             .Select(p => new LiveChartsCore.Defaults.DateTimePoint(p.Timestamp, p.AnomaliesPerSecond))
             .OrderBy(p => p.DateTime)
             .ToArray();
@@ -580,10 +580,10 @@ public partial class DashboardChartsViewModel : ObservableObject
 
     private void AddThreatsSeries(NetworkStatistics statistics, ObservableCollection<ISeries> newSeries, int maxDataPoints)
     {
-        if (statistics.ThreatsPerSecondTimeSeries == null || !statistics.ThreatsPerSecondTimeSeries.Any()) return;
+        if (statistics.ThreatsPerSecondTimeSeries is null || !statistics.ThreatsPerSecondTimeSeries.Any()) return;
 
         var allThreatsData = statistics.ThreatsPerSecondTimeSeries
-            .Where(p => p != null && p.Timestamp != default)
+            .Where(p => p is not null && p.Timestamp != default)
             .Select(p => new LiveChartsCore.Defaults.DateTimePoint(p.Timestamp, p.Value))
             .OrderBy(p => p.DateTime)
             .ToArray();
@@ -664,7 +664,7 @@ public partial class DashboardChartsViewModel : ObservableObject
     {
         try
         {
-            if (statistics?.ProtocolStats == null || !statistics.ProtocolStats.Any())
+            if (statistics?.ProtocolStats is null || !statistics.ProtocolStats.Any())
             {
                 DebugLogger.Log("[DashboardChartsViewModel] No protocol data available");
                 ProtocolSeries = new ObservableCollection<ISeries>();
@@ -710,7 +710,7 @@ public partial class DashboardChartsViewModel : ObservableObject
     {
         try
         {
-            if (statistics?.TopPorts == null || !statistics.TopPorts.Any())
+            if (statistics?.TopPorts is null || !statistics.TopPorts.Any())
             {
                 DebugLogger.Log("[DashboardChartsViewModel] No port data available");
                 PortByBytesSeries = new ObservableCollection<ISeries>();
@@ -801,7 +801,7 @@ public partial class DashboardChartsViewModel : ObservableObject
     {
         try
         {
-            if (statistics == null)
+            if (statistics is null)
             {
                 DebugLogger.Log("[DashboardChartsViewModel] No statistics for protocol-port chart");
                 return;
@@ -832,7 +832,7 @@ public partial class DashboardChartsViewModel : ObservableObject
     {
         try
         {
-            if (statistics?.PacketSizeDistribution == null || statistics.PacketSizeDistribution.Buckets == null)
+            if (statistics?.PacketSizeDistribution is null || statistics.PacketSizeDistribution.Buckets is null)
             {
                 DebugLogger.Log("[DashboardChartsViewModel] No packet size distribution data available");
                 PacketSizeSeries = new ObservableCollection<ISeries>();
@@ -916,7 +916,7 @@ public partial class DashboardChartsViewModel : ObservableObject
     {
         try
         {
-            if (statistics == null) return;
+            if (statistics is null) return;
 
             // Calculate throughput statistics
             if (_maxThroughputRaw > 0)

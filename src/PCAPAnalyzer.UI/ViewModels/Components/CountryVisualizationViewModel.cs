@@ -86,7 +86,7 @@ public partial class CountryVisualizationViewModel : ObservableObject
     /// </summary>
     public void UpdateCountryChart()
     {
-        if (_currentStatistics?.CountryStatistics == null || !_currentStatistics.CountryStatistics.Any())
+        if (_currentStatistics?.CountryStatistics is null || !_currentStatistics.CountryStatistics.Any())
         {
             CountryChartSeries = new ObservableCollection<ISeries>
             {
@@ -163,7 +163,7 @@ public partial class CountryVisualizationViewModel : ObservableObject
     {
         var mapData = new Dictionary<string, double>();
 
-        if (_currentStatistics?.CountryStatistics != null)
+        if (_currentStatistics?.CountryStatistics is not null)
         {
             DebugLogger.Log($"[CountryVisualizationViewModel] UpdateCountryMapData: Processing {_currentStatistics.CountryStatistics.Count} countries for map");
 
@@ -190,7 +190,7 @@ public partial class CountryVisualizationViewModel : ObservableObject
     /// </summary>
     public void UpdateContinentColors()
     {
-        if (_currentStatistics?.CountryStatistics == null)
+        if (_currentStatistics?.CountryStatistics is null)
         {
             ResetContinentColors();
             return;

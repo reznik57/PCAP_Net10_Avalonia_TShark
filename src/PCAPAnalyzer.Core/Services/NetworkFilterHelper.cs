@@ -354,7 +354,7 @@ namespace PCAPAnalyzer.Core.Services
         public static bool IsSuspiciousTraffic(string sourceIp, string destIp, int sourcePort, int destPort, string info)
         {
             // Port scanning pattern (many SYN packets to different ports)
-            if (info != null && info.Contains("SYN", StringComparison.OrdinalIgnoreCase) && !info.Contains("ACK", StringComparison.OrdinalIgnoreCase))
+            if (info is not null && info.Contains("SYN", StringComparison.OrdinalIgnoreCase) && !info.Contains("ACK", StringComparison.OrdinalIgnoreCase))
             {
                 // High source port + low dest port often indicates scanning
                 if (sourcePort > 1024 && destPort < 1024)

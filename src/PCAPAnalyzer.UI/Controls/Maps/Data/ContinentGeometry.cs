@@ -23,7 +23,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
         /// </summary>
         public static StreamGeometry GetNorthAmericaGeometry()
         {
-            if (_northAmericaGeometry != null)
+            if (_northAmericaGeometry is not null)
                 return _northAmericaGeometry;
 
             var geometry = new StreamGeometry();
@@ -58,7 +58,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
         /// </summary>
         public static StreamGeometry GetSouthAmericaGeometry()
         {
-            if (_southAmericaGeometry != null)
+            if (_southAmericaGeometry is not null)
                 return _southAmericaGeometry;
 
             var geometry = new StreamGeometry();
@@ -90,7 +90,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
         /// </summary>
         public static StreamGeometry GetEuropeGeometry()
         {
-            if (_europeGeometry != null)
+            if (_europeGeometry is not null)
                 return _europeGeometry;
 
             var geometry = new StreamGeometry();
@@ -123,7 +123,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
         /// </summary>
         public static StreamGeometry GetAfricaGeometry()
         {
-            if (_africaGeometry != null)
+            if (_africaGeometry is not null)
                 return _africaGeometry;
 
             var geometry = new StreamGeometry();
@@ -156,7 +156,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
         /// </summary>
         public static StreamGeometry GetAsiaGeometry()
         {
-            if (_asiaGeometry != null)
+            if (_asiaGeometry is not null)
                 return _asiaGeometry;
 
             var geometry = new StreamGeometry();
@@ -193,7 +193,7 @@ namespace PCAPAnalyzer.UI.Controls.Maps.Data
         /// </summary>
         public static StreamGeometry GetOceaniaGeometry()
         {
-            if (_oceaniaGeometry != null)
+            if (_oceaniaGeometry is not null)
                 return _oceaniaGeometry;
 
             var geometry = new StreamGeometry();

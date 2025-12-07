@@ -198,9 +198,9 @@ public partial class DashboardStatisticsViewModel : ObservableObject
         var startTime = DateTime.Now;
         try
         {
-            DebugLogger.Log($"[DashboardStatisticsViewModel] UpdateAllStatistics called - isFiltered: {isFiltered}, statistics null: {statistics == null}");
+            DebugLogger.Log($"[DashboardStatisticsViewModel] UpdateAllStatistics called - isFiltered: {isFiltered}, statistics null: {statistics is null}");
 
-            if (statistics == null)
+            if (statistics is null)
             {
                 DebugLogger.Log("[DashboardStatisticsViewModel] No statistics provided");
                 InitializeEmptyTables();
@@ -279,19 +279,19 @@ public partial class DashboardStatisticsViewModel : ObservableObject
             AnalysisSummary = GenerateAnalysisSummary(statistics);
 
             // Anomaly breakdown
-            if (statistics.DetectedThreats != null && statistics.DetectedThreats.Any())
+            if (statistics.DetectedThreats is not null && statistics.DetectedThreats.Any())
             {
                 LowAnomalies = statistics.DetectedThreats.Count(t => t.Severity == ThreatSeverity.Low);
                 MediumAnomalies = statistics.DetectedThreats.Count(t => t.Severity == ThreatSeverity.Medium);
             }
-            else if (statistics.Threats != null && statistics.Threats.Any())
+            else if (statistics.Threats is not null && statistics.Threats.Any())
             {
                 LowAnomalies = statistics.Threats.Count(t => t.Severity == ThreatSeverity.Low);
                 MediumAnomalies = statistics.Threats.Count(t => t.Severity == ThreatSeverity.Medium);
             }
 
             // Packet Size Distribution statistics
-            if (statistics.PacketSizeDistribution != null)
+            if (statistics.PacketSizeDistribution is not null)
             {
                 AveragePacketSize = statistics.PacketSizeDistribution.AveragePacketSize;
                 MedianPacketSize = statistics.PacketSizeDistribution.MedianPacketSize;
@@ -361,7 +361,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
         var startTime = DateTime.Now;
         try
         {
-            if (statistics == null)
+            if (statistics is null)
             {
                 DebugLogger.Log("[DashboardStatisticsViewModel] No statistics for tables");
                 InitializeEmptyTables();
@@ -417,7 +417,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
     {
         TopSources.Clear();
         TopSourcesDisplay.Clear();
-        if (statistics.TopSources == null)
+        if (statistics.TopSources is null)
         {
             DebugLogger.Log("[DashboardStatisticsViewModel] PopulateSourcesByPackets: TopSources is NULL");
             return;
@@ -425,7 +425,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
 
         // Log actual data being populated to verify it's filtered data
         var topSource = statistics.TopSources.FirstOrDefault();
-        if (topSource != null)
+        if (topSource is not null)
         {
             DebugLogger.Log($"[DashboardStatisticsViewModel] PopulateSourcesByPackets: First source={topSource.Address}, packets={topSource.PacketCount:N0}, totalStats={statistics.TotalPackets:N0}");
         }
@@ -443,7 +443,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
     {
         TopSourcesByBytes.Clear();
         TopSourcesByBytesDisplay.Clear();
-        if (statistics.TopSources == null) return;
+        if (statistics.TopSources is null) return;
 
         var totalBytes = statistics.TotalBytes > 0 ? statistics.TotalBytes : 1;
         foreach (var source in statistics.TopSources.OrderByDescending(s => s.ByteCount))
@@ -460,7 +460,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
     {
         TopDestinations.Clear();
         TopDestinationsDisplay.Clear();
-        if (statistics.TopDestinations == null)
+        if (statistics.TopDestinations is null)
         {
             DebugLogger.Log("[DashboardStatisticsViewModel] PopulateDestinationsByPackets: TopDestinations is NULL");
             return;
@@ -468,7 +468,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
 
         // Log actual data being populated to verify it's filtered data
         var topDest = statistics.TopDestinations.FirstOrDefault();
-        if (topDest != null)
+        if (topDest is not null)
         {
             DebugLogger.Log($"[DashboardStatisticsViewModel] PopulateDestinationsByPackets: First dest={topDest.Address}, packets={topDest.PacketCount:N0}, totalStats={statistics.TotalPackets:N0}");
         }
@@ -488,7 +488,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
     {
         TopDestinationsByBytes.Clear();
         TopDestinationsByBytesDisplay.Clear();
-        if (statistics.TopDestinations == null) return;
+        if (statistics.TopDestinations is null) return;
 
         var totalBytes = statistics.TotalBytes > 0 ? statistics.TotalBytes : 1;
         foreach (var dest in statistics.TopDestinations.OrderByDescending(d => d.ByteCount))
@@ -506,7 +506,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
         TopTotalIPsByPacketsExtended.Clear();
         TopTotalIPsByBytesExtended.Clear();
 
-        if (statistics.TopSources == null || statistics.TopDestinations == null)
+        if (statistics.TopSources is null || statistics.TopDestinations is null)
         {
             DebugLogger.Log("[DashboardStatisticsViewModel] PopulateTotalIPs: TopSources or TopDestinations is null");
             return;
@@ -607,7 +607,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
     {
         // By packets
         TopConversations.Clear();
-        if (statistics.TopConversations != null)
+        if (statistics.TopConversations is not null)
         {
             foreach (var conv in statistics.TopConversations)
             {
@@ -632,7 +632,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
 
         // By bytes
         TopConversationsByBytes.Clear();
-        if (statistics.TopConversations != null)
+        if (statistics.TopConversations is not null)
         {
             foreach (var conv in statistics.TopConversations.OrderByDescending(c => c.ByteCount))
             {
@@ -662,7 +662,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
     {
         // By packets
         TopServices.Clear();
-        if (statistics.ServiceStats != null)
+        if (statistics.ServiceStats is not null)
         {
             foreach (var service in statistics.ServiceStats.Values.OrderByDescending(s => s.PacketCount))
             {
@@ -681,7 +681,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
 
         // By bytes
         TopServicesByBytes.Clear();
-        if (statistics.ServiceStats != null)
+        if (statistics.ServiceStats is not null)
         {
             foreach (var service in statistics.ServiceStats.Values.OrderByDescending(s => s.ByteCount))
             {
@@ -707,7 +707,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
         TopPortsByPacketsDisplay.Clear();
         TopPortsByBytesDisplay.Clear();
 
-        if (statistics.TopPorts != null)
+        if (statistics.TopPorts is not null)
         {
             foreach (var port in statistics.TopPorts)
             {
@@ -754,7 +754,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
     private void UpdateThreatTables(NetworkStatistics statistics)
     {
         TopThreats.Clear();
-        if (statistics.DetectedThreats != null)
+        if (statistics.DetectedThreats is not null)
         {
             foreach (var threat in statistics.DetectedThreats)
             {

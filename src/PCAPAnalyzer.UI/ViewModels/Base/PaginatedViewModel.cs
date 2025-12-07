@@ -69,7 +69,7 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
         /// </summary>
         protected virtual void UpdatePagination()
         {
-            if (_allItems == null || _allItems.Count == 0)
+            if (_allItems is null || _allItems.Count == 0)
             {
                 TotalPages = 0;
                 TotalItems = 0;

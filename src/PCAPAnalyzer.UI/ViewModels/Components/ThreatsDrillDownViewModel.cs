@@ -152,7 +152,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
                 ? desktop.MainWindow?.Clipboard
                 : null;
 
-            if (clipboard != null)
+            if (clipboard is not null)
             {
                 await clipboard.SetTextAsync(IocExportText);
             }
@@ -178,7 +178,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
                 ? desktop.MainWindow?.Clipboard
                 : null;
 
-            if (clipboard != null)
+            if (clipboard is not null)
             {
                 await clipboard.SetTextAsync(report);
             }
@@ -200,7 +200,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
     [RelayCommand]
     private void ViewInPacketAnalysis()
     {
-        if (_currentThreat == null) return;
+        if (_currentThreat is null) return;
 
         // Raise event for parent to handle navigation
         ViewInPacketAnalysisRequested?.Invoke(this, new ViewInPacketAnalysisEventArgs

@@ -55,7 +55,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     ? desktop.MainWindow
                     : null;
 
-                if (mainWindow == null)
+                if (mainWindow is null)
                 {
                     StatusMessage = "Error: Cannot access main window";
                     return;
@@ -76,7 +76,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     SuggestedFileName = $"{Title.Replace(" ", "_", StringComparison.Ordinal).Replace("-", "_", StringComparison.Ordinal)}.csv"
                 });
 
-                if (file == null)
+                if (file is null)
                 {
                     StatusMessage = "Export cancelled";
                     return;
@@ -113,7 +113,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     ? desktop.MainWindow
                     : null;
 
-                if (mainWindow == null)
+                if (mainWindow is null)
                 {
                     StatusMessage = "Error: Cannot access main window";
                     return;
@@ -134,7 +134,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     SuggestedFileName = $"{Title.Replace(" ", "_", StringComparison.Ordinal).Replace("-", "_", StringComparison.Ordinal)}.json"
                 });
 
-                if (file == null)
+                if (file is null)
                 {
                     StatusMessage = "Export cancelled";
                     return;
@@ -197,7 +197,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             {
                 foreach (var item in enumerable)
                 {
-                    if (item == null) continue;
+                    if (item is null) continue;
                     
                     var values = new List<string>();
                     var itemType = item.GetType();
@@ -206,7 +206,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     {
                         // Try to get the property value
                         var prop = itemType.GetProperty(column.Replace(" ", "", StringComparison.Ordinal));
-                        if (prop != null)
+                        if (prop is not null)
                         {
                             var value = prop.GetValue(item);
                             values.Add($"\"{value?.ToString() ?? ""}\"");
@@ -227,7 +227,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                             else if (column == "Destination")
                                 prop = itemType.GetProperty("DestinationDisplay");
                             
-                            if (prop != null)
+                            if (prop is not null)
                             {
                                 var value = prop.GetValue(item);
                                 values.Add($"\"{value?.ToString() ?? ""}\"");

@@ -296,7 +296,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             QuickFilters.FiltersChanged += () => UpdateThreatsList();
 
             // Wire up UnifiedFilterPanel's ThreatsTab change event
-            if (_unifiedFilterPanel != null)
+            if (_unifiedFilterPanel is not null)
             {
                 _unifiedFilterPanel.ThreatsTab.FiltersChanged += OnUnifiedFilterChanged;
                 _unifiedFilterPanel.ApplyFiltersRequested += OnUnifiedFilterApplied;
@@ -306,13 +306,13 @@ namespace PCAPAnalyzer.UI.ViewModels
             Statistics.SortChanged += () => UpdateThreatsList();
 
             // Subscribe to filter changes
-            if (_filterService != null)
+            if (_filterService is not null)
             {
                 _filterService.FilterChanged += OnFilterServiceChanged;
             }
 
             // Subscribe to GlobalFilterState changes for tab-specific filtering
-            if (_globalFilterState != null)
+            if (_globalFilterState is not null)
             {
                 _globalFilterState.OnFilterChanged += OnGlobalFilterChanged;
             }
@@ -353,7 +353,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         private void OnFilterServiceChanged(object? sender, FilterChangedEventArgs e)
         {
             // When filter changes and we have packets, reprocess threats
-            if (_unfilteredPackets != null && _unfilteredPackets.Any())
+            if (_unfilteredPackets is not null && _unfilteredPackets.Any())
             {
                 _ = Task.Run(async () =>
                 {
@@ -400,7 +400,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             }
 
             // Currently loading - wait for existing operation
-            if (_loadingTask != null)
+            if (_loadingTask is not null)
             {
                 DebugLogger.Log("[ThreatsViewModel] Loading already in progress, awaiting existing task");
                 await _loadingTask;
@@ -490,7 +490,7 @@ namespace PCAPAnalyzer.UI.ViewModels
     public void SetSuricataAlerts(List<SuricataAlert> alerts)
     {
         _suricataAlerts = alerts;
-        if (alerts == null || alerts.Count == 0) return;
+        if (alerts is null || alerts.Count == 0) return;
 
         // Delegate to Analysis component - OnAnalysisCompleted will sync _allThreats and update UI
         Analysis.AddSuricataAlerts(alerts);
@@ -502,7 +502,7 @@ namespace PCAPAnalyzer.UI.ViewModels
     public void SetYaraMatches(List<YaraMatch> matches)
     {
         _yaraMatches = matches;
-        if (matches == null || matches.Count == 0) return;
+        if (matches is null || matches.Count == 0) return;
 
         // Delegate to Analysis component - OnAnalysisCompleted will sync _allThreats and update UI
         Analysis.AddYaraMatches(matches);
@@ -520,7 +520,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
         private void UpdateUI()
         {
-            if (_metrics == null) return;
+            if (_metrics is null) return;
 
             TotalThreats = _metrics.TotalThreats;
             CriticalThreats = _metrics.CriticalThreats;
@@ -717,7 +717,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 metrics = _insecurePortDetector.CalculateSecurityMetrics(threatsList);
                 chartsData = threatsList;
             }
-            else if (_metrics != null)
+            else if (_metrics is not null)
             {
                 metrics = _metrics;
                 chartsData = _allThreats;
@@ -786,7 +786,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
         private static void PopulateMetadataFields(SecurityThreatItemViewModel item, EnhancedSecurityThreat threat)
         {
-            if (threat.Metadata == null) return;
+            if (threat.Metadata is null) return;
 
             if (threat.Metadata.TryGetValue("DetectedVersion", out var version))
                 item.DetectedVersion = version?.ToString() ?? "";
@@ -886,7 +886,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             // Find the original EnhancedSecurityThreat for full investigation data
             var enhancedThreat = _allThreats.FirstOrDefault(t => t.Id == threat.Id);
 
-            if (enhancedThreat != null)
+            if (enhancedThreat is not null)
             {
                 // Use DrillDown component for full investigation (Dashboard pattern)
                 DrillDown.ShowForThreat(enhancedThreat, _currentPackets, _allThreats);
@@ -939,7 +939,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         {
             try
             {
-                if (NavigateToPacketAnalysis == null)
+                if (NavigateToPacketAnalysis is null)
                 {
                     DebugLogger.Log("[ThreatsViewModel] NavigateToPacketAnalysis not wired - cannot navigate");
                     return;
@@ -1032,7 +1032,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         /// </summary>
         private IEnumerable<EnhancedSecurityThreat> ApplyGlobalFilterStateCriteria(IEnumerable<EnhancedSecurityThreat> threats)
         {
-            if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+            if (_globalFilterState is null || !_globalFilterState.HasActiveFilters)
                 return threats;
 
             var result = threats;
@@ -1084,13 +1084,13 @@ namespace PCAPAnalyzer.UI.ViewModels
             _disposed = true;
 
             // Unsubscribe from GlobalFilterState to prevent memory leaks
-            if (_globalFilterState != null)
+            if (_globalFilterState is not null)
             {
                 _globalFilterState.OnFilterChanged -= OnGlobalFilterChanged;
             }
 
             // Unsubscribe from filter service events
-            if (_filterService != null)
+            if (_filterService is not null)
             {
                 _filterService.FilterChanged -= OnFilterServiceChanged;
             }
@@ -1099,13 +1099,13 @@ namespace PCAPAnalyzer.UI.ViewModels
             _filterCopyService?.UnregisterTab(TabName);
 
             // Unsubscribe from Analysis completion
-            if (Analysis != null)
+            if (Analysis is not null)
             {
                 Analysis.AnalysisCompleted -= OnAnalysisCompleted;
             }
 
             // Unsubscribe from DrillDown navigation
-            if (DrillDown != null)
+            if (DrillDown is not null)
             {
                 DrillDown.ViewInPacketAnalysisRequested -= OnDrillDownNavigationRequested;
             }

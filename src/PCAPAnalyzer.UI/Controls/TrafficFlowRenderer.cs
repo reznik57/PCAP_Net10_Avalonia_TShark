@@ -181,7 +181,7 @@ namespace PCAPAnalyzer.UI.Controls
             var pathColor = Color.FromArgb(opacity, flow.Style.Color.R, flow.Style.Color.G, flow.Style.Color.B);
             
             Pen? pathPen;
-            if (flow.Style.DashPattern != null)
+            if (flow.Style.DashPattern is not null)
             {
                 pathPen = new Pen(new SolidColorBrush(pathColor), flow.Style.LineWidth, 
                                 new DashStyle(flow.Style.DashPattern, 0));

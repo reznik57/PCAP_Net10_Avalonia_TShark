@@ -320,7 +320,7 @@ public class StreamAnalyzer
     /// </summary>
     private async Task<SecurityIndicators?> AnalyzeSecurityIndicatorsAsync(PacketInfo referencePacket)
     {
-        if (_portDetector == null && _geoIPService == null)
+        if (_portDetector is null && _geoIPService is null)
             return null;
 
         var warnings = new List<string>();
@@ -358,7 +358,7 @@ public class StreamAnalyzer
         string? riskDesc = null;
         string? alternative = null;
 
-        if (_portDetector != null)
+        if (_portDetector is not null)
         {
             var knownPorts = _portDetector.GetKnownInsecurePorts();
             if (knownPorts.TryGetValue(port, out var profile))
@@ -392,7 +392,7 @@ public class StreamAnalyzer
     /// </summary>
     private async Task<GeoSecurityInfo?> AnalyzeGeoIPAsync(string ip, List<string> warnings, string direction)
     {
-        if (_geoIPService == null)
+        if (_geoIPService is null)
             return null;
 
         var isPrivate = IsPrivateIP(ip);

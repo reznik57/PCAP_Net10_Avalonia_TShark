@@ -93,7 +93,7 @@ public class ProtocolBadge : TemplatedControl
 
     private void UpdateColors()
     {
-        if (_colorService == null || string.IsNullOrWhiteSpace(Protocol))
+        if (_colorService is null || string.IsNullOrWhiteSpace(Protocol))
             return;
 
         try
@@ -151,7 +151,7 @@ public class ProtocolBadge : TemplatedControl
     /// </summary>
     public string GetCurrentColor()
     {
-        if (_colorService == null || string.IsNullOrWhiteSpace(Protocol))
+        if (_colorService is null || string.IsNullOrWhiteSpace(Protocol))
             return ThemeColorHelper.GetColorHex("ProtocolDefault", "#6B7280");
 
         return _colorService.GetProtocolColorHex(Protocol);
@@ -162,7 +162,7 @@ public class ProtocolBadge : TemplatedControl
     /// </summary>
     public string GetCategory()
     {
-        if (_colorService == null || string.IsNullOrWhiteSpace(Protocol))
+        if (_colorService is null || string.IsNullOrWhiteSpace(Protocol))
             return "Unknown";
 
         return _colorService.GetProtocolCategory(Protocol);

@@ -95,7 +95,7 @@ public static class Program
                 DebugLogger.Critical($"[PCAPAnalyzer] Message: {avaloniaEx.Message}");
                 DebugLogger.Critical($"[PCAPAnalyzer] Stack Trace:\n{avaloniaEx.StackTrace}");
 
-                if (avaloniaEx.InnerException != null)
+                if (avaloniaEx.InnerException is not null)
                 {
                     DebugLogger.Critical($"[PCAPAnalyzer] Inner Exception: {avaloniaEx.InnerException.GetType().FullName}");
                     DebugLogger.Critical($"[PCAPAnalyzer] Inner Message: {avaloniaEx.InnerException.Message}");
@@ -130,7 +130,7 @@ Inner Stack:
             DebugLogger.Log($"[PCAPAnalyzer] Message: {ex.Message}");
             DebugLogger.Log($"[PCAPAnalyzer] Stack Trace:\n{ex.StackTrace}");
             
-            if (ex.InnerException != null)
+            if (ex.InnerException is not null)
             {
                 DebugLogger.Log($"[PCAPAnalyzer] Inner Exception: {ex.InnerException.GetType().Name}");
                 DebugLogger.Log($"[PCAPAnalyzer] Inner Message: {ex.InnerException.Message}");

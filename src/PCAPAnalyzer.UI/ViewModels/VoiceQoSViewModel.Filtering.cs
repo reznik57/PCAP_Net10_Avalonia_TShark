@@ -190,7 +190,7 @@ public partial class VoiceQoSViewModel
     /// </summary>
     private IEnumerable<QoSTrafficItem> ApplyGlobalFilterStateCriteria(IEnumerable<QoSTrafficItem> items)
     {
-        if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+        if (_globalFilterState is null || !_globalFilterState.HasActiveFilters)
             return items;
 
         var result = items;
@@ -239,7 +239,7 @@ public partial class VoiceQoSViewModel
     /// </summary>
     private IEnumerable<LatencyConnectionItem> ApplyGlobalLatencyFilters(IEnumerable<LatencyConnectionItem> items)
     {
-        if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+        if (_globalFilterState is null || !_globalFilterState.HasActiveFilters)
             return items;
 
         var result = items;
@@ -275,7 +275,7 @@ public partial class VoiceQoSViewModel
     /// </summary>
     private IEnumerable<JitterConnectionItem> ApplyGlobalJitterFilters(IEnumerable<JitterConnectionItem> items)
     {
-        if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+        if (_globalFilterState is null || !_globalFilterState.HasActiveFilters)
             return items;
 
         var result = items;

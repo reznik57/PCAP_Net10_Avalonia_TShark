@@ -264,7 +264,7 @@ namespace PCAPAnalyzer.UI.ViewModels
         
         public Task UpdateStatistics(NetworkStatistics statistics)
         {
-            if (statistics == null) return Task.CompletedTask;
+            if (statistics is null) return Task.CompletedTask;
 
             // Ensure all updates happen on UI thread
             if (!Dispatcher.CheckAccess())
@@ -276,7 +276,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             DebugLogger.Log($"[EnhancedMapViewModel] Countries: {statistics.CountryStatistics?.Count ?? 0}");
             
             // Update country traffic data
-            if (statistics.CountryStatistics != null)
+            if (statistics.CountryStatistics is not null)
             {
                 CountryTrafficData = new Dictionary<string, CountryTrafficStatistics>(statistics.CountryStatistics);
                 DebugLogger.Log($"[EnhancedMapViewModel] Set CountryTrafficData with {CountryTrafficData.Count} countries");
@@ -285,7 +285,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             }
             
             // Update traffic flows
-            if (statistics.TrafficFlows != null)
+            if (statistics.TrafficFlows is not null)
             {
                 TrafficFlows = statistics.TrafficFlows
                     .Where(f => f.IsCrossBorder)
@@ -295,7 +295,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                         DestinationCountryCode = f.DestinationCountry,
                         PacketCount = f.PacketCount,
                         ByteCount = f.ByteCount,
-                        PrimaryProtocol = f.Protocols?.FirstOrDefault() != null ? 
+                        PrimaryProtocol = f.Protocols?.FirstOrDefault() is not null ? 
                             Enum.TryParse<Protocol>(f.Protocols.First(), out var proto) ? proto : Protocol.TCP 
                             : Protocol.TCP,
                         Intensity = Math.Min(1.0, f.PacketCount / 10000.0),
@@ -348,7 +348,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 // Get current statistics
                 // Get current statistics - simplified for now
                 var stats = await Task.FromResult(new { CountryStatistics = CountryTrafficData, TotalPackets = 100000L });
-                if (stats != null)
+                if (stats is not null)
                 {
                     // Update country traffic data
                     CountryTrafficData = stats.CountryStatistics ?? new Dictionary<string, CountryTrafficStatistics>();
@@ -460,7 +460,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                         var sourceLocation = GetCountryLocation(sourceCode);
                         var destLocation = GetCountryLocation(destCode);
                         
-                        if (sourceLocation != null && destLocation != null)
+                        if (sourceLocation is not null && destLocation is not null)
                         {
                             flows.Add(new GeographicTrafficFlow
                             {
@@ -492,14 +492,14 @@ namespace PCAPAnalyzer.UI.ViewModels
             var protocolCounts = new Dictionary<string, long>();
             
             // Use statistics if provided, otherwise use CountryTrafficData
-            if (statistics?.ProtocolStats != null)
+            if (statistics?.ProtocolStats is not null)
             {
                 foreach (var protocol in statistics.ProtocolStats.Values)
                 {
                     protocolCounts[protocol.Protocol] = protocol.PacketCount;
                 }
             }
-            else if (CountryTrafficData != null)
+            else if (CountryTrafficData is not null)
             {
                 foreach (var country in CountryTrafficData.Values)
                 {
@@ -596,7 +596,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 return;
             }
             
-            if (CountryTrafficData == null || !CountryTrafficData.Any())
+            if (CountryTrafficData is null || !CountryTrafficData.Any())
             {
                 TopCountriesByPackets.Clear();
                 TopCountriesByBytes.Clear();
@@ -731,14 +731,14 @@ namespace PCAPAnalyzer.UI.ViewModels
         
         private async Task ShowCountryDetails(CountryTableItem countryItem)
         {
-            if (countryItem == null) return;
+            if (countryItem is null) return;
             
             try
             {
                 // Filter packets for this country
                 var countryPackets = new List<PacketInfo>();
                 
-                if (_allPackets != null && _countryTrafficData != null)
+                if (_allPackets is not null && _countryTrafficData is not null)
                 {
                     // Get the country statistics for this country
                     if (_countryTrafficData.TryGetValue(countryItem.CountryCode, out var countryStats))
@@ -762,7 +762,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                 // Show as dialog with animation
                 if (Avalonia.Application.Current?.ApplicationLifetime is
                     Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop &&
-                    desktop.MainWindow != null)
+                    desktop.MainWindow is not null)
                 {
                     await window.ShowDialogWithAnimation(desktop.MainWindow);
                 }

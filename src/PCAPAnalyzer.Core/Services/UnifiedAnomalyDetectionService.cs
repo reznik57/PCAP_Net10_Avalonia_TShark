@@ -225,7 +225,7 @@ public class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionService
 
     public void RegisterDetector(IAnomalyDetector detector)
     {
-        if (detector == null)
+        if (detector is null)
             return;
 
         using (_lock.EnterScope())

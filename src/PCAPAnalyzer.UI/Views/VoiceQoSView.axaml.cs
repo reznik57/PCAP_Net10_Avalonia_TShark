@@ -73,7 +73,7 @@ public partial class VoiceQoSView : UserControl
             _cachedMinY = double.MaxValue;
             _cachedMaxY = double.MinValue;
 
-            if (DataContext is not VoiceQoSViewModel vm || vm.ChartsViewModel.TimelineSeries == null)
+            if (DataContext is not VoiceQoSViewModel vm || vm.ChartsViewModel.TimelineSeries is null)
             {
                 DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [VoiceQoSView] CacheTimelineData - No data to cache");
                 return;
@@ -82,7 +82,7 @@ public partial class VoiceQoSView : UserControl
             foreach (var series in vm.ChartsViewModel.TimelineSeries)
             {
                 if (series is LineSeries<DateTimePoint> lineSeries &&
-                    lineSeries.Values != null &&
+                    lineSeries.Values is not null &&
                     !string.IsNullOrEmpty(lineSeries.Name))
                 {
                     var points = lineSeries.Values.Cast<DateTimePoint>().ToList();
@@ -120,7 +120,7 @@ public partial class VoiceQoSView : UserControl
             var chart = sender as CartesianChart;
             var tooltipText = this.FindControl<TextBlock>("TimelineTooltipText");
 
-            if (chart == null || tooltipText == null)
+            if (chart is null || tooltipText is null)
             {
                 DebugLogger.Log("[VoiceQoSView] Timeline chart or tooltip not found");
                 return;
@@ -156,7 +156,7 @@ public partial class VoiceQoSView : UserControl
 
             // Find data index based on first available series
             var firstSeries = _cachedTimelineData.Values.FirstOrDefault();
-            if (firstSeries == null || firstSeries.Count == 0)
+            if (firstSeries is null || firstSeries.Count == 0)
             {
                 tooltipText.Inlines?.Clear();
                 tooltipText.Text = "";
@@ -240,7 +240,7 @@ public partial class VoiceQoSView : UserControl
         try
         {
             var tooltipText = this.FindControl<TextBlock>("TimelineTooltipText");
-            if (tooltipText != null)
+            if (tooltipText is not null)
             {
                 tooltipText.Inlines?.Clear();
                 tooltipText.Text = "";
@@ -260,7 +260,7 @@ public partial class VoiceQoSView : UserControl
     {
         try
         {
-            if (chart == null || DataContext is not VoiceQoSViewModel vm)
+            if (chart is null || DataContext is not VoiceQoSViewModel vm)
                 return;
 
             // Don't add duplicate highlight at same position
@@ -304,7 +304,7 @@ public partial class VoiceQoSView : UserControl
 
             // Add to chart
             var series = vm.ChartsViewModel.TimelineSeries;
-            if (series != null)
+            if (series is not null)
             {
                 series.Add(_highlightScatter);
                 series.Add(_highlightLine);
@@ -329,18 +329,18 @@ public partial class VoiceQoSView : UserControl
             _lastHighlightedIndex = -1;
 
             var series = vm.ChartsViewModel.TimelineSeries;
-            if (series == null)
+            if (series is null)
                 return;
 
             // Remove scatter
-            if (_highlightScatter != null)
+            if (_highlightScatter is not null)
             {
                 series.Remove(_highlightScatter);
                 _highlightScatter = null;
             }
 
             // Remove line
-            if (_highlightLine != null)
+            if (_highlightLine is not null)
             {
                 series.Remove(_highlightLine);
                 _highlightLine = null;
@@ -507,7 +507,7 @@ public partial class VoiceQoSView : UserControl
         try
         {
             var filterCopyService = App.Services?.GetService<FilterCopyService>();
-            if (filterCopyService == null)
+            if (filterCopyService is null)
             {
                 DebugLogger.Log("[VoiceQoSView] FilterCopyService not available");
                 return;

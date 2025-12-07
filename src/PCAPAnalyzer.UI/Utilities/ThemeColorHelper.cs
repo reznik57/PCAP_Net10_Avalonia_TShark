@@ -623,7 +623,7 @@ public static class ThemeColorHelper
         try
         {
             var app = Application.Current;
-            if (app != null && app.Resources.TryGetResource(resourceKey, null, out var resource))
+            if (app is not null && app.Resources.TryGetResource(resourceKey, null, out var resource))
             {
                 if (resource is Color color)
                     return color;
@@ -645,7 +645,7 @@ public static class ThemeColorHelper
         try
         {
             var app = Application.Current;
-            if (app != null && app.Resources.TryGetResource(resourceKey, null, out var resource))
+            if (app is not null && app.Resources.TryGetResource(resourceKey, null, out var resource))
             {
                 if (resource is Color color)
                     return new SolidColorBrush(color);
@@ -669,7 +669,7 @@ public static class ThemeColorHelper
         try
         {
             var app = Application.Current;
-            if (app != null && app.Resources.TryGetResource(resourceKey, null, out var resource))
+            if (app is not null && app.Resources.TryGetResource(resourceKey, null, out var resource))
             {
                 if (resource is Color color)
                     return $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";

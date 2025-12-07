@@ -22,7 +22,7 @@ public sealed class SimplePacketStore : IPacketStore
 
     public Task InsertPacketsAsync(IEnumerable<PacketInfo> packets, CancellationToken cancellationToken = default)
     {
-        if (packets == null)
+        if (packets is null)
             return Task.CompletedTask;
 
         lock (_sync)
@@ -35,7 +35,7 @@ public sealed class SimplePacketStore : IPacketStore
 
     public Task<PacketQueryResult> QueryPacketsAsync(PacketQuery query, CancellationToken cancellationToken = default)
     {
-        if (query == null)
+        if (query is null)
             throw new ArgumentNullException(nameof(query));
 
         return Task.Run(() =>
@@ -47,7 +47,7 @@ public sealed class SimplePacketStore : IPacketStore
             }
 
             IEnumerable<PacketInfo> filtered = snapshot;
-            if (query.Filter != null && !query.Filter.IsEmpty)
+            if (query.Filter is not null && !query.Filter.IsEmpty)
             {
                 filtered = filtered.Where(query.Filter.MatchesPacket);
             }
@@ -100,7 +100,7 @@ public sealed class SimplePacketStore : IPacketStore
 
     public Task InsertFlowsAsync(IEnumerable<FlowRecord> flows, CancellationToken cancellationToken = default)
     {
-        if (flows == null)
+        if (flows is null)
             return Task.CompletedTask;
 
         lock (_sync)

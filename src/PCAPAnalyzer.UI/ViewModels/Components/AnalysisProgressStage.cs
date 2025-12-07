@@ -134,7 +134,7 @@ public partial class AnalysisProgressStage : ObservableObject
     public void StopTiming()
     {
         // Stop and dispose timer
-        if (_elapsedTimer != null)
+        if (_elapsedTimer is not null)
         {
             _elapsedTimer.Stop();
             _elapsedTimer = null;
@@ -189,7 +189,7 @@ public partial class AnalysisProgressStage : ObservableObject
         var hadStartTime = _startTime.HasValue;
 
         // Stop and dispose timer
-        if (_elapsedTimer != null)
+        if (_elapsedTimer is not null)
         {
             _elapsedTimer.Stop();
             _elapsedTimer = null;

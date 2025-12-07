@@ -101,7 +101,7 @@ namespace PCAPAnalyzer.Core.Performance
             if (offset < 0 || offset >= _fileSize)
                 throw new ArgumentOutOfRangeException(nameof(offset));
 
-            if (buffer == null)
+            if (buffer is null)
                 throw new ArgumentNullException(nameof(buffer));
 
             // Adjust count if it would exceed file size
@@ -189,7 +189,7 @@ namespace PCAPAnalyzer.Core.Performance
         /// <returns>Offset of first occurrence, or -1 if not found</returns>
         public long FindPattern(byte[] pattern, long startOffset = 0, long searchLength = 0)
         {
-            if (pattern == null || pattern.Length == 0)
+            if (pattern is null || pattern.Length == 0)
                 throw new ArgumentException("Pattern cannot be null or empty", nameof(pattern));
 
             if (startOffset < 0 || startOffset >= _fileSize)

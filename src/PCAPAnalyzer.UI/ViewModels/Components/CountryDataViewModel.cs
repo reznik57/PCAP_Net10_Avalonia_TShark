@@ -46,7 +46,7 @@ public partial class CountryDataViewModel : ObservableObject
         DebugLogger.Log($"[CountryDataViewModel] SetPackets called with {packets?.Count ?? 0} packets");
 
         // Build packet indices if statistics are available
-        if (_currentStatistics != null)
+        if (_currentStatistics is not null)
         {
             BuildCountryPacketIndices();
         }
@@ -60,7 +60,7 @@ public partial class CountryDataViewModel : ObservableObject
         _currentStatistics = statistics;
 
         // Build indices if packets are available
-        if (_allPackets != null && _currentStatistics != null)
+        if (_allPackets is not null && _currentStatistics is not null)
         {
             BuildCountryPacketIndices();
         }
@@ -112,7 +112,7 @@ public partial class CountryDataViewModel : ObservableObject
     /// </summary>
     public List<PacketInfo>? GetCountryPackets(string countryCode, CountryTableContext context)
     {
-        if (_allPackets == null || string.IsNullOrWhiteSpace(countryCode))
+        if (_allPackets is null || string.IsNullOrWhiteSpace(countryCode))
             return null;
 
         List<int>? indices = context switch
@@ -122,7 +122,7 @@ public partial class CountryDataViewModel : ObservableObject
             _ => GetCountryPacketIndices(countryCode)
         };
 
-        if (indices == null || indices.Count == 0)
+        if (indices is null || indices.Count == 0)
         {
             DebugLogger.Log($"[CountryDataViewModel] No indices found for {countryCode} (context: {context})");
             return null;
@@ -146,7 +146,7 @@ public partial class CountryDataViewModel : ObservableObject
         Justification = "Country packet indexing requires processing geographic data, building multiple lookup dictionaries for incoming/outgoing IPs, and creating separate indices for combined and directional traffic")]
     private void BuildCountryPacketIndices()
     {
-        if (_currentStatistics?.CountryStatistics == null || _allPackets == null)
+        if (_currentStatistics?.CountryStatistics is null || _allPackets is null)
         {
             DebugLogger.Log("[CountryDataViewModel] Cannot build indices - missing statistics or packets");
             return;
@@ -289,7 +289,7 @@ public partial class CountryDataViewModel : ObservableObject
     /// </summary>
     public IReadOnlyList<double>? GetCountryTimelineBuckets(string countryCode, CountryTableContext context)
     {
-        if (_allPackets == null || _allPackets.Count == 0 || string.IsNullOrWhiteSpace(countryCode))
+        if (_allPackets is null || _allPackets.Count == 0 || string.IsNullOrWhiteSpace(countryCode))
             return null;
 
         // Get packet indices for this country
@@ -300,16 +300,16 @@ public partial class CountryDataViewModel : ObservableObject
             _ => GetCountryPacketIndices(countryCode)
         };
 
-        if (indices == null || indices.Count == 0)
+        if (indices is null || indices.Count == 0)
             return null;
 
         // Compute capture time range (cache for performance)
-        if (_captureStartTime == null || _captureEndTime == null)
+        if (_captureStartTime is null || _captureEndTime is null)
         {
             ComputeCaptureTimeRange();
         }
 
-        if (_captureStartTime == null || _captureEndTime == null || _captureStartTime >= _captureEndTime)
+        if (_captureStartTime is null || _captureEndTime is null || _captureStartTime >= _captureEndTime)
             return null;
 
         var startTime = _captureStartTime.Value;
@@ -349,7 +349,7 @@ public partial class CountryDataViewModel : ObservableObject
     /// </summary>
     private void ComputeCaptureTimeRange()
     {
-        if (_allPackets == null || _allPackets.Count == 0)
+        if (_allPackets is null || _allPackets.Count == 0)
             return;
 
         DateTime minTime = DateTime.MaxValue;

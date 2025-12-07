@@ -110,7 +110,7 @@ namespace PCAPAnalyzer.Core.Capture
             CaptureConfiguration configuration,
             CancellationToken cancellationToken = default)
         {
-            if (configuration == null)
+            if (configuration is null)
                 throw new ArgumentNullException(nameof(configuration));
 
             configuration.Validate();
@@ -125,7 +125,7 @@ namespace PCAPAnalyzer.Core.Capture
                         configuration.InterfaceId,
                         cancellationToken);
 
-                    if (networkInterface == null)
+                    if (networkInterface is null)
                     {
                         throw new ArgumentException($"Network interface not found: {configuration.InterfaceId}");
                     }
@@ -281,7 +281,7 @@ namespace PCAPAnalyzer.Core.Capture
             {
                 // Get TShark process from session
                 var process = session.GetTSharkProcess();
-                if (process == null)
+                if (process is null)
                 {
                     throw new InvalidOperationException("TShark process not available");
                 }
@@ -305,7 +305,7 @@ namespace PCAPAnalyzer.Core.Capture
                         using (PerformanceMonitor.Instance.Time("TShark_JSON_Parse"))
                         {
                             var packetData = ParseTSharkJson(line, session);
-                            if (packetData == null)
+                            if (packetData is null)
                                 continue;
 
                             // Update statistics
@@ -455,12 +455,12 @@ namespace PCAPAnalyzer.Core.Capture
                     ["Protocols"] = protocols
                 };
 
-                if (srcIp != null) metadata["SourceIP"] = srcIp;
-                if (dstIp != null) metadata["DestinationIP"] = dstIp;
-                if (srcPort != null) metadata["SourcePort"] = srcPort;
-                if (dstPort != null) metadata["DestinationPort"] = dstPort;
-                if (srcMac != null) metadata["SourceMAC"] = srcMac;
-                if (dstMac != null) metadata["DestinationMAC"] = dstMac;
+                if (srcIp is not null) metadata["SourceIP"] = srcIp;
+                if (dstIp is not null) metadata["DestinationIP"] = dstIp;
+                if (srcPort is not null) metadata["SourcePort"] = srcPort;
+                if (dstPort is not null) metadata["DestinationPort"] = dstPort;
+                if (srcMac is not null) metadata["SourceMAC"] = srcMac;
+                if (dstMac is not null) metadata["DestinationMAC"] = dstMac;
 
                 return new PacketData
                 {
@@ -648,7 +648,7 @@ namespace PCAPAnalyzer.Core.Capture
         {
             // Validate interface exists
             var iface = await _interfaceDiscovery.GetInterfaceByIdAsync(interfaceId, cancellationToken);
-            if (iface == null)
+            if (iface is null)
             {
                 throw new ArgumentException($"Interface not found: {interfaceId}");
             }

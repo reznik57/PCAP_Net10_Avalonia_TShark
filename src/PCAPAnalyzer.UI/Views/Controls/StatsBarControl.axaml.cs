@@ -37,7 +37,7 @@ public partial class StatsBarControl : UserControl
         // Find parent window
         _parentWindow = this.FindLogicalAncestorOfType<Window>();
 
-        if (_parentWindow != null)
+        if (_parentWindow is not null)
         {
             // Store base column count from ViewModel
             if (DataContext is StatsBarControlViewModel viewModel)
@@ -56,7 +56,7 @@ public partial class StatsBarControl : UserControl
     private void OnDetachedFromLogicalTree(object? sender, LogicalTreeAttachmentEventArgs e)
     {
         // Unsubscribe to prevent memory leaks
-        if (_parentWindow != null)
+        if (_parentWindow is not null)
         {
             _parentWindow.PropertyChanged -= OnWindowPropertyChanged;
             _parentWindow = null;

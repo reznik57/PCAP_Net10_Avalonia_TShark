@@ -300,7 +300,7 @@ public sealed class CaptureScheduler : IDisposable
                 return;
             }
 
-            if (schedule.TriggerCondition == null)
+            if (schedule.TriggerCondition is null)
             {
                 return;
             }

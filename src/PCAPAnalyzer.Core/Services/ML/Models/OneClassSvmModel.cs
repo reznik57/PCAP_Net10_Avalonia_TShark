@@ -80,7 +80,7 @@ public class OneClassSvmModel : IMLAnomalyModel
 
     public MLAnomalyPrediction Predict(MLNetworkFlow flow)
     {
-        if (!IsTrained || _svm == null)
+        if (!IsTrained || _svm is null)
         {
             throw new InvalidOperationException("Model must be trained before prediction");
         }
@@ -113,7 +113,7 @@ public class OneClassSvmModel : IMLAnomalyModel
 
     public async Task SaveModelAsync(string path)
     {
-        if (!IsTrained || _svm == null)
+        if (!IsTrained || _svm is null)
         {
             throw new InvalidOperationException("Cannot save untrained model");
         }
@@ -159,7 +159,7 @@ public class OneClassSvmModel : IMLAnomalyModel
                 var json = File.ReadAllText(jsonPath);
                 var modelData = JsonSerializer.Deserialize<OneClassSvmModelData>(json);
 
-                if (modelData == null)
+                if (modelData is null)
                 {
                     throw new InvalidOperationException("Failed to deserialize model data");
                 }
@@ -236,7 +236,7 @@ public class OneClassSvmModel : IMLAnomalyModel
 
     private void EvaluateModel(List<MLNetworkFlow> flows, double[][] features)
     {
-        if (flows.Count == 0 || _svm == null) return;
+        if (flows.Count == 0 || _svm is null) return;
 
         var predictions = features.Select(f => _svm.Score(f)).ToList();
         var anomalyCount = predictions.Count(d => d < _threshold);

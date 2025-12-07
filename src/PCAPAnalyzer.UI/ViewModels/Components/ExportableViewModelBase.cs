@@ -35,7 +35,7 @@ public abstract partial class ExportableViewModelBase : ObservableObject
     [RelayCommand]
     protected async Task ExportToCsvAsync(string dataType)
     {
-        if (_csvExportService == null || _fileDialogService == null)
+        if (_csvExportService is null || _fileDialogService is null)
         {
             ExportStatusMessage = "Export service not available";
             return;
@@ -48,7 +48,7 @@ public abstract partial class ExportableViewModelBase : ObservableObject
 
             // Get data to export
             var data = GetExportData(dataType);
-            if (data == null || !data.Any())
+            if (data is null || !data.Any())
             {
                 ExportStatusMessage = "No data to export";
                 return;
@@ -99,7 +99,7 @@ public abstract partial class ExportableViewModelBase : ObservableObject
     [RelayCommand]
     protected async Task QuickExportAsync(string dataType)
     {
-        if (_csvExportService == null)
+        if (_csvExportService is null)
         {
             ExportStatusMessage = "Export service not available";
             return;
@@ -111,7 +111,7 @@ public abstract partial class ExportableViewModelBase : ObservableObject
             ExportStatusMessage = "Preparing quick export...";
 
             var data = GetExportData(dataType);
-            if (data == null || !data.Any())
+            if (data is null || !data.Any())
             {
                 ExportStatusMessage = "No data to export";
                 return;
@@ -149,7 +149,7 @@ public abstract partial class ExportableViewModelBase : ObservableObject
     /// </summary>
     private async Task ExportDataAsync(string dataType, IEnumerable<dynamic> data, string filePath)
     {
-        if (_csvExportService == null)
+        if (_csvExportService is null)
             return;
 
         switch (dataType.ToLowerInvariant())

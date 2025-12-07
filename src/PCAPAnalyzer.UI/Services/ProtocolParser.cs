@@ -33,7 +33,7 @@ public class ProtocolParser
 
         // Transport layer (TCP/UDP/ICMP)
         var transportNode = CreateTransportLayer(packet);
-        if (transportNode != null)
+        if (transportNode is not null)
         {
             tree.Add(transportNode);
         }

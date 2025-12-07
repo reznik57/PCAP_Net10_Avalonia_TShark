@@ -55,9 +55,9 @@ namespace PCAPAnalyzer.Core.Services.Reporting
             NetworkStatistics statistics,
             List<SecurityThreat> threats)
         {
-            if (statistics == null)
+            if (statistics is null)
                 throw new ArgumentNullException(nameof(statistics));
-            if (threats == null)
+            if (threats is null)
                 throw new ArgumentNullException(nameof(threats));
 
             // If caching is disabled, bypass cache entirely
@@ -75,7 +75,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
 
                 // Check cache first
                 var cachedResult = await _cacheService.GetAsync<List<SecurityFinding>>(cacheKey);
-                if (cachedResult != null)
+                if (cachedResult is not null)
                 {
                     _logger.LogInformation(
                         "Cache hit for security findings generation (ThreatCount={ThreatCount}, Key={CacheKey})",
@@ -127,7 +127,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
         /// <returns>Cached or freshly generated security findings for insecure services.</returns>
         public async Task<List<SecurityFinding>> AnalyzeInsecureServicesAsync(NetworkStatistics statistics)
         {
-            if (statistics == null)
+            if (statistics is null)
                 throw new ArgumentNullException(nameof(statistics));
 
             // If caching is disabled, bypass cache
@@ -147,7 +147,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
                     string.Join(",", statistics.TopPorts?.Select(p => $"{p.Port}:{p.PacketCount}") ?? Array.Empty<string>()));
 
                 var cachedResult = await _cacheService.GetAsync<List<SecurityFinding>>(cacheKey);
-                if (cachedResult != null)
+                if (cachedResult is not null)
                 {
                     _logger.LogDebug("Cache hit for insecure services analysis");
                     return cachedResult;
@@ -182,7 +182,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
         /// <returns>Cached or freshly generated security findings for suspicious patterns.</returns>
         public async Task<List<SecurityFinding>> AnalyzeSuspiciousPatternsAsync(NetworkStatistics statistics)
         {
-            if (statistics == null)
+            if (statistics is null)
                 throw new ArgumentNullException(nameof(statistics));
 
             // If caching is disabled, bypass cache
@@ -202,7 +202,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
                     statistics.TopConversations?.Sum(c => c.PacketCount) ?? 0);
 
                 var cachedResult = await _cacheService.GetAsync<List<SecurityFinding>>(cacheKey);
-                if (cachedResult != null)
+                if (cachedResult is not null)
                 {
                     _logger.LogDebug("Cache hit for suspicious patterns analysis");
                     return cachedResult;
@@ -237,7 +237,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
         /// <returns>Estimated size in bytes.</returns>
         private static long EstimateSize(List<SecurityFinding> findings)
         {
-            if (findings == null || findings.Count == 0)
+            if (findings is null || findings.Count == 0)
                 return 1024; // Minimum size
 
             // Rough estimate: 5KB per finding (includes all nested data)

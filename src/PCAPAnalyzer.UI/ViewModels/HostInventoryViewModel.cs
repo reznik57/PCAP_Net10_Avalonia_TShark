@@ -80,7 +80,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
         _globalFilterState = globalFilterState;
 
         // Subscribe to GlobalFilterState changes for IP-based filtering
-        if (_globalFilterState != null)
+        if (_globalFilterState is not null)
         {
             _globalFilterState.OnFilterChanged += OnGlobalFilterChanged;
             DebugLogger.Log("[HostInventoryViewModel] Subscribed to GlobalFilterState.OnFilterChanged");
@@ -94,7 +94,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     /// </summary>
     public async Task UpdateHostsAsync()
     {
-        if (_fingerprintService == null)
+        if (_fingerprintService is null)
             return;
 
         await Task.Run(() =>
@@ -131,7 +131,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
 
     private void RefreshHostList()
     {
-        if (_allHosts == null)
+        if (_allHosts is null)
             return;
 
         var filtered = _allHosts.AsEnumerable();
@@ -199,7 +199,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     /// </summary>
     private IEnumerable<HostFingerprint> ApplyGlobalFilterStateFilters(IEnumerable<HostFingerprint> hosts)
     {
-        if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+        if (_globalFilterState is null || !_globalFilterState.HasActiveFilters)
             return hosts;
 
         // Apply include groups (host must match ANY include group)
@@ -503,7 +503,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
 
     private void UpdateStatistics()
     {
-        if (_allHosts == null)
+        if (_allHosts is null)
         {
             TotalHosts = 0;
             WindowsHosts = 0;
@@ -529,7 +529,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
             h.OsDetection?.DeviceType == DeviceType.IoT ||
             h.OsDetection?.DeviceType == DeviceType.NetworkEquipment);
         UnknownHosts = _allHosts.Count(h =>
-            h.OsDetection == null ||
+            h.OsDetection is null ||
             h.OsDetection.OsFamily == "Unknown" ||
             string.IsNullOrEmpty(h.OsDetection.OsFamily));
     }
@@ -558,7 +558,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
         {
             if (Avalonia.Application.Current?.ApplicationLifetime is not
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop ||
-                desktop.MainWindow == null)
+                desktop.MainWindow is null)
             {
                 return;
             }
@@ -576,7 +576,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
             };
 
             var file = await topLevel.StorageProvider.SaveFilePickerAsync(saveDialog);
-            if (file == null) return;
+            if (file is null) return;
 
             await using var stream = await file.OpenWriteAsync();
             await using var writer = new System.IO.StreamWriter(stream);
@@ -633,7 +633,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     [RelayCommand]
     private async Task CopyToClipboard(HostInventoryItem? item)
     {
-        if (item == null) return;
+        if (item is null) return;
 
         var text = $"IP: {item.IpAddress}\n" +
                    $"MAC: {item.MacAddress}\n" +
@@ -652,7 +652,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
             ? desktop.MainWindow?.Clipboard
             : null;
 
-        if (clipboard != null)
+        if (clipboard is not null)
         {
             await clipboard.SetTextAsync(text);
             DebugLogger.Log($"[HostInventoryViewModel] Copied host info for {item.IpAddress} to clipboard");
@@ -681,7 +681,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
         _disposed = true;
 
         // Unsubscribe from GlobalFilterState to prevent memory leaks
-        if (_globalFilterState != null)
+        if (_globalFilterState is not null)
         {
             _globalFilterState.OnFilterChanged -= OnGlobalFilterChanged;
             DebugLogger.Log("[HostInventoryViewModel] Unsubscribed from GlobalFilterState.OnFilterChanged");

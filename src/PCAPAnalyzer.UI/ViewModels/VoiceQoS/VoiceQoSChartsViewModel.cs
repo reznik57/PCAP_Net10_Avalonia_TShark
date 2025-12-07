@@ -199,7 +199,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
 
         private void RefreshChart()
         {
-            if (_cachedDataPoints == null || !_cachedDataPoints.Any())
+            if (_cachedDataPoints is null || !_cachedDataPoints.Any())
                 return;
 
             if (!Dispatcher.CheckAccess())
@@ -314,7 +314,7 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
 
         private void CalculatePercentileStatistics(List<VoiceQoSTimeSeriesPoint> dataPoints)
         {
-            if (dataPoints == null || !dataPoints.Any())
+            if (dataPoints is null || !dataPoints.Any())
             {
                 LatencyP5 = LatencyP95 = JitterP5 = JitterP95 = 0;
                 return;

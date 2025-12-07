@@ -42,7 +42,7 @@ public sealed class CredentialDetectionService : ICredentialDetectionService
                    ?? TryExtractMySqlCredentials(fields, frameNumber, timestamp, sourceIP, destIP, destPort)
                    ?? TryExtractPostgreSqlCredentials(fields, frameNumber, timestamp, sourceIP, destIP, destPort);
 
-        if (finding != null)
+        if (finding is not null)
         {
             _findings.Add(finding);
         }

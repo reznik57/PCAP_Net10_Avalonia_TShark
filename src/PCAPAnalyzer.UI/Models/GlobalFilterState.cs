@@ -282,7 +282,7 @@ public partial class GlobalFilterState : ObservableObject
     {
         var collection = isExclude ? ExcludeGroups : IncludeGroups;
         var group = collection.FirstOrDefault(g => g.GroupId == groupId);
-        if (group != null)
+        if (group is not null)
         {
             collection.Remove(group);
             IncrementVersion();

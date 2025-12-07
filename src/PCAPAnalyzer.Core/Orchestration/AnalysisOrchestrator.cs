@@ -103,7 +103,7 @@ namespace PCAPAnalyzer.Core.Orchestration
                 var (statistics, threats, anomalies, voiceQoS) = await AnalyzeInParallelAsync(allPackets, coordinator, cancellationToken);
 
                 DebugLogger.Log($"[AnalysisOrchestrator] Analysis complete: {statistics.CountryStatistics.Count} countries, " +
-                                  $"{threats.Count} threats, {anomalies.Count} anomalies, VoiceQoS={voiceQoS != null}");
+                                  $"{threats.Count} threats, {anomalies.Count} anomalies, VoiceQoS={voiceQoS is not null}");
 
                 // ========================================================================
                 // PHASE 3: BUILD RESULT & CACHE (92-100% overall)

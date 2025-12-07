@@ -280,7 +280,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         Charts.PropertyChanged += OnChartsPropertyChanged;
 
         // Subscribe to filter changes
-        if (_filterService != null)
+        if (_filterService is not null)
         {
             _filterService.FilterChanged += OnFilterServiceChanged;
         }
@@ -305,7 +305,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         var methodStart = DateTime.Now;
         DebugLogger.Log($"[{methodStart:HH:mm:ss.fff}] [DashboardViewModel.UpdateStatisticsAsync] ========== METHOD START ==========");
 
-        if (packets == null || packets.Count == 0)
+        if (packets is null || packets.Count == 0)
         {
             DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [DashboardViewModel.UpdateStatisticsAsync] No packets to update");
             return;
@@ -335,7 +335,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             // Calculate statistics
             NetworkStatistics statistics;
 
-            if (_nextStatisticsOverride != null)
+            if (_nextStatisticsOverride is not null)
             {
                 var overrideStart = DateTime.Now;
                 statistics = _nextStatisticsOverride;
@@ -403,9 +403,9 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     private async Task UpdateAllComponents(NetworkStatistics? statistics, IReadOnlyList<PacketInfo>? packets)
     {
         var updateStartTime = DateTime.Now;
-        DebugLogger.Log($"[DashboardViewModel] UpdateAllComponents starting - statistics null: {statistics == null}, packets: {packets?.Count ?? 0}");
+        DebugLogger.Log($"[DashboardViewModel] UpdateAllComponents starting - statistics null: {statistics is null}, packets: {packets?.Count ?? 0}");
 
-        if (statistics == null || packets == null)
+        if (statistics is null || packets is null)
         {
             DebugLogger.Log($"[DashboardViewModel] Cannot update components - statistics or packets is null");
             return;
@@ -527,7 +527,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
         try
         {
-            if (_allPackets == null || _allPackets.Count == 0)
+            if (_allPackets is null || _allPackets.Count == 0)
             {
                 DebugLogger.Log("[DashboardViewModel] No packets available for chip-based filtering");
                 return;
@@ -540,7 +540,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             var filter = _currentChipBasedFilter;
 
             // Check if filter is empty or null
-            IsFilterActive = filter != null && !filter.IsEmpty;
+            IsFilterActive = filter is not null && !filter.IsEmpty;
 
             if (!IsFilterActive)
             {
@@ -552,7 +552,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
                     Statistics.ClearFilteredStatistics();
                     // CRITICAL: Update charts with full unfiltered data when filters are cleared
-                    if (_unfilteredStatistics != null)
+                    if (_unfilteredStatistics is not null)
                     {
                         Statistics.UpdateAllStatistics(_unfilteredStatistics, isFiltered: false);
                         Charts.UpdateAllCharts(_unfilteredStatistics);
@@ -593,7 +593,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             cancellationToken.ThrowIfCancellationRequested();
 
             // Apply global anomaly filters if active
-            if (_globalFilterState != null && _globalFilterState.HasAnomalyFilters && _anomalyFrameIndexService != null)
+            if (_globalFilterState is not null && _globalFilterState.HasAnomalyFilters && _anomalyFrameIndexService is not null)
             {
                 var matchingFrames = _anomalyFrameIndexService.GetFramesMatchingFilters(
                     _globalFilterState.AnomalySeverityFilter,
@@ -703,11 +703,11 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     private void OnFilterServiceChanged(object? sender, EventArgs e)
     {
-        if (_filterService == null) return;
+        if (_filterService is null) return;
 
         try
         {
-            if (_filterService.IsFilterActive && _allPackets != null)
+            if (_filterService.IsFilterActive && _allPackets is not null)
             {
                 var filteredPackets = _filterService.GetFilteredPackets(_allPackets).ToList();
                 _filteredPackets = filteredPackets;
@@ -722,7 +722,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             {
                 // Reset to unfiltered
                 _filteredPackets = null;
-                if (_unfilteredStatistics != null)
+                if (_unfilteredStatistics is not null)
                 {
                     Statistics.UpdateAllStatistics(_unfilteredStatistics, isFiltered: false);
                     Charts.UpdateAllCharts(_unfilteredStatistics);
@@ -742,7 +742,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     {
         try
         {
-            if (statistics.CountryStatistics != null && statistics.CountryStatistics.Any())
+            if (statistics.CountryStatistics is not null && statistics.CountryStatistics.Any())
             {
                 var countryData = new Dictionary<string, double>();
 
@@ -853,7 +853,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
                 _filterCancellationTokenSource = null;
 
                 // Unsubscribe from CommonFilters property changes (fixes memory leak)
-                if (_commonFiltersHandler != null)
+                if (_commonFiltersHandler is not null)
                 {
                     CommonFilters.PropertyChanged -= _commonFiltersHandler;
                     _commonFiltersHandler = null;
@@ -863,7 +863,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
                 Statistics.PropertyChanged -= OnStatisticsPropertyChanged;
                 Charts.PropertyChanged -= OnChartsPropertyChanged;
 
-                if (_filterService != null)
+                if (_filterService is not null)
                 {
                     _filterService.FilterChanged -= OnFilterServiceChanged;
                 }

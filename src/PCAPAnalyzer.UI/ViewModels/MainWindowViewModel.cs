@@ -190,7 +190,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         _analysisCoordinator = analysisCoordinator;
         _sessionCache = sessionCache ?? App.Services?.GetService<ISessionAnalysisCache>() ?? new SessionAnalysisCacheService();
 
-        if (_orchestrator == null)
+        if (_orchestrator is null)
             DebugLogger.Critical("[MainWindowViewModel] AnalysisOrchestrator is NULL - Analyze button will be disabled!");
 
         // Initialize tab-specific filter services (isolated per tab)
@@ -205,7 +205,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         Analysis = new MainWindowAnalysisViewModel(_dispatcher, _tsharkService);
         UIState = new MainWindowUIStateViewModel();
         var packetDetails = packetDetailsViewModel ?? App.Services?.GetService<PacketDetailsViewModel>();
-        if (packetDetails == null)
+        if (packetDetails is null)
         {
 
             var protocolParser = new ProtocolParser();
@@ -255,14 +255,14 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         InitializePacketAnalysisStats();
 
         var fileAnalysisVM = App.Services?.GetService<FileAnalysisViewModel>();
-        if (fileAnalysisVM != null)
+        if (fileAnalysisVM is not null)
         {
             FileAnalysisViewModel = fileAnalysisVM;
             FileAnalysisViewModel.NavigateToTab = (tabIndex) => SelectedTabIndex = tabIndex;
             FileAnalysisViewModel.OnAnalysisCompleted += OnFileAnalysisCompleted;
             FileAnalysisViewModel.SetAnalysisViewModel(Analysis);
             var fileSelectionVM = App.Services?.GetService<Components.FileSelectionControlViewModel>();
-            if (fileSelectionVM == null && FileAnalysisViewModel != null)
+            if (fileSelectionVM is null && FileAnalysisViewModel is not null)
                 fileSelectionVM = new Components.FileSelectionControlViewModel(FileAnalysisViewModel);
             FileSelectionControl = fileSelectionVM;
             FileManagerViewModel = new FileManagerViewModel(FileAnalysisViewModel ?? throw new InvalidOperationException("FileAnalysisViewModel is required"));
@@ -280,7 +280,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             navigateToTab: HandleDashboardNavigation);
 
         // Subscribe to GlobalFilterState changes to propagate filters to all tabs
-        if (_globalFilterState != null)
+        if (_globalFilterState is not null)
         {
             _globalFilterState.OnFilterChanged += OnGlobalFilterStateChanged;
             DebugLogger.Log("[MainWindowViewModel] Subscribed to GlobalFilterState.OnFilterChanged");
@@ -303,17 +303,17 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
         var packetComparer = App.Services?.GetService<IPacketComparer>();
         var compareFileDialogService = App.Services?.GetService<IFileDialogService>();
-        if (packetComparer != null)
+        if (packetComparer is not null)
             CompareViewModel = new CompareViewModel(packetComparer, compareFileDialogService);
 
         var topTalkersVM = App.Services?.GetService<TopTalkersViewModel>();
-        if (topTalkersVM != null)
+        if (topTalkersVM is not null)
             TopTalkersViewModel = topTalkersVM;
         else
         {
             var csvService = App.Services?.GetService<ICsvExportService>();
             var fileDialogService = App.Services?.GetService<IFileDialogService>();
-            if (csvService != null && fileDialogService != null)
+            if (csvService is not null && fileDialogService is not null)
                 TopTalkersViewModel = new TopTalkersViewModel(csvService, fileDialogService);
         }
 
@@ -326,12 +326,12 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         var hostInventoryVM = App.Services?.GetService<HostInventoryViewModel>();
         HostInventoryViewModel = hostInventoryVM ?? new HostInventoryViewModel();
 
-        if (reportService != null)
+        if (reportService is not null)
             ReportViewModel = new ReportViewModel(reportService);
         else
         {
             var reportGen = App.Services?.GetService<Core.Services.IReportGeneratorService>();
-            ReportViewModel = reportGen != null ? new ReportViewModel(reportGen) : null!;
+            ReportViewModel = reportGen is not null ? new ReportViewModel(reportGen) : null!;
         }
 
         _updateTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
@@ -342,7 +342,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
     private void RegisterTabsWithCoordinator()
     {
-        if (_analysisCoordinator == null)
+        if (_analysisCoordinator is null)
         {
             DebugLogger.Log("[MainWindowViewModel] Coordinator not available - skipping tab registration");
             return;
@@ -418,7 +418,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             return;
         }
 
-        if (_orchestrator == null)
+        if (_orchestrator is null)
             throw new InvalidOperationException("AnalysisOrchestrator required - ensure ServiceConfiguration registers it");
 
         try
@@ -429,12 +429,12 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             Charts.ResetCharts();
             Analysis.ResetAnalysis();
 
-            if (DashboardViewModel != null)
+            if (DashboardViewModel is not null)
             {
                 DashboardViewModel.ResetStatistics();
             }
 
-            if (AnomaliesViewModel != null)
+            if (AnomaliesViewModel is not null)
             {
                 AnomaliesViewModel.Clear();
             }
@@ -500,7 +500,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         PacketFilterViewModel.IsAnalyzing = false;
         PacketFilterViewModel.CanApplyFilters = true;
 
-        if (PacketManager != null)
+        if (PacketManager is not null)
         {
             await PacketManager.PopulateFullPacketListAsync(result.Statistics);
             PacketManager.ApplyFilter(new PacketFilter());
@@ -512,13 +512,13 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
         var packetStats = _tsharkService.GetStatistics();
         Charts.UpdateCharts(packetStats);
-        if (PacketManager != null)
+        if (PacketManager is not null)
         {
             var filteredPackets = PacketManager.GetFilteredPackets();
             Charts.UpdatePacketsOverTimeChart(filteredPackets);
         }
 
-        if (_analysisCoordinator != null)
+        if (_analysisCoordinator is not null)
             await _analysisCoordinator.PopulateTabsAsync(result);
         else
             await PopulateTabsLegacyAsync(result);
@@ -527,26 +527,26 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     private async Task PopulateTabsLegacyAsync(AnalysisResult result)
     {
         // Dashboard
-        if (DashboardViewModel != null)
+        if (DashboardViewModel is not null)
         {
             DashboardViewModel.SetStatisticsOverride(result.Statistics);
             await DashboardViewModel.UpdateStatisticsAsync(result.AllPackets);
         }
 
         // Threats
-        if (ThreatsViewModel != null)
+        if (ThreatsViewModel is not null)
         {
             await ThreatsViewModel.SetFromCacheAsync(result.Threats, result.AllPackets);
         }
 
         // VoiceQoS
-        if (VoiceQoSViewModel != null && result.VoiceQoSData != null)
+        if (VoiceQoSViewModel is not null && result.VoiceQoSData is not null)
         {
             await VoiceQoSViewModel.SetFromCacheAsync(result.VoiceQoSData, result.VoiceQoSTimeSeries, result.AllPackets);
         }
 
         // Country Traffic
-        if (CountryTrafficViewModel != null)
+        if (CountryTrafficViewModel is not null)
         {
             await CountryTrafficViewModel.UpdateStatistics(result.Statistics);
         }
@@ -601,7 +601,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
         // Update supplementary views after dashboard update
         var enrichedStats = DashboardViewModel?.CurrentStatistics ?? Analysis.FinalStatistics;
-        if (enrichedStats != null)
+        if (enrichedStats is not null)
         {
             var packets = (_packetAnalysisFilterService?.IsFilterActive == true)
                 ? _packetAnalysisFilterService.GetFilteredPackets(PacketManager.CachedDashboardPackets ?? new List<PacketInfo>()).ToList()
@@ -618,24 +618,24 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             // Only update geographic views here (Country, Map)
             // ThreatsViewModel and VoiceQoSViewModel have dedicated phases
 
-            if (CountryTrafficViewModel != null)
+            if (CountryTrafficViewModel is not null)
             {
                 await _dispatcher.InvokeAsync(() => CountryTrafficViewModel.SetPackets(sample));
                 await CountryTrafficViewModel.UpdateStatistics(statistics);
             }
 
-            if (GeographicMapViewModel != null)
+            if (GeographicMapViewModel is not null)
             {
                 await _dispatcher.InvokeAsync(() => GeographicMapViewModel.SetPackets(sample));
                 await GeographicMapViewModel.UpdateStatistics(statistics);
             }
 
-            if (ReportViewModel != null && ThreatsViewModel != null)
+            if (ReportViewModel is not null && ThreatsViewModel is not null)
             {
                 await ReportViewModel.UpdateData(statistics, ThreatsViewModel.GetCurrentThreats());
             }
 
-            if (FlowSummaryViewModel != null && statistics.TopConversations != null)
+            if (FlowSummaryViewModel is not null && statistics.TopConversations is not null)
             {
                 // Snapshot collection first, then transform
                 var conversations = statistics.TopConversations.ToList();
@@ -655,7 +655,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
                 await _dispatcher.InvokeAsync(() => FlowSummaryViewModel.LoadFlows(flows));
             }
 
-            if (TopTalkersViewModel != null)
+            if (TopTalkersViewModel is not null)
             {
                 // Convert to List as TopTalkersViewModel expects List<PacketInfo>
                 await _dispatcher.InvokeAsync(async () => await TopTalkersViewModel.UpdateData(statistics, sample.ToList()));
@@ -688,7 +688,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     /// </summary>
     private async void OnGlobalFilterStateChanged()
     {
-        if (_globalFilterState == null) return;
+        if (_globalFilterState is null) return;
 
         DebugLogger.Log("[MainWindowViewModel] GlobalFilterState changed - applying to Packet Analysis tab");
 
@@ -730,7 +730,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     /// </summary>
     private PacketFilter BuildPacketFilterFromGlobalState()
     {
-        if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+        if (_globalFilterState is null || !_globalFilterState.HasActiveFilters)
             return new PacketFilter(); // Empty filter - show all
 
         var includeFilters = new List<PacketFilter>();
@@ -740,7 +740,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         foreach (var group in _globalFilterState.IncludeGroups)
         {
             var groupFilter = BuildFilterFromGroup(group);
-            if (groupFilter != null)
+            if (groupFilter is not null)
                 includeFilters.Add(groupFilter);
         }
 
@@ -748,7 +748,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         foreach (var group in _globalFilterState.ExcludeGroups)
         {
             var groupFilter = BuildFilterFromGroup(group);
-            if (groupFilter != null)
+            if (groupFilter is not null)
                 excludeFilters.Add(groupFilter);
         }
 
@@ -785,8 +785,8 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
         // Combine: INCLUDE AND NOT(EXCLUDE)
         var finalFilters = new List<PacketFilter>();
-        if (includeFilter != null) finalFilters.Add(includeFilter);
-        if (excludeFilter != null) finalFilters.Add(excludeFilter);
+        if (includeFilter is not null) finalFilters.Add(includeFilter);
+        if (excludeFilter is not null) finalFilters.Add(excludeFilter);
 
         if (finalFilters.Count == 0)
             return new PacketFilter();
@@ -883,7 +883,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     private static void AddDirectionFilter(List<PacketFilter> filters, FilterGroup group)
     {
         if (group.Directions?.Count == 0) return;
-        if (group.Directions == null) return;
+        if (group.Directions is null) return;
 
         var directions = group.Directions;
         filters.Add(new PacketFilter
@@ -915,12 +915,12 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     private void AddQuickFilters(List<PacketFilter> filters, FilterGroup group)
     {
         if (group.QuickFilters?.Count == 0) return;
-        if (group.QuickFilters == null) return;
+        if (group.QuickFilters is null) return;
 
         foreach (var qf in group.QuickFilters)
         {
             var pred = BuildQuickFilterPredicate(qf);
-            if (pred != null)
+            if (pred is not null)
             {
                 filters.Add(new PacketFilter
                 {
@@ -1169,7 +1169,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
     protected override void CopyFiltersToDashboard()
     {
-        if (DashboardViewModel != null)
+        if (DashboardViewModel is not null)
         {
             _dashboardFilterService.CopyFilterFrom(_packetAnalysisFilterService);
             UIState.UpdateStatus("Filters copied to Dashboard", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
@@ -1178,7 +1178,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
     protected override void CopyFiltersToThreats()
     {
-        if (ThreatsViewModel != null)
+        if (ThreatsViewModel is not null)
         {
             _threatsFilterService.CopyFilterFrom(_packetAnalysisFilterService);
             UIState.UpdateStatus("Filters copied to Security Threats", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
@@ -1187,7 +1187,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
     protected override void CopyFiltersToVoiceQoS()
     {
-        if (VoiceQoSViewModel != null)
+        if (VoiceQoSViewModel is not null)
         {
             _voiceQoSFilterService.CopyFilterFrom(_packetAnalysisFilterService);
             UIState.UpdateStatus("Filters copied to Voice/QoS", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
@@ -1196,7 +1196,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
     protected override void CopyFiltersToCountryTraffic()
     {
-        if (CountryTrafficViewModel != null)
+        if (CountryTrafficViewModel is not null)
         {
             _countryTrafficFilterService.CopyFilterFrom(_packetAnalysisFilterService);
             UIState.UpdateStatus("Filters copied to Country Traffic", ThemeColorHelper.GetColorHex("ColorSuccess", "#4ADE80"));
@@ -1220,7 +1220,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             Analysis?.Dispose();
 
             // Properly await PacketManager disposal
-            if (PacketManager != null)
+            if (PacketManager is not null)
                 await PacketManager.DisposeAsync().ConfigureAwait(false);
 
             // Dispose child ViewModels

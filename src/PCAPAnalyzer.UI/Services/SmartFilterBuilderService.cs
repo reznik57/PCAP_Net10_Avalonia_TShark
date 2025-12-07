@@ -98,15 +98,15 @@ namespace PCAPAnalyzer.UI.Services
             }
 
             // Step 7: Final combination: (INCLUDE) AND (NOT EXCLUDE)
-            if (combinedInclude != null && combinedExclude != null)
+            if (combinedInclude is not null && combinedExclude is not null)
             {
                 return CombineFiltersWithAnd(new List<PacketFilter> { combinedInclude, combinedExclude });
             }
-            else if (combinedInclude != null)
+            else if (combinedInclude is not null)
             {
                 return combinedInclude;
             }
-            else if (combinedExclude != null)
+            else if (combinedExclude is not null)
             {
                 return combinedExclude;
             }

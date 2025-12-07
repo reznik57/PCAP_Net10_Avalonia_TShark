@@ -53,7 +53,7 @@ public partial class CountryTableViewModel : ObservableObject
     {
         _currentStatistics = statistics;
 
-        if (statistics?.CountryStatistics == null)
+        if (statistics?.CountryStatistics is null)
         {
             DebugLogger.Log("[CountryTableViewModel] UpdateTables: No country statistics available");
             ClearTables();
@@ -148,7 +148,7 @@ public partial class CountryTableViewModel : ObservableObject
     /// </summary>
     private void UpdateActiveFlows(NetworkStatistics statistics)
     {
-        if (statistics?.TrafficFlows == null)
+        if (statistics?.TrafficFlows is null)
         {
             DebugLogger.Log("[CountryTableViewModel] UpdateActiveFlows: No traffic flows available");
             ActiveFlows.Clear();
@@ -263,7 +263,7 @@ public partial class CountryTableViewModel : ObservableObject
     /// </summary>
     private void UpdateSourceDestinationTables(NetworkStatistics statistics)
     {
-        if (statistics?.CountryStatistics == null)
+        if (statistics?.CountryStatistics is null)
         {
             TopSourceCountriesByPackets.Clear();
             TopSourceCountriesByBytes.Clear();
@@ -392,7 +392,7 @@ public partial class CountryTableViewModel : ObservableObject
             .ToList();
 
         // Populate timeline data if provider is available
-        if (TimelineBucketProvider != null)
+        if (TimelineBucketProvider is not null)
         {
             foreach (var item in sourceByPackets)
                 item.TimelineBuckets = TimelineBucketProvider(item.CountryCode, item.Context);

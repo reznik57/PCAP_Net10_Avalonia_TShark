@@ -499,7 +499,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
             // This allows MainWindowViewModel to start preloading tabs in parallel BEFORE AnalysisCompleted
             // Pass packetStore so preload can query packets
             DebugLogger.Log($"[{statsTimestamp}] [ANALYSIS] *** TRIGGERING EAGER PRELOADING ***");
-            if (_finalStatistics != null)
+            if (_finalStatistics is not null)
             {
                 StatisticsBuilt?.Invoke(this, (_finalStatistics, packetStore));
             }
@@ -517,13 +517,13 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
                 StatusChanged?.Invoke(this, "Analysis complete - processing results");
             });
 
-            if (_finalStatistics != null)
+            if (_finalStatistics is not null)
             {
                 _processingMetrics.Complete(_finalStatistics.TotalPackets, _finalStatistics.TotalBytes, ThreatsDetected, _finalStatistics.PacketsPerSecond);
             }
 
             // Notify completion - tabs will handle finalization stage
-            if (_finalStatistics != null)
+            if (_finalStatistics is not null)
             {
                 AnalysisCompleted?.Invoke(this, _finalStatistics);
             }
@@ -1052,7 +1052,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
     /// </summary>
     private void StopElapsedTimer()
     {
-        if (_elapsedTimer != null)
+        if (_elapsedTimer is not null)
         {
             _elapsedTimer.Stop();
             _elapsedTimer = null;
@@ -1067,7 +1067,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
     /// </summary>
     public void UpdateRealtimeMetrics(PCAPAnalyzer.Core.Orchestration.AnalysisProgress? analysisProgress)
     {
-        if (analysisProgress == null)
+        if (analysisProgress is null)
         {
             HasRealtimeMetrics = false;
             return;

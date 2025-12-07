@@ -86,7 +86,7 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
     {
         _logger.LogInformation("PopulateFromCacheAsync called with {Count} anomalies", result.Anomalies?.Count ?? 0);
 
-        if (result.Anomalies == null || result.Anomalies.Count == 0)
+        if (result.Anomalies is null || result.Anomalies.Count == 0)
         {
             _logger.LogWarning("No anomalies in AnalysisResult");
             HasData = false;
@@ -101,7 +101,7 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
 
     public async Task LoadFromAnalysisResultAsync(List<NetworkAnomaly> anomalies)
     {
-        if (anomalies == null)
+        if (anomalies is null)
         {
             _logger.LogWarning("LoadFromAnalysisResultAsync called with null anomalies");
             HasData = false;

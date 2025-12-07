@@ -21,11 +21,11 @@ namespace PCAPAnalyzer.UI.Views
             // Creating a separate instance here caused duplicate ViewModels (memory waste + wrong data)
             DataContextChanged += (s, e) =>
             {
-                if (_viewModel != null)
+                if (_viewModel is not null)
                     _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
 
                 _viewModel = DataContext as ThreatsViewModel;
-                if (_viewModel != null)
+                if (_viewModel is not null)
                     _viewModel.PropertyChanged += OnViewModelPropertyChanged;
             };
         }

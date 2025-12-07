@@ -48,7 +48,7 @@ namespace PCAPAnalyzer.Core.Services
         /// </summary>
         public void CopyFilterFrom(ITabFilterService sourceTab)
         {
-            if (sourceTab == null)
+            if (sourceTab is null)
                 throw new ArgumentNullException(nameof(sourceTab));
 
             DebugLogger.Log($"[{TabName}] Copying filter from [{sourceTab.TabName}]");

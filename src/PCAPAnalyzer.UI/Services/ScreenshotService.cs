@@ -39,7 +39,7 @@ namespace PCAPAnalyzer.UI.Services
             try
             {
                 var window = GetMainWindow();
-                if (window == null)
+                if (window is null)
                 {
                     DebugLogger.Log("[Screenshot] ERROR: Main window is null");
                     return false;

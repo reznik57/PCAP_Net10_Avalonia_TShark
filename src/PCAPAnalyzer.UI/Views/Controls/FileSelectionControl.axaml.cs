@@ -34,10 +34,10 @@ public partial class FileSelectionControl : UserControl
     private void OnDragEnter(object? sender, DragEventArgs e)
     {
         var files = e.DataTransfer.TryGetFiles();
-        if (files != null && files.Any())
+        if (files is not null && files.Any())
         {
             // Add DragOver class for blue glow effect
-            if (_dropZoneBorder != null && !_dropZoneBorder.Classes.Contains("DragOver"))
+            if (_dropZoneBorder is not null && !_dropZoneBorder.Classes.Contains("DragOver"))
             {
                 _dropZoneBorder.Classes.Add("DragOver");
             }
@@ -50,7 +50,7 @@ public partial class FileSelectionControl : UserControl
     private void OnDragLeave(object? sender, DragEventArgs e)
     {
         // Remove DragOver class
-        if (_dropZoneBorder != null && _dropZoneBorder.Classes.Contains("DragOver"))
+        if (_dropZoneBorder is not null && _dropZoneBorder.Classes.Contains("DragOver"))
         {
             _dropZoneBorder.Classes.Remove("DragOver");
         }
@@ -63,7 +63,7 @@ public partial class FileSelectionControl : UserControl
     {
         // Only allow file drops
         var files = e.DataTransfer.TryGetFiles();
-        if (files != null && files.Any())
+        if (files is not null && files.Any())
         {
             e.DragEffects = DragDropEffects.Copy;
         }
@@ -81,13 +81,13 @@ public partial class FileSelectionControl : UserControl
     private void OnDrop(object? sender, DragEventArgs e)
     {
         // Remove drag-over visual state
-        if (_dropZoneBorder != null && _dropZoneBorder.Classes.Contains("DragOver"))
+        if (_dropZoneBorder is not null && _dropZoneBorder.Classes.Contains("DragOver"))
         {
             _dropZoneBorder.Classes.Remove("DragOver");
         }
 
         var files = e.DataTransfer.TryGetFiles()?.ToArray();
-        if (files == null || files.Length == 0)
+        if (files is null || files.Length == 0)
             return;
 
         var filePath = files[0].Path.LocalPath;
@@ -104,7 +104,7 @@ public partial class FileSelectionControl : UserControl
         if (DataContext is ViewModels.Components.FileSelectionControlViewModel vm)
         {
             var fileAnalysisVm = GetFileAnalysisViewModel(vm);
-            if (fileAnalysisVm != null)
+            if (fileAnalysisVm is not null)
             {
                 DebugLogger.Log($"[FileSelectionControl] File dropped: {filePath}");
                 fileAnalysisVm.SelectedFilePath = filePath;

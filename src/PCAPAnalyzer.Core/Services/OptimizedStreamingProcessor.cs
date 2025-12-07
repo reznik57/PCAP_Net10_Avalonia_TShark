@@ -117,7 +117,7 @@ namespace PCAPAnalyzer.Core.Services
         public async Task<NetworkStatistics?> GetStatisticsAsync(List<PacketInfo> allPackets)
         {
             // Return cached statistics if recent enough
-            if (_cachedStatistics != null && 
+            if (_cachedStatistics is not null && 
                 (DateTime.Now - _lastStatisticsUpdate) < _statisticsUpdateInterval)
             {
                 return _cachedStatistics;
@@ -127,7 +127,7 @@ namespace PCAPAnalyzer.Core.Services
             await _statisticsSemaphore.WaitAsync();
             try
             {
-                if (_cachedStatistics != null && 
+                if (_cachedStatistics is not null && 
                     (DateTime.Now - _lastStatisticsUpdate) < _statisticsUpdateInterval)
                 {
                     return _cachedStatistics;

@@ -187,7 +187,7 @@ public partial class PacketDetailsViewModel : ObservableObject
     /// </summary>
     public async Task LoadProtocolDeepDiveAsync()
     {
-        if (CurrentPacket == null || _deepDiveService == null || string.IsNullOrWhiteSpace(_currentPcapPath))
+        if (CurrentPacket is null || _deepDiveService is null || string.IsNullOrWhiteSpace(_currentPcapPath))
         {
             DebugLogger.Log("[DeepDive] Cannot load - missing packet, service, or pcap path");
             return;
@@ -304,7 +304,7 @@ public partial class PacketDetailsViewModel : ObservableObject
     [RelayCommand]
     private void FilterByStream()
     {
-        if (CurrentPacket == null || !CanFilterByStream)
+        if (CurrentPacket is null || !CanFilterByStream)
             return;
 
         var packet = CurrentPacket.Value;
@@ -348,7 +348,7 @@ public partial class PacketDetailsViewModel : ObservableObject
     [RelayCommand]
     private void SearchByStream()
     {
-        if (CurrentPacket == null || !CanFilterByStream)
+        if (CurrentPacket is null || !CanFilterByStream)
             return;
 
         var packet = CurrentPacket.Value;
@@ -388,7 +388,7 @@ public partial class PacketDetailsViewModel : ObservableObject
     {
         DebugLogger.Log($"[DETAILS] LoadPacketDetailsAsync - packet: {packet?.FrameNumber}");
 
-        if (packet == null)
+        if (packet is null)
         {
             ClearDetails();
             return;
@@ -530,7 +530,7 @@ public partial class PacketDetailsViewModel : ObservableObject
             FlowConversation = $"{packet.SourceIP}:{packet.SourcePort} ↔ {packet.DestinationIP}:{packet.DestinationPort}";
 
             // If packet store is available, perform comprehensive stream analysis
-            if (_packetStore != null)
+            if (_packetStore is not null)
             {
                 // Run analysis on background thread to avoid blocking UI
                 _ = Task.Run(async () => await PerformStreamAnalysisAsync(packet, streamKey));
@@ -609,7 +609,7 @@ public partial class PacketDetailsViewModel : ObservableObject
     /// </summary>
     private async Task<List<PacketInfo>> QueryStreamPacketsAsync(PacketInfo packet)
     {
-        if (_packetStore == null)
+        if (_packetStore is null)
             return new List<PacketInfo>();
 
         // Create filter for this stream (bidirectional conversation)
@@ -658,7 +658,7 @@ public partial class PacketDetailsViewModel : ObservableObject
     {
         // Find previous/next packets in stream
         uint? prevPacket = null, nextPacketFrame = null;
-        if (streamPackets != null && streamPackets.Count > 0)
+        if (streamPackets is not null && streamPackets.Count > 0)
         {
             var ordered = streamPackets.OrderBy(p => p.FrameNumber).ToList();
             var idx = ordered.FindIndex(p => p.FrameNumber == currentPacket.FrameNumber);
@@ -678,7 +678,7 @@ public partial class PacketDetailsViewModel : ObservableObject
         string dstGeo = "--";
         var warnings = new List<string>();
 
-        if (analysis.Security != null)
+        if (analysis.Security is not null)
         {
             riskLevel = analysis.Security.OverallRisk.ToString();
             riskColor = analysis.Security.OverallRisk switch
@@ -705,7 +705,7 @@ public partial class PacketDetailsViewModel : ObservableObject
 
         // Enhanced Security Analysis (StreamSecurityAnalyzer)
         StreamSecurityResult? enhancedSecurity = null;
-        if (streamPackets != null && streamPackets.Count > 0)
+        if (streamPackets is not null && streamPackets.Count > 0)
         {
             enhancedSecurity = _streamSecurityAnalyzer.Analyze(
                 streamPackets,
@@ -717,7 +717,7 @@ public partial class PacketDetailsViewModel : ObservableObject
 
         // Directional metrics
         string clientTraffic = "--", serverTraffic = "--", direction = "--", position = "--", age = "--";
-        if (analysis.Directional != null)
+        if (analysis.Directional is not null)
         {
             var d = analysis.Directional;
             clientTraffic = $"{d.Client.IP}:{d.Client.Port} -> {d.Client.BytesSentFormatted} ({d.Client.PacketsSent} pkts)";
@@ -749,7 +749,7 @@ public partial class PacketDetailsViewModel : ObservableObject
             HasSecurityWarnings = warnings.Count > 0;
 
             // Enhanced Security Analysis
-            if (enhancedSecurity != null)
+            if (enhancedSecurity is not null)
             {
                 HasEnhancedSecurityAnalysis = true;
                 StreamRiskScore = enhancedSecurity.RiskScore;
@@ -816,12 +816,12 @@ public partial class PacketDetailsViewModel : ObservableObject
     /// </summary>
     private static string FormatGeoInfo(GeoSecurityInfo? geo)
     {
-        if (geo == null)
+        if (geo is null)
             return "--";
         if (geo.IsPrivateIP)
             return $"{geo.IP} (Private Network)";
 
-        var location = geo.City != null ? $"{geo.City}, {geo.CountryName}" : geo.CountryName ?? "Unknown";
+        var location = geo.City is not null ? $"{geo.City}, {geo.CountryName}" : geo.CountryName ?? "Unknown";
         var risk = geo.IsHighRiskCountry ? " [HIGH RISK]" : "";
         return $"{geo.IP} - {location}{risk}";
     }

@@ -109,7 +109,7 @@ namespace PCAPAnalyzer.Core.Services.Caching
             ThrowIfDisposed();
             ValidateKey(key);
 
-            if (value == null)
+            if (value is null)
             {
                 throw new ArgumentNullException(nameof(value), "Cannot cache null value");
             }

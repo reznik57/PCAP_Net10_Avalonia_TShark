@@ -20,7 +20,7 @@ public partial class CountryTrafficViewModel
     {
         try
         {
-            if (_currentStatistics?.CountryStatistics == null || _currentStatistics.CountryStatistics.Count == 0)
+            if (_currentStatistics?.CountryStatistics is null || _currentStatistics.CountryStatistics.Count == 0)
             {
                 DebugLogger.Log("[CountryTrafficViewModel] Export: No country data to export");
                 return;
@@ -29,7 +29,7 @@ public partial class CountryTrafficViewModel
             // Get the main window for dialog
             if (Avalonia.Application.Current?.ApplicationLifetime is not
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop ||
-                desktop.MainWindow == null)
+                desktop.MainWindow is null)
             {
                 return;
             }
@@ -51,7 +51,7 @@ public partial class CountryTrafficViewModel
             };
 
             var file = await topLevel.StorageProvider.SaveFilePickerAsync(saveDialog);
-            if (file == null)
+            if (file is null)
                 return;
 
             var filePath = file.Path.LocalPath;

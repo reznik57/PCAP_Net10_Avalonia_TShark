@@ -138,7 +138,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
         private async Task UpdateTimeSeriesAsync()
         {
-            if (_currentStatistics?.ThroughputTimeSeries == null || !_currentStatistics.ThroughputTimeSeries.Any())
+            if (_currentStatistics?.ThroughputTimeSeries is null || !_currentStatistics.ThroughputTimeSeries.Any())
                 return;
 
             await Task.Run(() =>
@@ -174,7 +174,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
         private async Task UpdateHeatmapAsync()
         {
-            if (_currentPackets == null || !_currentPackets.Any())
+            if (_currentPackets is null || !_currentPackets.Any())
                 return;
 
             await Task.Run(() =>
@@ -209,7 +209,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
         private async Task UpdateHistogramAsync()
         {
-            if (_currentPackets == null || !_currentPackets.Any())
+            if (_currentPackets is null || !_currentPackets.Any())
                 return;
 
             await Task.Run(() =>
@@ -243,7 +243,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
         private async Task UpdateNetworkGraphAsync()
         {
-            if (_currentStatistics?.TopConversations == null || !_currentStatistics.TopConversations.Any())
+            if (_currentStatistics?.TopConversations is null || !_currentStatistics.TopConversations.Any())
                 return;
 
             await Task.Run(() =>
@@ -283,7 +283,7 @@ namespace PCAPAnalyzer.UI.ViewModels
                     var sourceNode = nodes.FirstOrDefault(n => n.Id == edge.Source);
                     var targetNode = nodes.FirstOrDefault(n => n.Id == edge.Target);
 
-                    if (sourceNode != null && targetNode != null)
+                    if (sourceNode is not null && targetNode is not null)
                     {
                         edges.Add(new NetworkEdgeViewModel
                         {
@@ -361,7 +361,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
         private async Task RefreshDataAsync()
         {
-            if (_currentPackets != null && _currentStatistics != null)
+            if (_currentPackets is not null && _currentStatistics is not null)
             {
                 await UpdateVisualizationsAsync(_currentPackets, _currentStatistics);
             }

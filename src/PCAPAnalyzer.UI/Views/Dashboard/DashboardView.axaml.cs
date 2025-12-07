@@ -92,7 +92,7 @@ public partial class DashboardView : UserControl
         base.OnUnloaded(e);
 
         // Unsubscribe from filter panel events
-        if (_filterPanelVm != null)
+        if (_filterPanelVm is not null)
         {
             _filterPanelVm.ApplyFiltersRequested -= OnFilterPanelApplyRequested;
             _filterPanelVm.IsApplyingFilter = false;
@@ -100,7 +100,7 @@ public partial class DashboardView : UserControl
         }
 
         // Unsubscribe from DashboardViewModel property changes
-        if (_dashboardVm != null)
+        if (_dashboardVm is not null)
         {
             _dashboardVm.PropertyChanged -= OnDashboardViewModelDataPropertyChanged;
             _dashboardVm.PropertyChanged -= OnDashboardViewModelFilterProgressChanged;
@@ -120,7 +120,7 @@ public partial class DashboardView : UserControl
             _filterPanelVm = filterPanelVm;
             filterPanelVm.ApplyFiltersRequested += OnFilterPanelApplyRequested;
 
-            if (_dashboardVm != null)
+            if (_dashboardVm is not null)
                 _dashboardVm.PropertyChanged += OnDashboardViewModelFilterProgressChanged;
         }
     }
@@ -135,7 +135,7 @@ public partial class DashboardView : UserControl
     /// </summary>
     private void OnDashboardViewModelFilterProgressChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (_filterPanelVm == null || sender is not DashboardViewModel dashVm)
+        if (_filterPanelVm is null || sender is not DashboardViewModel dashVm)
             return;
 
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
@@ -182,7 +182,7 @@ public partial class DashboardView : UserControl
     {
         _cachedTrafficData.Clear();
 
-        if (series == null || series.Count == 0)
+        if (series is null || series.Count == 0)
             return;
 
         double throughputMin = double.MaxValue, throughputMax = double.MinValue;
@@ -191,7 +191,7 @@ public partial class DashboardView : UserControl
 
         foreach (var s in series)
         {
-            if (s is not LineSeries<DateTimePoint> dateTimeSeries || dateTimeSeries.Values == null)
+            if (s is not LineSeries<DateTimePoint> dateTimeSeries || dateTimeSeries.Values is null)
                 continue;
 
             var name = dateTimeSeries.Name ?? "Unknown";
@@ -239,7 +239,7 @@ public partial class DashboardView : UserControl
     {
         _cachedPortData.Clear();
 
-        if (series == null || series.Count == 0)
+        if (series is null || series.Count == 0)
             return;
 
         double min = double.MaxValue;
@@ -251,7 +251,7 @@ public partial class DashboardView : UserControl
             if (name is "Highlight" or "VerticalLine")
                 continue;
 
-            if (s is LineSeries<DateTimePoint> dateTimeSeries && dateTimeSeries.Values != null)
+            if (s is LineSeries<DateTimePoint> dateTimeSeries && dateTimeSeries.Values is not null)
             {
                 var values = dateTimeSeries.Values.Cast<object>().ToList();
                 _cachedPortData[name] = values;
@@ -262,7 +262,7 @@ public partial class DashboardView : UserControl
                     max = Math.Max(max, dt.Value!.Value);
                 }
             }
-            else if (s is LineSeries<ObservablePoint> observableSeries && observableSeries.Values != null)
+            else if (s is LineSeries<ObservablePoint> observableSeries && observableSeries.Values is not null)
             {
                 var values = observableSeries.Values.Cast<object>().ToList();
                 _cachedPortData[name] = values;
@@ -290,7 +290,7 @@ public partial class DashboardView : UserControl
     {
         if (sender is not LiveChartsCore.SkiaSharpView.Avalonia.CartesianChart chart)
             return;
-        if (_dashboardVm?.DrillDown == null)
+        if (_dashboardVm?.DrillDown is null)
             return;
 
         var clickPos = e.GetPosition(chart);
@@ -308,7 +308,7 @@ public partial class DashboardView : UserControl
     private DateTime? FindNearestTimestamp(LiveChartsCore.SkiaSharpView.Avalonia.CartesianChart chart, Avalonia.Point clickPos)
     {
         var firstSeries = _cachedTrafficData.Values.FirstOrDefault();
-        if (firstSeries == null || firstSeries.Count == 0)
+        if (firstSeries is null || firstSeries.Count == 0)
             return null;
 
         var chartWidth = chart.Bounds.Width;
@@ -339,7 +339,7 @@ public partial class DashboardView : UserControl
     private void OnFilterCopyClick(object? sender, RoutedEventArgs e)
     {
         var filterCopyService = App.Services?.GetService<FilterCopyService>();
-        if (filterCopyService == null)
+        if (filterCopyService is null)
             return;
 
         var comboBox = this.FindControl<ComboBox>("FilterCopyDestination");

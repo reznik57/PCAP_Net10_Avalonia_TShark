@@ -151,7 +151,7 @@ public sealed class TSharkService : ITSharkService
 
             _tsharkProcess = Process.Start(startInfo);
 
-            if (_tsharkProcess == null)
+            if (_tsharkProcess is null)
             {
                 _logger.LogError("Failed to start TShark process");
                 _isAnalyzing = false;
@@ -166,7 +166,7 @@ public sealed class TSharkService : ITSharkService
             // Monitor for errors
             _ = Task.Run(async () =>
             {
-                if (_tsharkProcess != null)
+                if (_tsharkProcess is not null)
                 {
                     var error = await _tsharkProcess.StandardError.ReadToEndAsync();
                     if (!string.IsNullOrWhiteSpace(error))
@@ -196,13 +196,13 @@ public sealed class TSharkService : ITSharkService
             var process = _tsharkProcess;
             while (!cancellationToken.IsCancellationRequested)
             {
-                if (process == null)
+                if (process is null)
                 {
                     break;
                 }
 
                 var line = await process.StandardOutput.ReadLineAsync();
-                if (line == null)
+                if (line is null)
                 {
                     if (process.HasExited)
                     {
@@ -245,7 +245,7 @@ public sealed class TSharkService : ITSharkService
                     else
                     {
                         Interlocked.Increment(ref _parseFailureCount);
-                        if (_firstParseFailure == null)
+                        if (_firstParseFailure is null)
                         {
                             _firstParseFailure = line;
                         }
@@ -296,7 +296,7 @@ public sealed class TSharkService : ITSharkService
         // Speedup: 2.7x faster parsing, zero heap allocations per packet
         var packet = TSharkParserOptimized.ParseLine(line.AsSpan());
 
-        if (packet == null)
+        if (packet is null)
             return null;
 
         // Optimized parser returns PacketInfo directly - no mapping needed
@@ -582,7 +582,7 @@ public sealed class TSharkService : ITSharkService
         {
             _cts?.Cancel();
 
-            if (_tsharkProcess != null && !_tsharkProcess.HasExited)
+            if (_tsharkProcess is not null && !_tsharkProcess.HasExited)
             {
                 // Kill entire process tree to prevent orphaned child processes
                 _tsharkProcess.Kill(entireProcessTree: true);
@@ -727,7 +727,7 @@ public sealed class TSharkService : ITSharkService
             var psi = capinfosInfo.CreateProcessStartInfo($"-Mc \"{convertedPath}\"");
 
             using var process = Process.Start(psi);
-            if (process == null)
+            if (process is null)
             {
                 PCAPAnalyzer.Core.Utilities.DebugLogger.Log("[TSharkService] Failed to start capinfos process");
                 return 0;
@@ -830,7 +830,7 @@ public sealed class TSharkService : ITSharkService
         }
 
         using var process = Process.Start(startInfo);
-        if (process == null)
+        if (process is null)
         {
             _logger.LogError("Failed to start TShark process for packet count using {Executable}", resolvedExecutable);
             return 0;
@@ -846,7 +846,7 @@ public sealed class TSharkService : ITSharkService
         while (true)
         {
             var line = await process.StandardOutput.ReadLineAsync();
-            if (line == null)
+            if (line is null)
             {
                 break;
             }
@@ -877,7 +877,7 @@ public sealed class TSharkService : ITSharkService
             _logger.LogWarning("TShark error output while counting packets ({Mode}): {Error}", executionMode, errorOutput);
         }
 
-        if (lastLine != null && long.TryParse(lastLine, out var packetCount))
+        if (lastLine is not null && long.TryParse(lastLine, out var packetCount))
         {
             _logger.LogInformation("Total packets in file ({Mode}): {Count} (took {Duration:F1}s)", executionMode, packetCount, sw.Elapsed.TotalSeconds);
 
@@ -945,7 +945,7 @@ public sealed class TSharkService : ITSharkService
             }
 
             using var process = Process.Start(startInfo);
-            if (process == null) return null;
+            if (process is null) return null;
 
             var output = await process.StandardOutput.ReadToEndAsync();
             await process.WaitForExitAsync();
@@ -981,7 +981,7 @@ public sealed class TSharkService : ITSharkService
             }
 
             using var process = Process.Start(startInfo);
-            if (process == null) return null;
+            if (process is null) return null;
 
             string? lastLine = null;
             while (await process.StandardOutput.ReadLineAsync() is { } line)
@@ -992,7 +992,7 @@ public sealed class TSharkService : ITSharkService
 
             await process.WaitForExitAsync();
 
-            if (lastLine != null && double.TryParse(lastLine.Trim(), System.Globalization.NumberStyles.Float,
+            if (lastLine is not null && double.TryParse(lastLine.Trim(), System.Globalization.NumberStyles.Float,
                     System.Globalization.CultureInfo.InvariantCulture, out var epoch))
             {
                 return DateTimeOffset.FromUnixTimeMilliseconds((long)(epoch * 1000)).LocalDateTime;
@@ -1015,7 +1015,7 @@ public sealed class TSharkService : ITSharkService
             _isAnalyzing = false;
 
             // Kill process immediately if running
-            if (_tsharkProcess != null && !_tsharkProcess.HasExited)
+            if (_tsharkProcess is not null && !_tsharkProcess.HasExited)
             {
                 try
                 {
@@ -1059,7 +1059,7 @@ public sealed class TSharkService : ITSharkService
             _cts?.Cancel();
 
             // Ensure TShark process is killed and wait for exit
-            if (_tsharkProcess != null && !_tsharkProcess.HasExited)
+            if (_tsharkProcess is not null && !_tsharkProcess.HasExited)
             {
                 try
                 {
@@ -1108,7 +1108,7 @@ public sealed class TSharkService : ITSharkService
             // Aggressive cleanup: Cancel and kill immediately, no waiting
             _cts?.Cancel();
 
-            if (_tsharkProcess != null && !_tsharkProcess.HasExited)
+            if (_tsharkProcess is not null && !_tsharkProcess.HasExited)
             {
                 try
                 {

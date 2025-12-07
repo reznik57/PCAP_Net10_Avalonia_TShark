@@ -33,7 +33,7 @@ public partial class PacketDetailsViewModel
             sb.AppendLine("═══════════════════════════════════════════════════════");
             sb.AppendLine($"State: {analysis.TcpState.State}");
 
-            if (analysis.TcpState.Handshake != null)
+            if (analysis.TcpState.Handshake is not null)
             {
                 sb.AppendLine($"Handshake: {analysis.TcpState.Handshake.GetDisplayString()}");
                 if (analysis.TcpState.Handshake.HandshakeDuration.HasValue)
@@ -66,7 +66,7 @@ public partial class PacketDetailsViewModel
         sb.AppendLine($"Duration: {analysis.Bandwidth.Duration.TotalSeconds:F2} seconds");
         sb.AppendLine($"Average Throughput: {analysis.Bandwidth.GetAverageThroughputDisplay()}");
 
-        if (analysis.Bandwidth.Peak != null)
+        if (analysis.Bandwidth.Peak is not null)
         {
             sb.AppendLine($"Peak Throughput: {analysis.Bandwidth.Peak.GetDisplayString()} at {analysis.Bandwidth.Peak.Timestamp:HH:mm:ss.fff}");
         }
@@ -83,12 +83,12 @@ public partial class PacketDetailsViewModel
             sb.AppendLine("═══════════════════════════════════════════════════════");
             sb.AppendLine($"Average RTT: {analysis.Timing.AverageRttMs:F2} ms");
 
-            if (analysis.Timing.MinRttSample != null)
+            if (analysis.Timing.MinRttSample is not null)
             {
                 sb.AppendLine($"Min RTT: {analysis.Timing.MinRttMs:F2} ms (packet #{analysis.Timing.MinRttSample.RequestPacket} ↔ #{analysis.Timing.MinRttSample.ResponsePacket})");
             }
 
-            if (analysis.Timing.MaxRttSample != null)
+            if (analysis.Timing.MaxRttSample is not null)
             {
                 sb.AppendLine($"Max RTT: {analysis.Timing.MaxRttMs:F2} ms (packet #{analysis.Timing.MaxRttSample.RequestPacket} ↔ #{analysis.Timing.MaxRttSample.ResponsePacket})");
             }

@@ -20,7 +20,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
         /// <exception cref="ArgumentNullException">Thrown when report is null</exception>
         public async Task<string> GenerateAsync(NetworkAnalysisReport report)
         {
-            if (report == null)
+            if (report is null)
                 throw new ArgumentNullException(nameof(report));
 
             var html = new StringBuilder();
@@ -178,7 +178,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
                     html.AppendLine("</div>");
                 }
 
-                if (finding.Remediation != null)
+                if (finding.Remediation is not null)
                 {
                     html.AppendLine("<div class=\"remediation\">");
                     html.AppendLine($"<strong>Remediation ({finding.Remediation.Priority}):</strong> {finding.Remediation.Summary}");

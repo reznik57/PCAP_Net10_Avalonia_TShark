@@ -55,7 +55,7 @@ namespace PCAPAnalyzer.UI.ViewModels.Components
         /// </summary>
         public void CopyFrom(CommonFilterViewModel source)
         {
-            if (source == null)
+            if (source is null)
                 return;
 
             ProtocolFilter = source.ProtocolFilter;

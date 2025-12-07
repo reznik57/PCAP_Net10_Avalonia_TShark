@@ -148,7 +148,7 @@ public partial class AnomaliesDrillDownViewModel : ObservableObject
             .GroupBy(a => a.DestinationPort)
             .OrderByDescending(g => g.Count())
             .FirstOrDefault();
-        TimePointTopPort = topPort != null ? $"Port {topPort.Key}" : "N/A";
+        TimePointTopPort = topPort is not null ? $"Port {topPort.Key}" : "N/A";
         TimePointTopPortCount = topPort?.Count() ?? 0;
 
         // Category breakdown

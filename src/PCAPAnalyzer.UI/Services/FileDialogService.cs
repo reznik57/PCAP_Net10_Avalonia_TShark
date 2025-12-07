@@ -26,10 +26,10 @@ namespace PCAPAnalyzer.UI.Services
         public async Task<string?> OpenFileAsync(string title = "Open File", params FileDialogFilter[] filters)
         {
             var window = GetMainWindow();
-            if (window == null) return null;
+            if (window is null) return null;
 
             var storageProvider = window.StorageProvider;
-            if (storageProvider == null) return null;
+            if (storageProvider is null) return null;
 
             var options = new FilePickerOpenOptions
             {
@@ -45,10 +45,10 @@ namespace PCAPAnalyzer.UI.Services
         public async Task<IEnumerable<string>> OpenFilesAsync(string title = "Open Files", params FileDialogFilter[] filters)
         {
             var window = GetMainWindow();
-            if (window == null) return Enumerable.Empty<string>();
+            if (window is null) return Enumerable.Empty<string>();
 
             var storageProvider = window.StorageProvider;
-            if (storageProvider == null) return Enumerable.Empty<string>();
+            if (storageProvider is null) return Enumerable.Empty<string>();
 
             var options = new FilePickerOpenOptions
             {
@@ -64,10 +64,10 @@ namespace PCAPAnalyzer.UI.Services
         public async Task<string?> SaveFileAsync(string title = "Save File", string defaultFileName = "", params FileDialogFilter[] filters)
         {
             var window = GetMainWindow();
-            if (window == null) return null;
+            if (window is null) return null;
 
             var storageProvider = window.StorageProvider;
-            if (storageProvider == null) return null;
+            if (storageProvider is null) return null;
 
             var options = new FilePickerSaveOptions
             {
@@ -83,10 +83,10 @@ namespace PCAPAnalyzer.UI.Services
         public async Task<string?> SelectFolderAsync(string title = "Select Folder")
         {
             var window = GetMainWindow();
-            if (window == null) return null;
+            if (window is null) return null;
 
             var storageProvider = window.StorageProvider;
-            if (storageProvider == null) return null;
+            if (storageProvider is null) return null;
 
             var options = new FolderPickerOpenOptions
             {
@@ -100,7 +100,7 @@ namespace PCAPAnalyzer.UI.Services
 
         private static List<FilePickerFileType>? ConvertFilters(FileDialogFilter[] filters)
         {
-            if (filters == null || filters.Length == 0)
+            if (filters is null || filters.Length == 0)
                 return null;
 
             return filters.Select(f => new FilePickerFileType(f.Name)

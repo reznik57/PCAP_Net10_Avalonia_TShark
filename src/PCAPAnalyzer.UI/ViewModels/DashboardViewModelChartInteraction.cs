@@ -282,8 +282,8 @@ namespace PCAPAnalyzer.UI.ViewModels
             // This method can be used for additional initialization if needed
             DebugLogger.Log("[DashboardViewModel] Chart interactions initialized");
             // Note: Command generation from RelayCommand attribute may need manual implementation
-            // DebugLogger.Log($"[DashboardViewModel] OnNetworkTrafficChartPointClickedCommand: {OnNetworkTrafficChartPointClickedCommand != null}");
-            // DebugLogger.Log($"[DashboardViewModel] OnPortActivityChartPointClickedCommand: {OnPortActivityChartPointClickedCommand != null}");
+            // DebugLogger.Log($"[DashboardViewModel] OnNetworkTrafficChartPointClickedCommand: {OnNetworkTrafficChartPointClickedCommand is not null}");
+            // DebugLogger.Log($"[DashboardViewModel] OnPortActivityChartPointClickedCommand: {OnPortActivityChartPointClickedCommand is not null}");
         }
         
         /// <summary>
@@ -295,7 +295,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             // This would be called when initializing charts
             
             // For Network Traffic Chart
-            if (ThroughputSeries != null)
+            if (ThroughputSeries is not null)
             {
                 foreach (var series in ThroughputSeries)
                 {
@@ -308,7 +308,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             }
             
             // For Port Activity Timeline
-            if (PortActivitySeries != null)
+            if (PortActivitySeries is not null)
             {
                 foreach (var series in PortActivitySeries)
                 {

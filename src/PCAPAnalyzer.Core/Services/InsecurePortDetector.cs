@@ -216,7 +216,7 @@ namespace PCAPAnalyzer.Core.Services
                     detectedService = "RDP";
                 }
 
-                if (detectedService != null)
+                if (detectedService is not null)
                 {
                     var key = (detectedService, packet.DestinationPort, isLikelyClientConnection);
                     if (!detectedServices.ContainsKey(key))
@@ -463,7 +463,7 @@ namespace PCAPAnalyzer.Core.Services
 
         private ThreatCategory DetermineVersionCategory(VersionDetectionResult versionResult)
         {
-            if (versionResult.DetectedVersion != null)
+            if (versionResult.DetectedVersion is not null)
             {
                 var version = versionResult.DetectedVersion.ToUpper();
 
@@ -516,7 +516,7 @@ namespace PCAPAnalyzer.Core.Services
 
         private bool IsEncryptedButInsecure(VersionDetectionResult versionResult)
         {
-            if (versionResult.DetectedVersion == null)
+            if (versionResult.DetectedVersion is null)
                 return false;
 
             string[] encryptedButInsecure =

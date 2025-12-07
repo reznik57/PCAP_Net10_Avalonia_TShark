@@ -174,7 +174,7 @@ public partial class DashboardView
     /// </summary>
     private static void SetSeriesVisibility(ISeries? series, bool visible)
     {
-        if (series != null)
+        if (series is not null)
             series.IsVisible = visible;
     }
 

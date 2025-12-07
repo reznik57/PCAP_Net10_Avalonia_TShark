@@ -35,7 +35,7 @@ public partial class VoiceQoSPopupViewModel : ObservableObject
     [RelayCommand]
     public void ShowQoSDetails(QoSTrafficItem? item)
     {
-        if (item == null) return;
+        if (item is null) return;
 
         Dispatcher.InvokeAsync(() =>
         {
@@ -60,7 +60,7 @@ public partial class VoiceQoSPopupViewModel : ObservableObject
     [RelayCommand]
     public void ShowLatencyDetails(LatencyConnectionItem? item)
     {
-        if (item == null) return;
+        if (item is null) return;
 
         Dispatcher.InvokeAsync(() =>
         {
@@ -85,7 +85,7 @@ public partial class VoiceQoSPopupViewModel : ObservableObject
     [RelayCommand]
     public void ShowJitterDetails(JitterConnectionItem? item)
     {
-        if (item == null) return;
+        if (item is null) return;
 
         Dispatcher.InvokeAsync(() =>
         {
@@ -112,7 +112,7 @@ public partial class VoiceQoSPopupViewModel : ObservableObject
     /// <param name="relatedPackets">Pre-filtered packets related to this endpoint</param>
     public void ShowTopEndpointDetails(TopEndpointItem? item, IEnumerable<PacketInfo>? relatedPackets)
     {
-        if (item == null) return;
+        if (item is null) return;
 
         Dispatcher.InvokeAsync(() =>
         {
@@ -120,7 +120,7 @@ public partial class VoiceQoSPopupViewModel : ObservableObject
             {
                 DetailPackets.Clear();
 
-                if (relatedPackets != null)
+                if (relatedPackets is not null)
                 {
                     foreach (var packet in relatedPackets.OrderBy(p => p.Timestamp))
                     {

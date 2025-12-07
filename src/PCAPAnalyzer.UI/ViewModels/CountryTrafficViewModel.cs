@@ -146,7 +146,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     private void ApplyFiltersInternal()
     {
         // Reapply filters by triggering a statistics update
-        if (_currentStatistics != null)
+        if (_currentStatistics is not null)
         {
             _ = UpdateStatistics(_currentStatistics);
         }
@@ -158,7 +158,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     protected override void ApplySmartFilter(PacketFilter filter)
     {
         // Apply filter to country statistics and update visualizations
-        if (_currentStatistics != null)
+        if (_currentStatistics is not null)
         {
             _ = UpdateStatistics(_currentStatistics);
         }
@@ -226,13 +226,13 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         // GeoIP service is initialized via DI (ServiceConfiguration.cs) - no duplicate init needed
 
         // Subscribe to filter service changes
-        if (_filterService != null)
+        if (_filterService is not null)
         {
             _filterService.FilterChanged += OnFilterServiceChanged;
         }
 
         // Subscribe to GlobalFilterState changes for tab-specific filtering (country, region)
-        if (_globalFilterState != null)
+        if (_globalFilterState is not null)
         {
             _globalFilterState.OnFilterChanged += OnGlobalFilterChanged;
         }
@@ -274,7 +274,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
             return;
         }
 
-        if (statistics == null) return;
+        if (statistics is null) return;
 
         // DEFENSIVE: Don't overwrite good country data with empty data from filter events
         var countryCount = statistics.CountryStatistics?.Count ?? 0;
@@ -313,7 +313,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     /// </summary>
     private void UpdateTopCountriesList()
     {
-        if (_currentStatistics?.CountryStatistics == null)
+        if (_currentStatistics?.CountryStatistics is null)
         {
             TopCountries.Clear();
             FilteredTotalPackets = 0;
@@ -378,7 +378,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     /// </summary>
     private IEnumerable<CountryTrafficStatistics> ApplyGlobalFilterStateCriteria(IEnumerable<CountryTrafficStatistics> countries)
     {
-        if (_globalFilterState == null || !_globalFilterState.HasActiveFilters)
+        if (_globalFilterState is null || !_globalFilterState.HasActiveFilters)
             return countries;
 
         var result = countries;
@@ -485,7 +485,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         DebugLogger.Log($"[CountryTrafficViewModel] NavigateToPacketAnalysis: {filterType}={filterValue}");
 
         // Apply filter via GlobalFilterState
-        if (_globalFilterState != null)
+        if (_globalFilterState is not null)
         {
             switch (filterType.ToLowerInvariant())
             {
@@ -543,7 +543,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     private List<PacketInfo>? GetFlowPackets(ActiveFlowViewModel flow)
     {
         var allPackets = DataManager.GetAllPackets();
-        if (allPackets == null)
+        if (allPackets is null)
             return null;
 
         // Map normalized UI codes back to DataManager keys
@@ -556,7 +556,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         var outgoingIndices = DataManager.GetCountryOutgoingIndices(sourceKey);
         var incomingIndices = DataManager.GetCountryIncomingIndices(destKey);
 
-        if (outgoingIndices == null || incomingIndices == null)
+        if (outgoingIndices is null || incomingIndices is null)
             return null;
 
         // Intersect source outgoing and destination incoming
@@ -586,7 +586,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     [RelayCommand]
     private async Task RefreshCountries()
     {
-        if (_currentStatistics != null)
+        if (_currentStatistics is not null)
         {
             await UpdateStatistics(_currentStatistics);
         }
@@ -631,7 +631,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     private void OnStatisticsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         // Forward all Statistics property changes - these are delegated to parent VM
-        if (e.PropertyName != null)
+        if (e.PropertyName is not null)
         {
             OnPropertyChanged(e.PropertyName);
             DebugLogger.Log($"[CountryTrafficViewModel] Forwarding Statistics.{e.PropertyName} PropertyChanged");
@@ -645,7 +645,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     private void OnVisualizationPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         // Forward all Visualization property changes - these are delegated to parent VM
-        if (e.PropertyName != null)
+        if (e.PropertyName is not null)
         {
             OnPropertyChanged(e.PropertyName);
             DebugLogger.Log($"[CountryTrafficViewModel] Forwarding Visualization.{e.PropertyName} PropertyChanged");
@@ -664,7 +664,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     private void OnGlobalFilterChanged()
     {
         // Re-apply filters when global filter state changes (e.g., country/region from UnifiedFilterPanel)
-        if (_currentStatistics?.CountryStatistics != null && _currentStatistics.CountryStatistics.Count > 0)
+        if (_currentStatistics?.CountryStatistics is not null && _currentStatistics.CountryStatistics.Count > 0)
         {
             _dispatcher.InvokeAsync(() =>
             {
@@ -862,7 +862,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         var countryName = CountryNameHelper.GetDisplayName(countryCode, countryCode);
 
         // Apply country filter via GlobalFilterState for cross-tab consistency
-        if (_globalFilterState != null)
+        if (_globalFilterState is not null)
         {
             // Clear existing countries and add this one
             _globalFilterState.IncludeFilters.Countries.Clear();
@@ -910,12 +910,12 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
 
         // Try to get statistics for this country
         var stats = CountryTrafficStatistics?.GetValueOrDefault(dataKey);
-        if (stats == null)
+        if (stats is null)
         {
             DebugLogger.Log($"[CountryTrafficViewModel] No statistics found for {dataKey} (tried exact match)");
             // Try case-insensitive lookup
             var key = dictKeys.FirstOrDefault(k => k.Equals(dataKey, StringComparison.OrdinalIgnoreCase));
-            if (key != null)
+            if (key is not null)
             {
                 DebugLogger.Log($"[CountryTrafficViewModel] Found case-insensitive match: {key}");
                 stats = CountryTrafficStatistics![key];
@@ -930,7 +930,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         var countryPackets = DataManager.GetCountryPacketIndices(dataKey);
         var allPackets = DataManager.GetAllPackets();
 
-        if (countryPackets == null || allPackets == null || countryPackets.Count == 0)
+        if (countryPackets is null || allPackets is null || countryPackets.Count == 0)
         {
             DebugLogger.Log($"[CountryTrafficViewModel] No packets found for {dataKey}");
             return;
@@ -985,13 +985,13 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         _filterTrigger.Dispose();
 
         // Unsubscribe from GlobalFilterState to prevent memory leaks
-        if (_globalFilterState != null)
+        if (_globalFilterState is not null)
         {
             _globalFilterState.OnFilterChanged -= OnGlobalFilterChanged;
         }
 
         // Unsubscribe from filter service events
-        if (_filterService != null)
+        if (_filterService is not null)
         {
             _filterService.FilterChanged -= OnFilterServiceChanged;
         }
@@ -1000,14 +1000,14 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         _filterCopyService?.UnregisterTab(TabName);
 
         // Unsubscribe from component events
-        if (Filter != null)
+        if (Filter is not null)
         {
             Filter.SortModeChanged -= OnFilterSortModeChanged;
             Filter.ExcludedCountriesChanged -= OnExcludedCountriesChanged;
             Filter.DisplayCountChanged -= OnDisplayCountChanged;
         }
 
-        if (UIState != null)
+        if (UIState is not null)
         {
             UIState.ContinentChanged -= OnContinentChanged;
         }

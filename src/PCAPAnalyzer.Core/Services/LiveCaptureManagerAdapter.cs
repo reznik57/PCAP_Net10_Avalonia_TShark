@@ -130,7 +130,7 @@ namespace PCAPAnalyzer.Core.Services
 
             await _captureManager.StopCaptureAsync(_currentSessionId, cancellationToken);
 
-            if (_currentSession != null)
+            if (_currentSession is not null)
             {
                 _currentSession.EndTime = DateTime.UtcNow;
                 _currentSession.Status = UICaptureModels.CaptureStatus.Stopped;
@@ -151,7 +151,7 @@ namespace PCAPAnalyzer.Core.Services
 
             await _captureManager.PauseCaptureAsync(_currentSessionId, cancellationToken);
 
-            if (_currentSession != null)
+            if (_currentSession is not null)
             {
                 _currentSession.Status = UICaptureModels.CaptureStatus.Paused;
             }
@@ -171,7 +171,7 @@ namespace PCAPAnalyzer.Core.Services
 
             await _captureManager.ResumeCaptureAsync(_currentSessionId, cancellationToken);
 
-            if (_currentSession != null)
+            if (_currentSession is not null)
             {
                 _currentSession.Status = UICaptureModels.CaptureStatus.Capturing;
             }
@@ -191,7 +191,7 @@ namespace PCAPAnalyzer.Core.Services
             }
 
             var snapshot = _captureManager.GetSessionStatistics(_currentSessionId);
-            if (snapshot == null)
+            if (snapshot is null)
             {
                 return new UICaptureModels.CaptureSessionStats();
             }
@@ -208,7 +208,7 @@ namespace PCAPAnalyzer.Core.Services
             CancellationToken cancellationToken = default)
         {
             var sessions = new List<UICaptureModels.CaptureSession>();
-            if (_currentSession != null)
+            if (_currentSession is not null)
             {
                 sessions.Add(_currentSession);
             }
@@ -222,7 +222,7 @@ namespace PCAPAnalyzer.Core.Services
             string outputPath,
             CancellationToken cancellationToken = default)
         {
-            if (_currentSession == null || _currentSession.CaptureFiles.Count == 0)
+            if (_currentSession is null || _currentSession.CaptureFiles.Count == 0)
             {
                 throw new InvalidOperationException("No capture files available to export");
             }
@@ -274,7 +274,7 @@ namespace PCAPAnalyzer.Core.Services
             {
                 var uiStats = ConvertToSessionStats(e.Statistics);
 
-                if (_currentSession != null)
+                if (_currentSession is not null)
                 {
                     _currentSession.Stats = uiStats;
                 }
@@ -309,7 +309,7 @@ namespace PCAPAnalyzer.Core.Services
         /// </summary>
         private void OnBackendCaptureError(object? sender, CaptureErrorEventArgs e)
         {
-            if (_currentSession != null)
+            if (_currentSession is not null)
             {
                 _currentSession.Status = UICaptureModels.CaptureStatus.Failed;
                 _currentSession.ErrorMessage = e.ErrorMessage;

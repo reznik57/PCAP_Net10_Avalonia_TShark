@@ -61,7 +61,7 @@ public partial class CountryStatisticsViewModel : ObservableObject
     /// </summary>
     public void UpdateStatistics(NetworkStatistics statistics)
     {
-        if (statistics == null)
+        if (statistics is null)
         {
             DebugLogger.Log("[CountryStatisticsViewModel] UpdateStatistics called with null statistics");
             return;
@@ -76,7 +76,7 @@ public partial class CountryStatisticsViewModel : ObservableObject
         DebugLogger.Log($"[CountryStatisticsViewModel] Found {UniqueCountries} unique countries");
 
         // Log country statistics for debugging
-        if (statistics.CountryStatistics != null)
+        if (statistics.CountryStatistics is not null)
         {
             var countryPacketSum = statistics.CountryStatistics.Values.Sum(c => c.TotalPackets);
             var countryByteSum = statistics.CountryStatistics.Values.Sum(c => c.TotalBytes);
@@ -115,7 +115,7 @@ public partial class CountryStatisticsViewModel : ObservableObject
             .OrderByDescending(c => c.TotalPackets)
             .FirstOrDefault();
 
-        if (topCountryData != null)
+        if (topCountryData is not null)
         {
             CountrySummary = $"{UniqueCountries} countries detected • Top: {topCountryData.CountryName} ({topCountryData.Percentage:F1}%)";
             TopCountry = topCountryData.CountryName;
@@ -139,7 +139,7 @@ public partial class CountryStatisticsViewModel : ObservableObject
         UpdateTopCountriesList(statistics);
 
         // Update country traffic statistics for ContinentMapControl
-        if (_currentStatistics?.CountryStatistics != null)
+        if (_currentStatistics?.CountryStatistics is not null)
         {
             CountryTrafficStatistics = new Dictionary<string, CountryTrafficStatistics>(_currentStatistics.CountryStatistics);
             DebugLogger.Log($"[CountryStatisticsViewModel] Set CountryTrafficStatistics with {CountryTrafficStatistics.Count} countries");
@@ -165,7 +165,7 @@ public partial class CountryStatisticsViewModel : ObservableObject
     /// </summary>
     private void UpdateTopCountriesList(NetworkStatistics statistics)
     {
-        if (statistics.CountryStatistics == null || statistics.CountryStatistics.Count == 0)
+        if (statistics.CountryStatistics is null || statistics.CountryStatistics.Count == 0)
         {
             TopCountriesList = new ObservableCollection<CountryTrafficItem>();
             AllCountriesList = new ObservableCollection<CountryTrafficItem>();
@@ -211,7 +211,7 @@ public partial class CountryStatisticsViewModel : ObservableObject
     /// </summary>
     private void UpdateContinentTrafficStats()
     {
-        if (_currentStatistics?.CountryStatistics == null)
+        if (_currentStatistics?.CountryStatistics is null)
         {
             NorthAmericaTraffic = "0 packets";
             SouthAmericaTraffic = "0 packets";

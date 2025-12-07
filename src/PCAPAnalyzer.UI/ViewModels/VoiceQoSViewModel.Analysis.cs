@@ -47,7 +47,7 @@ public partial class VoiceQoSViewModel
             ApplyLocalFilters();
 
             // Update chart
-            if (_cachedTimeSeriesData != null)
+            if (_cachedTimeSeriesData is not null)
             {
                 ChartsViewModel.UpdateTimelineChartFromAggregated(_cachedTimeSeriesData);
             }
@@ -77,7 +77,7 @@ public partial class VoiceQoSViewModel
         }
 
         // Currently loading - wait for existing operation
-        if (_loadingTask != null)
+        if (_loadingTask is not null)
         {
             DebugLogger.Log("[VoiceQoSViewModel] Loading already in progress, awaiting existing task");
             await _loadingTask;
@@ -172,7 +172,7 @@ public partial class VoiceQoSViewModel
             }).ToList();
 
             // Store cached time-series data
-            if (timeSeriesData != null)
+            if (timeSeriesData is not null)
             {
                 _cachedTimeSeriesData = timeSeriesData;
             }
@@ -190,7 +190,7 @@ public partial class VoiceQoSViewModel
             ApplyLocalFilters();
 
             // Update chart from cached time-series
-            if (_cachedTimeSeriesData != null)
+            if (_cachedTimeSeriesData is not null)
             {
                 var chartStartTime = DateTime.Now;
                 DebugLogger.Log($"[{chartStartTime:HH:mm:ss.fff}] [VoiceQoSViewModel] Updating chart from cached time-series");
@@ -313,7 +313,7 @@ public partial class VoiceQoSViewModel
             var timestamp = updateStart.ToString("HH:mm:ss.fff");
 
             // Use pre-aggregated time-series data (generated ONCE during analysis)
-            if (_cachedTimeSeriesData == null)
+            if (_cachedTimeSeriesData is null)
             {
                 DebugLogger.Log($"[{timestamp}] [VoiceQoSViewModel] No cached chart data - skipping chart update");
                 return;
@@ -339,7 +339,7 @@ public partial class VoiceQoSViewModel
     public async Task PopulateFromCacheAsync(AnalysisResult result)
     {
         DebugLogger.Log($"[VoiceQoSViewModel.PopulateFromCacheAsync] Populating from cache with {result.AllPackets.Count:N0} packets");
-        if (result.VoiceQoSData != null)
+        if (result.VoiceQoSData is not null)
         {
             await SetFromCacheAsync(result.VoiceQoSData, result.VoiceQoSTimeSeries, result.AllPackets);
         }

@@ -106,7 +106,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
                     };
 #pragma warning restore CA2000
 
-                    if (provider != null)
+                    if (provider is not null)
                     {
                         RegisterProvider(provider);
                         _logger?.LogInformation("Registered provider: {ProviderType} with priority {Priority}",
@@ -122,7 +122,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
 
         public void RegisterProvider(IGeoIPProvider provider)
         {
-            if (provider == null) return;
+            if (provider is null) return;
             _providers.Add(provider);
             DebugLogger.Log($"[UnifiedGeoIPService] Registered provider: {provider.ProviderName}");
         }
@@ -236,7 +236,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
                 try
                 {
                     var result = await provider.LookupAsync(ipAddress);
-                    if (result != null)
+                    if (result is not null)
                     {
                         // Cache the result if caching is enabled
                         if (_configuration.EnableCache)
@@ -314,7 +314,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             DebugLogger.Log($"[UnifiedGeoIPService] Initialized: {_isInitialized}, Providers: {_providers.Count}, Ready providers: {_providers.Count(p => p.IsReady)}");
 
             // ✅ TIMING FIX: Start timing when actual work begins
-            if (progressStage != null)
+            if (progressStage is not null)
             {
                 try
                 {
@@ -396,7 +396,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
                 try
                 {
                     var location = await GetLocationAsync(ip);
-                    if (location != null)
+                    if (location is not null)
                     {
                         ipToCountry[ip] = location.CountryCode;
                     }
@@ -481,7 +481,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
                         // else: Public IP with failed GeoIP lookup - skip this packet
                     }
 
-                    if (sourceCountry != null)
+                    if (sourceCountry is not null)
                     {
                         var stats = tempStats.GetOrAdd(sourceCountry, _ => new TempCountryStats { CountryCode = sourceCountry });
 
@@ -494,7 +494,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
                         stats.UniqueIPs.Add(packet.SourceIP);
                     }
 
-                    if (destCountry != null)
+                    if (destCountry is not null)
                     {
                         var stats = tempStats.GetOrAdd(destCountry, _ => new TempCountryStats { CountryCode = destCountry });
 
@@ -548,7 +548,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             DebugLogger.Log($"[UnifiedGeoIPService] Analysis complete: {countryStats.Count} countries");
 
             // ✅ TIMING FIX: Stop timing when work completes
-            if (progressStage != null)
+            if (progressStage is not null)
             {
                 try
                 {
@@ -568,7 +568,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
         public async Task<List<TrafficFlowDirection>> AnalyzeTrafficFlowsAsync(IEnumerable<PacketInfo> packets, object? progressStage = null)
         {
             // ✅ TIMING FIX: Start timing when actual work begins
-            if (progressStage != null)
+            if (progressStage is not null)
             {
                 try
                 {
@@ -602,7 +602,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
                 if (IsPublicIP(packet.SourceIP))
                 {
                     var sourceLoc = await GetLocationAsync(packet.SourceIP);
-                    if (sourceLoc != null)
+                    if (sourceLoc is not null)
                     {
                         sourceCountry = sourceLoc.CountryCode;
                         sourceCountryName = sourceLoc.CountryName;
@@ -623,7 +623,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
                 if (IsPublicIP(packet.DestinationIP))
                 {
                     var destLoc = await GetLocationAsync(packet.DestinationIP);
-                    if (destLoc != null)
+                    if (destLoc is not null)
                     {
                         destCountry = destLoc.CountryCode;
                         destCountryName = destLoc.CountryName;
@@ -660,7 +660,7 @@ namespace PCAPAnalyzer.Core.Services.GeoIP
             DebugLogger.Log($"[UnifiedGeoIPService] AnalyzeTrafficFlowsAsync: Generated {flowMap.Count} unique flows");
 
             // ✅ TIMING FIX: Stop timing when work completes
-            if (progressStage != null)
+            if (progressStage is not null)
             {
                 try
                 {

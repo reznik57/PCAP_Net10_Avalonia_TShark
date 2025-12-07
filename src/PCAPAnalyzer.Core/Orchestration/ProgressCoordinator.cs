@@ -238,7 +238,7 @@ namespace PCAPAnalyzer.Core.Orchestration
             }
 
             // Throttled logging (max once per second)
-            if (ShouldLogProgress() && logMessage != null)
+            if (ShouldLogProgress() && logMessage is not null)
                 DebugLogger.Log(logMessage);
 
             // Loading phase: 5-55% (50% range) - starts after PHASE_COUNTING

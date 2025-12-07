@@ -75,7 +75,7 @@ namespace PCAPAnalyzer.Core.Services
 
         public NetworkStatistics CalculateStatistics(IEnumerable<PacketInfo> packets)
         {
-            if (packets == null)
+            if (packets is null)
                 return new NetworkStatistics();
 
             var packetList = packets as List<PacketInfo> ?? packets.ToList();
@@ -153,7 +153,7 @@ namespace PCAPAnalyzer.Core.Services
 
         public async Task<NetworkStatistics> CalculateStatisticsAsync(IEnumerable<PacketInfo> packets, object? geoIPStage = null, object? flowStage = null)
         {
-            if (packets == null)
+            if (packets is null)
                 return await Task.Run(() => CalculateStatistics(Array.Empty<PacketInfo>()));
 
             var packetCollection = packets as List<PacketInfo> ?? packets.ToList();
@@ -171,7 +171,7 @@ namespace PCAPAnalyzer.Core.Services
                 return stats;
             }
 
-            if (_geoIPService != null && packetCollection.Count > 0)
+            if (_geoIPService is not null && packetCollection.Count > 0)
             {
                 DebugLogger.Log($"[StatisticsService] Starting GeoIP analysis for {packetCollection.Count} packets");
 
@@ -184,7 +184,7 @@ namespace PCAPAnalyzer.Core.Services
                 return stats;
             }
 
-            if (countryTask != null || flowTask != null || riskTask != null)
+            if (countryTask is not null || flowTask is not null || riskTask is not null)
             {
                 try
                 {
@@ -198,20 +198,20 @@ namespace PCAPAnalyzer.Core.Services
 
                     using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(geoTimeoutSeconds));
 
-                    if (countryTask != null)
+                    if (countryTask is not null)
                     {
                         stats.CountryStatistics = await countryTask.WaitAsync(cts.Token);
-                        if (stats.CountryStatistics != null)
+                        if (stats.CountryStatistics is not null)
                         {
                             stats.GeolocatedPackets = stats.CountryStatistics.Values.Sum(c => c.TotalPackets);
                             stats.GeolocatedBytes = stats.CountryStatistics.Values.Sum(c => c.TotalBytes);
                         }
                     }
 
-                    if (flowTask != null)
+                    if (flowTask is not null)
                         stats.TrafficFlows = await flowTask.WaitAsync(cts.Token);
 
-                    if (riskTask != null)
+                    if (riskTask is not null)
                         stats.HighRiskCountries = await riskTask.WaitAsync(cts.Token);
 
                     // Quick international vs domestic calculation
@@ -242,10 +242,10 @@ namespace PCAPAnalyzer.Core.Services
 
         public async Task<NetworkStatistics> EnrichWithGeoAsync(NetworkStatistics statistics, IEnumerable<PacketInfo> packets, IProgress<AnalysisProgress>? progress = null)
         {
-            if (statistics == null)
+            if (statistics is null)
                 throw new ArgumentNullException(nameof(statistics));
 
-            if (_geoIPService == null)
+            if (_geoIPService is null)
                 return statistics;
 
             var packetCollection = packets as List<PacketInfo> ?? packets.ToList();
@@ -285,20 +285,20 @@ namespace PCAPAnalyzer.Core.Services
                 // Progress monitoring task
                 var monitoringTask = MonitorEnrichmentProgress(countryTask, progress, totalUniqueIPs, enrichmentStopwatch, geoTimeoutSeconds, cts.Token);
 
-                if (countryTask != null)
+                if (countryTask is not null)
                 {
                     statistics.CountryStatistics = await countryTask.WaitAsync(cts.Token);
-                    if (statistics.CountryStatistics != null)
+                    if (statistics.CountryStatistics is not null)
                     {
                         statistics.GeolocatedPackets = statistics.CountryStatistics.Values.Sum(static c => c.TotalPackets);
                         statistics.GeolocatedBytes = statistics.CountryStatistics.Values.Sum(static c => c.TotalBytes);
                     }
                 }
 
-                if (flowTask != null)
+                if (flowTask is not null)
                     statistics.TrafficFlows = await flowTask.WaitAsync(cts.Token);
 
-                if (riskTask != null)
+                if (riskTask is not null)
                     statistics.HighRiskCountries = await riskTask.WaitAsync(cts.Token);
 
                 CalculateInternationalDomestic(packetCollection, statistics);
@@ -420,14 +420,14 @@ namespace PCAPAnalyzer.Core.Services
             var packetList = packets?.ToList() ?? new List<PacketInfo>();
 
             // Detect insecure ports and services
-            if (_insecurePortDetector != null)
+            if (_insecurePortDetector is not null)
             {
                 var insecurePortThreats = _insecurePortDetector.DetectInsecurePorts(packetList);
-                if (insecurePortThreats != null)
+                if (insecurePortThreats is not null)
                 {
                     foreach (var threat in insecurePortThreats)
                     {
-                        if (threat == null) continue;
+                        if (threat is null) continue;
 
                         var affectedPackets = new List<long>();
                         if (threat.Metadata?.ContainsKey("PacketNumbers") == true)
@@ -494,7 +494,7 @@ namespace PCAPAnalyzer.Core.Services
             }
 
             // Analyze protocol distribution
-            if (stats.ProtocolStats != null && stats.ProtocolStats.Any())
+            if (stats.ProtocolStats is not null && stats.ProtocolStats.Any())
             {
                 var httpPercentage = stats.ProtocolStats
                     .Where(p => p.Key == "HTTP")
@@ -541,7 +541,7 @@ namespace PCAPAnalyzer.Core.Services
             }
 
             // Analyze top talkers
-            if (stats.TopSources != null && stats.TopSources.Any())
+            if (stats.TopSources is not null && stats.TopSources.Any())
             {
                 var topSource = stats.TopSources.First();
                 if (topSource.Percentage > 30)
@@ -564,7 +564,7 @@ namespace PCAPAnalyzer.Core.Services
             }
 
             // Analyze threats
-            if (stats.DetectedThreats != null && stats.DetectedThreats.Any())
+            if (stats.DetectedThreats is not null && stats.DetectedThreats.Any())
             {
                 var criticalThreats = stats.DetectedThreats.Count(t => t.Severity == ThreatSeverity.Critical);
                 if (criticalThreats > 0)

@@ -16,7 +16,7 @@ public class PacketStatisticsCalculator : IPacketStatisticsCalculator
     /// <inheritdoc />
     public int CalculateUniqueIPs(IReadOnlyList<PacketInfo> packets)
     {
-        if (packets == null || packets.Count == 0)
+        if (packets is null || packets.Count == 0)
             return 0;
 
         try
@@ -37,7 +37,7 @@ public class PacketStatisticsCalculator : IPacketStatisticsCalculator
     /// <inheritdoc />
     public int CalculateUniqueDestinationPorts(IReadOnlyList<PacketInfo> packets)
     {
-        if (packets == null || packets.Count == 0)
+        if (packets is null || packets.Count == 0)
             return 0;
 
         try
@@ -58,7 +58,7 @@ public class PacketStatisticsCalculator : IPacketStatisticsCalculator
     /// <inheritdoc />
     public int CalculateTCPConversations(IReadOnlyList<PacketInfo> packets)
     {
-        if (packets == null || packets.Count == 0)
+        if (packets is null || packets.Count == 0)
             return 0;
 
         try
@@ -81,7 +81,7 @@ public class PacketStatisticsCalculator : IPacketStatisticsCalculator
     /// <inheritdoc />
     public long CalculateTotalBytes(IReadOnlyList<PacketInfo> packets)
     {
-        if (packets == null || packets.Count == 0)
+        if (packets is null || packets.Count == 0)
             return 0;
 
         try
@@ -98,7 +98,7 @@ public class PacketStatisticsCalculator : IPacketStatisticsCalculator
     /// <inheritdoc />
     public PacketStatisticsSummary CalculateAllStatistics(IReadOnlyList<PacketInfo> packets)
     {
-        if (packets == null || packets.Count == 0)
+        if (packets is null || packets.Count == 0)
         {
             return new PacketStatisticsSummary
             {

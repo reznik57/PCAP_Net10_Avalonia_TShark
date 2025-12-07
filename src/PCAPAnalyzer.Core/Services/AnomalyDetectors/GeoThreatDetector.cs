@@ -126,7 +126,7 @@ public class GeoThreatDetector : ISpecializedDetector
         }
 
         // Batch lookup all external IPs in parallel (single blocking call instead of N)
-        if (_geoIPService != null && externalIPs.Count > 0)
+        if (_geoIPService is not null && externalIPs.Count > 0)
         {
             try
             {

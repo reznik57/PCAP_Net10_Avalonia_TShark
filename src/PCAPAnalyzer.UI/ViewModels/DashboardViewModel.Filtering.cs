@@ -26,7 +26,7 @@ public partial class DashboardViewModel
 
         try
         {
-            if (_allPackets == null || _allPackets.Count == 0)
+            if (_allPackets is null || _allPackets.Count == 0)
             {
                 DebugLogger.Log("[DashboardViewModel] No packets available for filtering");
                 return;
@@ -153,7 +153,7 @@ public partial class DashboardViewModel
             _currentStatistics = _unfilteredStatistics;
             Statistics.ClearFilteredStatistics();
 
-            if (_unfilteredStatistics != null)
+            if (_unfilteredStatistics is not null)
             {
                 Statistics.UpdateAllStatistics(_unfilteredStatistics, isFiltered: false);
                 Charts.UpdateAllCharts(_unfilteredStatistics);
@@ -197,7 +197,7 @@ public partial class DashboardViewModel
         if (!string.IsNullOrWhiteSpace(PortRangeFilter))
         {
             var portPredicate = BuildPortRangePredicate(PortRangeFilter);
-            if (portPredicate != null)
+            if (portPredicate is not null)
                 predicates.Add(portPredicate);
         }
 

@@ -39,7 +39,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
 
         public async Task UpdateEndpointCountriesAsync(List<EndpointStatistics> endpoints)
         {
-            if (endpoints == null || _geoIPService == null) return;
+            if (endpoints is null || _geoIPService is null) return;
 
             var tasks = endpoints.Select(async endpoint =>
             {
@@ -48,7 +48,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                     if (_geoIPService.IsPublicIP(endpoint.Address))
                     {
                         var location = await _geoIPService.GetLocationAsync(endpoint.Address);
-                        if (location != null)
+                        if (location is not null)
                         {
                             endpoint.Country = location.CountryName;
                             endpoint.CountryCode = location.CountryCode;
@@ -103,7 +103,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
 
         public async Task UpdateConversationCountriesAsync(List<ConversationStatistics> conversations)
         {
-            if (conversations == null || _geoIPService == null) return;
+            if (conversations is null || _geoIPService is null) return;
 
             var tasks = conversations.Select(async conversation =>
             {
@@ -112,7 +112,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                     if (_geoIPService.IsPublicIP(conversation.SourceAddress))
                     {
                         var srcLocation = await _geoIPService.GetLocationAsync(conversation.SourceAddress);
-                        if (srcLocation != null)
+                        if (srcLocation is not null)
                         {
                             conversation.SourceCountry = srcLocation.CountryName;
                         }
@@ -125,7 +125,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
                     if (_geoIPService.IsPublicIP(conversation.DestinationAddress))
                     {
                         var dstLocation = await _geoIPService.GetLocationAsync(conversation.DestinationAddress);
-                        if (dstLocation != null)
+                        if (dstLocation is not null)
                         {
                             conversation.DestinationCountry = dstLocation.CountryName;
                         }

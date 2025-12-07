@@ -179,7 +179,7 @@ public partial class AnomalyViewModel : ObservableObject
     [RelayCommand]
     private void ViewPackets()
     {
-        if (SelectedAnomaly == null) return;
+        if (SelectedAnomaly is null) return;
 
         var filter = !string.IsNullOrEmpty(SelectedAnomaly.SourceIP)
             ? $"ip={SelectedAnomaly.SourceIP}"
@@ -210,7 +210,7 @@ public partial class AnomalyViewModel : ObservableObject
         {
             if (Avalonia.Application.Current?.ApplicationLifetime is not
                 Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop ||
-                desktop.MainWindow == null)
+                desktop.MainWindow is null)
             {
                 return;
             }
@@ -228,7 +228,7 @@ public partial class AnomalyViewModel : ObservableObject
             };
 
             var file = await topLevel.StorageProvider.SaveFilePickerAsync(saveDialog);
-            if (file == null) return;
+            if (file is null) return;
 
             await using var stream = await file.OpenWriteAsync();
             await using var writer = new System.IO.StreamWriter(stream);

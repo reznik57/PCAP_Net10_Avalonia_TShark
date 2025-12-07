@@ -75,7 +75,7 @@ public partial class VoiceQoSAnalysisViewModel : ObservableObject
 
         // TRY CACHE FIRST
         var cachedResult = await TryLoadFromCacheAsync(startTime);
-        if (cachedResult != null)
+        if (cachedResult is not null)
         {
             RestoreFromCache(cachedResult, latencyThreshold, jitterThreshold);
             GenerateChartData();
@@ -373,7 +373,7 @@ public partial class VoiceQoSAnalysisViewModel : ObservableObject
 
     private static double CalculatePercentile(List<double> sortedValues, double percentile)
     {
-        if (sortedValues == null || sortedValues.Count == 0) return 0;
+        if (sortedValues is null || sortedValues.Count == 0) return 0;
         if (sortedValues.Count == 1) return sortedValues[0];
 
         double index = (percentile / 100.0) * (sortedValues.Count - 1);
@@ -435,7 +435,7 @@ public partial class VoiceQoSAnalysisViewModel : ObservableObject
 
     private async Task<VoiceQoSAnalysisResult?> TryLoadFromCacheAsync(DateTime startTime)
     {
-        if (_cacheService == null || string.IsNullOrEmpty(_currentFilePath))
+        if (_cacheService is null || string.IsNullOrEmpty(_currentFilePath))
             return null;
 
         try
@@ -451,7 +451,7 @@ public partial class VoiceQoSAnalysisViewModel : ObservableObject
 
             var cachedData = await _cacheService.LoadVoiceQoSAsync(_currentCacheKey);
 
-            if (cachedData != null && (cachedData.QoSTraffic.Count > 0 || cachedData.HighLatencyConnections.Count > 0 || cachedData.HighJitterConnections.Count > 0))
+            if (cachedData is not null && (cachedData.QoSTraffic.Count > 0 || cachedData.HighLatencyConnections.Count > 0 || cachedData.HighJitterConnections.Count > 0))
             {
                 var elapsed = (DateTime.Now - startTime).TotalSeconds;
                 DebugLogger.Log($"[VoiceQoSAnalysisViewModel] LOADED FROM CACHE in {elapsed:F2}s");
@@ -479,7 +479,7 @@ public partial class VoiceQoSAnalysisViewModel : ObservableObject
 
     private void SaveToCache()
     {
-        if (_cacheService == null || string.IsNullOrEmpty(_currentCacheKey))
+        if (_cacheService is null || string.IsNullOrEmpty(_currentCacheKey))
             return;
 
         var cacheData = ConvertToCacheModel(AllQoSTraffic, AllLatencyConnections, AllJitterConnections);

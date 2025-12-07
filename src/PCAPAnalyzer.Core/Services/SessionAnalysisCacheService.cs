@@ -29,7 +29,7 @@ public class SessionAnalysisCacheService : ISessionAnalysisCache
     /// <param name="result">Complete analysis result to cache</param>
     public void Set(AnalysisResult result)
     {
-        if (result == null)
+        if (result is null)
             throw new ArgumentNullException(nameof(result));
 
         using (_lock.EnterScope())
@@ -67,7 +67,7 @@ public class SessionAnalysisCacheService : ISessionAnalysisCache
 
         using (_lock.EnterScope())
         {
-            return _current != null && _current.FileHash == fileHash;
+            return _current is not null && _current.FileHash == fileHash;
         }
     }
 
@@ -86,7 +86,7 @@ public class SessionAnalysisCacheService : ISessionAnalysisCache
     {
         using (_lock.EnterScope())
         {
-            if (_current != null)
+            if (_current is not null)
             {
                 var packets = _current.TotalPackets;
                 var memoryGB = _current.EstimatedMemoryGB;
@@ -117,7 +117,7 @@ public class SessionAnalysisCacheService : ISessionAnalysisCache
         {
             return new CacheStatistics
             {
-                HasData = _current != null,
+                HasData = _current is not null,
                 TotalPackets = _current?.TotalPackets ?? 0,
                 MemoryGB = _current?.EstimatedMemoryGB ?? 0,
                 CachedAt = _current?.AnalyzedAt,

@@ -13,7 +13,7 @@ public class EnumEqualsConverter : IValueConverter
 {
     public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value == null || parameter == null)
+        if (value is null || parameter is null)
             return false;
 
         // Both must be enums or convertible to same type

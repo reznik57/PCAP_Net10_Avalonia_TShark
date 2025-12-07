@@ -57,7 +57,7 @@ namespace PCAPAnalyzer.UI.Views
                 var lvcPosition = new LiveChartsCore.Drawing.LvcPointD(position.X, position.Y);
                 var chartPoint = chart.ScalePixelsToData(lvcPosition);
 
-                if (vm.ThreatTimelineSeries == null)
+                if (vm.ThreatTimelineSeries is null)
                     return;
 
                 // FIX: LiveCharts2 uses DateTime.Ticks for X values (NOT OleAutomation dates)
@@ -74,10 +74,10 @@ namespace PCAPAnalyzer.UI.Views
                 foreach (var series in vm.ThreatTimelineSeries)
                 {
                     // Handle LineSeries<DateTimePoint> (legacy)
-                    if (series is LineSeries<DateTimePoint> dateLineSeries && dateLineSeries.Values != null)
+                    if (series is LineSeries<DateTimePoint> dateLineSeries && dateLineSeries.Values is not null)
                     {
                         var values = dateLineSeries.Values as IEnumerable<DateTimePoint>;
-                        if (values == null) continue;
+                        if (values is null) continue;
 
                         int index = 0;
                         foreach (var point in values)
@@ -92,15 +92,15 @@ namespace PCAPAnalyzer.UI.Views
                         }
                     }
                     // Handle LineSeries<ObservablePoint> (current implementation - uses Ticks)
-                    else if (series is LineSeries<ObservablePoint> obsLineSeries && obsLineSeries.Values != null)
+                    else if (series is LineSeries<ObservablePoint> obsLineSeries && obsLineSeries.Values is not null)
                     {
                         var values = obsLineSeries.Values as IEnumerable<ObservablePoint>;
-                        if (values == null) continue;
+                        if (values is null) continue;
 
                         int index = 0;
                         foreach (var point in values)
                         {
-                            if (point.X == null) continue;
+                            if (point.X is null) continue;
                             var pointTicks = (long)(point.X.Value);
                             if (pointTicks < DateTime.MinValue.Ticks || pointTicks > DateTime.MaxValue.Ticks) continue;
 
@@ -125,10 +125,10 @@ namespace PCAPAnalyzer.UI.Views
                     foreach (var series in vm.ThreatTimelineSeries)
                     {
                         // Handle LineSeries<DateTimePoint>
-                        if (series is LineSeries<DateTimePoint> dateLineSeries && dateLineSeries.Values != null)
+                        if (series is LineSeries<DateTimePoint> dateLineSeries && dateLineSeries.Values is not null)
                         {
                             var values = dateLineSeries.Values as IList<DateTimePoint>;
-                            if (values != null && closestIndex < values.Count)
+                            if (values is not null && closestIndex < values.Count)
                             {
                                 var point = values[closestIndex];
                                 timestamp = point.DateTime;
@@ -136,13 +136,13 @@ namespace PCAPAnalyzer.UI.Views
                             }
                         }
                         // Handle LineSeries<ObservablePoint> (current)
-                        else if (series is LineSeries<ObservablePoint> obsLineSeries && obsLineSeries.Values != null)
+                        else if (series is LineSeries<ObservablePoint> obsLineSeries && obsLineSeries.Values is not null)
                         {
                             var values = obsLineSeries.Values as IList<ObservablePoint>;
-                            if (values != null && closestIndex < values.Count)
+                            if (values is not null && closestIndex < values.Count)
                             {
                                 var point = values[closestIndex];
-                                if (point.X != null)
+                                if (point.X is not null)
                                 {
                                     var pointTicks = (long)(point.X.Value);
                                     if (pointTicks >= DateTime.MinValue.Ticks && pointTicks <= DateTime.MaxValue.Ticks)
@@ -234,7 +234,7 @@ namespace PCAPAnalyzer.UI.Views
                 }
 
                 // Create or update scatter series for highlight dot
-                if (_threatHighlightScatter == null)
+                if (_threatHighlightScatter is null)
                 {
                     _threatHighlightScatter = new ScatterSeries<DateTimePoint>
                     {
@@ -254,7 +254,7 @@ namespace PCAPAnalyzer.UI.Views
                 UpdateScatterPoint(_threatHighlightScatter, timestamp, value);
 
                 // Create or update line series for vertical line
-                if (_threatHighlightLine == null)
+                if (_threatHighlightLine is null)
                 {
                     _threatHighlightLine = new LineSeries<DateTimePoint>
                     {
@@ -315,16 +315,16 @@ namespace PCAPAnalyzer.UI.Views
         {
             try
             {
-                if (DataContext is not ThreatsViewModel vm || vm.ThreatTimelineSeries == null)
+                if (DataContext is not ThreatsViewModel vm || vm.ThreatTimelineSeries is null)
                     return;
 
                 // Remove highlight series from collection if they exist
-                if (_threatHighlightScatter != null && vm.ThreatTimelineSeries.Contains(_threatHighlightScatter))
+                if (_threatHighlightScatter is not null && vm.ThreatTimelineSeries.Contains(_threatHighlightScatter))
                 {
                     vm.ThreatTimelineSeries.Remove(_threatHighlightScatter);
                 }
 
-                if (_threatHighlightLine != null && vm.ThreatTimelineSeries.Contains(_threatHighlightLine))
+                if (_threatHighlightLine is not null && vm.ThreatTimelineSeries.Contains(_threatHighlightLine))
                 {
                     vm.ThreatTimelineSeries.Remove(_threatHighlightLine);
                 }
@@ -347,7 +347,7 @@ namespace PCAPAnalyzer.UI.Views
         /// </summary>
         private static void SetSeriesVisibility(ISeries? series, bool visible)
         {
-            if (series == null) return;
+            if (series is null) return;
             series.IsVisible = visible;
         }
 
@@ -430,7 +430,7 @@ namespace PCAPAnalyzer.UI.Views
                 var nearbyThreat = vm.SecurityThreatsPagination.PagedItems?
                     .FirstOrDefault(t => Math.Abs((t.FirstSeen - clickedTime).TotalMinutes) < 5);
 
-                if (nearbyThreat != null)
+                if (nearbyThreat is not null)
                 {
                     vm.ShowThreatDetailsCommand.Execute(nearbyThreat);
                     DebugLogger.Log($"[EnhancedThreatsView] Opening DrillDown for threat: {nearbyThreat.ThreatName}");
@@ -456,7 +456,7 @@ namespace PCAPAnalyzer.UI.Views
         {
             try
             {
-                if (DataContext is not ThreatsViewModel vm || vm.XAxes == null || vm.XAxes.Length == 0)
+                if (DataContext is not ThreatsViewModel vm || vm.XAxes is null || vm.XAxes.Length == 0)
                     return;
 
                 var xAxis = vm.XAxes[0];
@@ -484,7 +484,7 @@ namespace PCAPAnalyzer.UI.Views
         {
             try
             {
-                if (DataContext is not ThreatsViewModel vm || vm.XAxes == null || vm.XAxes.Length == 0)
+                if (DataContext is not ThreatsViewModel vm || vm.XAxes is null || vm.XAxes.Length == 0)
                     return;
 
                 var xAxis = vm.XAxes[0];
@@ -512,7 +512,7 @@ namespace PCAPAnalyzer.UI.Views
         {
             try
             {
-                if (DataContext is not ThreatsViewModel vm || vm.XAxes == null || vm.XAxes.Length == 0)
+                if (DataContext is not ThreatsViewModel vm || vm.XAxes is null || vm.XAxes.Length == 0)
                     return;
 
                 var xAxis = vm.XAxes[0];
@@ -543,7 +543,7 @@ namespace PCAPAnalyzer.UI.Views
                 var lvcPosition = new LiveChartsCore.Drawing.LvcPointD(position.X, position.Y);
                 var chartPoint = chart.ScalePixelsToData(lvcPosition);
 
-                if (vm.Charts.ThreatPortActivitySeries == null || !vm.Charts.ThreatPortActivitySeries.Any())
+                if (vm.Charts.ThreatPortActivitySeries is null || !vm.Charts.ThreatPortActivitySeries.Any())
                     return;
 
                 long ticks = (long)chartPoint.X;
@@ -556,17 +556,17 @@ namespace PCAPAnalyzer.UI.Views
                 // Gather values from each port series
                 foreach (var series in vm.Charts.ThreatPortActivitySeries)
                 {
-                    if (series is LineSeries<ObservablePoint> lineSeries && lineSeries.Values != null)
+                    if (series is LineSeries<ObservablePoint> lineSeries && lineSeries.Values is not null)
                     {
                         var values = lineSeries.Values as IList<ObservablePoint>;
-                        if (values == null) continue;
+                        if (values is null) continue;
 
                         // Find closest point
                         ObservablePoint? closest = null;
                         double minDist = double.MaxValue;
                         foreach (var point in values)
                         {
-                            if (point.X == null) continue;
+                            if (point.X is null) continue;
                             var dist = Math.Abs(point.X.Value - ticks);
                             if (dist < minDist)
                             {
@@ -575,7 +575,7 @@ namespace PCAPAnalyzer.UI.Views
                             }
                         }
 
-                        if (closest != null && closest.Y.HasValue)
+                        if (closest is not null && closest.Y.HasValue)
                         {
                             var valueStr = $"{closest.Y.Value:F2}/s";
                             tooltipParts.Add($"{lineSeries.Name}: {valueStr}");
@@ -618,7 +618,7 @@ namespace PCAPAnalyzer.UI.Views
         {
             try
             {
-                if (DataContext is not ThreatsViewModel vm || vm.Charts.ThreatPortActivityXAxes == null || vm.Charts.ThreatPortActivityXAxes.Length == 0)
+                if (DataContext is not ThreatsViewModel vm || vm.Charts.ThreatPortActivityXAxes is null || vm.Charts.ThreatPortActivityXAxes.Length == 0)
                     return;
 
                 var xAxis = vm.Charts.ThreatPortActivityXAxes[0];
@@ -644,7 +644,7 @@ namespace PCAPAnalyzer.UI.Views
         {
             try
             {
-                if (DataContext is not ThreatsViewModel vm || vm.Charts.ThreatPortActivityXAxes == null || vm.Charts.ThreatPortActivityXAxes.Length == 0)
+                if (DataContext is not ThreatsViewModel vm || vm.Charts.ThreatPortActivityXAxes is null || vm.Charts.ThreatPortActivityXAxes.Length == 0)
                     return;
 
                 var xAxis = vm.Charts.ThreatPortActivityXAxes[0];
@@ -670,7 +670,7 @@ namespace PCAPAnalyzer.UI.Views
         {
             try
             {
-                if (DataContext is not ThreatsViewModel vm || vm.Charts.ThreatPortActivityXAxes == null || vm.Charts.ThreatPortActivityXAxes.Length == 0)
+                if (DataContext is not ThreatsViewModel vm || vm.Charts.ThreatPortActivityXAxes is null || vm.Charts.ThreatPortActivityXAxes.Length == 0)
                     return;
 
                 var xAxis = vm.Charts.ThreatPortActivityXAxes[0];

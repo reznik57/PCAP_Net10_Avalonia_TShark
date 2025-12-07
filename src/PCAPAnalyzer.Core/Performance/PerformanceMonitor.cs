@@ -83,7 +83,7 @@ namespace PCAPAnalyzer.Core.Performance
                 // PerformanceCounter is Windows-only
                 if (OperatingSystem.IsWindows())
                 {
-                    var perfCounter = instance != null
+                    var perfCounter = instance is not null
                         ? new PerformanceCounter(category, counter, instance, true)
                         : new PerformanceCounter(category, counter, true);
 
@@ -161,7 +161,7 @@ namespace PCAPAnalyzer.Core.Performance
                 try
                 {
                     // PerformanceCounter.NextValue() is Windows-only
-                    if (OperatingSystem.IsWindows() && kvp.Value != null)
+                    if (OperatingSystem.IsWindows() && kvp.Value is not null)
                     {
                         results[kvp.Key] = kvp.Value.NextValue();
                     }
@@ -259,7 +259,7 @@ namespace PCAPAnalyzer.Core.Performance
             foreach (var metricName in _metrics.Keys.OrderBy(k => k))
             {
                 var stats = GetMetricStatistics(metricName);
-                if (stats != null)
+                if (stats is not null)
                 {
                     report.AppendLine($"  {stats.Name}:");
                     report.AppendLine($"    Count: {stats.Count}");

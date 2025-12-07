@@ -42,11 +42,11 @@ public partial class MainWindowViewModel
                 PacketManager?.PacketDetails?.SetPacketStore(PacketManager.ActivePacketStore);
             }
 
-            if (args.Packets != null && args.Packets.Count > 0 && PacketManager != null)
+            if (args.Packets is not null && args.Packets.Count > 0 && PacketManager is not null)
                 await PacketManager.ActivePacketStore.InsertPacketsAsync(args.Packets, CancellationToken.None);
 
             var cachedResult = _sessionCache.Get();
-            if (cachedResult != null)
+            if (cachedResult is not null)
             {
                 FileAnalysisViewModel?.ReportTabLoadingProgress(0, "Populating tabs from cache...");
                 await PopulateViewModelsFromCacheAsync(cachedResult);
@@ -56,7 +56,7 @@ public partial class MainWindowViewModel
             else
                 OnAnalysisCompleted(this, args.Statistics);
 
-            if (FileAnalysisViewModel != null && args.Packets != null)
+            if (FileAnalysisViewModel is not null && args.Packets is not null)
                 await CalculateFileAnalysisQuickStats(args.Statistics, args.Packets);
 
             UIState.CanAccessAnalysisTabs = true;
@@ -69,7 +69,7 @@ public partial class MainWindowViewModel
     {
         await Task.Run(() =>
         {
-            if (FileAnalysisViewModel == null) return;
+            if (FileAnalysisViewModel is null) return;
             var quickStats = FileAnalysisViewModel.QuickStats;
             quickStats.TotalPackets = packets.Count;
             quickStats.TotalTrafficMB = statistics.TotalBytes / 1024.0 / 1024.0;
@@ -135,7 +135,7 @@ public partial class MainWindowViewModel
         var dashboardCountryTask = Task.Run(async () =>
         {
             await _dispatcher.InvokeAsync(async () => await UpdateDashboardAsync(forceUpdate: true));
-            if (CountryTrafficViewModel != null)
+            if (CountryTrafficViewModel is not null)
             {
                 await _dispatcher.InvokeAsync(async () =>
                 {
@@ -149,7 +149,7 @@ public partial class MainWindowViewModel
 
         var threatsTask = Task.Run(async () =>
         {
-            if (ThreatsViewModel != null)
+            if (ThreatsViewModel is not null)
                 await ThreatsViewModel.UpdateThreatsAsync(packets);
             return 0;
         });
@@ -160,7 +160,7 @@ public partial class MainWindowViewModel
             await _dispatcher.InvokeAsync(async () =>
             {
                 AnomalyViewModel?.UpdateAnomalies(detectedAnomalies);
-                if (AnomaliesViewModel != null)
+                if (AnomaliesViewModel is not null)
                     await AnomaliesViewModel.LoadFromAnalysisResultAsync(detectedAnomalies);
                 DashboardViewModel?.UpdateAnomalySummary(detectedAnomalies);
             });
@@ -169,7 +169,7 @@ public partial class MainWindowViewModel
 
         var voiceQoSTask = Task.Run(async () =>
         {
-            if (VoiceQoSViewModel != null)
+            if (VoiceQoSViewModel is not null)
                 await VoiceQoSViewModel.AnalyzePacketsAsync(packets);
             return 0;
         });
@@ -227,7 +227,7 @@ public partial class MainWindowViewModel
                     System.IO.Path.GetFileNameWithoutExtension(currentFile) + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss"));
                 var alerts = await _suricataService.RunAsync(currentFile, outputDir, CancellationToken.None);
                 DebugLogger.Log($"[Suricata] Parsed {alerts.Count} alerts");
-                if (alerts.Count > 0 && ThreatsViewModel != null)
+                if (alerts.Count > 0 && ThreatsViewModel is not null)
                 {
                     await _dispatcher.InvokeAsync(() => ThreatsViewModel.SetSuricataAlerts(alerts));
                 }
@@ -239,7 +239,7 @@ public partial class MainWindowViewModel
                     System.IO.Path.GetFileNameWithoutExtension(currentFile) + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".log");
                 var matches = await _yaraService.RunAsync(currentFile, yaraOutput, CancellationToken.None);
                 DebugLogger.Log($"[YARA] Matches: {matches.Count}");
-                if (matches.Count > 0 && ThreatsViewModel != null)
+                if (matches.Count > 0 && ThreatsViewModel is not null)
                 {
                     await _dispatcher.InvokeAsync(() => ThreatsViewModel.SetYaraMatches(matches));
                 }

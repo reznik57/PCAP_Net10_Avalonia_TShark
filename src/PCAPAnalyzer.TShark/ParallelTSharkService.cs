@@ -300,7 +300,7 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
             }
 
             using var process = Process.Start(startInfo);
-            if (process == null)
+            if (process is null)
             {
                 DebugLogger.Log($"[ParallelTSharkService] ❌ Chunk {chunkIndex}: Failed to start TShark process!");
                 return 0;
@@ -313,7 +313,7 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
             while (!ct.IsCancellationRequested)
             {
                 var line = await process.StandardOutput.ReadLineAsync(ct);
-                if (line == null) break;
+                if (line is null) break;
                 linesRead++;
 
                 // Log first line of first chunk to verify format
@@ -486,7 +486,7 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
             var psi = capinfosInfo.CreateProcessStartInfo($"-Mc \"{convertedPath}\"");
 
             using var process = Process.Start(psi);
-            if (process == null)
+            if (process is null)
             {
                 DebugLogger.Log("[ParallelTSharkService] Failed to start capinfos process");
                 return 0;
@@ -590,7 +590,7 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
         while (true)
         {
             var line = await process.StandardOutput.ReadLineAsync();
-            if (line == null) break;
+            if (line is null) break;
 
             if (!string.IsNullOrWhiteSpace(line))
             {
@@ -609,7 +609,7 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
 
         await process.WaitForExitAsync();
 
-        if (lastLine != null && long.TryParse(lastLine, out var count))
+        if (lastLine is not null && long.TryParse(lastLine, out var count))
         {
             _logger.LogDebug("Total packet count ({Mode}): {Count:N0} (took {Duration:F1}s)", _tsharkInfo.Mode, count, sw.Elapsed.TotalSeconds);
             progressCoordinator?.ReportCounting(100, $"Counted {count:N0} packets");
@@ -670,7 +670,7 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
             var startInfo = _tsharkInfo.CreateProcessStartInfo(arguments);
 
             using var process = Process.Start(startInfo);
-            if (process == null) return null;
+            if (process is null) return null;
 
             var output = await process.StandardOutput.ReadToEndAsync();
             await process.WaitForExitAsync();
@@ -697,7 +697,7 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
             var startInfo = _tsharkInfo.CreateProcessStartInfo(arguments);
 
             using var process = Process.Start(startInfo);
-            if (process == null) return null;
+            if (process is null) return null;
 
             string? lastLine = null;
             while (await process.StandardOutput.ReadLineAsync() is { } line)
@@ -707,7 +707,7 @@ public sealed class ParallelTSharkService : ITSharkService, IDisposable
             }
             await process.WaitForExitAsync();
 
-            if (lastLine != null && double.TryParse(lastLine.Trim(), System.Globalization.NumberStyles.Float,
+            if (lastLine is not null && double.TryParse(lastLine.Trim(), System.Globalization.NumberStyles.Float,
                     System.Globalization.CultureInfo.InvariantCulture, out var epoch))
             {
                 return DateTimeOffset.FromUnixTimeMilliseconds((long)(epoch * 1000)).LocalDateTime;

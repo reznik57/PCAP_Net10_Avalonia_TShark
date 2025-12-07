@@ -74,7 +74,7 @@ public partial class DashboardView
                 _ => throw new ArgumentOutOfRangeException(nameof(chartType))
             };
 
-            if (axis == null)
+            if (axis is null)
                 return;
 
             // Execute zoom operation
@@ -115,7 +115,7 @@ public partial class DashboardView
         double? currentMin = axis.MinLimit ?? dataMin;
         double? currentMax = axis.MaxLimit ?? dataMax;
 
-        if (currentMin == null || currentMax == null)
+        if (currentMin is null || currentMax is null)
             return;
 
         var range = currentMax.Value - currentMin.Value;
@@ -145,10 +145,10 @@ public partial class DashboardView
     {
         var dataPoints = vm.TimelineSeries?
             .SelectMany(s => s.Values?.Cast<DateTimePoint>() ?? Enumerable.Empty<DateTimePoint>())
-            .Where(p => p != null)
+            .Where(p => p is not null)
             .ToList();
 
-        if (dataPoints == null || dataPoints.Count == 0)
+        if (dataPoints is null || dataPoints.Count == 0)
             return (null, null);
 
         return (
@@ -164,10 +164,10 @@ public partial class DashboardView
     {
         var dataPoints = vm.PortActivitySeries?
             .SelectMany(s => s.Values?.Cast<DateTimePoint>() ?? Enumerable.Empty<DateTimePoint>())
-            .Where(p => p != null)
+            .Where(p => p is not null)
             .ToList();
 
-        if (dataPoints == null || dataPoints.Count == 0)
+        if (dataPoints is null || dataPoints.Count == 0)
             return (null, null);
 
         return (

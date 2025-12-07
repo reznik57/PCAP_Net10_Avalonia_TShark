@@ -268,7 +268,7 @@ public partial class FileAnalysisStagesViewModel : ObservableObject
         if (phaseToStageKey.TryGetValue(phaseName, out var stageKey))
         {
             var stage = Stages.FirstOrDefault(s => s.Key == stageKey);
-            if (stage != null)
+            if (stage is not null)
             {
                 Dispatcher.Post(() =>
                 {
@@ -337,7 +337,7 @@ public partial class FileAnalysisStagesViewModel : ObservableObject
     /// </summary>
     private void ForwardToGlobalOverlay(int stageIndex, AnalysisProgressStage stage, AnalysisStageState state, int percentComplete)
     {
-        if (_analysisVm == null || stageIndex > 2) return;  // Only forward stages 0-2 (views handled separately)
+        if (_analysisVm is null || stageIndex > 2) return;  // Only forward stages 0-2 (views handled separately)
 
         // Map 4-stage pipeline to global overlay keys (overlay has finer granularity)
         var stageKey = stageIndex switch
@@ -348,7 +348,7 @@ public partial class FileAnalysisStagesViewModel : ObservableObject
             _ => null
         };
 
-        if (stageKey == null) return;
+        if (stageKey is null) return;
 
         if (state == AnalysisStageState.Completed)
         {
