@@ -201,12 +201,12 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         _globalFilterState = globalFilterState;
 
         // Initialize component ViewModels
-        DataManager = new CountryDataViewModel();
-        Statistics = new CountryStatisticsViewModel();
-        Visualization = new CountryVisualizationViewModel();
-        Filter = new CountryFilterViewModel();
-        Tables = new CountryTableViewModel();
-        UIState = new CountryUIStateViewModel();
+        DataManager = new();
+        Statistics = new();
+        Visualization = new();
+        Filter = new();
+        Tables = new();
+        UIState = new();
         DrillDown = new DrillDownPopupViewModel(NavigateToPacketAnalysis, geoIPService);
 
         // Wire up timeline data provider for sparklines

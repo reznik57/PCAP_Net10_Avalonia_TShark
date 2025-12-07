@@ -145,7 +145,7 @@ public partial class CompareViewModel : ObservableObject, IDisposable
         HasResults = false;
 
         _comparisonCts?.Cancel();
-        _comparisonCts = new CancellationTokenSource();
+        _comparisonCts = new();
 
         try
         {

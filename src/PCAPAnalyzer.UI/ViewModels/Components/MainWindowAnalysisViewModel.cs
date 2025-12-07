@@ -175,7 +175,7 @@ public partial class MainWindowAnalysisViewModel : ObservableObject, IDisposable
         {
             _cts?.Cancel();
             _cts?.Dispose();
-            _cts = new CancellationTokenSource();
+            _cts = new();
 
             IsAnalyzing = true;
             IsPaused = false;

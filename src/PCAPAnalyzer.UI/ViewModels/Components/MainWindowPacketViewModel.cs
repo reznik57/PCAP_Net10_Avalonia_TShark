@@ -542,7 +542,7 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
         AppliedFiltersText = string.Empty;
         FirstPacketTimestamp = null;
 
-        _currentFilter = new PacketFilter();
+        _currentFilter = new();
     }
 
     /// <summary>

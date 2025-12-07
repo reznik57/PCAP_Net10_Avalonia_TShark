@@ -258,8 +258,8 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         _navigateToTab = navigateToTab;
 
         // Initialize component ViewModels
-        Charts = new DashboardChartsViewModel();
-        Statistics = new DashboardStatisticsViewModel();
+        Charts = new();
+        Statistics = new();
         Popups = new DashboardPopupViewModel(this);
 
         // Initialize anomaly summary with navigation callback
@@ -522,7 +522,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     private async Task ApplyChipBasedFilterAsync()
     {
         _filterCancellationTokenSource?.Cancel();
-        _filterCancellationTokenSource = new CancellationTokenSource();
+        _filterCancellationTokenSource = new();
         var cancellationToken = _filterCancellationTokenSource.Token;
 
         try

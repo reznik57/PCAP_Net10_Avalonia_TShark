@@ -34,7 +34,7 @@ public class DebouncedAction : IDisposable
             // Cancel previous pending action
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = new CancellationTokenSource();
+            _cancellationTokenSource = new();
 
             var token = _cancellationTokenSource.Token;
 

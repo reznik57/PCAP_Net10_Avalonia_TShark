@@ -273,7 +273,7 @@ public sealed class StreamingStatisticsAggregator
         var bucket = packet.Timestamp.AddMilliseconds(-packet.Timestamp.Millisecond);
         if (!_throughput.TryGetValue(bucket, out var accumulator))
         {
-            accumulator = new ThroughputAccumulator();
+            accumulator = new();
             _throughput[bucket] = accumulator;
             _throughputOrder.Enqueue(bucket);
         }

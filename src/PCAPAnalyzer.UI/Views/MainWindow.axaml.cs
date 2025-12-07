@@ -153,7 +153,7 @@ public partial class MainWindow : Window
                             DebugLogger.Log("[MainWindow] Dashboard not initialized, creating new instance");
                             try
                             {
-                                viewModel.DashboardViewModel = new DashboardViewModel();
+                                viewModel.DashboardViewModel = new();
                             }
                             catch (Exception dashEx)
                             {

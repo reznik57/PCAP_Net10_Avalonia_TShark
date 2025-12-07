@@ -236,7 +236,7 @@ public partial class CaptureConfigurationViewModel : ViewModelBase, IDisposable
         // Cancel previous validation
         _validationCts?.Cancel();
         _validationCts?.Dispose();
-        _validationCts = new CancellationTokenSource();
+        _validationCts = new();
 
         // Acquire lock to prevent concurrent validations
         await _validationLock.WaitAsync(_validationCts.Token);

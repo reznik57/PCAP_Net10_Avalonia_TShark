@@ -107,9 +107,9 @@ namespace PCAPAnalyzer.Core.Capture
             _interface = networkInterface ?? throw new ArgumentNullException(nameof(networkInterface));
 
             _sessionId = Guid.NewGuid().ToString("N");
-            _statistics = new CaptureStatistics();
+            _statistics = new();
             _state = CaptureSessionState.NotStarted;
-            _cancellationSource = new CancellationTokenSource();
+            _cancellationSource = new();
 
             _configuration.Validate();
         }

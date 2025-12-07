@@ -23,7 +23,7 @@ public class ProtocolDeepDiveService
     {
         // Auto-detect tshark path on Windows
         _tsharkPath = tsharkPath ?? DetectTSharkPath();
-        _registry = new ProtocolAnalyzerRegistry();
+        _registry = new();
         DebugLogger.Log($"[ProtocolDeepDive] Using TShark: {_tsharkPath}, registered {_registry.AnalyzerCount} analyzers");
     }
 

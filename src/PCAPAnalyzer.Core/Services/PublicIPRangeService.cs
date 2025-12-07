@@ -70,7 +70,7 @@ namespace PCAPAnalyzer.Core.Services
         public PublicIPRangeService(ILogger<PublicIPRangeService>? logger = null)
         {
             _logger = logger;
-            _httpClient = new HttpClient();
+            _httpClient = new();
             _httpClient.Timeout = TimeSpan.FromSeconds(30);
             _httpClient.DefaultRequestHeaders.Add("User-Agent", "PCAPAnalyzer/1.0");
             

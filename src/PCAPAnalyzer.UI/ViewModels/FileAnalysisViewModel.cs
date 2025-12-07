@@ -156,8 +156,8 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
         _orchestrator = orchestrator;
 
         // Initialize component ViewModels
-        ProgressViewModel = new FileAnalysisProgressViewModel();
-        StagesViewModel = new FileAnalysisStagesViewModel();
+        ProgressViewModel = new();
+        StagesViewModel = new();
         PipelineViewModel = new FileAnalysisPipelineViewModel(tsharkService, statisticsService);
 
         // Wire up stages to progress for notifications
@@ -328,7 +328,7 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
         if (string.IsNullOrEmpty(SelectedFilePath) || !File.Exists(SelectedFilePath))
             return;
 
-        _analysisCts = new CancellationTokenSource();
+        _analysisCts = new();
         IsAnalyzing = true;
         IsAnalysisComplete = false;
         ProgressViewModel.ResetMetrics();

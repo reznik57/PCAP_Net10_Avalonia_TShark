@@ -15,7 +15,7 @@ namespace PCAPAnalyzer.Core.Services
     /// </summary>
     public class FilterServiceCore : IFilterServiceCore
     {
-        private PacketFilter _currentFilter = new PacketFilter();
+        private PacketFilter _currentFilter = new();
         private readonly List<PacketFilter> _filterHistory = [];
         private readonly Dictionary<string, PacketFilter> _presetFilters = [];
 
@@ -188,7 +188,7 @@ namespace PCAPAnalyzer.Core.Services
 
         public void ClearFilter()
         {
-            CurrentFilter = new PacketFilter();
+            CurrentFilter = new();
             FilterChanged?.Invoke(this, new FilterChangedEventArgs(_currentFilter, FilterAction.Cleared));
         }
 

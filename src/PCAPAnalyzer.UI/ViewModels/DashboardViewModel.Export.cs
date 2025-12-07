@@ -365,7 +365,7 @@ public partial class DashboardViewModel
     {
         // Cancel any existing auto-clear
         _exportStatusCts?.Cancel();
-        _exportStatusCts = new CancellationTokenSource();
+        _exportStatusCts = new();
 
         try
         {

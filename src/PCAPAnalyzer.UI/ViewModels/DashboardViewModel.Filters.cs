@@ -103,7 +103,7 @@ public partial class DashboardViewModel
         PacketFilter? finalFilter = null;
         if (filters.Count == 0)
         {
-            finalFilter = new PacketFilter(); // Empty filter - show all
+            finalFilter = new(); // Empty filter - show all
         }
         else if (filters.Count == 1)
         {

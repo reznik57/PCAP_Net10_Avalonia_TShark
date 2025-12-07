@@ -55,7 +55,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     [ObservableProperty] private ReportViewModel _reportViewModel;
     [ObservableProperty] private CompareViewModel? _compareViewModel;
     [ObservableProperty] private GeographicMapViewModel _geographicMapViewModel;
-    [ObservableProperty] private FlowSummaryViewModel _flowSummaryViewModel = new FlowSummaryViewModel();
+    [ObservableProperty] private FlowSummaryViewModel _flowSummaryViewModel = new();
     [ObservableProperty] private TopTalkersViewModel? _topTalkersViewModel;
     [ObservableProperty] private AnomalyViewModel? _anomalyViewModel;
     [ObservableProperty] private AnomaliesViewModel? _anomaliesViewModel;
@@ -63,7 +63,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
     // ==================== STATS BAR VIEWMODELS ====================
 
-    public StatsBarControlViewModel PacketAnalysisStats { get; } = new StatsBarControlViewModel();
+    public StatsBarControlViewModel PacketAnalysisStats { get; } = new();
 
     // ==================== SERVICES ====================
 
@@ -201,9 +201,9 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         _voiceQoSFilterService = new TabFilterService("Voice/QoS", new FilterServiceCore());
         _countryTrafficFilterService = new TabFilterService("Country Traffic", new FilterServiceCore());
 
-        FileManager = new MainWindowFileViewModel();
+        FileManager = new();
         Analysis = new MainWindowAnalysisViewModel(_dispatcher, _tsharkService);
-        UIState = new MainWindowUIStateViewModel();
+        UIState = new();
         var packetDetails = packetDetailsViewModel ?? App.Services?.GetService<PacketDetailsViewModel>();
         if (packetDetails is null)
         {
@@ -215,7 +215,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         }
         PacketManager = new MainWindowPacketViewModel(_packetAnalysisFilterService, packetDetails);
 
-        Charts = new MainWindowChartsViewModel();
+        Charts = new();
 
         // Initialize extracted components
         _dashboardComponent = new MainWindowDashboardViewModel(_statisticsService, _geoIpService);

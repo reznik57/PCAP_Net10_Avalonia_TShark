@@ -34,7 +34,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             _config.Validate();
 
             _cache = new MemoryCache(_config.ToMemoryCacheOptions());
-            _metrics = new CacheMetrics();
+            _metrics = new();
         }
 
         public CachedStatisticsService(
@@ -46,7 +46,7 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _config = config ?? StatisticsCacheConfiguration.Default;
             _config.Validate();
-            _metrics = new CacheMetrics();
+            _metrics = new();
         }
 
         /// <summary>

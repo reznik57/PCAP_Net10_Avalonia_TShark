@@ -78,7 +78,7 @@ namespace PCAPAnalyzer.Core.Capture
             // Validate and normalize path to prevent path traversal attacks
             _baseOutputPath = ValidateAndNormalizePath(_configuration.OutputFilePath);
             _fileHistory = new ConcurrentQueue<string>();
-            _cancellationSource = new CancellationTokenSource();
+            _cancellationSource = new();
         }
 
         /// <summary>

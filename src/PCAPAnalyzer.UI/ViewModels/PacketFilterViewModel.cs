@@ -35,10 +35,10 @@ public partial class PacketFilterViewModel : ObservableObject
         _onFilterApplied = onFilterApplied ?? throw new ArgumentNullException(nameof(onFilterApplied));
 
         // Initialize component ViewModels
-        BasicFilters = new BasicFilterViewModel();
-        QuickFilters = new QuickFilterViewModel();
-        ProtocolFilters = new ProtocolFilterViewModel();
-        Statistics = new FilterStatisticsViewModel();
+        BasicFilters = new();
+        QuickFilters = new();
+        ProtocolFilters = new();
+        Statistics = new();
 
         // Subscribe to component events
         BasicFilters.FilterChanged += OnComponentFilterChanged;

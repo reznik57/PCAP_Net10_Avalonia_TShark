@@ -155,8 +155,8 @@ public partial class LiveCaptureViewModel : ViewModelBase, IDisposable
         _interfaceManager = interfaceManager;
 
         // Initialize child ViewModels
-        PacketListViewModel = new PacketListViewModel();
-        StatisticsViewModel = new LiveStatisticsViewModel();
+        PacketListViewModel = new();
+        StatisticsViewModel = new();
 
         // Initialize commands
         StartCaptureCommand = new AsyncRelayCommand(StartCaptureAsync, () => !IsCapturing);
@@ -225,7 +225,7 @@ public partial class LiveCaptureViewModel : ViewModelBase, IDisposable
         try
         {
             ClearError();
-            _captureCts = new CancellationTokenSource();
+            _captureCts = new();
 
             // Reset statistics and packet list
             StatisticsViewModel.Reset();

@@ -213,7 +213,7 @@ public partial class MainWindowChartsViewModel : ObservableObject
     /// </summary>
     private void InitializeDrillDown()
     {
-        DrillDown = new DrillDownPopupViewModel();
+        DrillDown = new();
     }
 
     /// <summary>

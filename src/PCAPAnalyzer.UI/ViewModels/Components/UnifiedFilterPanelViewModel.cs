@@ -125,12 +125,12 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         Summary = summary;
 
         // Create tab ViewModels WITHOUT GlobalFilterState
-        GeneralTab = new GeneralFilterTabViewModel();
-        ThreatsTab = new ThreatsFilterTabViewModel();
-        AnomaliesTab = new AnomaliesFilterTabViewModel();
-        VoiceQoSTab = new VoiceQoSFilterTabViewModel();
-        CountryTab = new CountryFilterTabViewModel();
-        HostInventoryTab = new HostInventoryFilterTabViewModel();
+        GeneralTab = new();
+        ThreatsTab = new();
+        AnomaliesTab = new();
+        VoiceQoSTab = new();
+        CountryTab = new();
+        HostInventoryTab = new();
 
         // Subscribe to GlobalFilterState changes for progress state forwarding
         _filterState.PropertyChanged += OnFilterStatePropertyChanged;

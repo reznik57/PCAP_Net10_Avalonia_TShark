@@ -93,7 +93,7 @@ namespace PCAPAnalyzer.UI.Helpers
             using (_lock.EnterScope())
             {
                 _cts?.Cancel();
-                _cts = new CancellationTokenSource();
+                _cts = new();
                 cts = _cts;
             }
             

@@ -65,7 +65,7 @@ namespace PCAPAnalyzer.UI.ViewModels
 
         public GeographicMapViewModel(IGeoIPService geoIPService, IStatisticsService statisticsService, IProtocolColorService? protocolColorService = null)
         {
-            Activator = new ViewModelActivator();
+            Activator = new();
             _geoIPService = geoIPService;
             _statisticsService = statisticsService;
             // Use DI container, fallback to direct instantiation only if DI not available

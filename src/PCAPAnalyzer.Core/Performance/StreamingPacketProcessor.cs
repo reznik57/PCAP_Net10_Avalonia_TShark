@@ -69,8 +69,8 @@ namespace PCAPAnalyzer.Core.Performance
                 });
 
             _processorTasks = new ConcurrentBag<Task>();
-            _cancellationSource = new CancellationTokenSource();
-            Statistics = new ProcessingStatistics();
+            _cancellationSource = new();
+            Statistics = new();
         }
 
         /// <summary>

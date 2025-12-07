@@ -36,7 +36,7 @@ public sealed class TSharkService : ITSharkService
     public TSharkService(ILogger<TSharkService> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _statistics = new PacketStatistics();
+        _statistics = new();
         _packetChannel = null!; // Will be initialized in CreateNewChannel
         CreateNewChannel();
     }

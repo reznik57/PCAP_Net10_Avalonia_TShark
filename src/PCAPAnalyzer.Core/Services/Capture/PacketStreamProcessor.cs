@@ -60,7 +60,7 @@ public class PacketStreamProcessor : IDisposable
             throw new InvalidOperationException("Processor is already running");
         }
 
-        _processingCts = new CancellationTokenSource();
+        _processingCts = new();
 
         // Start multiple processing tasks for parallel processing
         for (int i = 0; i < _maxConcurrency; i++)

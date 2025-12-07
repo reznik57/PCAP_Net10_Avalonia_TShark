@@ -67,11 +67,11 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
         _logger = logger;
 
         // Initialize component ViewModels
-        Statistics = new AnomaliesStatisticsViewModel();
-        Charts = new AnomaliesChartsViewModel();
-        DrillDown = new AnomaliesDrillDownViewModel();
+        Statistics = new();
+        Charts = new();
+        DrillDown = new();
         Filters = new AnomaliesFilterViewModel(globalFilterState);
-        PacketTable = new AnomaliesPacketTableViewModel();
+        PacketTable = new();
 
         // Subscribe to filter changes
         Filters.FiltersChanged += OnFiltersChanged;
@@ -335,7 +335,7 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
     private async Task ApplyFiltersAsync()
     {
         _filterCts?.Cancel();
-        _filterCts = new CancellationTokenSource();
+        _filterCts = new();
         var token = _filterCts.Token;
 
         IsFiltering = true;
