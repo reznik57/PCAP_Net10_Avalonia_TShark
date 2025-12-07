@@ -40,7 +40,7 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
     private readonly Lock _collectionLock = new(); // Thread-safety lock
     private readonly DebouncedAction _filterDebouncer; // Debouncer for IP filter TextBoxes
     private bool _disposed; // Track disposal state
-    private IReadOnlyList<PacketInfo> _allPackets = Array.Empty<PacketInfo>(); // Reference to cache (NOT a copy)
+    private IReadOnlyList<PacketInfo> _allPackets = []; // Reference to cache (NOT a copy)
     private string? _currentFilePath;
 
     // Storage for unfiltered collections (for local QoS/DSCP filtering)

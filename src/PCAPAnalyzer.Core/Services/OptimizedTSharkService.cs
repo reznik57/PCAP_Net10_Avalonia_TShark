@@ -271,7 +271,7 @@ namespace PCAPAnalyzer.Core.Services
             
             using var process = Process.Start(processInfo);
             if (process is null)
-                return Array.Empty<RawPacketData>();
+                return [];
             
             // Read output in parallel with process execution
             var outputTask = Task.Run(async () =>

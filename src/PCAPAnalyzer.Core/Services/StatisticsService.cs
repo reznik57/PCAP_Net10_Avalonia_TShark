@@ -159,7 +159,7 @@ namespace PCAPAnalyzer.Core.Services
         public async Task<NetworkStatistics> CalculateStatisticsAsync(IEnumerable<PacketInfo> packets, object? geoIPStage = null, object? flowStage = null)
         {
             if (packets is null)
-                return await Task.Run(() => CalculateStatistics(Array.Empty<PacketInfo>()));
+                return await Task.Run(() => CalculateStatistics([]));
 
             var packetCollection = packets as List<PacketInfo> ?? packets.ToList();
             var statsTask = Task.Run(() => CalculateStatistics(packetCollection));

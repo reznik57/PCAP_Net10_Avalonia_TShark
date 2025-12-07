@@ -46,13 +46,13 @@ public partial class MainWindowChartsViewModel : ObservableObject
     /// X-Axis configuration for Packets Over Time chart
     /// </summary>
     [ObservableProperty]
-    private Axis[] _packetsOverTimeXAxes = Array.Empty<Axis>();
+    private Axis[] _packetsOverTimeXAxes = [];
 
     /// <summary>
     /// Y-Axis configuration for Packets Over Time chart
     /// </summary>
     [ObservableProperty]
-    private Axis[] _packetsOverTimeYAxes = Array.Empty<Axis>();
+    private Axis[] _packetsOverTimeYAxes = [];
 
     /// <summary>
     /// Tooltip text for Packets Over Time chart hover

@@ -200,7 +200,7 @@ public partial class ThreatsReportExportViewModel : ObservableObject
 
         foreach (var threat in _allThreats.OrderByDescending(t => t.Severity).ThenByDescending(t => t.RiskScore))
         {
-            var affectedIPs = string.Join(";", threat.AffectedIPs?.Take(10) ?? Array.Empty<string>());
+            var affectedIPs = string.Join(";", threat.AffectedIPs?.Take(10) ?? []);
             var description = EscapeCsv(threat.Description);
             var threatName = EscapeCsv(threat.ThreatName);
 
@@ -413,7 +413,7 @@ public partial class ThreatsReportExportViewModel : ObservableObject
 
         foreach (var threat in _allThreats.Where(t => t.Severity >= ThreatSeverity.High).Take(20))
         {
-            foreach (var ip in threat.AffectedIPs?.Take(3) ?? Array.Empty<string>())
+            foreach (var ip in threat.AffectedIPs?.Take(3) ?? [])
             {
                 html.AppendLine($"{ip}|{threat.Port}/{threat.Protocol}|{threat.Severity}|{threat.ThreatName}");
             }
@@ -433,7 +433,7 @@ public partial class ThreatsReportExportViewModel : ObservableObject
             html.AppendLine("      <ul>");
             foreach (var threat in _allThreats.Where(t => t.Severity == ThreatSeverity.Critical).Take(5))
             {
-                foreach (var mitigation in threat.Mitigations?.Take(2) ?? Array.Empty<string>())
+                foreach (var mitigation in threat.Mitigations?.Take(2) ?? [])
                 {
                     html.AppendLine($"        <li>{EscapeHtml(mitigation)}</li>");
                 }
@@ -449,7 +449,7 @@ public partial class ThreatsReportExportViewModel : ObservableObject
             html.AppendLine("      <ul>");
             foreach (var threat in _allThreats.Where(t => t.Severity == ThreatSeverity.High).Take(5))
             {
-                foreach (var mitigation in threat.Mitigations?.Take(1) ?? Array.Empty<string>())
+                foreach (var mitigation in threat.Mitigations?.Take(1) ?? [])
                 {
                     html.AppendLine($"        <li>{EscapeHtml(mitigation)}</li>");
                 }

@@ -28,7 +28,7 @@ public class NullPacketStore : IPacketStore
     {
         return Task.FromResult(new PacketQueryResult
         {
-            Packets = Array.Empty<PacketInfo>(),
+            Packets = [],
             TotalCount = 0,
             TotalBytes = 0,
             ThreatCount = 0

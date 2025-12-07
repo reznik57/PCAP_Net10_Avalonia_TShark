@@ -171,9 +171,9 @@ namespace PCAPAnalyzer.Core.Services.VoiceQoS
             var bucketInterval = interval ?? TimeSpan.FromSeconds(1);
 
             // Convert to arrays for single-pass processing
-            var qosArray = qosPackets?.ToArray() ?? Array.Empty<PacketInfo>();
-            var latencyArray = latencyPackets?.ToArray() ?? Array.Empty<PacketInfo>();
-            var jitterArray = jitterPackets?.ToArray() ?? Array.Empty<PacketInfo>();
+            var qosArray = qosPackets?.ToArray() ?? [];
+            var latencyArray = latencyPackets?.ToArray() ?? [];
+            var jitterArray = jitterPackets?.ToArray() ?? [];
 
             // Quick exit if no data
             if (qosArray.Length == 0 && latencyArray.Length == 0 && jitterArray.Length == 0)

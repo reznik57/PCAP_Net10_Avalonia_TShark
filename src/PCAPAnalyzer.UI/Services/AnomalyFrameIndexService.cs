@@ -111,7 +111,7 @@ public sealed class AnomalyFrameIndexService : IAnomalyFrameIndexService
         {
             if (_frameToAnomalies.TryGetValue(frameNumber, out var anomalies))
                 return anomalies;
-            return Array.Empty<NetworkAnomaly>();
+            return [];
         }
     }
 
@@ -122,7 +122,7 @@ public sealed class AnomalyFrameIndexService : IAnomalyFrameIndexService
     {
         lock (_lock)
         {
-            if (!HasIndex) return Array.Empty<NetworkAnomaly>();
+            if (!HasIndex) return [];
 
             var matching = _allAnomalies.AsEnumerable();
 

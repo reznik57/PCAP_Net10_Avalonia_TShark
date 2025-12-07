@@ -44,16 +44,16 @@ public partial class AnomaliesChartsViewModel : ObservableObject
     // Legacy property for binding compatibility (returns the collection as array)
     public ISeries[] TimelineSeries => TimelineSeriesCollection.ToArray();
 
-    public Axis[] TimelineXAxes { get; private set; } = Array.Empty<Axis>();
-    public Axis[] TimelineYAxes { get; private set; } = Array.Empty<Axis>();
+    public Axis[] TimelineXAxes { get; private set; } = [];
+    public Axis[] TimelineYAxes { get; private set; } = [];
 
     // Category donut chart
-    public ISeries[] CategorySeries { get; private set; } = Array.Empty<ISeries>();
+    public ISeries[] CategorySeries { get; private set; } = [];
 
     // Ports bar chart
-    public ISeries[] PortsSeries { get; private set; } = Array.Empty<ISeries>();
-    public Axis[] PortsXAxes { get; private set; } = Array.Empty<Axis>();
-    public Axis[] PortsYAxes { get; private set; } = Array.Empty<Axis>();
+    public ISeries[] PortsSeries { get; private set; } = [];
+    public Axis[] PortsXAxes { get; private set; } = [];
+    public Axis[] PortsYAxes { get; private set; } = [];
 
     // Zoom state
     [ObservableProperty] private double _timelineMinX = double.NaN;
@@ -105,7 +105,7 @@ public partial class AnomaliesChartsViewModel : ObservableObject
         {
             new Axis
             {
-                Labels = Array.Empty<string>(),
+                Labels = [],
                 LabelsPaint = new SolidColorPaint(axisLabelColor),
                 TextSize = 11
             }
@@ -241,8 +241,8 @@ public partial class AnomaliesChartsViewModel : ObservableObject
 
         if (portList.Count == 0)
         {
-            PortsSeries = Array.Empty<ISeries>();
-            PortsYAxes[0].Labels = Array.Empty<string>();
+            PortsSeries = [];
+            PortsYAxes[0].Labels = [];
             OnPropertyChanged(nameof(PortsSeries));
             return;
         }
@@ -289,8 +289,8 @@ public partial class AnomaliesChartsViewModel : ObservableObject
     public void Clear()
     {
         TimelineSeriesCollection.Clear();
-        CategorySeries = Array.Empty<ISeries>();
-        PortsSeries = Array.Empty<ISeries>();
+        CategorySeries = [];
+        PortsSeries = [];
         ResetZoom();
         OnPropertyChanged(nameof(TimelineSeries));
         OnPropertyChanged(nameof(CategorySeries));

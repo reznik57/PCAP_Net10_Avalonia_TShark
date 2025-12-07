@@ -103,7 +103,7 @@ public partial class CountryStatisticsViewModel : ObservableObject
                 .Where(c => c.Value.IsHighRisk)
                 .Select(c => c.Value.CountryName)
                 .Take(3);
-            HighRiskWarning = $"Traffic detected from: {string.Join(", ", highRiskNames ?? Array.Empty<string>())}";
+            HighRiskWarning = $"Traffic detected from: {string.Join(", ", highRiskNames ?? [])}";
         }
         else
         {

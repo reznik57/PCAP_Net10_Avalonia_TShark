@@ -189,7 +189,7 @@ public sealed class DuckDbPacketStore : IPacketStore
                     }
                 }
 
-                IReadOnlyList<PacketInfo> packets = Array.Empty<PacketInfo>();
+                IReadOnlyList<PacketInfo> packets = [];
                 if (includePackets)
                 {
                     packets = ExecutePacketQuery(whereClause, parameterValues, pageNumber, pageSize, sortDescending);

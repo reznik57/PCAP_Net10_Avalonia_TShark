@@ -64,7 +64,7 @@ public partial class ThreatsDrillDownViewModel : ObservableObject
 
     // Internal state
     private EnhancedSecurityThreat? _currentThreat;
-    private IReadOnlyList<PacketInfo> _allPackets = Array.Empty<PacketInfo>();
+    private IReadOnlyList<PacketInfo> _allPackets = [];
     private List<EnhancedSecurityThreat> _allThreats = [];
     private List<uint> _currentFrameNumbers = [];
 

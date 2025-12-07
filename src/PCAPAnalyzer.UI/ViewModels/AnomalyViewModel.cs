@@ -16,7 +16,7 @@ public partial class AnomalyViewModel : ObservableObject
 {
     // ==================== DATA ====================
 
-    private IReadOnlyList<NetworkAnomaly> _allAnomalies = Array.Empty<NetworkAnomaly>();
+    private IReadOnlyList<NetworkAnomaly> _allAnomalies = [];
 
     [ObservableProperty]
     private ObservableCollection<AnomalyDisplayItem> _filteredAnomalies = [];
@@ -66,7 +66,7 @@ public partial class AnomalyViewModel : ObservableObject
     /// </summary>
     public void UpdateAnomalies(IReadOnlyList<NetworkAnomaly>? anomalies)
     {
-        _allAnomalies = anomalies ?? Array.Empty<NetworkAnomaly>();
+        _allAnomalies = anomalies ?? [];
 
         // Update counts
         TotalCount = _allAnomalies.Count;
@@ -109,7 +109,7 @@ public partial class AnomalyViewModel : ObservableObject
     /// </summary>
     public void Clear()
     {
-        _allAnomalies = Array.Empty<NetworkAnomaly>();
+        _allAnomalies = [];
         FilteredAnomalies.Clear();
         SelectedAnomaly = null;
         TotalCount = CriticalCount = HighCount = MediumCount = LowCount = FilteredCount = 0;

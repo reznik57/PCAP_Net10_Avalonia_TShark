@@ -257,7 +257,7 @@ public partial class FileAnalysisPipelineViewModel : ObservableObject
         {
             FilePath = filePath,
             Statistics = statistics,
-            Packets = isSuccessful ? packets.AsReadOnly() : Array.Empty<PacketInfo>(),
+            Packets = isSuccessful ? packets.AsReadOnly() : [],
             ReadingDuration = readingDuration,
             ParsingDuration = parsingDuration,
             StatisticsDuration = statisticsDuration,

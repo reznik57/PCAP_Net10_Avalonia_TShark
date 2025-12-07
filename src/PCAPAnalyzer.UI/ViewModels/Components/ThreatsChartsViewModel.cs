@@ -374,7 +374,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
         if (metrics is null || !metrics.ThreatsByPort.Any())
         {
             PortRiskSeries = new ObservableCollection<ISeries>();
-            PortRiskXAxes = new[] { new Axis { Labels = Array.Empty<string>() } };
+            PortRiskXAxes = new[] { new Axis { Labels = [] } };
             return;
         }
 
@@ -420,7 +420,7 @@ public partial class ThreatsChartsViewModel : ObservableObject
         if (metrics is null || !metrics.ThreatsByCategory.Any())
         {
             ThreatCategorySeries = new ObservableCollection<ISeries>();
-            ThreatCategoryYAxes = new[] { new Axis { Labels = Array.Empty<string>() } };
+            ThreatCategoryYAxes = new[] { new Axis { Labels = [] } };
             return;
         }
 

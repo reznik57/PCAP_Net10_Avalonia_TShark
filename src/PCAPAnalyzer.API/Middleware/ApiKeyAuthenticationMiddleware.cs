@@ -39,7 +39,7 @@ public class ApiKeyAuthenticationMiddleware
             return;
         }
 
-        var validApiKeys = _configuration.GetSection("ApiKeys").Get<string[]>() ?? Array.Empty<string>();
+        var validApiKeys = _configuration.GetSection("ApiKeys").Get<string[]>() ?? [];
 
         if (!validApiKeys.Contains(extractedApiKey.ToString()))
         {

@@ -146,7 +146,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
                     "InsecureServices",
                     statistics.TotalPackets,
                     statistics.TopPorts?.Count ?? 0,
-                    string.Join(",", statistics.TopPorts?.Select(p => $"{p.Port}:{p.PacketCount}") ?? Array.Empty<string>()));
+                    string.Join(",", statistics.TopPorts?.Select(p => $"{p.Port}:{p.PacketCount}") ?? []));
 
                 var cachedResult = await _cacheService.GetAsync<List<SecurityFinding>>(cacheKey);
                 if (cachedResult is not null)

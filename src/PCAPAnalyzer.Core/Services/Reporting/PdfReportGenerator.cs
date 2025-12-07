@@ -44,7 +44,7 @@ namespace PCAPAnalyzer.Core.Services.Reporting
             // return await Task.FromResult(document.GeneratePdf());
 
             // Placeholder: Return empty byte array until QuestPDF is integrated
-            return await Task.FromResult(Array.Empty<byte>());
+            return await Task.FromResult<byte[]>([]);
         }
     }
 }

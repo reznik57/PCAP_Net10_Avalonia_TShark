@@ -76,7 +76,7 @@ public sealed class SimplePacketStore : IPacketStore
                 lastTimestamp = ordered.Count > 0 ? ordered.Max(p => p.Timestamp) : null;
             }
 
-            IReadOnlyList<PacketInfo> pagePackets = Array.Empty<PacketInfo>();
+            IReadOnlyList<PacketInfo> pagePackets = [];
             if (query.IncludePackets)
             {
                 var pageSize = query.PageSize <= 0 ? 100 : query.PageSize;

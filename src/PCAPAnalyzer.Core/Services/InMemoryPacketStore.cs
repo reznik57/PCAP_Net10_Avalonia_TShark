@@ -129,7 +129,7 @@ public sealed class InMemoryPacketStore : IPacketStore
                 }
             }
 
-            IReadOnlyList<PacketInfo> pagePackets = Array.Empty<PacketInfo>();
+            IReadOnlyList<PacketInfo> pagePackets = [];
             if (query.IncludePackets && workingSet.Count > 0)
             {
                 var page = ExtractPage(workingSet, query.PageNumber, query.PageSize, query.SortDescending);
@@ -224,7 +224,7 @@ public sealed class InMemoryPacketStore : IPacketStore
     private static IReadOnlyList<PacketInfo> ExtractPage(IList<PacketInfo> packets, int pageNumber, int pageSize, bool sortDescending)
     {
         if (packets.Count == 0)
-            return Array.Empty<PacketInfo>();
+            return [];
 
         pageNumber = Math.Max(1, pageNumber);
         pageSize = Math.Max(1, pageSize); // No upper limit - let caller decide page size
@@ -236,7 +236,7 @@ public sealed class InMemoryPacketStore : IPacketStore
             var remaining = Math.Max(0, totalCount - startIndex);
             var take = Math.Min(pageSize, remaining);
             if (take == 0)
-                return Array.Empty<PacketInfo>();
+                return [];
 
             var result = new List<PacketInfo>(take);
             for (var i = 0; i < take; i++)
@@ -250,7 +250,7 @@ public sealed class InMemoryPacketStore : IPacketStore
             // Descending: newest packets first (end of list)
             var startOffset = (pageNumber - 1) * pageSize;
             if (startOffset >= totalCount)
-                return Array.Empty<PacketInfo>();
+                return [];
 
             var endIndexExclusive = totalCount - startOffset;
             var startIndex = Math.Max(0, endIndexExclusive - pageSize);

@@ -42,8 +42,8 @@ namespace PCAPAnalyzer.UI.ViewModels
     private List<EnhancedSecurityThreat> _allThreats = [];
     private List<SuricataAlert> _suricataAlerts = [];
     private List<YaraMatch> _yaraMatches = [];
-        private IReadOnlyList<PacketInfo> _currentPackets = Array.Empty<PacketInfo>(); // Filtered packets (may be reference or new list)
-        private IReadOnlyList<PacketInfo> _unfilteredPackets = Array.Empty<PacketInfo>(); // Reference to cache (NOT a copy)
+        private IReadOnlyList<PacketInfo> _currentPackets = []; // Filtered packets (may be reference or new list)
+        private IReadOnlyList<PacketInfo> _unfilteredPackets = []; // Reference to cache (NOT a copy)
         private SecurityMetrics? _metrics;
 
         // Cache to prevent redundant analysis
