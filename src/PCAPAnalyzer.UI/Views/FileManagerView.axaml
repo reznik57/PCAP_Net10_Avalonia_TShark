@@ -519,8 +519,8 @@
                 <StackPanel Spacing="16">
                     <TextBlock Text="📊 Analysis Statistics" Classes="SectionHeader"/>
 
-                    <!-- File-Specific Stats Grid (2x3) -->
-                    <Grid ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" RowSpacing="12" ColumnSpacing="12">
+                    <!-- Analysis Stats Grid (2x2) - File size removed (shown in upload area) -->
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="12" ColumnSpacing="12">
                         <!-- Packet Count -->
                         <Border Grid.Row="0" Grid.Column="0" Classes="StatCard">
                             <StackPanel>
@@ -530,17 +530,8 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- File Size -->
-                        <Border Grid.Row="0" Grid.Column="1" Classes="StatCard">
-                            <StackPanel>
-                                <TextBlock Text="💾" Classes="StatIcon" Foreground="{DynamicResource SlackInfo}"/>
-                                <TextBlock Text="{Binding CaptureFileSize}" Classes="StatValue" Foreground="{DynamicResource SlackInfo}"/>
-                                <TextBlock Text="file size" Classes="StatLabel" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            </StackPanel>
-                        </Border>
-
                         <!-- Capture Duration -->
-                        <Border Grid.Row="0" Grid.Column="2" Classes="StatCard">
+                        <Border Grid.Row="0" Grid.Column="1" Classes="StatCard">
                             <StackPanel>
                                 <TextBlock Text="⏱️" Classes="StatIcon" Foreground="{DynamicResource SlackDanger}"/>
                                 <TextBlock Text="{Binding Duration}" Classes="StatValue" Foreground="{DynamicResource SlackDanger}"/>
@@ -565,124 +556,81 @@
                                 <TextBlock Text="analysis time" Classes="StatLabel" Foreground="{DynamicResource TextSecondaryBrush}"/>
                             </StackPanel>
                         </Border>
-
-                        <!-- Completion Status -->
-                        <Border Grid.Row="1" Grid.Column="2" Classes="StatCard">
-                            <StackPanel>
-                                <TextBlock Text="✅" Classes="StatIcon" Foreground="{DynamicResource SlackSuccess}"/>
-                                <TextBlock Text="Complete" Classes="StatValue" FontSize="{StaticResource FontSizeXL}" Foreground="{DynamicResource SlackSuccess}"/>
-                                <TextBlock Text="analysis status" Classes="StatLabel" Foreground="{DynamicResource TextSecondaryBrush}"/>
-                            </StackPanel>
-                        </Border>
                     </Grid>
                 </StackPanel>
             </Border>
 
-            <!-- ✅ COMPACT GRID: Analysis Stages - 3-column responsive layout -->
-            <!-- ✅ FIX: Visible when file loaded OR analysis complete (OR logic in ShouldShowStages property) -->
+            <!-- ✅ COMPACT: Analysis Stages - Horizontal badges layout -->
             <Border Classes="Card" IsVisible="{Binding ShouldShowStages}">
                 <StackPanel Spacing="12">
-                    <!-- Header with optional capture time range -->
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Grid.Column="0" Text="📊 Analysis Stages" Classes="SectionHeader"/>
-                        <!-- PCAP Capture Time Period (shown when available) -->
-                        <TextBlock Grid.Column="1"
-                                  IsVisible="{Binding CaptureTimeRange, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
-                                  VerticalAlignment="Center"
-                                  Margin="0,0,0,12">
-                            <Run Text="📡" FontSize="{StaticResource FontSizeInput}"/>
-                            <Run Text=" "/>
-                            <Run Text="{Binding CaptureTimeRange}"
-                                 FontSize="{StaticResource FontSizeInput}"
-                                 FontWeight="SemiBold"
-                                 Foreground="{DynamicResource SlackInfo}"/>
-                        </TextBlock>
+                    <!-- Header with completion summary -->
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Column="0" Text="📊 Analysis Stages" Classes="SectionHeader" Margin="0"/>
+                        <!-- Completion summary badge -->
+                        <Border Grid.Column="2"
+                                Background="{DynamicResource SlackSuccess}"
+                                CornerRadius="12"
+                                Padding="12,4"
+                                VerticalAlignment="Center"
+                                IsVisible="{Binding IsAnalysisComplete}">
+                            <TextBlock Text="{Binding TotalStagesTime, StringFormat='Total: {0}'}"
+                                      FontSize="{StaticResource FontSizeSmall}"
+                                      FontWeight="SemiBold"
+                                      Foreground="White"/>
+                        </Border>
                     </Grid>
 
-                    <!-- ✅ FIX: Added ScrollViewer to ensure all 7 stages are visible -->
-                    <ScrollViewer HorizontalScrollBarVisibility="Disabled"
-                                  VerticalScrollBarVisibility="Auto"
-                                  MaxHeight="600">
-                        <!-- 3-Column Grid with WrapPanel for responsive layout -->
-                        <ItemsControl ItemsSource="{Binding AnalysisStages}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Horizontal" ItemWidth="450"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
+                    <!-- Compact horizontal badges -->
+                    <ItemsControl ItemsSource="{Binding AnalysisStages}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="local:AnalysisProgressStage">
-                                <!-- ✅ SLACK-STYLE Stage Card -->
+                                <!-- Compact pill badge -->
                                 <Border Background="{DynamicResource BackgroundCard}"
-                                        BorderBrush="{DynamicResource BackgroundElevated}"
+                                        BorderBrush="{Binding StateColor}"
                                         BorderThickness="1"
-                                        CornerRadius="8"
-                                        Padding="12,10"
-                                        Margin="0,0,12,10"
-                                        MinHeight="75">
-                                    <!-- Grid: Icon + Content Grid + Time/Progress -->
-                                    <Grid ColumnDefinitions="Auto,*,Auto">
-                                        <!-- Icon with pulsing animation for active stages -->
-                                        <TextBlock Grid.Column="0"
-                                                  Text="{Binding StateIcon}"
-                                                  FontSize="{StaticResource FontSizeXL}"
-                                                  Foreground="{Binding StateColor}"
-                                                  Classes="StageIcon"
-                                                  Classes.ActiveStageIcon="{Binding State, Converter={StaticResource EnumEqualsConverter}, ConverterParameter={x:Static local:AnalysisStageState.Active}}"
-                                                  VerticalAlignment="Top"
-                                                  Margin="0,2,12,0"/>
-
-                                        <!-- Content: Name and Description in SEPARATE ROWS -->
-                                        <Grid Grid.Column="1" RowDefinitions="Auto,Auto" VerticalAlignment="Center">
-                                            <!-- Row 1: Stage Name -->
-                                            <TextBlock Grid.Row="0"
-                                                      Text="{Binding Name}"
-                                                      FontSize="{StaticResource FontSizeMedium}"
-                                                      FontWeight="SemiBold"
-                                                      Foreground="{DynamicResource TextPrimaryBrush}"
-                                                      TextWrapping="NoWrap"
-                                                      TextTrimming="None"
-                                                      Margin="0,0,0,4"/>
-
-                                            <!-- Row 2: Stage Detail/Description (shows "Waiting..." for pending) -->
-                                            <TextBlock Grid.Row="1"
-                                                      Text="{Binding DisplayDetail}"
-                                                      FontSize="{StaticResource FontSizeSmall}"
-                                                      Foreground="{DynamicResource TextMutedBrush}"
-                                                      TextWrapping="Wrap"
-                                                      TextTrimming="CharacterEllipsis"
-                                                      MaxLines="2"/>
-                                        </Grid>
-
-                                        <!-- Elapsed Time + Mini Progress (right-aligned) -->
-                                        <StackPanel Grid.Column="2"
-                                                   Orientation="Vertical"
-                                                   Spacing="6"
-                                                   VerticalAlignment="Center"
-                                                   MinWidth="80">
-                                            <!-- Elapsed Time (bold, visible always) -->
-                                            <TextBlock Text="{Binding ElapsedTime}"
-                                                      FontSize="{StaticResource FontSizeBase}"
-                                                      FontWeight="SemiBold"
-                                                      Foreground="{DynamicResource SlackInfo}"
-                                                      HorizontalAlignment="Right"/>
-
-                                            <!-- Mini Progress Bar (only during analysis) -->
-                                            <ProgressBar Value="{Binding PercentComplete}"
-                                                        Minimum="0"
-                                                        Maximum="100"
-                                                        Height="5"
-                                                        CornerRadius="2"
-                                                        Background="{DynamicResource BackgroundElevated}"
-                                                        Foreground="{Binding StateColor}"
-                                                        IsVisible="{Binding ShowProgressBar}"/>
+                                        CornerRadius="16"
+                                        Padding="12,6"
+                                        Margin="0,0,8,8">
+                                    <ToolTip.Tip>
+                                        <StackPanel Spacing="4" MaxWidth="300">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding DisplayDetail}" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
                                         </StackPanel>
-                                    </Grid>
+                                    </ToolTip.Tip>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <!-- Status icon -->
+                                        <TextBlock Text="{Binding StateIcon}"
+                                                  FontSize="{StaticResource FontSizeBase}"
+                                                  Foreground="{Binding StateColor}"
+                                                  VerticalAlignment="Center"
+                                                  Classes="StageIcon"
+                                                  Classes.ActiveStageIcon="{Binding State, Converter={StaticResource EnumEqualsConverter}, ConverterParameter={x:Static local:AnalysisStageState.Active}}"/>
+                                        <!-- Stage name -->
+                                        <TextBlock Text="{Binding Name}"
+                                                  FontSize="{StaticResource FontSizeSmall}"
+                                                  FontWeight="Medium"
+                                                  Foreground="{DynamicResource TextPrimaryBrush}"
+                                                  VerticalAlignment="Center"/>
+                                        <!-- Time badge -->
+                                        <Border Background="{DynamicResource BackgroundElevated}"
+                                                CornerRadius="8"
+                                                Padding="6,2"
+                                                IsVisible="{Binding ElapsedTime, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                            <TextBlock Text="{Binding ElapsedTime}"
+                                                      FontSize="{StaticResource FontSizeXS}"
+                                                      FontWeight="SemiBold"
+                                                      Foreground="{DynamicResource SlackInfo}"/>
+                                        </Border>
+                                    </StackPanel>
                                 </Border>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    </ScrollViewer>
                 </StackPanel>
             </Border>
 

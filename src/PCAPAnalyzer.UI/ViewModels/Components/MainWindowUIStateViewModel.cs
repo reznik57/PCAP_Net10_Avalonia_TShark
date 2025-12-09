@@ -427,22 +427,27 @@ public partial class MainWindowUIStateViewModel : ObservableObject
     private void OnMemoryPressureEmergency(object? sender, EventArgs e)
     {
         DetailedLogger.Instance.Error("MEMORY", "🚨 EMERGENCY memory pressure detected!");
-        Status = "🚨 Emergency memory pressure - aggressive GC";
+        Status = "🚨 Emergency memory pressure - forced GC";
 
-        // ✅ FIX: Emergency was completely unhandled before - now triggers aggressive GC
+        // ✅ PERF FIX: Use NON-BLOCKING GC to prevent UI freeze
+        // NOTE: Aggressive mode REQUIRES blocking: true (throws exception otherwise)
+        // Use Forced mode instead - it's the strongest non-blocking option
         Task.Run(() =>
         {
-            var before = GC.GetTotalMemory(false);
-
-            // Aggressive collection with LOH compaction
+            // Request LOH compaction on next blocking GC (won't block now)
             System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect(2, GCCollectionMode.Aggressive, blocking: true, compacting: true);
-            GC.WaitForPendingFinalizers();
-            GC.Collect(2, GCCollectionMode.Aggressive, blocking: true, compacting: true);
 
-            var after = GC.GetTotalMemory(true);
-            var freedMB = (before - after) / 1_000_000;
-            DebugLogger.Log($"[MEMORY] 🚨 Emergency GC complete: freed {freedMB}MB");
+            // Forced mode: strongest GC that works with blocking: false
+            // (Aggressive mode throws ArgumentException if blocking: false)
+            GC.Collect(2, GCCollectionMode.Forced, blocking: false, compacting: false);
+            GC.WaitForPendingFinalizers();
+
+            // Second pass to collect finalizable objects (still non-blocking)
+            GC.Collect(1, GCCollectionMode.Forced, blocking: false);
+
+            // NOTE: Don't measure "freed" for non-blocking GC - collection happens asynchronously
+            // so immediate measurement is meaningless (often shows negative values)
+            DebugLogger.Log("[MEMORY] 🚨 Emergency GC requested (Gen2 Forced, non-blocking, LOH compaction queued)");
         });
     }
 

@@ -58,16 +58,14 @@ namespace PCAPAnalyzer.Core.Monitoring
         
         public static void ForceGarbageCollection()
         {
-            var before = GC.GetTotalMemory(false) / (1024 * 1024);
-            
-            GC.Collect();
+            // ✅ PERF FIX: Use non-blocking GC to prevent UI freeze
+            // NOTE: Don't measure "freed" - non-blocking GC completes asynchronously
+            // so immediate measurement is meaningless (often shows negative/zero values)
+            GC.Collect(2, GCCollectionMode.Optimized, blocking: false);
             GC.WaitForPendingFinalizers();
-            GC.Collect();
-            
-            var after = GC.GetTotalMemory(false) / (1024 * 1024);
-            var freed = before - after;
-            
-            DebugLogger.Log($"  GC freed {freed}MB (Heap: {before}MB -> {after}MB)");
+            GC.Collect(1, GCCollectionMode.Optimized, blocking: false);
+
+            DebugLogger.Log("  GC requested (Gen2 Optimized, non-blocking)");
         }
         
         public static long GetCurrentMemoryMB()

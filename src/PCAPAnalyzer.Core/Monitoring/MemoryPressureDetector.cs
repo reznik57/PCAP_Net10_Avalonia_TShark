@@ -186,52 +186,37 @@ namespace PCAPAnalyzer.Core.Monitoring
 
         private async Task OptimizeMemoryAsync()
         {
-            DebugLogger.Log("[MEMORY] Starting memory optimization...");
+            DebugLogger.Log("[MEMORY] Starting memory optimization (non-blocking)...");
 
-            // Step 1: Request garbage collection - use aggressive mode for emergency
-            var gen0Before = GC.CollectionCount(0);
-            var gen1Before = GC.CollectionCount(1);
-            var gen2Before = GC.CollectionCount(2);
-
-            // ✅ FIX: Use Aggressive mode for Emergency level (was always Optimized)
+            // Use Forced mode for Emergency, Optimized for others
+            // NOTE: Aggressive mode REQUIRES blocking: true (throws ArgumentException otherwise)
             var gcMode = _currentLevel >= MemoryPressureLevel.Emergency
-                ? GCCollectionMode.Aggressive
+                ? GCCollectionMode.Forced  // Strongest non-blocking option
                 : GCCollectionMode.Optimized;
 
-            GC.Collect(2, gcMode, blocking: _currentLevel >= MemoryPressureLevel.Critical);
-            await Task.Delay(100); // Let GC complete
+            // ✅ PERF FIX: NEVER use blocking: true - it freezes the entire UI
+            // Non-blocking GC allows UI thread to continue while collection happens
+            GC.Collect(2, gcMode, blocking: false, compacting: false);
+            await Task.Delay(50); // Brief yield to let GC make progress
             GC.WaitForPendingFinalizers();
-            GC.Collect(2, gcMode, blocking: _currentLevel >= MemoryPressureLevel.Critical);
+            GC.Collect(1, GCCollectionMode.Optimized, blocking: false);
 
-            var gen0After = GC.CollectionCount(0);
-            var gen1After = GC.CollectionCount(1);
-            var gen2After = GC.CollectionCount(2);
-
-            DebugLogger.Log($"[MEMORY] GC Collections ({gcMode}) - Gen0: {gen0After - gen0Before}, Gen1: {gen1After - gen1Before}, Gen2: {gen2After - gen2Before}");
-
-            // Step 2: Compact LOH if critical or emergency
+            // Request LOH compaction for next natural GC (non-blocking approach)
             if (_currentLevel >= MemoryPressureLevel.Critical)
             {
+                // Set compaction mode - will compact on next blocking GC (app shutdown, etc.)
                 GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
-                GC.Collect(2, GCCollectionMode.Forced, blocking: true, compacting: true);
-                DebugLogger.Log("[MEMORY] Large Object Heap compacted");
-            }
-
-            // Step 3: Check results
-            _currentProcess.Refresh();
-            var newMemoryUsage = _currentProcess.WorkingSet64;
-            var freed = _lastMemoryUsage - newMemoryUsage;
-
-            if (freed > 0)
-            {
-                DebugLogger.Log($"[MEMORY] Freed {freed / 1_000_000}MB of memory");
+                DebugLogger.Log($"[MEMORY] GC requested (Gen2 {gcMode}, non-blocking, LOH compaction queued)");
             }
             else
             {
-                DebugLogger.Log("[MEMORY] No significant memory freed");
+                DebugLogger.Log($"[MEMORY] GC requested (Gen2 {gcMode}, non-blocking)");
             }
 
-            _lastMemoryUsage = newMemoryUsage;
+            // Update memory reading (but don't claim "freed" - non-blocking GC results are async)
+            await Task.Delay(100);
+            _currentProcess.Refresh();
+            _lastMemoryUsage = _currentProcess.WorkingSet64;
         }
 
         private void LogMemoryStatus()

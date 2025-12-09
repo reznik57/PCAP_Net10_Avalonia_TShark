@@ -92,6 +92,37 @@ public partial class FileManagerViewModel : ObservableObject
 
     // ==================== DERIVED PROPERTIES ====================
 
+    /// <summary>
+    /// Total time across all analysis stages (sum of individual stage times).
+    /// </summary>
+    public string TotalStagesTime
+    {
+        get
+        {
+            if (AnalysisStages.Count == 0) return "00:00";
+
+            double totalSeconds = 0;
+            foreach (var stage in AnalysisStages)
+            {
+                if (string.IsNullOrEmpty(stage.ElapsedTime)) continue;
+
+                // Parse elapsed time like "4,5s" or "14,8s" (European format with comma)
+                var timeStr = stage.ElapsedTime.TrimEnd('s').Replace(',', '.');
+                if (double.TryParse(timeStr, System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture, out var seconds))
+                {
+                    totalSeconds += seconds;
+                }
+            }
+
+            // Format as mm:ss or hh:mm:ss
+            var ts = TimeSpan.FromSeconds(totalSeconds);
+            return ts.TotalHours >= 1
+                ? ts.ToString(@"hh\:mm\:ss")
+                : ts.ToString(@"mm\:ss");
+        }
+    }
+
     public bool HasFile
     {
         get
@@ -322,10 +353,14 @@ public partial class FileManagerViewModel : ObservableObject
             case nameof(FileAnalysisViewModel.IsAnalysisComplete):
                 IsAnalysisComplete = _fileAnalysisViewModel.IsAnalysisComplete;
 
-                // ✅ CLEANUP: Reduced diagnostic logging (production-friendly)
+                // Force stage sync and notify when analysis completes (bypass throttle)
                 if (IsAnalysisComplete)
                 {
-                    DebugLogger.Log($"[FileManagerVM] 🏁 Analysis complete - {AnalysisStages.Count} stages finished");
+                    // Force immediate sync to ensure all completed stages are visible
+                    _lastProgressUpdate = DateTime.MinValue; // Reset throttle
+                    UpdateProgressInfo();
+                    OnPropertyChanged(nameof(TotalStagesTime));
+                    DebugLogger.Log($"[FileManagerVM] 🏁 Analysis complete - {AnalysisStages.Count} stages finished, Total: {TotalStagesTime}");
                 }
 
                 OnPropertyChanged(nameof(ShouldShowStages)); // ✅ Notify UI that visibility should update
@@ -411,13 +446,18 @@ public partial class FileManagerViewModel : ObservableObject
         EstimatedTimeRemaining = _fileAnalysisViewModel.RemainingTimeFormatted;
         ProcessingRateFormatted = $"{NumberFormatter.FormatCount(_fileAnalysisViewModel.PacketsPerSecond)} pkt/s";
 
-        // Sync stages collection (keep same references, don't Clear+Add)
-        // This is more efficient than Clear() + AddRange()
-        if (AnalysisStages.Count == 0)
+        // Sync stages collection - detect if source stages were replaced with new objects
+        // This can happen when ClearAllStages() creates new stage objects
+        var sourceStages = _fileAnalysisViewModel.Stages;
+        var needsResync = AnalysisStages.Count == 0
+            || AnalysisStages.Count != sourceStages.Count
+            || (AnalysisStages.Count > 0 && sourceStages.Count > 0 && !ReferenceEquals(AnalysisStages[0], sourceStages[0]));
+
+        if (needsResync)
         {
-            // First time: populate collection
-            DebugLogger.Log($"[FileManagerVM] Syncing stages from FileAnalysisVM ({_fileAnalysisViewModel.Stages.Count} stages)");
-            foreach (var stage in _fileAnalysisViewModel.Stages)
+            DebugLogger.Log($"[FileManagerVM] Syncing stages from FileAnalysisVM ({sourceStages.Count} stages) - resync needed");
+            AnalysisStages.Clear();
+            foreach (var stage in sourceStages)
             {
                 AnalysisStages.Add(stage);
                 DebugLogger.Log($"[FileManagerVM]   Added stage: {stage.Name ?? "(null)"} [{stage.Key}]");
@@ -425,6 +465,7 @@ public partial class FileManagerViewModel : ObservableObject
             DebugLogger.Log($"[FileManagerVM] AnalysisStages.Count = {AnalysisStages.Count}");
             DebugLogger.Log($"[FileManagerVM] 🎨 UI BINDING CHECK: HasFile={HasFile}, FilePath={FilePath ?? "(null)"}");
             DebugLogger.Log($"[FileManagerVM] 🎨 Collection ready for ItemsControl binding");
+            OnPropertyChanged(nameof(TotalStagesTime)); // Refresh total time display
         }
         // Else: stages already synced by reference (same objects)
 

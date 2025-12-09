@@ -19,6 +19,13 @@
     <!-- AVLN2100: Some bindings use RelativeSource which requires reflection binding -->
     <!-- CA1002: List<T> used intentionally in internal ViewModels for performance -->
     <NoWarn>$(NoWarn);AVLN2000;AVLN2100;CA1002</NoWarn>
+    <!-- ✅ PERF: GC Configuration for large packet processing -->
+    <!-- Server GC: Better for multi-threaded workloads, uses more threads for collection -->
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <!-- Concurrent GC: Runs Gen2 collection concurrently with app, reduces pause times -->
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <!-- Retain VM: Keep virtual memory pages for faster subsequent allocations -->
+    <RetainVMGarbageCollection>true</RetainVMGarbageCollection>
   </PropertyGroup>
 
   <ItemGroup>
