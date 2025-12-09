@@ -10,9 +10,17 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 
 /// <summary>
 /// Manages KPIs and ranked table data for the Anomalies tab.
+/// Uses fingerprinting to skip redundant UI updates when data is unchanged.
 /// </summary>
 public partial class AnomaliesStatisticsViewModel : ObservableObject
 {
+    // Fingerprints for early-exit optimization
+    private string? _lastKPIsFingerprint;
+    private string? _lastSourcesFingerprint;
+    private string? _lastTargetsFingerprint;
+    private string? _lastPortsFingerprint;
+    private string? _lastCategoriesFingerprint;
+
     // KPIs
     [ObservableProperty] private int _totalAnomalies;
     [ObservableProperty] private int _criticalCount;
@@ -35,6 +43,12 @@ public partial class AnomaliesStatisticsViewModel : ObservableObject
 
     public void UpdateKPIs(AnomalyKPIs kpis)
     {
+        // Fingerprint check for early-exit
+        var fingerprint = $"{kpis.TotalAnomalies}|{kpis.CriticalCount}|{kpis.HighCount}|{kpis.MediumCount}|{kpis.LowCount}|{kpis.UniqueSourceIPs}|{kpis.UniqueTargetIPs}|{kpis.TimeSpan.Ticks}";
+        if (fingerprint == _lastKPIsFingerprint)
+            return;
+        _lastKPIsFingerprint = fingerprint;
+
         TotalAnomalies = kpis.TotalAnomalies;
         CriticalCount = kpis.CriticalCount;
         HighCount = kpis.HighCount;
@@ -59,29 +73,55 @@ public partial class AnomaliesStatisticsViewModel : ObservableObject
 
     public void UpdateTopSources(IEnumerable<AnomalyEndpointViewModel> sources)
     {
+        var sourceList = sources.Take(20).ToList();
+        // Fingerprint: IP + count for each source
+        var fingerprint = string.Join(";", sourceList.Select(s => $"{s.IpAddress}:{s.AnomalyCount}"));
+        if (fingerprint == _lastSourcesFingerprint)
+            return;
+        _lastSourcesFingerprint = fingerprint;
+
         TopSources.Clear();
-        foreach (var source in sources.Take(20))
+        foreach (var source in sourceList)
             TopSources.Add(source);
     }
 
     public void UpdateTopTargets(IEnumerable<AnomalyEndpointViewModel> targets)
     {
+        var targetList = targets.Take(20).ToList();
+        var fingerprint = string.Join(";", targetList.Select(t => $"{t.IpAddress}:{t.AnomalyCount}"));
+        if (fingerprint == _lastTargetsFingerprint)
+            return;
+        _lastTargetsFingerprint = fingerprint;
+
         TopTargets.Clear();
-        foreach (var target in targets.Take(20))
+        foreach (var target in targetList)
             TopTargets.Add(target);
     }
 
     public void UpdateTopPorts(IEnumerable<AnomalyPortViewModel> ports)
     {
+        var portList = ports.Take(15).ToList();
+        var fingerprint = string.Join(";", portList.Select(p => $"{p.Port}:{p.AnomalyCount}"));
+        if (fingerprint == _lastPortsFingerprint)
+            return;
+        _lastPortsFingerprint = fingerprint;
+
         TopPorts.Clear();
-        foreach (var port in ports.Take(15))
+        foreach (var port in portList)
             TopPorts.Add(port);
     }
 
     public void UpdateCategoryBreakdown(IEnumerable<AnomalyCategoryViewModel> categories)
     {
+        // Categories already sorted by caller - no need to re-sort
+        var categoryList = categories.ToList();
+        var fingerprint = string.Join(";", categoryList.Select(c => $"{c.Category}:{c.Count}"));
+        if (fingerprint == _lastCategoriesFingerprint)
+            return;
+        _lastCategoriesFingerprint = fingerprint;
+
         CategoryBreakdown.Clear();
-        foreach (var cat in categories.OrderByDescending(c => c.Count))
+        foreach (var cat in categoryList)
             CategoryBreakdown.Add(cat);
     }
 
@@ -107,5 +147,12 @@ public partial class AnomaliesStatisticsViewModel : ObservableObject
         TopTargets.Clear();
         TopPorts.Clear();
         CategoryBreakdown.Clear();
+
+        // Reset fingerprints to allow fresh population
+        _lastKPIsFingerprint = null;
+        _lastSourcesFingerprint = null;
+        _lastTargetsFingerprint = null;
+        _lastPortsFingerprint = null;
+        _lastCategoriesFingerprint = null;
     }
 }

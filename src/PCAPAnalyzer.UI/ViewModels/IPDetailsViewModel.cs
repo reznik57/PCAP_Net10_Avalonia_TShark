@@ -25,6 +25,10 @@ namespace PCAPAnalyzer.UI.ViewModels
         private string _selectedDirection = "All";
         private ObservableCollection<IPPacketDetail> _allPackets = [];
         private ObservableCollection<IPPacketDetail> _filteredPackets = [];
+
+        // Cached direction counts (computed once in LoadPackets instead of per-access)
+        private int _incomingPacketsCount;
+        private int _outgoingPacketsCount;
         
         public IPDetailsViewModel(EndpointViewModel endpoint, IEnumerable<PacketInfo> packets, bool isSource)
         {
@@ -102,8 +106,9 @@ namespace PCAPAnalyzer.UI.ViewModels
         
         public int FilteredCount => FilteredPackets?.Count ?? 0;
         public int TotalCount => _allPackets?.Count ?? 0;
-        public int IncomingPackets => _allPackets?.Count(p => p.Direction == "Incoming") ?? 0;
-        public int OutgoingPackets => _allPackets?.Count(p => p.Direction == "Outgoing") ?? 0;
+        // Use cached counts (calculated once in LoadPackets instead of per-access Count())
+        public int IncomingPackets => _incomingPacketsCount;
+        public int OutgoingPackets => _outgoingPacketsCount;
         
         // Commands
         public ICommand ExportCommand { get; }
@@ -112,21 +117,25 @@ namespace PCAPAnalyzer.UI.ViewModels
         private void LoadPackets(IEnumerable<PacketInfo> packets, bool isSource)
         {
             var packetDetails = new List<IPPacketDetail>();
-            
+            int incoming = 0, outgoing = 0;
+
             foreach (var packet in packets)
             {
                 // Check if packet involves this IP
-                bool isRelevant = isSource ? 
-                    packet.SourceIP == IPAddress : 
+                bool isRelevant = isSource ?
+                    packet.SourceIP == IPAddress :
                     packet.DestinationIP == IPAddress;
-                
+
                 if (isRelevant)
                 {
                     var direction = packet.SourceIP == IPAddress ? "Outgoing" : "Incoming";
                     var remoteIP = packet.SourceIP == IPAddress ? packet.DestinationIP : packet.SourceIP;
                     var localPort = packet.SourceIP == IPAddress ? packet.SourcePort : packet.DestinationPort;
                     var remotePort = packet.SourceIP == IPAddress ? packet.DestinationPort : packet.SourcePort;
-                    
+
+                    // Count directions during load (instead of per-access Count())
+                    if (direction == "Incoming") incoming++; else outgoing++;
+
                     packetDetails.Add(new IPPacketDetail
                     {
                         PacketNumber = (int)packet.FrameNumber,
@@ -141,10 +150,12 @@ namespace PCAPAnalyzer.UI.ViewModels
                     });
                 }
             }
-            
+
             _allPackets = new ObservableCollection<IPPacketDetail>(
                 packetDetails.OrderBy(p => p.PacketNumber)
             );
+            _incomingPacketsCount = incoming;
+            _outgoingPacketsCount = outgoing;
         }
         
         private void ApplyFilter()

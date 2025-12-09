@@ -33,6 +33,9 @@ public partial class CountryFilterViewModel : ObservableObject
     [ObservableProperty] private bool _showAllFlows = false;
     [ObservableProperty] private int _displayedFlowCount = 10;
 
+    // Hide internal/IPv6 traffic toggle (filters out Internal, IP6_LINK, IP6_LOOP, etc.)
+    [ObservableProperty] private bool _hideInternalTraffic = false;
+
     /// <summary>
     /// Event raised when sort mode changes
     /// </summary>
@@ -47,6 +50,11 @@ public partial class CountryFilterViewModel : ObservableObject
     /// Event raised when display count changes
     /// </summary>
     public event EventHandler? DisplayCountChanged;
+
+    /// <summary>
+    /// Event raised when hide internal traffic toggle changes
+    /// </summary>
+    public event EventHandler? HideInternalTrafficChanged;
 
     public CountryFilterViewModel()
     {
@@ -209,6 +217,15 @@ public partial class CountryFilterViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Property change handler for Hide Internal Traffic toggle
+    /// </summary>
+    partial void OnHideInternalTrafficChanged(bool value)
+    {
+        DebugLogger.Log($"[CountryFilterViewModel] Hide internal traffic: {value}");
+        HideInternalTrafficChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
     /// Gets the friendly name for a sort mode
     /// </summary>
     private string GetSortModeName(int mode)
@@ -228,5 +245,26 @@ public partial class CountryFilterViewModel : ObservableObject
     public string GetSortModeDescription()
     {
         return GetSortModeName(SortMode);
+    }
+
+    /// <summary>
+    /// Checks if a country code represents internal/private/IPv6 local traffic.
+    /// Used by HideInternalTraffic filter.
+    /// </summary>
+    public static bool IsInternalOrIPv6Local(string? countryCode)
+    {
+        if (string.IsNullOrWhiteSpace(countryCode))
+            return false;
+
+        return countryCode.ToUpperInvariant() switch
+        {
+            // IPv4 internal/private
+            "INTERNAL" or "INT" or "PRIV" or "PRV" or "PRIVATE" or "LOCAL" or "LAN" => true,
+            // IPv6 local types
+            "IP6" or "IP6_LINK" or "IP6_LOOP" or "IP6_MCAST" or "IP6_ULA" or "IP6_SITE" or "IP6_ANY" => true,
+            // Public IPv6 should NOT be hidden
+            "IP6_GLOBAL" => false,
+            _ => false
+        };
     }
 }

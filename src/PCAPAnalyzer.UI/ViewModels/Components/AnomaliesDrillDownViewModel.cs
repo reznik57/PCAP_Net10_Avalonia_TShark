@@ -64,15 +64,28 @@ public partial class AnomaliesDrillDownViewModel : ObservableObject
             .Where(a => a.DetectedAt >= windowStart && a.DetectedAt <= windowEnd)
             .ToList();
 
+        // Single-pass severity counting (was 4 separate .Count() calls)
+        int critical = 0, high = 0, medium = 0, low = 0;
+        foreach (var a in windowAnomalies)
+        {
+            switch (a.Severity)
+            {
+                case AnomalySeverity.Critical: critical++; break;
+                case AnomalySeverity.High: high++; break;
+                case AnomalySeverity.Medium: medium++; break;
+                case AnomalySeverity.Low: low++; break;
+            }
+        }
+
         TimeSliceSummary = new AnomalyTimeSliceSummary
         {
             WindowStart = windowStart,
             WindowEnd = windowEnd,
             TotalAnomalies = windowAnomalies.Count,
-            CriticalCount = windowAnomalies.Count(a => a.Severity == AnomalySeverity.Critical),
-            HighCount = windowAnomalies.Count(a => a.Severity == AnomalySeverity.High),
-            MediumCount = windowAnomalies.Count(a => a.Severity == AnomalySeverity.Medium),
-            LowCount = windowAnomalies.Count(a => a.Severity == AnomalySeverity.Low),
+            CriticalCount = critical,
+            HighCount = high,
+            MediumCount = medium,
+            LowCount = low,
             CategoryBreakdown = windowAnomalies
                 .GroupBy(a => a.Category)
                 .ToDictionary(g => g.Key, g => g.Count()),
@@ -187,10 +200,23 @@ public partial class AnomaliesDrillDownViewModel : ObservableObject
         DetailPopupTitle = title;
         DetailPopupSubtitle = subtitle;
         DetailTotalAnomalies = _allDetailAnomalies.Count;
-        DetailCriticalCount = _allDetailAnomalies.Count(a => a.Severity == AnomalySeverity.Critical);
-        DetailHighCount = _allDetailAnomalies.Count(a => a.Severity == AnomalySeverity.High);
-        DetailMediumCount = _allDetailAnomalies.Count(a => a.Severity == AnomalySeverity.Medium);
-        DetailLowCount = _allDetailAnomalies.Count(a => a.Severity == AnomalySeverity.Low);
+
+        // Single-pass severity counting (was 4 separate .Count() calls)
+        int critical = 0, high = 0, medium = 0, low = 0;
+        foreach (var a in _allDetailAnomalies)
+        {
+            switch (a.Severity)
+            {
+                case AnomalySeverity.Critical: critical++; break;
+                case AnomalySeverity.High: high++; break;
+                case AnomalySeverity.Medium: medium++; break;
+                case AnomalySeverity.Low: low++; break;
+            }
+        }
+        DetailCriticalCount = critical;
+        DetailHighCount = high;
+        DetailMediumCount = medium;
+        DetailLowCount = low;
 
         // Category breakdown
         DetailCategoryBreakdown.Clear();

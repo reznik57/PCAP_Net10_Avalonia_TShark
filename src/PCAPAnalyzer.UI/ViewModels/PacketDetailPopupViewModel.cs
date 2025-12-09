@@ -311,11 +311,13 @@ namespace PCAPAnalyzer.UI.ViewModels
             foreach (var packet in packets)
             {
                 var streamId = GetTCPStreamId(packet);
-                if (!streams.ContainsKey(streamId))
+                // TryGetValue: 1 lookup instead of 2 (ContainsKey + indexer)
+                if (!streams.TryGetValue(streamId, out var streamList))
                 {
-                    streams[streamId] = new List<PacketInfo>();
+                    streamList = new List<PacketInfo>();
+                    streams[streamId] = streamList;
                 }
-                streams[streamId].Add(packet);
+                streamList.Add(packet);
             }
             
             return streams;

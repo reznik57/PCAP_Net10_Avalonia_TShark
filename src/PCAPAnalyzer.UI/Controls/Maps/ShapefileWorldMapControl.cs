@@ -7,9 +7,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
-using NetTopologySuite.Features;
 using NetTopologySuite.Geometries;
-using NetTopologySuite.IO;
+using NetTopologySuite.IO.Esri;
 using PCAPAnalyzer.Core.Extensions;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Utilities;
@@ -229,6 +228,7 @@ public class ShapefileWorldMapControl : Control
 
     /// <summary>
     /// Loads country shapes from a Natural Earth shapefile.
+    /// Uses NetTopologySuite.IO.Esri.Shapefile for modern, efficient shapefile reading.
     /// </summary>
     private void LoadShapefile(string shapefilePath)
     {
@@ -250,32 +250,20 @@ public class ShapefileWorldMapControl : Control
 
             _countries.Clear();
 
-            using var reader = new ShapefileDataReader(resolvedPath, new GeometryFactory());
-
-            // Get field indices for country attributes
-            var header = reader.DbaseHeader;
-            int isoA2Index = -1, isoA3Index = -1, nameIndex = -1;
-
-            for (int i = 0; i < header.NumFields; i++)
-            {
-                var fieldName = header.Fields[i].Name.ToUpperInvariant();
-                if (fieldName == "ISO_A2") isoA2Index = i;
-                else if (fieldName == "ISO_A3") isoA3Index = i;
-                else if (fieldName == "NAME" || fieldName == "ADMIN") nameIndex = i;
-            }
-
             double minX = double.MaxValue, minY = double.MaxValue;
             double maxX = double.MinValue, maxY = double.MinValue;
 
-            while (reader.Read())
+            // Use the new NetTopologySuite.IO.Esri API - cleaner and more efficient
+            foreach (var feature in Shapefile.ReadAllFeatures(resolvedPath))
             {
-                var geometry = reader.Geometry;
+                var geometry = feature.Geometry;
                 if (geometry is null) continue;
 
-                // Get country attributes - DBF fields are fixed-width with NULL padding
-                var isoA2 = isoA2Index >= 0 ? reader.GetString(isoA2Index + 1)?.Trim().TrimEnd('\0') : null;
-                var isoA3 = isoA3Index >= 0 ? reader.GetString(isoA3Index + 1)?.Trim().TrimEnd('\0') : null;
-                var name = nameIndex >= 0 ? reader.GetString(nameIndex + 1)?.Trim().TrimEnd('\0') : null;
+                // Access attributes directly by name - no manual index tracking needed
+                var isoA2 = GetAttributeString(feature.Attributes, "ISO_A2");
+                var isoA3 = GetAttributeString(feature.Attributes, "ISO_A3");
+                var name = GetAttributeString(feature.Attributes, "NAME")
+                        ?? GetAttributeString(feature.Attributes, "ADMIN");
 
                 // Use ISO A2 code, fall back to A3 if needed
                 var countryCode = !string.IsNullOrEmpty(isoA2) && isoA2 != "-99" ? isoA2 : isoA3;
@@ -311,6 +299,24 @@ public class ShapefileWorldMapControl : Control
         catch (Exception ex)
         {
             DebugLogger.Log($"[ShapefileWorldMap] Error loading shapefile: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Safely extracts a string attribute from feature attributes.
+    /// Handles null values and trims whitespace/NULL characters from DBF fields.
+    /// </summary>
+    private static string? GetAttributeString(NetTopologySuite.Features.IAttributesTable? attributes, string name)
+    {
+        if (attributes is null) return null;
+        try
+        {
+            var value = attributes[name];
+            return value?.ToString()?.Trim().TrimEnd('\0');
+        }
+        catch
+        {
+            return null;
         }
     }
 

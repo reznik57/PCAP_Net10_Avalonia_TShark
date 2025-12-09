@@ -18,6 +18,33 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 /// </summary>
 public partial class DashboardStatisticsViewModel : ObservableObject
 {
+    // ==================== CHANGE DETECTION (Performance Optimization) ====================
+
+    /// <summary>
+    /// Tracks last statistics fingerprint to skip redundant updates.
+    /// Format: "{TotalPackets}|{TotalBytes}|{TopSourcesCount}|{TopDestCount}"
+    /// </summary>
+    private string? _lastStatisticsFingerprint;
+
+    /// <summary>
+    /// Creates a fingerprint for statistics to detect if data actually changed.
+    /// Avoids expensive table rebuilds when data is identical.
+    /// </summary>
+    private static string CreateStatisticsFingerprint(NetworkStatistics stats)
+    {
+        return $"{stats.TotalPackets}|{stats.TotalBytes}|{stats.TopSources?.Count ?? 0}|{stats.TopDestinations?.Count ?? 0}|{stats.TopPorts?.Count ?? 0}";
+    }
+
+    /// <summary>
+    /// Invalidates the fingerprint cache, forcing next update to rebuild tables.
+    /// Call when filters change or new file is loaded.
+    /// </summary>
+    public void InvalidateCache()
+    {
+        _lastStatisticsFingerprint = null;
+        DebugLogger.Log("[DashboardStatisticsViewModel] Cache invalidated - next update will rebuild tables");
+    }
+
     // ==================== SUMMARY STATISTICS ====================
 
     [ObservableProperty] private string _analysisSummary = "No data loaded";
@@ -268,27 +295,48 @@ public partial class DashboardStatisticsViewModel : ObservableObject
             // TotalStreamCount = directional 4-tuples (matches Packet Analysis)
             // TotalConversationCount = bidirectional conversations (lower count, used for tables)
             ActiveConversations = statistics.TotalStreamCount;  // Use directional streams for consistency
-            ThreatCount = statistics.DetectedThreats?.Count ?? statistics.Threats?.Count ?? 0;
-            CriticalThreats = statistics.DetectedThreats?.Count(t => t.Severity == ThreatSeverity.Critical)
-                             ?? statistics.Threats?.Count(t => t.Severity == ThreatSeverity.Critical) ?? 0;
+
+            // Single-pass threat severity counting (was 6 separate .Count() calls)
+            int critical = 0, low = 0, medium = 0;
+            if (statistics.DetectedThreats is not null && statistics.DetectedThreats.Count > 0)
+            {
+                foreach (var t in statistics.DetectedThreats)
+                {
+                    switch (t.Severity)
+                    {
+                        case ThreatSeverity.Critical: critical++; break;
+                        case ThreatSeverity.Low: low++; break;
+                        case ThreatSeverity.Medium: medium++; break;
+                    }
+                }
+                ThreatCount = statistics.DetectedThreats.Count;
+            }
+            else if (statistics.Threats is not null && statistics.Threats.Count > 0)
+            {
+                foreach (var t in statistics.Threats)
+                {
+                    switch (t.Severity)
+                    {
+                        case ThreatSeverity.Critical: critical++; break;
+                        case ThreatSeverity.Low: low++; break;
+                        case ThreatSeverity.Medium: medium++; break;
+                    }
+                }
+                ThreatCount = statistics.Threats.Count;
+            }
+            else
+            {
+                ThreatCount = 0;
+            }
+            CriticalThreats = critical;
+            LowAnomalies = low;
+            MediumAnomalies = medium;
             HasThreats = ThreatCount > 0;
 
             DebugLogger.Log($"[DashboardStatisticsViewModel] ThreatCount: {ThreatCount}, DetectedThreats: {statistics.DetectedThreats?.Count ?? 0}, Threats: {statistics.Threats?.Count ?? 0}");
 
             // Analysis summary
             AnalysisSummary = GenerateAnalysisSummary(statistics);
-
-            // Anomaly breakdown
-            if (statistics.DetectedThreats is not null && statistics.DetectedThreats.Any())
-            {
-                LowAnomalies = statistics.DetectedThreats.Count(t => t.Severity == ThreatSeverity.Low);
-                MediumAnomalies = statistics.DetectedThreats.Count(t => t.Severity == ThreatSeverity.Medium);
-            }
-            else if (statistics.Threats is not null && statistics.Threats.Any())
-            {
-                LowAnomalies = statistics.Threats.Count(t => t.Severity == ThreatSeverity.Low);
-                MediumAnomalies = statistics.Threats.Count(t => t.Severity == ThreatSeverity.Medium);
-            }
 
             // Packet Size Distribution statistics
             if (statistics.PacketSizeDistribution is not null)
@@ -355,6 +403,7 @@ public partial class DashboardStatisticsViewModel : ObservableObject
 
     /// <summary>
     /// Updates all data tables with new statistics.
+    /// Uses fingerprinting to skip redundant updates when data hasn't changed.
     /// </summary>
     private void UpdateTables(NetworkStatistics statistics)
     {
@@ -365,8 +414,18 @@ public partial class DashboardStatisticsViewModel : ObservableObject
             {
                 DebugLogger.Log("[DashboardStatisticsViewModel] No statistics for tables");
                 InitializeEmptyTables();
+                _lastStatisticsFingerprint = null;
                 return;
             }
+
+            // Early exit if statistics haven't changed (performance optimization)
+            var fingerprint = CreateStatisticsFingerprint(statistics);
+            if (fingerprint == _lastStatisticsFingerprint)
+            {
+                DebugLogger.Log($"[DashboardStatisticsViewModel] SKIPPING UpdateTables - data unchanged (fingerprint: {fingerprint})");
+                return;
+            }
+            _lastStatisticsFingerprint = fingerprint;
 
             DebugLogger.Log($"[DashboardStatisticsViewModel] UpdateTables - TopSources: {statistics.TopSources?.Count ?? 0}, TopDestinations: {statistics.TopDestinations?.Count ?? 0}, TopPorts: {statistics.TopPorts?.Count ?? 0}, TopConversations: {statistics.TopConversations?.Count ?? 0}");
 
@@ -529,30 +588,21 @@ public partial class DashboardStatisticsViewModel : ObservableObject
     {
         var ipTotals = new Dictionary<string, (long packets, long bytes, string country, string countryCode)>();
 
+        // TryGetValue: 1 lookup instead of 3 (ContainsKey + 2× indexer)
         foreach (var source in sources)
         {
-            if (!ipTotals.ContainsKey(source.Address))
-            {
-                ipTotals[source.Address] = (source.PacketCount, source.ByteCount, source.Country, source.CountryCode);
-            }
-            else
-            {
-                var current = ipTotals[source.Address];
+            if (ipTotals.TryGetValue(source.Address, out var current))
                 ipTotals[source.Address] = (current.packets + source.PacketCount, current.bytes + source.ByteCount, source.Country, source.CountryCode);
-            }
+            else
+                ipTotals[source.Address] = (source.PacketCount, source.ByteCount, source.Country, source.CountryCode);
         }
 
         foreach (var dest in destinations)
         {
-            if (!ipTotals.ContainsKey(dest.Address))
-            {
-                ipTotals[dest.Address] = (dest.PacketCount, dest.ByteCount, dest.Country, dest.CountryCode);
-            }
-            else
-            {
-                var current = ipTotals[dest.Address];
+            if (ipTotals.TryGetValue(dest.Address, out var current))
                 ipTotals[dest.Address] = (current.packets + dest.PacketCount, current.bytes + dest.ByteCount, dest.Country, dest.CountryCode);
-            }
+            else
+                ipTotals[dest.Address] = (dest.PacketCount, dest.ByteCount, dest.Country, dest.CountryCode);
         }
 
         return ipTotals;

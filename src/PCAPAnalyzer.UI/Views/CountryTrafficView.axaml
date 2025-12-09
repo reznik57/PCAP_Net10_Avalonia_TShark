@@ -274,6 +274,7 @@
                                    </Grid>
                                    <!-- Filter options -->
                                    <CheckBox Content="Hide no-traffic" IsChecked="{Binding HideCountriesWithoutTraffic}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                   <CheckBox Content="Hide internal/IPv6" IsChecked="{Binding HideInternalTraffic}" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextSecondaryBrush}" ToolTip.Tip="Hide internal network and IPv6 local traffic from tables"/>
                                </StackPanel>
                            </Border>
                        </Grid>
@@ -299,10 +300,12 @@
                                        <ItemsControl.ItemTemplate>
                                            <DataTemplate>
                                                <Border Margin="20,0" Background="{DynamicResource BackgroundLevel1}" CornerRadius="4" Padding="4,2">
-                                                   <Grid ColumnDefinitions="30,140,*,100,80,60">
+                                                   <Grid ColumnDefinitions="30,16,140,*,100,80,60">
                                                        <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='#{0}'}" FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                       <TextBlock Grid.Column="1" Text="{Binding CountryDisplay}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
-                                                       <Grid Grid.Column="2" Margin="10,0">
+                                                       <!-- Risk indicator (red dot for high-risk countries) -->
+                                                       <Ellipse Grid.Column="1" Width="8" Height="8" Fill="{Binding RiskIndicatorColor}" IsVisible="{Binding ShowRiskIndicator}" VerticalAlignment="Center" ToolTip.Tip="High-risk country"/>
+                                                       <TextBlock Grid.Column="2" Text="{Binding CountryDisplay}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
+                                                       <Grid Grid.Column="3" Margin="10,0">
                                                            <Border x:Name="SourcePacketsTrack" Background="{DynamicResource BorderPrimary}" CornerRadius="3" Height="20">
                                                                <Grid>
                                                                    <Border Background="{Binding PacketPercentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left">
@@ -317,9 +320,9 @@
                                                                </Grid>
                                                            </Border>
                                                        </Grid>
-                                                       <TextBlock Grid.Column="3" Text="{Binding PacketsFormatted}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackInfo}" HorizontalAlignment="Right"/>
-                                                       <TextBlock Grid.Column="4" Text="{Binding Continent}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"/>
-                                                       <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                       <TextBlock Grid.Column="4" Text="{Binding PacketsFormatted}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackInfo}" HorizontalAlignment="Right"/>
+                                                       <TextBlock Grid.Column="5" Text="{Binding Continent}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"/>
+                                                       <Button Grid.Column="6" Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
                                                    </Grid>
                                                </Border>
                                            </DataTemplate>
@@ -343,10 +346,12 @@
                                        <ItemsControl.ItemTemplate>
                                            <DataTemplate>
                                                <Border Margin="20,0" Background="{DynamicResource BackgroundLevel1}" CornerRadius="4" Padding="4,2">
-                                                   <Grid ColumnDefinitions="30,140,*,100,80,60">
+                                                   <Grid ColumnDefinitions="30,16,140,*,100,80,60">
                                                        <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='#{0}'}" FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                       <TextBlock Grid.Column="1" Text="{Binding CountryDisplay}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
-                                                       <Grid Grid.Column="2" Margin="10,0">
+                                                       <!-- Risk indicator (red dot for high-risk countries) -->
+                                                       <Ellipse Grid.Column="1" Width="8" Height="8" Fill="{Binding RiskIndicatorColor}" IsVisible="{Binding ShowRiskIndicator}" VerticalAlignment="Center" ToolTip.Tip="High-risk country"/>
+                                                       <TextBlock Grid.Column="2" Text="{Binding CountryDisplay}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
+                                                       <Grid Grid.Column="3" Margin="10,0">
                                                            <Border x:Name="SourceBytesTrack" Background="{DynamicResource BorderPrimary}" CornerRadius="3" Height="20">
                                                                <Grid>
                                                                    <Border Background="{Binding BytePercentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left">
@@ -361,9 +366,9 @@
                                                                </Grid>
                                                            </Border>
                                                        </Grid>
-                                                       <TextBlock Grid.Column="3" Text="{Binding BytesFormatted}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackInfo}" HorizontalAlignment="Right"/>
-                                                       <TextBlock Grid.Column="4" Text="{Binding Continent}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"/>
-                                                       <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                       <TextBlock Grid.Column="4" Text="{Binding BytesFormatted}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackInfo}" HorizontalAlignment="Right"/>
+                                                       <TextBlock Grid.Column="5" Text="{Binding Continent}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"/>
+                                                       <Button Grid.Column="6" Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
                                                    </Grid>
                                                </Border>
                                            </DataTemplate>
@@ -390,10 +395,12 @@
                                        <ItemsControl.ItemTemplate>
                                            <DataTemplate>
                                                <Border Margin="20,0" Background="{DynamicResource BackgroundLevel1}" CornerRadius="4" Padding="4,2">
-                                                   <Grid ColumnDefinitions="30,140,*,100,80,60">
+                                                   <Grid ColumnDefinitions="30,16,140,*,100,80,60">
                                                        <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='#{0}'}" FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                       <TextBlock Grid.Column="1" Text="{Binding CountryDisplay}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
-                                                       <Grid Grid.Column="2" Margin="10,0">
+                                                       <!-- Risk indicator (red dot for high-risk countries) -->
+                                                       <Ellipse Grid.Column="1" Width="8" Height="8" Fill="{Binding RiskIndicatorColor}" IsVisible="{Binding ShowRiskIndicator}" VerticalAlignment="Center" ToolTip.Tip="High-risk country"/>
+                                                       <TextBlock Grid.Column="2" Text="{Binding CountryDisplay}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
+                                                       <Grid Grid.Column="3" Margin="10,0">
                                                            <Border x:Name="DestinationPacketsTrack" Background="{DynamicResource BorderPrimary}" CornerRadius="3" Height="20">
                                                                <Grid>
                                                                    <Border Background="{Binding PacketPercentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left">
@@ -408,9 +415,9 @@
                                                                </Grid>
                                                            </Border>
                                                        </Grid>
-                                                       <TextBlock Grid.Column="3" Text="{Binding PacketsFormatted}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackInfo}" HorizontalAlignment="Right"/>
-                                                       <TextBlock Grid.Column="4" Text="{Binding Continent}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"/>
-                                                       <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                       <TextBlock Grid.Column="4" Text="{Binding PacketsFormatted}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackInfo}" HorizontalAlignment="Right"/>
+                                                       <TextBlock Grid.Column="5" Text="{Binding Continent}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"/>
+                                                       <Button Grid.Column="6" Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
                                                    </Grid>
                                                </Border>
                                            </DataTemplate>
@@ -434,10 +441,12 @@
                                        <ItemsControl.ItemTemplate>
                                            <DataTemplate>
                                                <Border Margin="20,0" Background="{DynamicResource BackgroundLevel1}" CornerRadius="4" Padding="4,2">
-                                                   <Grid ColumnDefinitions="30,140,*,100,80,60">
+                                                   <Grid ColumnDefinitions="30,16,140,*,100,80,60">
                                                        <TextBlock Grid.Column="0" Text="{Binding Rank, StringFormat='#{0}'}" FontSize="{StaticResource FontSizeMedium}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                                       <TextBlock Grid.Column="1" Text="{Binding CountryDisplay}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
-                                                       <Grid Grid.Column="2" Margin="10,0">
+                                                       <!-- Risk indicator (red dot for high-risk countries) -->
+                                                       <Ellipse Grid.Column="1" Width="8" Height="8" Fill="{Binding RiskIndicatorColor}" IsVisible="{Binding ShowRiskIndicator}" VerticalAlignment="Center" ToolTip.Tip="High-risk country"/>
+                                                       <TextBlock Grid.Column="2" Text="{Binding CountryDisplay}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis"/>
+                                                       <Grid Grid.Column="3" Margin="10,0">
                                                            <Border x:Name="DestinationBytesTrack" Background="{DynamicResource BorderPrimary}" CornerRadius="3" Height="20">
                                                                <Grid>
                                                                    <Border Background="{Binding BytePercentage, Converter={StaticResource TrafficIntensityGradientConverter}}" CornerRadius="3" HorizontalAlignment="Left">
@@ -452,9 +461,9 @@
                                                                </Grid>
                                                            </Border>
                                                        </Grid>
-                                                       <TextBlock Grid.Column="3" Text="{Binding BytesFormatted}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackInfo}" HorizontalAlignment="Right"/>
-                                                       <TextBlock Grid.Column="4" Text="{Binding Continent}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"/>
-                                                       <Button Grid.Column="5" Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
+                                                       <TextBlock Grid.Column="4" Text="{Binding BytesFormatted}" FontSize="{StaticResource FontSizeBase}" FontWeight="SemiBold" Foreground="{DynamicResource SlackInfo}" HorizontalAlignment="Right"/>
+                                                       <TextBlock Grid.Column="5" Text="{Binding Continent}" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextMuted}" Margin="10,0,0,0"/>
+                                                       <Button Grid.Column="6" Command="{Binding $parent[UserControl].DataContext.ShowCountryDetailsCommand}" CommandParameter="{Binding}" Classes="details-btn"><TextBlock Text="Details"/></Button>
                                                    </Grid>
                                                </Border>
                                            </DataTemplate>

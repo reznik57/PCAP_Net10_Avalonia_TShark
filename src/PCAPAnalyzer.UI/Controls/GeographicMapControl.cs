@@ -24,6 +24,10 @@ namespace PCAPAnalyzer.UI.Controls
         private readonly List<TrafficFlowAnimation> _trafficFlows = [];
         private readonly Dictionary<string, HeatMapPoint> _heatMapPoints = [];
 
+        // Cached max packets to avoid O(n²) in CalculateIntensity
+        private long _cachedMaxPackets;
+        private int _cachedCountryDataVersion;
+
         #endregion
 
         #region Styled Properties
@@ -370,12 +374,24 @@ namespace PCAPAnalyzer.UI.Controls
             return new Point(x, y);
         }
 
+        /// <summary>
+        /// Calculates intensity using cached max packets.
+        /// Previous: O(n) per country = O(n²) total. Now: O(1) per country.
+        /// </summary>
         private double CalculateIntensity(CountryTrafficStatistics stats)
         {
             if (CountryData is null) return 0;
-            var maxPackets = CountryData.Values.Max(s => s.TotalPackets);
-            if (maxPackets == 0) return 0;
-            return Math.Min(1.0, stats.TotalPackets / (double)maxPackets);
+
+            // Cache max packets when data changes (version check)
+            var currentVersion = CountryData.Count;
+            if (_cachedCountryDataVersion != currentVersion || _cachedMaxPackets == 0)
+            {
+                _cachedMaxPackets = CountryData.Values.Max(s => s.TotalPackets);
+                _cachedCountryDataVersion = currentVersion;
+            }
+
+            if (_cachedMaxPackets == 0) return 0;
+            return Math.Min(1.0, stats.TotalPackets / (double)_cachedMaxPackets);
         }
 
         private Color GetProtocolColor(CountryTrafficStatistics stats)

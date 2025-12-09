@@ -217,6 +217,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         Filter.SortModeChanged += OnFilterSortModeChanged;
         Filter.ExcludedCountriesChanged += OnExcludedCountriesChanged;
         Filter.DisplayCountChanged += OnDisplayCountChanged;
+        Filter.HideInternalTrafficChanged += OnHideInternalTrafficChanged;
         UIState.ContinentChanged += OnContinentChanged;
 
         // Forward PropertyChanged from component VMs to this VM for delegated properties
@@ -277,14 +278,22 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
 
         if (statistics is null) return;
 
-        // DEFENSIVE: Don't overwrite good country data with empty data from filter events
+        // DEFENSIVE: Don't overwrite good country data with empty data from race conditions
+        // But DO allow legitimate 0-country results from filters (e.g., filtering to Antarctica)
         var countryCount = statistics.CountryStatistics?.Count ?? 0;
         var currentCountryCount = _currentStatistics?.CountryStatistics?.Count ?? 0;
 
-        if (countryCount == 0 && currentCountryCount > 0)
+        // Only block if this looks like a data loss bug (same total packets but 0 countries)
+        // Allow 0 countries if: (1) total packets also changed, or (2) GlobalFilterState is active
+        var isLikelyDataLoss = countryCount == 0
+            && currentCountryCount > 0
+            && statistics.TotalPackets == (_currentStatistics?.TotalPackets ?? 0)
+            && !IsGlobalFilterActive;
+
+        if (isLikelyDataLoss)
         {
-            DebugLogger.Log($"[CountryTrafficViewModel] SKIPPING update - would replace {currentCountryCount} countries with 0 countries");
-            DebugLogger.Log($"[CountryTrafficViewModel] Preserving existing country data");
+            DebugLogger.Log($"[CountryTrafficViewModel] SKIPPING update - likely data loss (same packets, 0 countries)");
+            DebugLogger.Log($"[CountryTrafficViewModel] Preserving existing {currentCountryCount} countries");
             return;
         }
 
@@ -617,6 +626,17 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         // Tables will automatically reflect changes through bindings
     }
 
+    private void OnHideInternalTrafficChanged(object? sender, EventArgs e)
+    {
+        DebugLogger.Log($"[CountryTrafficViewModel] Hide internal traffic changed to: {Filter.HideInternalTraffic}");
+        // Refresh tables with new filter state
+        if (_currentStatistics is not null)
+        {
+            Tables.HideInternalTraffic = Filter.HideInternalTraffic;
+            Tables.UpdateTables(_currentStatistics);
+        }
+    }
+
     private void OnContinentChanged(object? sender, string continentCode)
     {
         DebugLogger.Log($"[CountryTrafficViewModel] Continent changed to: {continentCode}");
@@ -758,6 +778,12 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     {
         get => Filter.DisplayedFlowCount;
         set => Filter.DisplayedFlowCount = value;
+    }
+
+    public bool HideInternalTraffic
+    {
+        get => Filter.HideInternalTraffic;
+        set => Filter.HideInternalTraffic = value;
     }
 
     // ==================== TABLE PROPERTIES ====================
@@ -1006,6 +1032,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
             Filter.SortModeChanged -= OnFilterSortModeChanged;
             Filter.ExcludedCountriesChanged -= OnExcludedCountriesChanged;
             Filter.DisplayCountChanged -= OnDisplayCountChanged;
+            Filter.HideInternalTrafficChanged -= OnHideInternalTrafficChanged;
         }
 
         if (UIState is not null)

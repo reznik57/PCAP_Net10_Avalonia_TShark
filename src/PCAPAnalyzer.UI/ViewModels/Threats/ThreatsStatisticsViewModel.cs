@@ -7,6 +7,7 @@ using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.UI.Models;
 using PCAPAnalyzer.UI.ViewModels.Components;
+using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels.Threats;
@@ -14,9 +15,14 @@ namespace PCAPAnalyzer.UI.ViewModels.Threats;
 /// <summary>
 /// Manages threat statistics, metrics display, table data aggregation, and sorting.
 /// Extracted from ThreatsViewModel to isolate statistics calculations.
+/// Uses fingerprinting for early-exit optimization.
 /// </summary>
 public partial class ThreatsStatisticsViewModel : ObservableObject
 {
+    // Fingerprints for early-exit optimization
+    private string? _lastMetricsFingerprint;
+    private string? _lastTableDataFingerprint;
+
     // ==================== SUMMARY METRICS ====================
 
     [ObservableProperty] private int _totalThreats;
@@ -62,11 +68,17 @@ public partial class ThreatsStatisticsViewModel : ObservableObject
     private ObservableCollection<AffectedIPViewModel> _topDestinationIPs = [];
 
     /// <summary>
-    /// Updates all statistics from SecurityMetrics
+    /// Updates all statistics from SecurityMetrics with fingerprinting for early-exit.
     /// </summary>
     public void UpdateFromMetrics(SecurityMetrics? metrics)
     {
         if (metrics is null) return;
+
+        // Fingerprint check for early-exit
+        var fingerprint = $"{metrics.TotalThreats}|{metrics.CriticalThreats}|{metrics.HighThreats}|{metrics.MediumThreats}|{metrics.LowThreats}|{metrics.OverallRiskScore:F2}";
+        if (fingerprint == _lastMetricsFingerprint)
+            return;
+        _lastMetricsFingerprint = fingerprint;
 
         TotalThreats = metrics.TotalThreats;
         CriticalThreats = metrics.CriticalThreats;
@@ -111,26 +123,57 @@ public partial class ThreatsStatisticsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Updates side-by-side table data from threats list
+    /// Updates side-by-side table data from threats list with fingerprinting for early-exit.
     /// </summary>
     public void UpdateTableData(List<EnhancedSecurityThreat> threats)
     {
-        if (!threats.Any()) return;
+        if (!threats.Any())
+        {
+            if (_lastTableDataFingerprint == "empty")
+                return;
+            _lastTableDataFingerprint = "empty";
+            TopAffectedPortsByCount.Clear();
+            TopAffectedPortsBySeverity.Clear();
+            TopSourceIPs.Clear();
+            TopDestinationIPs.Clear();
+            return;
+        }
 
-        // Top Affected Ports by Count
-        var portsByCount = threats
+        // Generate fingerprint from threat count and top ports
+        var fingerprint = $"{threats.Count}|{threats.Sum(t => t.Port)}|{threats.Count(t => t.Port > 0)}";
+        if (fingerprint == _lastTableDataFingerprint)
+        {
+            DebugLogger.Log("[ThreatsStatisticsViewModel] SKIPPING UpdateTableData - data unchanged");
+            return;
+        }
+        _lastTableDataFingerprint = fingerprint;
+
+        // Pre-group ports once for both queries (avoid duplicate GroupBy)
+        var portGroups = threats
             .Where(t => t.Port > 0)
             .GroupBy(t => new { t.Port, t.Protocol })
-            .Select(g => new AffectedPortViewModel
+            .Select(g => new
             {
-                Port = g.Key.Port,
-                Protocol = g.Key.Protocol ?? "TCP",
-                ServiceName = ThreatDisplayHelpers.GetServiceName(g.Key.Port),
+                g.Key.Port,
+                g.Key.Protocol,
                 ThreatCount = g.Count(),
-                SeverityScore = g.Average(t => (int)t.Severity)
+                MaxSeverity = g.Max(t => (int)t.Severity),
+                AvgSeverity = g.Average(t => (int)t.Severity)
             })
+            .ToList();
+
+        // Top Affected Ports by Count
+        var portsByCount = portGroups
             .OrderByDescending(p => p.ThreatCount)
             .Take(10)
+            .Select(p => new AffectedPortViewModel
+            {
+                Port = p.Port,
+                Protocol = p.Protocol ?? "TCP",
+                ServiceName = ThreatDisplayHelpers.GetServiceName(p.Port),
+                ThreatCount = p.ThreatCount,
+                SeverityScore = p.AvgSeverity
+            })
             .ToList();
 
         var totalPortThreats = portsByCount.Sum(p => p.ThreatCount);
@@ -142,20 +185,18 @@ public partial class ThreatsStatisticsViewModel : ObservableObject
         }
         TopAffectedPortsByCount = new ObservableCollection<AffectedPortViewModel>(portsByCount);
 
-        // Top Affected Ports by Severity
-        var portsBySeverity = threats
-            .Where(t => t.Port > 0)
-            .GroupBy(t => new { t.Port, t.Protocol })
-            .Select(g => new AffectedPortViewModel
-            {
-                Port = g.Key.Port,
-                Protocol = g.Key.Protocol ?? "TCP",
-                ServiceName = ThreatDisplayHelpers.GetServiceName(g.Key.Port),
-                ThreatCount = g.Count(),
-                SeverityScore = g.Max(t => (int)t.Severity) + g.Average(t => (int)t.Severity)
-            })
-            .OrderByDescending(p => p.SeverityScore)
+        // Top Affected Ports by Severity (reuse pre-grouped data)
+        var portsBySeverity = portGroups
+            .OrderByDescending(p => p.MaxSeverity + p.AvgSeverity)
             .Take(10)
+            .Select(p => new AffectedPortViewModel
+            {
+                Port = p.Port,
+                Protocol = p.Protocol ?? "TCP",
+                ServiceName = ThreatDisplayHelpers.GetServiceName(p.Port),
+                ThreatCount = p.ThreatCount,
+                SeverityScore = p.MaxSeverity + p.AvgSeverity
+            })
             .ToList();
 
         var maxSeverityScore = portsBySeverity.Count > 0 ? portsBySeverity.Max(p => p.SeverityScore) : 1;

@@ -25,6 +25,19 @@ public partial class CountryTableViewModel : ObservableObject
     /// </summary>
     public Func<string, CountryTableContext, IReadOnlyList<double>?>? TimelineBucketProvider { get; set; }
 
+    /// <summary>
+    /// Cache for timeline bucket computations to avoid redundant calculations.
+    /// Key: (CountryCode, Context), Value: computed timeline buckets
+    /// Cleared when statistics change (new PCAP loaded).
+    /// </summary>
+    private readonly Dictionary<(string Code, CountryTableContext Ctx), IReadOnlyList<double>?> _timelineBucketCache = new();
+
+    /// <summary>
+    /// When true, filters out internal/private/IPv6 local traffic from tables.
+    /// Set by parent ViewModel when user toggles the filter.
+    /// </summary>
+    public bool HideInternalTraffic { get; set; }
+
     // Country tables
     [ObservableProperty] private ObservableCollection<CountryTableItem> _countriesByPackets = [];
     [ObservableProperty] private ObservableCollection<CountryTableItem> _countriesByBytes = [];
@@ -53,6 +66,9 @@ public partial class CountryTableViewModel : ObservableObject
     {
         _currentStatistics = statistics;
 
+        // Clear timeline bucket cache when new statistics arrive (new PCAP or re-analysis)
+        _timelineBucketCache.Clear();
+
         if (statistics?.CountryStatistics is null)
         {
             DebugLogger.Log("[CountryTableViewModel] UpdateTables: No country statistics available");
@@ -79,16 +95,22 @@ public partial class CountryTableViewModel : ObservableObject
     /// </summary>
     private void UpdateCountryTables(NetworkStatistics statistics)
     {
-        // Calculate PUBLIC traffic totals (exclude INT and IP6)
-        var publicCountries = statistics.CountryStatistics
-            .Where(kvp => kvp.Key != "INT" && kvp.Key != "IP6" && kvp.Key != "INTERNAL" && kvp.Key != "IPV6" && kvp.Key != "PRIV" && kvp.Key != "PRV")
-            .ToList();
+        // Apply HideInternalTraffic filter to all countries list
+        var filteredCountries = HideInternalTraffic
+            ? statistics.CountryStatistics.Where(kvp => !CountryFilterViewModel.IsInternalOrIPv6Local(kvp.Key))
+            : statistics.CountryStatistics.AsEnumerable();
 
-        var totalPackets = publicCountries.Sum(kvp => kvp.Value.TotalPackets);
-        var totalBytes = publicCountries.Sum(kvp => kvp.Value.TotalBytes);
+        // Single-pass: calculate PUBLIC traffic totals (was 2 separate Sum() calls)
+        long totalPackets = 0, totalBytes = 0;
+        foreach (var kvp in statistics.CountryStatistics)
+        {
+            if (IsExcludedFromPublicTraffic(kvp.Key)) continue;
+            totalPackets += kvp.Value.TotalPackets;
+            totalBytes += kvp.Value.TotalBytes;
+        }
 
-        // Create country table items
-        var allCountries = statistics.CountryStatistics
+        // Create country table items (using filtered list when HideInternalTraffic is enabled)
+        var allCountries = filteredCountries
             .Select(kvp =>
             {
                 var stats = kvp.Value;
@@ -272,16 +294,21 @@ public partial class CountryTableViewModel : ObservableObject
             return;
         }
 
-        // Calculate PUBLIC traffic totals (exclude INT and IP6)
-        var publicCountries = statistics.CountryStatistics
-            .Where(kvp => kvp.Key != "INT" && kvp.Key != "IP6" && kvp.Key != "INTERNAL" && kvp.Key != "IPV6" && kvp.Key != "PRIV" && kvp.Key != "PRV")
-            .ToList();
+        // Apply HideInternalTraffic filter
+        var filteredCountries = HideInternalTraffic
+            ? statistics.CountryStatistics.Where(kvp => !CountryFilterViewModel.IsInternalOrIPv6Local(kvp.Key))
+            : statistics.CountryStatistics.AsEnumerable();
 
-        // CRITICAL: Use separate totals for source/destination to get correct percentages
-        var totalOutgoingPackets = publicCountries.Sum(kvp => kvp.Value.OutgoingPackets);
-        var totalOutgoingBytes = publicCountries.Sum(kvp => kvp.Value.OutgoingBytes);
-        var totalIncomingPackets = publicCountries.Sum(kvp => kvp.Value.IncomingPackets);
-        var totalIncomingBytes = publicCountries.Sum(kvp => kvp.Value.IncomingBytes);
+        // Single-pass: Calculate PUBLIC traffic totals for source/destination (was 4 separate Sum() calls)
+        long totalOutgoingPackets = 0, totalOutgoingBytes = 0, totalIncomingPackets = 0, totalIncomingBytes = 0;
+        foreach (var kvp in statistics.CountryStatistics)
+        {
+            if (IsExcludedFromPublicTraffic(kvp.Key)) continue;
+            totalOutgoingPackets += kvp.Value.OutgoingPackets;
+            totalOutgoingBytes += kvp.Value.OutgoingBytes;
+            totalIncomingPackets += kvp.Value.IncomingPackets;
+            totalIncomingBytes += kvp.Value.IncomingBytes;
+        }
 
         DebugLogger.Log($"[CountryTableViewModel] Source/Dest totals - Outgoing: {totalOutgoingPackets:N0} pkts, {totalOutgoingBytes:N0} bytes | Incoming: {totalIncomingPackets:N0} pkts, {totalIncomingBytes:N0} bytes");
 
@@ -299,8 +326,8 @@ public partial class CountryTableViewModel : ObservableObject
             DebugLogger.Log($"  {country.Key} ({country.Value.CountryName}): Total={country.Value.TotalPackets:N0}, Out={country.Value.OutgoingPackets:N0} ({outPct:F1}%), In={country.Value.IncomingPackets:N0} ({inPct:F1}%)");
         }
 
-        // Source countries
-        var sourceCountries = statistics.CountryStatistics
+        // Source countries (using filtered list when HideInternalTraffic is enabled)
+        var sourceCountries = filteredCountries
             .Where(kvp => kvp.Value.OutgoingPackets > 0)
             .Select(kvp => new CountryTableItem(
                 kvp.Key,
@@ -345,8 +372,8 @@ public partial class CountryTableViewModel : ObservableObject
             })
             .ToList();
 
-        // Destination countries
-        var destinationCountries = statistics.CountryStatistics
+        // Destination countries (using filtered list when HideInternalTraffic is enabled)
+        var destinationCountries = filteredCountries
             .Where(kvp => kvp.Value.IncomingPackets > 0)
             .Select(kvp => new CountryTableItem(
                 kvp.Key,
@@ -391,17 +418,17 @@ public partial class CountryTableViewModel : ObservableObject
             })
             .ToList();
 
-        // Populate timeline data if provider is available
+        // Populate timeline data if provider is available (using cache to avoid recomputation)
         if (TimelineBucketProvider is not null)
         {
             foreach (var item in sourceByPackets)
-                item.TimelineBuckets = TimelineBucketProvider(item.CountryCode, item.Context);
+                item.TimelineBuckets = GetCachedTimelineBuckets(item.CountryCode, item.Context);
             foreach (var item in sourceByBytes)
-                item.TimelineBuckets = TimelineBucketProvider(item.CountryCode, item.Context);
+                item.TimelineBuckets = GetCachedTimelineBuckets(item.CountryCode, item.Context);
             foreach (var item in destinationByPackets)
-                item.TimelineBuckets = TimelineBucketProvider(item.CountryCode, item.Context);
+                item.TimelineBuckets = GetCachedTimelineBuckets(item.CountryCode, item.Context);
             foreach (var item in destinationByBytes)
-                item.TimelineBuckets = TimelineBucketProvider(item.CountryCode, item.Context);
+                item.TimelineBuckets = GetCachedTimelineBuckets(item.CountryCode, item.Context);
         }
 
         // Update collections
@@ -503,6 +530,25 @@ public partial class CountryTableViewModel : ObservableObject
         => ContinentData.GetContinentDisplayName(countryCode);
 
     /// <summary>
+    /// Gets timeline buckets with caching to avoid redundant calculations.
+    /// Cache is cleared when statistics change (new PCAP loaded).
+    /// </summary>
+    private IReadOnlyList<double>? GetCachedTimelineBuckets(string countryCode, CountryTableContext context)
+    {
+        if (TimelineBucketProvider is null)
+            return null;
+
+        var key = (countryCode, context);
+        if (_timelineBucketCache.TryGetValue(key, out var cached))
+            return cached;
+
+        // Compute and cache
+        var buckets = TimelineBucketProvider(countryCode, context);
+        _timelineBucketCache[key] = buckets;
+        return buckets;
+    }
+
+    /// <summary>
     /// Checks if a country code represents an IPv6 address type
     /// </summary>
     private static bool IsIPv6Type(string code)
@@ -514,4 +560,11 @@ public partial class CountryTableViewModel : ObservableObject
             _ => false
         };
     }
+
+    /// <summary>
+    /// Returns true if country code should be excluded from public traffic totals.
+    /// Extracts duplicate 6-condition predicate used in UpdateCountryTables and UpdateSourceDestinationTables.
+    /// </summary>
+    private static bool IsExcludedFromPublicTraffic(string countryCode)
+        => countryCode is "INT" or "IP6" or "INTERNAL" or "IPV6" or "PRIV" or "PRV";
 }

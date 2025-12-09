@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using SkiaSharp;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Charts;
 using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.Utilities;
 
@@ -23,6 +24,34 @@ public partial class DashboardChartsViewModel : ObservableObject
 {
     private readonly IDispatcherService _dispatcher;
     private readonly IProtocolColorService _protocolColorService;
+
+    // ==================== CHANGE DETECTION (Performance Optimization) ====================
+
+    /// <summary>
+    /// Tracks last statistics fingerprint to skip redundant chart rebuilds.
+    /// </summary>
+    private string? _lastChartFingerprint;
+
+    /// <summary>
+    /// Creates a fingerprint for chart-relevant statistics.
+    /// </summary>
+    private static string CreateChartFingerprint(NetworkStatistics stats)
+    {
+        var throughputCount = stats.ThroughputTimeSeries?.Count ?? 0;
+        var protocolCount = stats.ProtocolStats?.Count ?? 0;
+        var portCount = stats.TopPorts?.Count ?? 0;
+        return $"{stats.TotalPackets}|{throughputCount}|{protocolCount}|{portCount}";
+    }
+
+    /// <summary>
+    /// Invalidates the chart cache, forcing next update to rebuild charts.
+    /// </summary>
+    public void InvalidateCache()
+    {
+        _lastChartFingerprint = null;
+        DebugLogger.Log("[DashboardChartsViewModel] Chart cache invalidated");
+    }
+
     // ==================== CHART SERIES ====================
 
     [ObservableProperty] private ObservableCollection<ISeries> _throughputSeries = [];
@@ -59,13 +88,12 @@ public partial class DashboardChartsViewModel : ObservableObject
 
     // ==================== ZOOM PROPERTIES ====================
 
-    [ObservableProperty] private double _timelineZoomLevel = 100;
-    private const double MinZoom = 50;
-    private const double MaxZoom = 200;
-    private const double ZoomStep = 5;
-    private double _originalMinLimit;
-    private double _originalMaxLimit;
-    private bool _zoomInitialized;
+    private readonly ChartZoomController _zoomController = new();
+
+    /// <summary>
+    /// Exposes zoom level for UI binding.
+    /// </summary>
+    public double TimelineZoomLevel => _zoomController.ZoomLevel;
 
     // ==================== CHART STATISTICS ====================
 
@@ -291,36 +319,33 @@ public partial class DashboardChartsViewModel : ObservableObject
     [RelayCommand]
     private void ZoomInTimeline()
     {
-        if (TimelineZoomLevel < MaxZoom)
+        if (_zoomController.ZoomIn())
         {
-            TimelineZoomLevel = Math.Min(TimelineZoomLevel + ZoomStep, MaxZoom);
             ApplyZoomToChart();
+            OnPropertyChanged(nameof(TimelineZoomLevel));
         }
     }
 
     [RelayCommand]
     private void ZoomOutTimeline()
     {
-        if (TimelineZoomLevel > MinZoom)
+        if (_zoomController.ZoomOut())
         {
-            TimelineZoomLevel = Math.Max(TimelineZoomLevel - ZoomStep, MinZoom);
             ApplyZoomToChart();
+            OnPropertyChanged(nameof(TimelineZoomLevel));
         }
     }
 
     [RelayCommand]
     private void ResetTimelineZoom()
     {
-        TimelineZoomLevel = 100;
+        _zoomController.ResetZoom();
         ApplyZoomToChart();
+        OnPropertyChanged(nameof(TimelineZoomLevel));
     }
 
     [RelayCommand]
-    private void FitTimelineToWindow()
-    {
-        TimelineZoomLevel = 100;
-        ApplyZoomToChart();
-    }
+    private void FitTimelineToWindow() => ResetTimelineZoom();
 
     private void ApplyZoomToChart()
     {
@@ -330,48 +355,20 @@ public partial class DashboardChartsViewModel : ObservableObject
         var axis = XAxes[0];
         if (axis is null) return;
 
-        // Store original limits if not initialized
-        if (!_zoomInitialized && axis.MinLimit.HasValue && axis.MaxLimit.HasValue)
+        // Initialize zoom controller with axis limits if needed
+        if (!_zoomController.IsInitialized && axis.MinLimit.HasValue && axis.MaxLimit.HasValue)
         {
-            _originalMinLimit = axis.MinLimit.Value;
-            _originalMaxLimit = axis.MaxLimit.Value;
-            _zoomInitialized = true;
+            _zoomController.Initialize(axis.MinLimit.Value, axis.MaxLimit.Value);
         }
 
-        // Calculate zoom
-        var zoomFactor = 100.0 / TimelineZoomLevel;
-        var originalRange = _originalMaxLimit - _originalMinLimit;
-        var newRange = originalRange * zoomFactor;
-
-        // Get current center or use original center
-        var currentCenter = axis.MinLimit.HasValue && axis.MaxLimit.HasValue
-            ? (axis.MinLimit.Value + axis.MaxLimit.Value) / 2
-            : (_originalMinLimit + _originalMaxLimit) / 2;
-
-        // Apply new limits
-        var newMin = currentCenter - newRange / 2;
-        var newMax = currentCenter + newRange / 2;
-
-        // Constrain to original bounds
-        if (newMin < _originalMinLimit)
-        {
-            newMin = _originalMinLimit;
-            newMax = newMin + newRange;
-        }
-        if (newMax > _originalMaxLimit)
-        {
-            newMax = _originalMaxLimit;
-            newMin = newMax - newRange;
-        }
-
-        axis.MinLimit = newMin;
-        axis.MaxLimit = newMax;
+        _zoomController.ApplyToAxis(axis);
     }
 
     // ==================== PUBLIC UPDATE METHODS ====================
 
     /// <summary>
     /// Updates all charts with new statistics data.
+    /// Uses fingerprinting to skip redundant rebuilds when data hasn't changed.
     /// Called by parent DashboardViewModel when data changes.
     /// </summary>
     public void UpdateAllCharts(NetworkStatistics statistics)
@@ -382,8 +379,18 @@ public partial class DashboardChartsViewModel : ObservableObject
             if (statistics is null)
             {
                 DebugLogger.Log("[DashboardChartsViewModel] No statistics provided for chart updates");
+                _lastChartFingerprint = null;
                 return;
             }
+
+            // Early exit if statistics haven't changed (performance optimization)
+            var fingerprint = CreateChartFingerprint(statistics);
+            if (fingerprint == _lastChartFingerprint)
+            {
+                DebugLogger.Log($"[DashboardChartsViewModel] SKIPPING UpdateAllCharts - data unchanged");
+                return;
+            }
+            _lastChartFingerprint = fingerprint;
 
             var t1 = DateTime.Now;
             UpdateThroughputChart(statistics);
@@ -469,7 +476,7 @@ public partial class DashboardChartsViewModel : ObservableObject
             .OrderBy(p => p.DateTime)
             .ToArray();
 
-        var throughputValues = DownsampleData(allData, maxDataPoints);
+        var throughputValues = ChartDataHelper.Downsample(allData, maxDataPoints);
         if (throughputValues.Length == 0) return;
 
         var maxThroughput = throughputValues.Select(v => v.Value ?? 0).DefaultIfEmpty(0).Max();
@@ -507,7 +514,7 @@ public partial class DashboardChartsViewModel : ObservableObject
             .OrderBy(p => p.DateTime)
             .ToArray();
 
-        var ppsValues = DownsampleData(allPpsData, maxDataPoints);
+        var ppsValues = ChartDataHelper.Downsample(allPpsData, maxDataPoints);
         if (ppsValues.Length == 0) return;
 
         var maxPackets = ppsValues.Select(v => v.Value ?? 0).DefaultIfEmpty(0).Max();
@@ -545,13 +552,13 @@ public partial class DashboardChartsViewModel : ObservableObject
             .OrderBy(p => p.DateTime)
             .ToArray();
 
-        var anomaliesValues = DownsampleData(allAnomaliesData, maxDataPoints);
+        var anomaliesValues = ChartDataHelper.Downsample(allAnomaliesData, maxDataPoints);
         if (anomaliesValues.Length == 0) return;
 
         var maxAnomalies = anomaliesValues.Select(v => v.Value ?? 0).DefaultIfEmpty(0).Max();
 
         // Smart step calculation for anomaly axis - reduce tick density
-        var anomalyStep = CalculateAnomalyAxisStep(maxAnomalies);
+        var anomalyStep = ChartDataHelper.CalculateAnomalyStep(maxAnomalies);
 
         // Update anomaly axis with smart stepping AND fixed MaxLimit
         if (YAxes.Length > 2)
@@ -588,13 +595,13 @@ public partial class DashboardChartsViewModel : ObservableObject
             .OrderBy(p => p.DateTime)
             .ToArray();
 
-        var threatsValues = DownsampleData(allThreatsData, maxDataPoints);
+        var threatsValues = ChartDataHelper.Downsample(allThreatsData, maxDataPoints);
         if (threatsValues.Length == 0) return;
 
         var maxThreats = threatsValues.Select(v => v.Value ?? 0).DefaultIfEmpty(0).Max();
 
         // Smart step calculation for threats axis
-        var threatsStep = CalculateThreatAxisStep(maxThreats);
+        var threatsStep = ChartDataHelper.CalculateThreatStep(maxThreats);
 
         // Update threats axis with smart stepping AND fixed MaxLimit
         if (YAxes.Length > 3)
@@ -621,41 +628,6 @@ public partial class DashboardChartsViewModel : ObservableObject
         DebugLogger.Log($"[DashboardChartsViewModel] Added Threats series with {threatsValues.Length} data points (max: {maxThreats:F2} threats/s, step: {threatsStep})");
     }
 
-    private double CalculateThreatAxisStep(double maxThreats)
-    {
-        return maxThreats switch
-        {
-            < 5 => 1,      // 0-5: step by 1
-            < 20 => 2,     // 5-20: step by 2
-            < 50 => 5,     // 20-50: step by 5
-            < 100 => 10,   // 50-100: step by 10
-            < 200 => 20,   // 100-200: step by 20
-            < 500 => 50,   // 200-500: step by 50
-            _ => 100       // 500+: step by 100
-        };
-    }
-
-    private LiveChartsCore.Defaults.DateTimePoint[] DownsampleData(LiveChartsCore.Defaults.DateTimePoint[] allData, int maxDataPoints)
-    {
-        if (allData.Length <= maxDataPoints) return allData;
-
-        var step = Math.Max(1, (int)Math.Floor(allData.Length / (double)maxDataPoints));
-        return allData.Where((x, i) => i % step == 0).Take(maxDataPoints).ToArray();
-    }
-
-    private double CalculateAnomalyAxisStep(double maxAnomalies)
-    {
-        return maxAnomalies switch
-        {
-            < 5 => 1,      // 0-5: step by 1
-            < 20 => 2,     // 5-20: step by 2
-            < 50 => 5,     // 20-50: step by 5
-            < 100 => 10,   // 50-100: step by 10
-            < 200 => 20,   // 100-200: step by 20
-            < 500 => 50,   // 200-500: step by 50
-            _ => 100       // 500+: step by 100
-        };
-    }
 
     /// <summary>
     /// Updates protocol distribution chart.
@@ -921,10 +893,10 @@ public partial class DashboardChartsViewModel : ObservableObject
             // Calculate throughput statistics
             if (_maxThroughputRaw > 0)
             {
-                MaxThroughput = FormatThroughput(_maxThroughputRaw);
-                Throughput25 = FormatThroughput(_maxThroughputRaw * 0.25);
-                Throughput50 = FormatThroughput(_maxThroughputRaw * 0.50);
-                Throughput75 = FormatThroughput(_maxThroughputRaw * 0.75);
+                MaxThroughput = ChartDataHelper.FormatThroughput(_maxThroughputRaw);
+                Throughput25 = ChartDataHelper.FormatThroughput(_maxThroughputRaw * 0.25);
+                Throughput50 = ChartDataHelper.FormatThroughput(_maxThroughputRaw * 0.50);
+                Throughput75 = ChartDataHelper.FormatThroughput(_maxThroughputRaw * 0.75);
             }
 
             // Calculate packet statistics
@@ -942,16 +914,6 @@ public partial class DashboardChartsViewModel : ObservableObject
         }
     }
 
-    // ==================== HELPER METHODS ====================
-
-    private string FormatThroughput(double kbps)
-    {
-        if (kbps >= 1024 * 1024)
-            return $"{kbps / 1024 / 1024:F2} GB/s";
-        if (kbps >= 1024)
-            return $"{kbps / 1024:F2} MB/s";
-        return $"{kbps:F2} KB/s";
-    }
 }
 
 /// <summary>

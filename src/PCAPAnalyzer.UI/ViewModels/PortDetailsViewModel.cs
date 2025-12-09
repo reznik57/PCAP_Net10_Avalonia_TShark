@@ -24,6 +24,10 @@ namespace PCAPAnalyzer.UI.ViewModels
         private string _selectedDirection = "All";
         private ObservableCollection<PortPacketDetail> _allPackets = [];
         private ObservableCollection<PortPacketDetail> _filteredPackets = [];
+
+        // Cached direction counts (computed once in LoadPackets instead of per-access)
+        private int _sourcePortPacketsCount;
+        private int _destinationPortPacketsCount;
         
         public PortDetailsViewModel(TopPortViewModel portInfo, IEnumerable<PacketInfo> packets)
         {
@@ -89,8 +93,9 @@ namespace PCAPAnalyzer.UI.ViewModels
         
         public int FilteredCount => FilteredPackets?.Count ?? 0;
         public int TotalCount => _allPackets?.Count ?? 0;
-        public int SourcePortPackets => _allPackets?.Count(p => p.Direction == "Source") ?? 0;
-        public int DestinationPortPackets => _allPackets?.Count(p => p.Direction == "Destination") ?? 0;
+        // Use cached counts (calculated once in LoadPackets instead of per-access Count())
+        public int SourcePortPackets => _sourcePortPacketsCount;
+        public int DestinationPortPackets => _destinationPortPacketsCount;
         
         // Commands
         public ICommand ExportCommand { get; }
@@ -99,17 +104,21 @@ namespace PCAPAnalyzer.UI.ViewModels
         private void LoadPackets(IEnumerable<PacketInfo> packets)
         {
             var packetDetails = new List<PortPacketDetail>();
-            
+            int sourceCount = 0, destCount = 0;
+
             foreach (var packet in packets)
             {
                 // Check if packet uses this port
                 bool isSourcePort = packet.SourcePort == Port;
                 bool isDestPort = packet.DestinationPort == Port;
-                
+
                 if ((isSourcePort || isDestPort) && packet.GetProtocolDisplay().Contains(Protocol, StringComparison.OrdinalIgnoreCase))
                 {
                     var direction = isSourcePort ? "Source" : "Destination";
-                    
+
+                    // Count directions during load (instead of per-access Count())
+                    if (isSourcePort) sourceCount++; else destCount++;
+
                     packetDetails.Add(new PortPacketDetail
                     {
                         PacketNumber = (int)packet.FrameNumber,
@@ -124,10 +133,12 @@ namespace PCAPAnalyzer.UI.ViewModels
                     });
                 }
             }
-            
+
             _allPackets = new ObservableCollection<PortPacketDetail>(
                 packetDetails.OrderBy(p => p.PacketNumber)
             );
+            _sourcePortPacketsCount = sourceCount;
+            _destinationPortPacketsCount = destCount;
         }
         
         private void ApplyFilter()

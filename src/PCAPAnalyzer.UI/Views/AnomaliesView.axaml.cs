@@ -37,6 +37,10 @@ public partial class AnomaliesView : UserControl
     private double _cachedMinY;
     private double _cachedMaxY = 100;
 
+    // Cached chart data to avoid ToList() allocation on every mouse move
+    private Dictionary<string, IReadOnlyList<DateTimePoint>>? _cachedChartData;
+    private int _cachedDataVersion;
+
     public AnomaliesView()
     {
         InitializeComponent();
@@ -138,16 +142,28 @@ public partial class AnomaliesView : UserControl
         double critical = 0, high = 0, medium = 0, low = 0;
         int resultIndex = -1;
 
-        foreach (var s in ViewModel!.Charts!.TimelineSeries!)
+        // Rebuild cache if series changed (check version from Charts ViewModel)
+        var series = ViewModel!.Charts!.TimelineSeries;
+        var currentVersion = series?.Length ?? 0;
+        if (_cachedChartData is null || _cachedDataVersion != currentVersion)
         {
-            // Skip highlight series
-            if (s.Name is "Highlight" or "VerticalLine")
-                continue;
+            _cachedChartData = new Dictionary<string, IReadOnlyList<DateTimePoint>>();
+            if (series is not null)
+            {
+                foreach (var s in series)
+                {
+                    if (s.Name is "Highlight" or "VerticalLine")
+                        continue;
+                    if (s is LineSeries<DateTimePoint> dateTimeSeries && dateTimeSeries.Values is not null)
+                        _cachedChartData[s.Name ?? ""] = dateTimeSeries.Values.ToList();
+                }
+            }
+            _cachedDataVersion = currentVersion;
+        }
 
-            if (s is not LineSeries<DateTimePoint> dateTimeSeries || dateTimeSeries.Values is null)
-                continue;
-
-            var values = dateTimeSeries.Values.ToList();
+        foreach (var kvp in _cachedChartData)
+        {
+            var values = kvp.Value;
             if (values.Count == 0) continue;
 
             var dataIndex = Math.Clamp((int)(relativeX * (values.Count - 1)), 0, values.Count - 1);
@@ -160,7 +176,7 @@ public partial class AnomaliesView : UserControl
             // Update cached Y-axis max for vertical line
             _cachedMaxY = Math.Max(_cachedMaxY, value * 1.1);
 
-            (critical, high, medium, low) = MapSeriesValue(dateTimeSeries.Name ?? "", value, critical, high, medium, low);
+            (critical, high, medium, low) = MapSeriesValue(kvp.Key, value, critical, high, medium, low);
         }
 
         return (timestamp, critical, high, medium, low, resultIndex);
@@ -393,6 +409,10 @@ public partial class AnomaliesView : UserControl
             _highlightLine = null;
             _lastHighlightedIndex = -1;
             _cachedMaxY = 100;
+
+            // Invalidate chart data cache to force rebuild on next hover
+            _cachedChartData = null;
+            _cachedDataVersion = 0;
 
             DebugLogger.Log("[AnomaliesView] Highlight series cleaned up");
         }

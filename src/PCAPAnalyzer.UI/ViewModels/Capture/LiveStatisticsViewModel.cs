@@ -226,11 +226,9 @@ public partial class LiveStatisticsViewModel : ViewModelBase, IDisposable
 
         lock (_statsLock)
         {
-            if (!_protocolCounts.ContainsKey(protocol))
-            {
-                _protocolCounts[protocol] = 0;
-            }
-            _protocolCounts[protocol]++;
+            // TryGetValue: single lookup instead of ContainsKey + 2× indexer
+            _protocolCounts.TryGetValue(protocol, out var count);
+            _protocolCounts[protocol] = count + 1;
         }
     }
 

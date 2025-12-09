@@ -174,12 +174,23 @@ namespace PCAPAnalyzer.UI.ViewModels
                 OverallRiskLevel = CurrentReport.ExecutiveSummary.OverallRiskLevel;
             }
             
-            // Update findings statistics
+            // Single-pass severity counting (was 4 separate .Count() calls)
+            int critical = 0, high = 0, medium = 0, low = 0;
+            foreach (var finding in CurrentReport.SecurityFindings)
+            {
+                switch (finding.Severity)
+                {
+                    case SeverityLevel.Critical: critical++; break;
+                    case SeverityLevel.High: high++; break;
+                    case SeverityLevel.Medium: medium++; break;
+                    case SeverityLevel.Low: low++; break;
+                }
+            }
             TotalFindings = CurrentReport.SecurityFindings.Count;
-            CriticalFindings = CurrentReport.SecurityFindings.Count(f => f.Severity == SeverityLevel.Critical);
-            HighFindings = CurrentReport.SecurityFindings.Count(f => f.Severity == SeverityLevel.High);
-            MediumFindings = CurrentReport.SecurityFindings.Count(f => f.Severity == SeverityLevel.Medium);
-            LowFindings = CurrentReport.SecurityFindings.Count(f => f.Severity == SeverityLevel.Low);
+            CriticalFindings = critical;
+            HighFindings = high;
+            MediumFindings = medium;
+            LowFindings = low;
             
             // Update security findings display
             SecurityFindings.Clear();

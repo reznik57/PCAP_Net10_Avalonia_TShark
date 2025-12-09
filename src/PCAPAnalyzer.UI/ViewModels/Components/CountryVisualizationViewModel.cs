@@ -216,9 +216,10 @@ public partial class CountryVisualizationViewModel : ObservableObject
                 continue;
 
             var continent = GetContinentName(country.CountryCode);
-            if (continentTraffic.ContainsKey(continent))
+            // TryGetValue: 1 lookup instead of 2 (ContainsKey + indexer)
+            if (continentTraffic.TryGetValue(continent, out var current))
             {
-                continentTraffic[continent] += country.TotalPackets;
+                continentTraffic[continent] = current + country.TotalPackets;
             }
         }
 

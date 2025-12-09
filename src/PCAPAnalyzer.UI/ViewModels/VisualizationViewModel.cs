@@ -277,13 +277,15 @@ namespace PCAPAnalyzer.UI.ViewModels
                     });
                 }
 
+                // Build dictionary for O(1) lookup instead of O(n) per edge
+                var nodeDict = nodes.ToDictionary(n => n.Id);
+
                 var edges = new ObservableCollection<NetworkEdgeViewModel>();
                 foreach (var edge in graphData.Edges)
                 {
-                    var sourceNode = nodes.FirstOrDefault(n => n.Id == edge.Source);
-                    var targetNode = nodes.FirstOrDefault(n => n.Id == edge.Target);
-
-                    if (sourceNode is not null && targetNode is not null)
+                    // TryGetValue: O(1) instead of FirstOrDefault: O(n)
+                    if (nodeDict.TryGetValue(edge.Source, out var sourceNode) &&
+                        nodeDict.TryGetValue(edge.Target, out var targetNode))
                     {
                         edges.Add(new NetworkEdgeViewModel
                         {

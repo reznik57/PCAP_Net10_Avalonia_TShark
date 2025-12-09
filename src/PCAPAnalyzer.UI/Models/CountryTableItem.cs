@@ -32,6 +32,17 @@ namespace PCAPAnalyzer.UI.Models
         public string PacketsFormatted => $"{TotalPackets:N0}";
         public string BytesFormatted => NumberFormatter.FormatBytes(TotalBytes);
 
+        /// <summary>
+        /// Risk indicator color for UI display.
+        /// Red (#E53935) for high-risk, transparent for normal.
+        /// </summary>
+        public string RiskIndicatorColor => IsHighRisk ? "#E53935" : "Transparent";
+
+        /// <summary>
+        /// Risk indicator visibility for UI binding.
+        /// </summary>
+        public bool ShowRiskIndicator => IsHighRisk;
+
         // Display country code with full name
         private bool _suppressNameUpdate;
 
@@ -97,6 +108,12 @@ namespace PCAPAnalyzer.UI.Models
             }
 
             OnPropertyChanged(nameof(CountryDisplay));
+        }
+
+        partial void OnIsHighRiskChanged(bool value)
+        {
+            OnPropertyChanged(nameof(RiskIndicatorColor));
+            OnPropertyChanged(nameof(ShowRiskIndicator));
         }
 
         private void EnsureResolvedCountryName()

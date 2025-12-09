@@ -32,7 +32,11 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
     private List<NetworkAnomaly> _filteredAnomalies = [];
     private List<PacketInfo> _allPackets = [];
     private CancellationTokenSource? _filterCts;
+    private CancellationTokenSource? _geoIPCts;
     private bool _disposed;
+
+    // GeoIP throttling: max 5 concurrent lookups to avoid overwhelming the service
+    private static readonly SemaphoreSlim _geoIPThrottle = new(5, 5);
 
     // Component ViewModels
     public AnomaliesStatisticsViewModel Statistics { get; }
@@ -141,80 +145,195 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
 
     private async Task UpdateAllComponentsAsync()
     {
-        await Task.Run(() =>
+        // Cancel any pending GeoIP enrichment from previous update
+        _geoIPCts?.Cancel();
+        _geoIPCts = new CancellationTokenSource();
+        var geoIPToken = _geoIPCts.Token;
+
+        var (kpis, timePoints, sources, targets, ports, categories) = await Task.Run(() =>
         {
-            var kpis = CalculateKPIs(_filteredAnomalies);
-            var timePoints = BuildTimelineSeries(_filteredAnomalies);
-            var sources = BuildRankedSources(_filteredAnomalies);
-            var targets = BuildRankedTargets(_filteredAnomalies);
-            var ports = BuildPortBreakdown(_filteredAnomalies);
-            var categories = BuildCategoryBreakdown(_filteredAnomalies);
-
-            _dispatcher.Post(() =>
-            {
-                Statistics.UpdateKPIs(kpis);
-                Statistics.UpdateTopSources(sources);
-                Statistics.UpdateTopTargets(targets);
-                Statistics.UpdateTopPorts(ports);
-                Statistics.UpdateCategoryBreakdown(categories);
-                Statistics.SetFilteredState(
-                    _filteredAnomalies.Count != _allAnomalies.Count,
-                    _filteredAnomalies.Count);
-
-                Charts.UpdateTimeline(timePoints);
-                Charts.UpdateCategoryDonut(categories);
-                Charts.UpdatePortsBar(ports);
-
-                // Update packet table with filtered anomalies
-                PacketTable.LoadPackets(_allPackets, _filteredAnomalies);
-            });
+            var k = CalculateKPIs(_filteredAnomalies);
+            var t = BuildTimelineSeries(_filteredAnomalies);
+            var s = BuildRankedSources(_filteredAnomalies);
+            var tg = BuildRankedTargets(_filteredAnomalies);
+            var p = BuildPortBreakdown(_filteredAnomalies);
+            var c = BuildCategoryBreakdown(_filteredAnomalies);
+            return (k, t, s, tg, p, c);
         });
+
+        _dispatcher.Post(() =>
+        {
+            Statistics.UpdateKPIs(kpis);
+            Statistics.UpdateTopSources(sources);
+            Statistics.UpdateTopTargets(targets);
+            Statistics.UpdateTopPorts(ports);
+            Statistics.UpdateCategoryBreakdown(categories);
+            Statistics.SetFilteredState(
+                _filteredAnomalies.Count != _allAnomalies.Count,
+                _filteredAnomalies.Count);
+
+            Charts.UpdateTimeline(timePoints);
+            Charts.UpdateCategoryDonut(categories);
+            Charts.UpdatePortsBar(ports);
+
+            // Update packet table with filtered anomalies
+            PacketTable.LoadPackets(_allPackets, _filteredAnomalies);
+        });
+
+        // Batch GeoIP enrichment with throttling (tracked, not fire-and-forget)
+        var allEndpoints = sources.Concat(targets).ToList();
+        if (allEndpoints.Count > 0)
+        {
+            _ = EnrichEndpointsGeoIPBatchAsync(allEndpoints, geoIPToken);
+        }
     }
 
-    private AnomalyKPIs CalculateKPIs(List<NetworkAnomaly> anomalies)
+    /// <summary>
+    /// Batch GeoIP enrichment with SemaphoreSlim throttling.
+    /// Max 5 concurrent requests to avoid overwhelming the GeoIP service.
+    /// </summary>
+    private async Task EnrichEndpointsGeoIPBatchAsync(
+        List<AnomalyEndpointViewModel> endpoints,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var tasks = endpoints.Select(async endpoint =>
+            {
+                await _geoIPThrottle.WaitAsync(cancellationToken);
+                try
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        return;
+
+                    var geoInfo = await _geoIPService.GetLocationAsync(endpoint.IpAddress);
+
+                    // Update on UI thread
+                    _dispatcher.Post(() =>
+                    {
+                        endpoint.Country = geoInfo?.CountryName ?? "Unknown";
+                        endpoint.CountryCode = geoInfo?.CountryCode ?? "";
+                    });
+                }
+                catch (OperationCanceledException)
+                {
+                    // Expected when filter changes rapidly
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogDebug(ex, "GeoIP lookup failed for {IP}", endpoint.IpAddress);
+                    _dispatcher.Post(() =>
+                    {
+                        endpoint.Country = "Unknown";
+                        endpoint.CountryCode = "";
+                    });
+                }
+                finally
+                {
+                    _geoIPThrottle.Release();
+                }
+            });
+
+            await Task.WhenAll(tasks);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogDebug("GeoIP batch enrichment cancelled");
+        }
+    }
+
+    /// <summary>
+    /// Calculates KPIs using single-pass aggregation.
+    /// Previous: 9 collection traversals. Now: 1 traversal with HashSets.
+    /// </summary>
+    private static AnomalyKPIs CalculateKPIs(List<NetworkAnomaly> anomalies)
     {
         if (anomalies.Count == 0)
             return new AnomalyKPIs();
 
-        var timestamps = anomalies
-            .Select(a => a.DetectedAt)
-            .OrderBy(t => t)
-            .ToList();
+        // Single-pass aggregation with severity buckets
+        int critical = 0, high = 0, medium = 0, low = 0;
+        var sourceIPs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var targetIPs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var minTime = DateTime.MaxValue;
+        var maxTime = DateTime.MinValue;
+
+        foreach (var anomaly in anomalies)
+        {
+            // Count by severity
+            switch (anomaly.Severity)
+            {
+                case AnomalySeverity.Critical: critical++; break;
+                case AnomalySeverity.High: high++; break;
+                case AnomalySeverity.Medium: medium++; break;
+                case AnomalySeverity.Low: low++; break;
+            }
+
+            // Track unique IPs
+            if (!string.IsNullOrEmpty(anomaly.SourceIP))
+                sourceIPs.Add(anomaly.SourceIP);
+            if (!string.IsNullOrEmpty(anomaly.DestinationIP))
+                targetIPs.Add(anomaly.DestinationIP);
+
+            // Track time range
+            if (anomaly.DetectedAt < minTime) minTime = anomaly.DetectedAt;
+            if (anomaly.DetectedAt > maxTime) maxTime = anomaly.DetectedAt;
+        }
 
         return new AnomalyKPIs
         {
             TotalAnomalies = anomalies.Count,
-            CriticalCount = anomalies.Count(a => a.Severity == AnomalySeverity.Critical),
-            HighCount = anomalies.Count(a => a.Severity == AnomalySeverity.High),
-            MediumCount = anomalies.Count(a => a.Severity == AnomalySeverity.Medium),
-            LowCount = anomalies.Count(a => a.Severity == AnomalySeverity.Low),
-            UniqueSourceIPs = anomalies.Select(a => a.SourceIP).Where(ip => !string.IsNullOrEmpty(ip)).Distinct().Count(),
-            UniqueTargetIPs = anomalies.Select(a => a.DestinationIP).Where(ip => !string.IsNullOrEmpty(ip)).Distinct().Count(),
-            FirstAnomalyTime = timestamps.FirstOrDefault(),
-            LastAnomalyTime = timestamps.LastOrDefault(),
-            TimeSpan = timestamps.Count > 1 ? timestamps.Last() - timestamps.First() : TimeSpan.Zero
+            CriticalCount = critical,
+            HighCount = high,
+            MediumCount = medium,
+            LowCount = low,
+            UniqueSourceIPs = sourceIPs.Count,
+            UniqueTargetIPs = targetIPs.Count,
+            FirstAnomalyTime = minTime == DateTime.MaxValue ? default : minTime,
+            LastAnomalyTime = maxTime == DateTime.MinValue ? default : maxTime,
+            TimeSpan = minTime < maxTime ? maxTime - minTime : TimeSpan.Zero
         };
     }
 
-    private List<AnomalyTimePoint> BuildTimelineSeries(List<NetworkAnomaly> anomalies)
+    /// <summary>
+    /// Builds timeline series using single-pass per group.
+    /// Previous: 4 Count() calls per group. Now: 1 pass with severity buckets.
+    /// </summary>
+    private static List<AnomalyTimePoint> BuildTimelineSeries(List<NetworkAnomaly> anomalies)
     {
         if (anomalies.Count == 0)
-            return new List<AnomalyTimePoint>();
+            return [];
 
-        // Group by second for fine-grained timeline
-        var grouped = anomalies
-            .GroupBy(a => new DateTime(
-                a.DetectedAt.Year, a.DetectedAt.Month, a.DetectedAt.Day,
-                a.DetectedAt.Hour, a.DetectedAt.Minute, a.DetectedAt.Second))
-            .OrderBy(g => g.Key);
+        // Use Dictionary for O(1) lookup instead of GroupBy + OrderBy
+        var buckets = new SortedDictionary<DateTime, (int Critical, int High, int Medium, int Low)>();
 
-        return grouped.Select(g => new AnomalyTimePoint
+        foreach (var anomaly in anomalies)
         {
-            Timestamp = g.Key,
-            CriticalCount = g.Count(a => a.Severity == AnomalySeverity.Critical),
-            HighCount = g.Count(a => a.Severity == AnomalySeverity.High),
-            MediumCount = g.Count(a => a.Severity == AnomalySeverity.Medium),
-            LowCount = g.Count(a => a.Severity == AnomalySeverity.Low)
+            // Truncate to second - use date math instead of constructor
+            var key = anomaly.DetectedAt.AddTicks(-(anomaly.DetectedAt.Ticks % TimeSpan.TicksPerSecond));
+
+            if (!buckets.TryGetValue(key, out var counts))
+                counts = (0, 0, 0, 0);
+
+            counts = anomaly.Severity switch
+            {
+                AnomalySeverity.Critical => (counts.Critical + 1, counts.High, counts.Medium, counts.Low),
+                AnomalySeverity.High => (counts.Critical, counts.High + 1, counts.Medium, counts.Low),
+                AnomalySeverity.Medium => (counts.Critical, counts.High, counts.Medium + 1, counts.Low),
+                AnomalySeverity.Low => (counts.Critical, counts.High, counts.Medium, counts.Low + 1),
+                _ => counts
+            };
+
+            buckets[key] = counts;
+        }
+
+        return buckets.Select(kvp => new AnomalyTimePoint
+        {
+            Timestamp = kvp.Key,
+            CriticalCount = kvp.Value.Critical,
+            HighCount = kvp.Value.High,
+            MediumCount = kvp.Value.Medium,
+            LowCount = kvp.Value.Low
         }).ToList();
     }
 
@@ -248,51 +367,44 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
 
     /// <summary>
     /// Builds endpoint view model for anomaly display.
-    /// TECH DEBT: GeoIP lookup is async but this is called from LINQ .Select().
-    /// Using fire-and-forget enrichment to avoid blocking - Country will be "Loading..." initially.
+    /// GeoIP enrichment is handled separately via EnrichEndpointsGeoIPBatchAsync.
     /// </summary>
     private AnomalyEndpointViewModel BuildEndpointViewModel(string ip, List<NetworkAnomaly> anomalies)
     {
         var total = _filteredAnomalies.Count > 0 ? _filteredAnomalies.Count : 1;
 
-        var viewModel = new AnomalyEndpointViewModel
+        // Single-pass severity counting instead of 4 separate Count() calls
+        int critical = 0, high = 0, medium = 0, low = 0;
+        var highestSeverity = AnomalySeverity.Low;
+
+        foreach (var a in anomalies)
+        {
+            switch (a.Severity)
+            {
+                case AnomalySeverity.Critical: critical++; break;
+                case AnomalySeverity.High: high++; break;
+                case AnomalySeverity.Medium: medium++; break;
+                case AnomalySeverity.Low: low++; break;
+            }
+            if (a.Severity > highestSeverity)
+                highestSeverity = a.Severity;
+        }
+
+        return new AnomalyEndpointViewModel
         {
             IpAddress = ip,
             AnomalyCount = anomalies.Count,
-            CriticalCount = anomalies.Count(a => a.Severity == AnomalySeverity.Critical),
-            HighCount = anomalies.Count(a => a.Severity == AnomalySeverity.High),
-            MediumCount = anomalies.Count(a => a.Severity == AnomalySeverity.Medium),
-            LowCount = anomalies.Count(a => a.Severity == AnomalySeverity.Low),
-            HighestSeverity = anomalies.Max(a => a.Severity),
+            CriticalCount = critical,
+            HighCount = high,
+            MediumCount = medium,
+            LowCount = low,
+            HighestSeverity = highestSeverity,
             Percentage = (double)anomalies.Count / total * 100,
-            Country = "Loading...",
+            Country = "Loading...",  // Will be enriched by EnrichEndpointsGeoIPBatchAsync
             CountryCode = "",
             Categories = anomalies.Select(a => a.Category).Distinct().ToList(),
             AffectedFrames = anomalies.SelectMany(a => a.AffectedFrames ?? Enumerable.Empty<long>()).Distinct().ToList()
         };
-
-        // Fire-and-forget GeoIP enrichment - updates viewModel.Country when complete
-        _ = EnrichEndpointGeoIPAsync(viewModel, ip);
-
-        return viewModel;
-    }
-
-    /// <summary>
-    /// Asynchronously enriches endpoint with GeoIP data.
-    /// </summary>
-    private async Task EnrichEndpointGeoIPAsync(AnomalyEndpointViewModel viewModel, string ip)
-    {
-        try
-        {
-            var geoInfo = await _geoIPService.GetLocationAsync(ip);
-            viewModel.Country = geoInfo?.CountryName ?? "Unknown";
-            viewModel.CountryCode = geoInfo?.CountryCode ?? "";
-        }
-        catch
-        {
-            viewModel.Country = "Unknown";
-            viewModel.CountryCode = "";
-        }
     }
 
     private List<AnomalyPortViewModel> BuildPortBreakdown(List<NetworkAnomaly> anomalies)
@@ -635,5 +747,7 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
         _globalFilterState.OnFilterChanged -= OnGlobalFilterGroupsChanged;
         _filterCts?.Cancel();
         _filterCts?.Dispose();
+        _geoIPCts?.Cancel();
+        _geoIPCts?.Dispose();
     }
 }

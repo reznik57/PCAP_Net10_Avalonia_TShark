@@ -47,10 +47,22 @@ public partial class AnomalySummaryViewModel : ObservableObject
             return;
         }
 
-        CriticalCount = anomalies.Count(a => a.Severity == AnomalySeverity.Critical);
-        HighCount = anomalies.Count(a => a.Severity == AnomalySeverity.High);
-        MediumCount = anomalies.Count(a => a.Severity == AnomalySeverity.Medium);
-        LowCount = anomalies.Count(a => a.Severity == AnomalySeverity.Low);
+        // Single-pass severity counting (was 4 separate .Count() calls)
+        int critical = 0, high = 0, medium = 0, low = 0;
+        foreach (var a in anomalies)
+        {
+            switch (a.Severity)
+            {
+                case AnomalySeverity.Critical: critical++; break;
+                case AnomalySeverity.High: high++; break;
+                case AnomalySeverity.Medium: medium++; break;
+                case AnomalySeverity.Low: low++; break;
+            }
+        }
+        CriticalCount = critical;
+        HighCount = high;
+        MediumCount = medium;
+        LowCount = low;
 
         // Get top 3 threats by severity
         var top3 = anomalies

@@ -23,6 +23,7 @@ namespace PCAPAnalyzer.UI.ViewModels;
 /// <summary>
 /// ViewModel for Host Inventory tab - displays OS fingerprinting results.
 /// Shows detected hosts with their OS, MAC vendor, JA3 verification, and other metadata.
+/// Uses fingerprinting for early-exit optimization and single-pass statistics.
 /// </summary>
 public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTarget, IDisposable
 {
@@ -34,6 +35,10 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     private readonly GlobalFilterState? _globalFilterState;
     private IReadOnlyList<HostFingerprint>? _allHosts;
     private bool _disposed;
+
+    // Fingerprints for early-exit optimization
+    private string? _lastStatisticsFingerprint;
+    private string? _lastHostListFingerprint;
 
     // ==================== ITabPopulationTarget ====================
 
@@ -183,9 +188,23 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
             filtered = filtered.Where(h => h.Ja3Verified);
         }
 
+        // Materialize filtered list and sort once
+        var sortedHosts = filtered.OrderByDescending(h => h.PacketCount).ToList();
+
+        // Fingerprint: IP addresses in order (captures both content and sort order)
+        var fingerprint = string.Join(";", sortedHosts.Take(100).Select(h => h.IpAddress));
+        fingerprint += $"|{sortedHosts.Count}";
+
+        if (fingerprint == _lastHostListFingerprint)
+        {
+            DebugLogger.Log("[HostInventoryViewModel] SKIPPING RefreshHostList - data unchanged");
+            return;
+        }
+        _lastHostListFingerprint = fingerprint;
+
         // Convert to view items and update collection
         Hosts.Clear();
-        foreach (var host in filtered.OrderByDescending(h => h.PacketCount))
+        foreach (var host in sortedHosts)
         {
             Hosts.Add(CreateHostItem(host));
         }
@@ -246,6 +265,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     /// <summary>
     /// Checks if host matches ALL criteria within a FilterGroup (AND logic within group).
     /// For hosts, we match against IP address, OS types, device types, and host roles.
+    /// Optimized: Uses case-insensitive comparison without repeated ToLowerInvariant() allocations.
     /// </summary>
     private static bool MatchesFilterGroup(HostFingerprint host, FilterGroup group)
     {
@@ -254,36 +274,29 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
         {
             bool ipMatch = false;
 
-            if (!string.IsNullOrEmpty(group.SourceIP))
-            {
-                if (MatchesIpFilter(host.IpAddress, group.SourceIP))
-                    ipMatch = true;
-            }
+            if (!string.IsNullOrEmpty(group.SourceIP) && MatchesIpFilter(host.IpAddress, group.SourceIP))
+                ipMatch = true;
 
-            if (!string.IsNullOrEmpty(group.DestinationIP))
-            {
-                if (MatchesIpFilter(host.IpAddress, group.DestinationIP))
-                    ipMatch = true;
-            }
+            if (!ipMatch && !string.IsNullOrEmpty(group.DestinationIP) && MatchesIpFilter(host.IpAddress, group.DestinationIP))
+                ipMatch = true;
 
             if (!ipMatch)
                 return false;
         }
 
-        // OS type filter
+        // OS type filter - use OrdinalIgnoreCase to avoid string allocations
         if (group.OsTypes?.Count > 0)
         {
-            var hostOsFamily = host.OsDetection?.OsFamily?.ToLowerInvariant() ?? "unknown";
-            if (!group.OsTypes.Any(os => hostOsFamily.Contains(os.ToLowerInvariant(), StringComparison.Ordinal)))
+            var hostOsFamily = host.OsDetection?.OsFamily ?? "unknown";
+            if (!group.OsTypes.Any(os => hostOsFamily.Contains(os, StringComparison.OrdinalIgnoreCase)))
                 return false;
         }
 
-        // Device type filter
+        // Device type filter - direct enum comparison instead of string conversion
         if (group.DeviceTypes?.Count > 0)
         {
             var hostDeviceType = host.OsDetection?.DeviceType ?? DeviceType.Unknown;
-            var hostDeviceTypeName = hostDeviceType.ToString().ToLowerInvariant();
-            if (!group.DeviceTypes.Any(dt => dt.ToLowerInvariant() == hostDeviceTypeName))
+            if (!group.DeviceTypes.Any(dt => MatchesDeviceType(hostDeviceType, dt)))
                 return false;
         }
 
@@ -291,12 +304,44 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
         if (group.HostRoles?.Count > 0)
         {
             var hasServerPorts = host.OpenPorts.Any(p => p < 1024 || IsCommonServerPort(p));
-            var hostRole = hasServerPorts ? "server" : "client";
-            if (!group.HostRoles.Any(r => r.ToLowerInvariant() == hostRole))
+            var isServer = hasServerPorts;
+            if (!group.HostRoles.Any(r => MatchesHostRole(isServer, r)))
                 return false;
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Matches device type string to enum without string allocation.
+    /// </summary>
+    private static bool MatchesDeviceType(DeviceType hostType, string filterType)
+    {
+        return filterType.ToLowerInvariant() switch
+        {
+            "desktop" => hostType == DeviceType.Desktop,
+            "server" => hostType == DeviceType.Server,
+            "mobile" => hostType == DeviceType.Mobile,
+            "iot" => hostType == DeviceType.IoT,
+            "networkequipment" or "network" => hostType == DeviceType.NetworkEquipment,
+            "printer" => hostType == DeviceType.Printer,
+            "virtual" => hostType == DeviceType.Virtual,
+            "unknown" => hostType == DeviceType.Unknown,
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Matches host role string to server/client status without repeated string allocations.
+    /// </summary>
+    private static bool MatchesHostRole(bool isServer, string roleFilter)
+    {
+        return roleFilter.ToLowerInvariant() switch
+        {
+            "server" => isServer,
+            "client" => !isServer,
+            _ => false
+        };
     }
 
     /// <summary>
@@ -501,10 +546,18 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
         };
     }
 
+    /// <summary>
+    /// Updates statistics using single-pass aggregation.
+    /// Previous: 7 separate traversals. Now: 1 traversal with category buckets.
+    /// </summary>
     private void UpdateStatistics()
     {
-        if (_allHosts is null)
+        if (_allHosts is null || _allHosts.Count == 0)
         {
+            if (_lastStatisticsFingerprint == "0")
+                return;
+            _lastStatisticsFingerprint = "0";
+
             TotalHosts = 0;
             WindowsHosts = 0;
             LinuxHosts = 0;
@@ -515,23 +568,50 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
             return;
         }
 
+        // Single-pass aggregation
+        int windows = 0, linux = 0, macOs = 0, mobile = 0, iot = 0, unknown = 0;
+
+        foreach (var host in _allHosts)
+        {
+            var osFamily = host.OsDetection?.OsFamily;
+            var deviceType = host.OsDetection?.DeviceType;
+
+            // OS family categorization
+            if (!string.IsNullOrEmpty(osFamily) && osFamily != "Unknown")
+            {
+                if (osFamily.Contains("Windows", StringComparison.OrdinalIgnoreCase))
+                    windows++;
+                else if (osFamily.Contains("Linux", StringComparison.OrdinalIgnoreCase))
+                    linux++;
+                else if (osFamily.Contains("macOS", StringComparison.OrdinalIgnoreCase) ||
+                         osFamily.Contains("iOS", StringComparison.OrdinalIgnoreCase))
+                    macOs++;
+            }
+            else
+            {
+                unknown++;
+            }
+
+            // Device type categorization
+            if (deviceType == DeviceType.Mobile)
+                mobile++;
+            else if (deviceType == DeviceType.IoT || deviceType == DeviceType.NetworkEquipment)
+                iot++;
+        }
+
+        // Fingerprint check for early-exit
+        var fingerprint = $"{_allHosts.Count}|{windows}|{linux}|{macOs}|{mobile}|{iot}|{unknown}";
+        if (fingerprint == _lastStatisticsFingerprint)
+            return;
+        _lastStatisticsFingerprint = fingerprint;
+
         TotalHosts = _allHosts.Count;
-        WindowsHosts = _allHosts.Count(h =>
-            h.OsDetection?.OsFamily?.Contains("Windows", StringComparison.OrdinalIgnoreCase) ?? false);
-        LinuxHosts = _allHosts.Count(h =>
-            h.OsDetection?.OsFamily?.Contains("Linux", StringComparison.OrdinalIgnoreCase) ?? false);
-        MacOsHosts = _allHosts.Count(h =>
-            (h.OsDetection?.OsFamily?.Contains("macOS", StringComparison.OrdinalIgnoreCase) ?? false) ||
-            (h.OsDetection?.OsFamily?.Contains("iOS", StringComparison.OrdinalIgnoreCase) ?? false));
-        MobileHosts = _allHosts.Count(h =>
-            h.OsDetection?.DeviceType == DeviceType.Mobile);
-        IotHosts = _allHosts.Count(h =>
-            h.OsDetection?.DeviceType == DeviceType.IoT ||
-            h.OsDetection?.DeviceType == DeviceType.NetworkEquipment);
-        UnknownHosts = _allHosts.Count(h =>
-            h.OsDetection is null ||
-            h.OsDetection.OsFamily == "Unknown" ||
-            string.IsNullOrEmpty(h.OsDetection.OsFamily));
+        WindowsHosts = windows;
+        LinuxHosts = linux;
+        MacOsHosts = macOs;
+        MobileHosts = mobile;
+        IotHosts = iot;
+        UnknownHosts = unknown;
     }
 
     // ==================== COMMANDS ====================

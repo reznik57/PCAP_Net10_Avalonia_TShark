@@ -23,6 +23,10 @@ using IDispatcherService = PCAPAnalyzer.UI.Services.IDispatcherService;
 
 namespace PCAPAnalyzer.UI.ViewModels
 {
+    /// <summary>
+    /// ViewModel for Geographic Map tab.
+    /// Uses fingerprinting for early-exit optimization on country table updates.
+    /// </summary>
     public class GeographicMapViewModel : ReactiveObject, IActivatableViewModel
     {
         private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
@@ -37,7 +41,10 @@ namespace PCAPAnalyzer.UI.ViewModels
         private ObservableCollection<ContinentSummary> _topContinents = [];
         private ObservableCollection<CountrySummary> _topCountries = [];
         private ObservableCollection<ProtocolSummary> _protocolStats = [];
-    private IReadOnlyList<PacketInfo>? _allPackets;
+        private IReadOnlyList<PacketInfo>? _allPackets;
+
+        // Fingerprints for early-exit optimization
+        private string? _lastCountryTablesFingerprint;
         
         // Table view properties
         private bool _showTop100;
@@ -304,9 +311,16 @@ namespace PCAPAnalyzer.UI.ViewModels
                     .ToList();
             }
             
-            // Update metrics - calculate public IP packets from country statistics
-            var publicIPPackets = CountryTrafficData?.Values.Sum(c => c.TotalPackets) ?? 0;
-            var publicIPBytes = CountryTrafficData?.Values.Sum(c => c.TotalBytes) ?? 0;
+            // Update metrics - single-pass calculation (was 2× Sum())
+            long publicIPPackets = 0, publicIPBytes = 0;
+            if (CountryTrafficData is not null)
+            {
+                foreach (var c in CountryTrafficData.Values)
+                {
+                    publicIPPackets += c.TotalPackets;
+                    publicIPBytes += c.TotalBytes;
+                }
+            }
             TotalPublicIPPackets = publicIPPackets;
             CountriesDetected = CountryTrafficData?.Count ?? 0;
             ActiveFlows = statistics.TrafficFlows?.Count(f => f.IsCrossBorder) ?? 0;
@@ -396,9 +410,10 @@ namespace PCAPAnalyzer.UI.ViewModels
             {
                 if (ContinentData.CountryToContinentMap.TryGetValue(kvp.Key, out var continentCode))
                 {
-                    if (!continentStats.ContainsKey(continentCode))
-                        continentStats[continentCode] = 0;
-                    continentStats[continentCode] += kvp.Value.TotalPackets;
+                    // TryGetValue pattern: 1 lookup instead of 2 (ContainsKey + indexer)
+                    if (!continentStats.TryGetValue(continentCode, out var current))
+                        current = 0;
+                    continentStats[continentCode] = current + kvp.Value.TotalPackets;
                 }
             }
             
@@ -505,9 +520,10 @@ namespace PCAPAnalyzer.UI.ViewModels
                 {
                     foreach (var protocol in country.ProtocolBreakdown)
                     {
-                        if (!protocolCounts.ContainsKey(protocol.Key))
-                            protocolCounts[protocol.Key] = 0;
-                        protocolCounts[protocol.Key] += protocol.Value;
+                        // TryGetValue pattern: 1 lookup instead of 2 (ContainsKey + indexer)
+                        if (!protocolCounts.TryGetValue(protocol.Key, out var current))
+                            current = 0;
+                        protocolCounts[protocol.Key] = current + protocol.Value;
                     }
                 }
             }
@@ -587,6 +603,10 @@ namespace PCAPAnalyzer.UI.ViewModels
             StatusMessage = "World Map";
         }
         
+        /// <summary>
+        /// Updates country tables with fingerprinting for early-exit.
+        /// Optimized: Single-pass totals calculation, fingerprint-based skip.
+        /// </summary>
         private void UpdateCountryTables()
         {
             // Always ensure we're on UI thread for collection updates
@@ -595,36 +615,51 @@ namespace PCAPAnalyzer.UI.ViewModels
                 Dispatcher.Post(() => UpdateCountryTables());
                 return;
             }
-            
+
             if (CountryTrafficData is null || !CountryTrafficData.Any())
             {
+                if (_lastCountryTablesFingerprint == "empty")
+                    return;
+                _lastCountryTablesFingerprint = "empty";
                 TopCountriesByPackets.Clear();
                 TopCountriesByBytes.Clear();
                 return;
             }
 
-            // Calculate totals using PUBLIC traffic only (exclude INT and IP6)
-            var publicCountries = CountryTrafficData
-                .Where(kvp => kvp.Key != "INT" && kvp.Key != "IP6" && kvp.Key != "INTERNAL" && kvp.Key != "IPV6")
-                .ToList();
+            // Single-pass totals calculation (exclude internal traffic)
+            long totalPackets = 0, totalBytes = 0;
+            foreach (var kvp in CountryTrafficData)
+            {
+                if (kvp.Key is "INT" or "IP6" or "INTERNAL" or "IPV6")
+                    continue;
+                totalPackets += kvp.Value.TotalPackets;
+                totalBytes += kvp.Value.TotalBytes;
+            }
 
-            var totalPackets = publicCountries.Sum(kvp => kvp.Value.TotalPackets);
-            var totalBytes = publicCountries.Sum(kvp => kvp.Value.TotalBytes);
+            // Generate fingerprint from top countries' data
+            var takeCount = ShowTop100 ? 100 : 25;
+            var fingerprint = $"{CountryTrafficData.Count}|{totalPackets}|{totalBytes}|{takeCount}";
 
-            // Create country table items - include Unknown for unresolved IPs
+            if (fingerprint == _lastCountryTablesFingerprint)
+            {
+                DebugLogger.Log("[GeographicMapViewModel] SKIPPING UpdateCountryTables - data unchanged");
+                return;
+            }
+            _lastCountryTablesFingerprint = fingerprint;
+
+            // Create country table items - single pass with percentage calculation
             var allCountries = CountryTrafficData
                 .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Key) &&
                              !string.IsNullOrWhiteSpace(kvp.Value.CountryName) &&
-                             kvp.Key.Length >= 2) // Filter out invalid country codes
+                             kvp.Key.Length >= 2)
                 .Select(kvp =>
                 {
                     var stats = kvp.Value;
-                    var continent = GetContinentForCountry(kvp.Key);
                     return new CountryTableItem
                     {
-                        CountryCode = string.IsNullOrWhiteSpace(kvp.Key) ? "IP6" : kvp.Key,
-                        CountryName = string.IsNullOrWhiteSpace(stats.CountryName) ? "Unknown" : stats.CountryName,
-                        Continent = continent,
+                        CountryCode = kvp.Key,
+                        CountryName = stats.CountryName ?? "Unknown",
+                        Continent = GetContinentForCountry(kvp.Key),
                         TotalPackets = stats.TotalPackets,
                         TotalBytes = stats.TotalBytes,
                         PacketPercentage = totalPackets > 0 ? (stats.TotalPackets * 100.0 / totalPackets) : 0,
@@ -633,60 +668,43 @@ namespace PCAPAnalyzer.UI.ViewModels
                     };
                 })
                 .ToList();
-            
-            // Sort by packets and apply limit - each list gets its own ranking
+
+            // Sort by packets and apply limit with ranking
             var byPackets = allCountries
                 .OrderByDescending(c => c.TotalPackets)
-                .Take(ShowTop100 ? Math.Min(100, allCountries.Count) : 25)
-                .Select((c, index) =>
-                {
-                    // Clone the item to avoid shared ranking
-                    var item = new CountryTableItem
-                    {
-                        CountryCode = c.CountryCode,
-                        CountryName = c.CountryName,
-                        Continent = c.Continent,
-                        TotalPackets = c.TotalPackets,
-                        TotalBytes = c.TotalBytes,
-                        PacketPercentage = c.PacketPercentage,
-                        BytePercentage = c.BytePercentage,
-                        IsHighRisk = c.IsHighRisk,
-                        Rank = index + 1
-                    };
-                    return item;
-                })
+                .Take(takeCount)
+                .Select((c, index) => CloneWithRank(c, index + 1))
                 .ToList();
-            
-            // Sort by bytes and apply limit - separate ranking
+
+            // Sort by bytes and apply limit with ranking
             var byBytes = allCountries
                 .OrderByDescending(c => c.TotalBytes)
-                .Take(ShowTop100 ? Math.Min(100, allCountries.Count) : 25)
-                .Select((c, index) =>
-                {
-                    // Clone the item to avoid shared ranking
-                    var item = new CountryTableItem
-                    {
-                        CountryCode = c.CountryCode,
-                        CountryName = c.CountryName,
-                        Continent = c.Continent,
-                        TotalPackets = c.TotalPackets,
-                        TotalBytes = c.TotalBytes,
-                        PacketPercentage = c.PacketPercentage,
-                        BytePercentage = c.BytePercentage,
-                        IsHighRisk = c.IsHighRisk,
-                        Rank = index + 1
-                    };
-                    return item;
-                })
+                .Take(takeCount)
+                .Select((c, index) => CloneWithRank(c, index + 1))
                 .ToList();
-            
+
             // Update collections
-            DebugLogger.Log($"[EnhancedMapViewModel] UpdateCountryTables - All countries: {allCountries.Count}");
-            DebugLogger.Log($"[EnhancedMapViewModel] UpdateCountryTables - byPackets: {byPackets.Count} items");
-            DebugLogger.Log($"[EnhancedMapViewModel] UpdateCountryTables - byBytes: {byBytes.Count} items");
+            DebugLogger.Log($"[GeographicMapViewModel] UpdateCountryTables - {allCountries.Count} countries, showing {byPackets.Count}");
             TopCountriesByPackets = new ObservableCollection<CountryTableItem>(byPackets);
             TopCountriesByBytes = new ObservableCollection<CountryTableItem>(byBytes);
         }
+
+        /// <summary>
+        /// Creates a clone of CountryTableItem with the specified rank.
+        /// Extracted to reduce code duplication.
+        /// </summary>
+        private static CountryTableItem CloneWithRank(CountryTableItem c, int rank) => new()
+        {
+            CountryCode = c.CountryCode,
+            CountryName = c.CountryName,
+            Continent = c.Continent,
+            TotalPackets = c.TotalPackets,
+            TotalBytes = c.TotalBytes,
+            PacketPercentage = c.PacketPercentage,
+            BytePercentage = c.BytePercentage,
+            IsHighRisk = c.IsHighRisk,
+            Rank = rank
+        };
         
         private static string GetContinentForCountry(string countryCode)
             => ContinentData.GetContinentDisplayName(countryCode);

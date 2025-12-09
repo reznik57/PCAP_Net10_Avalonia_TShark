@@ -161,9 +161,10 @@ public partial class TopTalkersViewModel : ObservableObject
             _ => talkers.OrderByDescending(t => t.TotalTraffic).Take(TopN).ToList()
         };
 
-        // Calculate percentage of total
-        var topTalkersTraffic = talkers.Sum(t => SelectedMetric == MetricTypes.Bytes ? t.ByteCount : t.PacketCount);
-        var totalTraffic = SelectedMetric == MetricTypes.Bytes ? _currentStatistics.TotalBytes : _currentStatistics.TotalPackets;
+        // Calculate percentage of total (hoist condition outside loop)
+        var useBytes = SelectedMetric == MetricTypes.Bytes;
+        var topTalkersTraffic = talkers.Sum(t => useBytes ? t.ByteCount : t.PacketCount);
+        var totalTraffic = useBytes ? _currentStatistics.TotalBytes : _currentStatistics.TotalPackets;
         TopTalkersPercentage = totalTraffic > 0 ? (double)topTalkersTraffic / totalTraffic * 100 : 0;
 
         // Assign ranks
@@ -184,14 +185,14 @@ public partial class TopTalkersViewModel : ObservableObject
     {
         var talkers = new Dictionary<string, TopTalkerViewModel>();
 
-        // Add sources
+        // Add sources (TryGetValue pattern: 1 lookup instead of 3)
         if (statistics.TopSources is not null)
         {
             foreach (var source in statistics.TopSources)
             {
-                if (!talkers.ContainsKey(source.Address))
+                if (!talkers.TryGetValue(source.Address, out var talker))
                 {
-                    talkers[source.Address] = new TopTalkerViewModel
+                    talker = new TopTalkerViewModel
                     {
                         Address = source.Address,
                         Country = source.Country,
@@ -199,21 +200,22 @@ public partial class TopTalkersViewModel : ObservableObject
                         IsInternal = source.IsInternal,
                         IsHighRisk = source.IsHighRisk
                     };
+                    talkers[source.Address] = talker;
                 }
 
-                talkers[source.Address].SentPackets += source.PacketCount;
-                talkers[source.Address].SentBytes += source.ByteCount;
+                talker.SentPackets += source.PacketCount;
+                talker.SentBytes += source.ByteCount;
             }
         }
 
-        // Add destinations
+        // Add destinations (TryGetValue pattern: 1 lookup instead of 3)
         if (statistics.TopDestinations is not null)
         {
             foreach (var dest in statistics.TopDestinations)
             {
-                if (!talkers.ContainsKey(dest.Address))
+                if (!talkers.TryGetValue(dest.Address, out var talker))
                 {
-                    talkers[dest.Address] = new TopTalkerViewModel
+                    talker = new TopTalkerViewModel
                     {
                         Address = dest.Address,
                         Country = dest.Country,
@@ -221,10 +223,11 @@ public partial class TopTalkersViewModel : ObservableObject
                         IsInternal = dest.IsInternal,
                         IsHighRisk = dest.IsHighRisk
                     };
+                    talkers[dest.Address] = talker;
                 }
 
-                talkers[dest.Address].ReceivedPackets += dest.PacketCount;
-                talkers[dest.Address].ReceivedBytes += dest.ByteCount;
+                talker.ReceivedPackets += dest.PacketCount;
+                talker.ReceivedBytes += dest.ByteCount;
             }
         }
 

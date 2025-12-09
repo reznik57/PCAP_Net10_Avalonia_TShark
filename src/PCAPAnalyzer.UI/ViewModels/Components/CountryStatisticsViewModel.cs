@@ -75,11 +75,15 @@ public partial class CountryStatisticsViewModel : ObservableObject
         InternationalPercentage = statistics.InternationalPercentage;
         DebugLogger.Log($"[CountryStatisticsViewModel] Found {UniqueCountries} unique countries");
 
-        // Log country statistics for debugging
+        // Log country statistics for debugging - single-pass (was 2× Sum())
         if (statistics.CountryStatistics is not null)
         {
-            var countryPacketSum = statistics.CountryStatistics.Values.Sum(c => c.TotalPackets);
-            var countryByteSum = statistics.CountryStatistics.Values.Sum(c => c.TotalBytes);
+            long countryPacketSum = 0, countryByteSum = 0;
+            foreach (var c in statistics.CountryStatistics.Values)
+            {
+                countryPacketSum += c.TotalPackets;
+                countryByteSum += c.TotalBytes;
+            }
             DebugLogger.Log($"[CountryStatisticsViewModel] Country statistics sum: {countryPacketSum} packets, {countryByteSum} bytes");
             DebugLogger.Log($"[CountryStatisticsViewModel] Total from statistics: {statistics.TotalPackets} packets, {statistics.TotalBytes} bytes (geolocated: {statistics.GeolocatedPackets} packets, {statistics.GeolocatedBytes} bytes)");
 
@@ -173,12 +177,14 @@ public partial class CountryStatisticsViewModel : ObservableObject
         }
 
         // Calculate percentages using PUBLIC traffic only (exclude INT and IP6)
-        var publicCountries = statistics.CountryStatistics
-            .Where(kvp => kvp.Key != "INT" && kvp.Key != "IP6" && kvp.Key != "INTERNAL" && kvp.Key != "IPV6")
-            .ToList();
-
-        var basePackets = publicCountries.Sum(kvp => kvp.Value.TotalPackets);
-        var baseBytes = publicCountries.Sum(kvp => kvp.Value.TotalBytes);
+        // Single-pass calculation (was 2× Sum())
+        long basePackets = 0, baseBytes = 0;
+        foreach (var kvp in statistics.CountryStatistics)
+        {
+            if (kvp.Key is "INT" or "IP6" or "INTERNAL" or "IPV6") continue;
+            basePackets += kvp.Value.TotalPackets;
+            baseBytes += kvp.Value.TotalBytes;
+        }
 
         var items = statistics.CountryStatistics
             .OrderByDescending(kvp => kvp.Value.TotalPackets)
@@ -234,9 +240,10 @@ public partial class CountryStatisticsViewModel : ObservableObject
         foreach (var kvp in _currentStatistics.CountryStatistics)
         {
             var continent = GetContinentCode(kvp.Key);
-            if (continentPackets.ContainsKey(continent))
+            // TryGetValue: 1 lookup instead of 2 (ContainsKey + indexer)
+            if (continentPackets.TryGetValue(continent, out var current))
             {
-                continentPackets[continent] += kvp.Value.TotalPackets;
+                continentPackets[continent] = current + kvp.Value.TotalPackets;
             }
         }
 

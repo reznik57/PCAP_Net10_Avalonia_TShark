@@ -46,6 +46,9 @@ public partial class ThreatsChartsViewModel : ObservableObject
     // Cached threat data for re-rendering when toggles change
     private List<EnhancedSecurityThreat> _cachedThreats = [];
 
+    // Fingerprints for early-exit optimization
+    private string? _lastChartsFingerprint;
+
     // Threat rates (calculated from timeline)
     [ObservableProperty] private double _peakThreatRate;
     [ObservableProperty] private double _averageThreatRate;
@@ -71,7 +74,8 @@ public partial class ThreatsChartsViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Updates all charts based on current threat data and metrics
+    /// Updates all charts based on current threat data and metrics.
+    /// Uses fingerprinting for early-exit optimization.
     /// </summary>
     public void UpdateAllCharts(
         List<EnhancedSecurityThreat> allThreats,
@@ -81,6 +85,12 @@ public partial class ThreatsChartsViewModel : ObservableObject
         int mediumCount,
         int lowCount)
     {
+        // Fingerprint check for early-exit
+        var fingerprint = $"{allThreats.Count}|{criticalCount}|{highCount}|{mediumCount}|{lowCount}|{metrics?.ThreatsByPort.Count ?? 0}";
+        if (fingerprint == _lastChartsFingerprint)
+            return;
+        _lastChartsFingerprint = fingerprint;
+
         _cachedThreats = allThreats;
         UpdateSeverityChart(criticalCount, highCount, mediumCount, lowCount);
         UpdateTimelineChart(allThreats);
@@ -169,11 +179,8 @@ public partial class ThreatsChartsViewModel : ObservableObject
             return;
         }
 
-        // Group threats by severity
-        var criticalThreats = allThreats.Where(t => t.Severity == ThreatSeverity.Critical).ToList();
-        var highThreats = allThreats.Where(t => t.Severity == ThreatSeverity.High).ToList();
-        var mediumThreats = allThreats.Where(t => t.Severity == ThreatSeverity.Medium).ToList();
-        var lowThreats = allThreats.Where(t => t.Severity == ThreatSeverity.Low).ToList();
+        // Single-pass: group threats by severity using ToLookup (4 Where → 1 ToLookup)
+        var threatsBySeverity = allThreats.ToLookup(t => t.Severity);
 
         // Use actual packet time range
         var minTime = allThreats.Min(t => t.FirstSeen);
@@ -188,11 +195,11 @@ public partial class ThreatsChartsViewModel : ObservableObject
 
         var series = new ObservableCollection<ISeries>();
 
-        // Add series for each severity level
-        AddTimelineSeries(series, criticalThreats, "Critical", minTime, maxTime);
-        AddTimelineSeries(series, highThreats, "High", minTime, maxTime);
-        AddTimelineSeries(series, mediumThreats, "Medium", minTime, maxTime);
-        AddTimelineSeries(series, lowThreats, "Low", minTime, maxTime);
+        // Add series for each severity level using pre-grouped lookup
+        AddTimelineSeries(series, threatsBySeverity[ThreatSeverity.Critical].ToList(), "Critical", minTime, maxTime);
+        AddTimelineSeries(series, threatsBySeverity[ThreatSeverity.High].ToList(), "High", minTime, maxTime);
+        AddTimelineSeries(series, threatsBySeverity[ThreatSeverity.Medium].ToList(), "Medium", minTime, maxTime);
+        AddTimelineSeries(series, threatsBySeverity[ThreatSeverity.Low].ToList(), "Low", minTime, maxTime);
 
         // Calculate threat rates
         CalculateThreatRates(allThreats, minTime, maxTime);
@@ -312,8 +319,9 @@ public partial class ThreatsChartsViewModel : ObservableObject
             var minute = new DateTime(
                 threat.FirstSeen.Year, threat.FirstSeen.Month, threat.FirstSeen.Day,
                 threat.FirstSeen.Hour, threat.FirstSeen.Minute, 0);
-            if (allMinutes.ContainsKey(minute))
-                allMinutes[minute]++;
+            // TryGetValue: 1 lookup instead of 2 (ContainsKey + indexer)
+            if (allMinutes.TryGetValue(minute, out var count))
+                allMinutes[minute] = count + 1;
         }
 
         PeakThreatRate = allMinutes.Any() ? allMinutes.Max(kvp => kvp.Value / 60.0) : 0;
@@ -713,9 +721,10 @@ public partial class ThreatsChartsViewModel : ObservableObject
             var seconds = (threat.FirstSeen - minTime).TotalSeconds;
             var bucket = Math.Min((int)(seconds / bucketSize), bucketCount);
             var severity = threat.Severity.ToString();
-            if (buckets[bucket].ContainsKey(severity))
+            // TryGetValue: 1 lookup instead of 2 (ContainsKey + indexer)
+            if (buckets[bucket].TryGetValue(severity, out var severityCount))
             {
-                buckets[bucket][severity]++;
+                buckets[bucket][severity] = severityCount + 1;
                 maxCount = Math.Max(maxCount, buckets[bucket].Values.Sum());
             }
         }

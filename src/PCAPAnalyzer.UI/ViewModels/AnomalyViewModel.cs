@@ -18,6 +18,9 @@ public partial class AnomalyViewModel : ObservableObject
 
     private IReadOnlyList<NetworkAnomaly> _allAnomalies = [];
 
+    // Fingerprint for early-exit optimization
+    private string? _lastFilterFingerprint;
+
     [ObservableProperty]
     private ObservableCollection<AnomalyDisplayItem> _filteredAnomalies = [];
 
@@ -63,18 +66,33 @@ public partial class AnomalyViewModel : ObservableObject
 
     /// <summary>
     /// Update with new anomaly data from analysis.
+    /// Uses single-pass counting (5 Count() → 1 foreach).
     /// </summary>
     public void UpdateAnomalies(IReadOnlyList<NetworkAnomaly>? anomalies)
     {
         _allAnomalies = anomalies ?? [];
 
-        // Update counts
-        TotalCount = _allAnomalies.Count;
-        CriticalCount = _allAnomalies.Count(a => a.Severity == AnomalySeverity.Critical);
-        HighCount = _allAnomalies.Count(a => a.Severity == AnomalySeverity.High);
-        MediumCount = _allAnomalies.Count(a => a.Severity == AnomalySeverity.Medium);
-        LowCount = _allAnomalies.Count(a => a.Severity == AnomalySeverity.Low);
+        // Single-pass severity counting (was 5 separate .Count() calls)
+        int critical = 0, high = 0, medium = 0, low = 0;
+        foreach (var a in _allAnomalies)
+        {
+            switch (a.Severity)
+            {
+                case AnomalySeverity.Critical: critical++; break;
+                case AnomalySeverity.High: high++; break;
+                case AnomalySeverity.Medium: medium++; break;
+                case AnomalySeverity.Low: low++; break;
+            }
+        }
 
+        TotalCount = _allAnomalies.Count;
+        CriticalCount = critical;
+        HighCount = high;
+        MediumCount = medium;
+        LowCount = low;
+
+        // Reset fingerprint to force filter rebuild with new data
+        _lastFilterFingerprint = null;
         ApplyFilters();
         DebugLogger.Log($"[AnomalyViewModel] Updated with {TotalCount} anomalies");
     }
@@ -133,6 +151,15 @@ public partial class AnomalyViewModel : ObservableObject
     [SuppressMessage("Maintainability", "CA1502:Avoid excessive class coupling", Justification = "Filter method checks 4 severity + 7 category flags with search - complexity is inherent to multi-criteria filtering")]
     private void ApplyFilters()
     {
+        // Fingerprint check for early-exit (includes all filter states)
+        var fingerprint = $"{_allAnomalies.Count}|{ShowCritical}|{ShowHigh}|{ShowMedium}|{ShowLow}|{FilterNetwork}|{FilterTcp}|{FilterApplication}|{FilterVoip}|{FilterIot}|{FilterSecurity}|{FilterMalformed}|{SearchText}";
+        if (fingerprint == _lastFilterFingerprint)
+        {
+            DebugLogger.Log("[AnomalyViewModel] SKIPPING ApplyFilters - unchanged");
+            return;
+        }
+        _lastFilterFingerprint = fingerprint;
+
         var filtered = _allAnomalies.AsEnumerable();
 
         // Severity filter
