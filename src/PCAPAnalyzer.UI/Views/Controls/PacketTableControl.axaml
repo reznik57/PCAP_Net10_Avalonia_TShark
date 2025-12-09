@@ -45,10 +45,25 @@
 
                     <!-- Center: Page info + Go To navigation - SLACK STYLE -->
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="16" VerticalAlignment="Center">
-                        <TextBlock VerticalAlignment="Center" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}">
-                            <Run Text="Page "/><Run Text="{Binding CurrentPage}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><Run Text=" of "/><Run Text="{Binding TotalPages}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                            <Run Text=" (30 per page)" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}"/>
-                        </TextBlock>
+                        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <TextBlock VerticalAlignment="Center" FontSize="{StaticResource FontSizeBase}" Foreground="{DynamicResource TextSecondaryBrush}">
+                                <Run Text="Page "/><Run Text="{Binding CurrentPage}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/><Run Text=" of "/><Run Text="{Binding TotalPages}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                            </TextBlock>
+                            <Border Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="6" Padding="4,2">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <ComboBox ItemsSource="{Binding PageSizeOptions}"
+                                              SelectedItem="{Binding UIState.PageSize}"
+                                              Width="65" Height="24"
+                                              FontSize="{StaticResource FontSizeSmall}"
+                                              Background="{DynamicResource BackgroundDark}"
+                                              Foreground="{DynamicResource TextPrimaryBrush}"
+                                              VerticalContentAlignment="Center"
+                                              HorizontalContentAlignment="Center"
+                                              ToolTip.Tip="Packets per page"/>
+                                    <TextBlock Text="/pg" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
 
                         <!-- Go To Packet input -->
                         <Border Background="{DynamicResource BackgroundCard}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="8" Padding="8,4">

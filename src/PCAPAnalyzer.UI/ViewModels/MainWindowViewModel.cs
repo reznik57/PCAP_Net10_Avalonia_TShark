@@ -100,7 +100,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     // ==================== PROPERTIES ====================
 
     public bool ShowNoFileWarning => string.IsNullOrEmpty(FileManager.CurrentFile) && !Analysis.IsAnalyzing;
-    public List<int> PageSizeOptions { get; } = new() { 25, 50, 100, 200, 500, 1000 };
+    public List<int> PageSizeOptions { get; } = [30, 50, 100, 200, 500, 1000];
 
     // Tab selection tracking (reserved for future database cache optimization)
     [ObservableProperty] private int _selectedTabIndex = 0;
@@ -239,6 +239,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         Analysis.PropertyChanged += OnAnalysisPropertyChanged;
 
         UIState.PageChanged += OnPageChanged;
+        UIState.PageSizeChanged += OnPageSizeChanged;
         UIState.GoToPacketRequested += OnGoToPacketRequested;
         UIState.SearchStreamRequested += OnSearchStreamRequested;
         UIState.PropertyChanged += OnUIStatePropertyChanged;
@@ -1031,6 +1032,14 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     private void OnPageChanged(object? sender, int pageNumber)
     {
         PacketManager.UpdatePageDisplay(pageNumber, UIState.PageSize);
+    }
+
+    private void OnPageSizeChanged(object? sender, int newPageSize)
+    {
+        // Recalculate pagination with new page size
+        var filteredPackets = PacketManager.GetFilteredPackets();
+        UIState.UpdatePaginationInfo(filteredPackets.Count);
+        PacketManager.UpdatePageDisplay(1, newPageSize);
     }
 
     private void OnGoToPacketRequested(object? sender, uint frameNumber)

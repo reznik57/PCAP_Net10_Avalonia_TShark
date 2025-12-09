@@ -60,6 +60,7 @@ public partial class MainWindowUIStateViewModel : ObservableObject
 
     // Events
     public event EventHandler<int>? PageChanged;
+    public event EventHandler<int>? PageSizeChanged;
     public event EventHandler<uint>? GoToPacketRequested;
     public event EventHandler<string>? SearchStreamRequested;
 
@@ -77,7 +78,9 @@ public partial class MainWindowUIStateViewModel : ObservableObject
             if (SetProperty(ref _pageSize, value))
             {
                 PageSizeText = value.ToString();
+                CurrentPage = 1; // Reset to first page when page size changes
                 Status = $"Page size changed to {_pageSize} packets per page";
+                PageSizeChanged?.Invoke(this, value);
             }
         }
     }
