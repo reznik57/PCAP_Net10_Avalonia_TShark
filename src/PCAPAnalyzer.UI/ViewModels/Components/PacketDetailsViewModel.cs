@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.Core.Performance;
 using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Services;
@@ -35,7 +36,8 @@ public partial class PacketDetailsViewModel : ObservableObject
     private IPacketStore? _packetStore;
 
     // Stream analysis cache: key = stream identifier, value = analysis result
-    private readonly Dictionary<string, StreamAnalysisResult> _streamCache = [];
+    // LRU cache with max 50 streams to prevent memory leak when analyzing many streams
+    private readonly ResultCache<string, StreamAnalysisResult> _streamCache = new(maxCapacity: 50);
 
     [ObservableProperty] private PacketInfo? _currentPacket;
     [ObservableProperty] private bool _hasPacket;
@@ -573,7 +575,7 @@ public partial class PacketDetailsViewModel : ObservableObject
             var streamPackets = await QueryStreamPacketsAsync(currentPacket);
 
             // Check cache first
-            if (_streamCache.TryGetValue(streamKey, out var cachedResult))
+            if (_streamCache.TryGetValue(streamKey, out var cachedResult) && cachedResult is not null)
             {
                 await UpdateFlowInfoFromAnalysisAsync(currentPacket, cachedResult, streamPackets);
                 return;
@@ -591,8 +593,8 @@ public partial class PacketDetailsViewModel : ObservableObject
             // Analyze stream
             var analysis = await _streamAnalyzer.AnalyzeStreamAsync(streamPackets, streamKey);
 
-            // Cache result
-            _streamCache[streamKey] = analysis;
+            // Cache result (LRU - evicts oldest when > 50 streams)
+            _streamCache.AddOrUpdate(streamKey, analysis);
 
             // Update UI
             await UpdateFlowInfoFromAnalysisAsync(currentPacket, analysis, streamPackets);
