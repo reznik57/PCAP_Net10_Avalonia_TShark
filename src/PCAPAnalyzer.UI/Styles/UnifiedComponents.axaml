@@ -16,31 +16,31 @@
 
     <!-- ═══ UNIFIED CARD STYLE ═══ -->
     <Style Selector="Border.modern-card-unified">
-        <Setter Property="Background" Value="#0D1117"/>
-        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="Background" Value="{DynamicResource BackgroundDarkestBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}"/>
         <Setter Property="Padding" Value="20"/>
         <Setter Property="ClipToBounds" Value="True"/>
     </Style>
 
     <!-- ═══ UNIFIED TABLE HEADER ═══ -->
     <Style Selector="Border.table-header-unified">
-        <Setter Property="Background" Value="#161B22"/>
+        <Setter Property="Background" Value="{DynamicResource BackgroundElevatedBrush}"/>
         <Setter Property="Height" Value="48"/>
         <Setter Property="Padding" Value="20,0"/>
-        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
     </Style>
 
     <!-- ═══ UNIFIED DATAGRID STYLE ═══ -->
     <Style Selector="DataGrid.modern-grid-unified">
-        <Setter Property="Background" Value="#0D1117"/>
-        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="Background" Value="{DynamicResource BackgroundDarkestBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="RowBackground" Value="#161B22"/>
+        <Setter Property="RowBackground" Value="{DynamicResource Background2Brush}"/>
         <Setter Property="GridLinesVisibility" Value="Horizontal"/>
-        <Setter Property="HorizontalGridLinesBrush" Value="#21262D"/>
+        <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderSubtleBrush}"/>
         <Setter Property="HeadersVisibility" Value="Column"/>
         <Setter Property="CanUserSortColumns" Value="True"/>
         <Setter Property="CanUserResizeColumns" Value="True"/>
@@ -50,60 +50,60 @@
 
     <!-- Alternating row background -->
     <Style Selector="DataGrid.modern-grid-unified DataGridRow:nth-child(even)">
-        <Setter Property="Background" Value="#0D1117"/>
+        <Setter Property="Background" Value="{DynamicResource BackgroundDarkestBrush}"/>
     </Style>
 
     <!-- DataGrid Header Style -->
     <Style Selector="DataGrid.modern-grid-unified DataGridColumnHeader">
-        <Setter Property="Background" Value="#161B22"/>
-        <Setter Property="Foreground" Value="#8B949E"/>
-        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Background" Value="{DynamicResource BackgroundElevatedBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Padding" Value="12,0"/>
         <Setter Property="Height" Value="40"/>
-        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
     </Style>
 
     <Style Selector="DataGrid.modern-grid-unified DataGridColumnHeader:pointerover">
-        <Setter Property="Background" Value="#21262D"/>
-        <Setter Property="Foreground" Value="#C9D1D9"/>
+        <Setter Property="Background" Value="{DynamicResource BackgroundCardBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
     <!-- DataGrid Row Selection -->
     <Style Selector="DataGrid.modern-grid-unified DataGridRow:selected /template/ Rectangle#BackgroundRectangle">
-        <Setter Property="Fill" Value="#1F4788"/>
+        <Setter Property="Fill" Value="{DynamicResource ColorPrimary}"/>
         <Setter Property="Opacity" Value="0.4"/>
     </Style>
 
     <Style Selector="DataGrid.modern-grid-unified DataGridRow:pointerover /template/ Rectangle#BackgroundRectangle">
-        <Setter Property="Fill" Value="#21262D"/>
+        <Setter Property="Fill" Value="{DynamicResource BackgroundCardBrush}"/>
         <Setter Property="Opacity" Value="1"/>
     </Style>
 
     <!-- DataGrid Cell Style -->
     <Style Selector="DataGrid.modern-grid-unified DataGridCell">
-        <Setter Property="Foreground" Value="#C9D1D9"/>
-        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBase}"/>
         <Setter Property="Padding" Value="12,8"/>
     </Style>
 
     <!-- ═══ UNIFIED STAT CARD ═══ -->
     <Style Selector="Border.stat-card-unified">
-        <Setter Property="Background" Value="#161B22"/>
-        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}"/>
         <Setter Property="Padding" Value="20"/>
         <Setter Property="MinHeight" Value="100"/>
     </Style>
 
     <!-- ═══ UNIFIED LOADING INDICATOR ═══ -->
     <Style Selector="Border.loading-unified">
-        <Setter Property="Background" Value="#161B22"/>
-        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusLarge}"/>
         <Setter Property="Padding" Value="20"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
@@ -111,49 +111,49 @@
 
     <Style Selector="ProgressBar.loading-progress-unified">
         <Setter Property="Height" Value="8"/>
-        <Setter Property="Foreground" Value="#3B82F6"/>
-        <Setter Property="Background" Value="#21262D"/>
+        <Setter Property="Foreground" Value="{DynamicResource ColorPrimary}"/>
+        <Setter Property="Background" Value="{DynamicResource BackgroundCardBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}"/>
     </Style>
 
     <!-- ═══ UNIFIED PAGINATION BUTTONS ═══ -->
     <Style Selector="Button.pagination-btn">
         <Setter Property="Width" Value="32"/>
         <Setter Property="Height" Value="28"/>
-        <Setter Property="Background" Value="#1C2128"/>
-        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="4"/>
-        <Setter Property="Foreground" Value="#8B949E"/>
-        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBase}"/>
         <Setter Property="Padding" Value="0"/>
     </Style>
 
     <Style Selector="Button.pagination-btn:pointerover">
-        <Setter Property="Background" Value="#22272E"/>
-        <Setter Property="BorderBrush" Value="#58A6FF"/>
-        <Setter Property="Foreground" Value="#C9D1D9"/>
+        <Setter Property="Background" Value="{DynamicResource BackgroundCardBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBlueLightBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
     <Style Selector="Button.pagination-btn:disabled">
         <Setter Property="Opacity" Value="0.4"/>
-        <Setter Property="Background" Value="#161B22"/>
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
     </Style>
 
     <!-- ═══ UNIFIED PAGE INFO TEXT ═══ -->
     <Style Selector="TextBlock.pagination-info">
-        <Setter Property="FontSize" Value="12"/>
-        <Setter Property="Foreground" Value="#8B949E"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBase}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Margin" Value="0,0,12,0"/>
     </Style>
 
     <!-- ═══ UNIFIED SECTION TITLE ═══ -->
     <Style Selector="TextBlock.section-title-unified">
-        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeInput}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="#F0F6FC"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="Margin" Value="0,0,0,16"/>
     </Style>
 
@@ -168,65 +168,65 @@
 
     <!-- ═══ UNIFIED BADGE STYLE ═══ -->
     <Style Selector="Border.badge-unified">
-        <Setter Property="Background" Value="#1C2128"/>
-        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="12"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusChip}"/>
         <Setter Property="Padding" Value="8,4"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
     <Style Selector="Border.badge-unified TextBlock">
-        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
         <Setter Property="FontWeight" Value="Medium"/>
     </Style>
 
     <!-- ═══ UNIFIED EXPORT BUTTON ═══ -->
     <Style Selector="Button.export-btn-unified">
-        <Setter Property="Background" Value="#1C2128"/>
-        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}"/>
         <Setter Property="Padding" Value="8,4"/>
-        <Setter Property="FontSize" Value="11"/>
-        <Setter Property="Foreground" Value="#8B949E"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
     </Style>
 
     <Style Selector="Button.export-btn-unified:pointerover">
-        <Setter Property="Background" Value="#22272E"/>
-        <Setter Property="BorderBrush" Value="#58A6FF"/>
-        <Setter Property="Foreground" Value="#C9D1D9"/>
+        <Setter Property="Background" Value="{DynamicResource BackgroundCardBrush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBlueLightBrush}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
     </Style>
 
     <!-- ═══ UNIFIED SEPARATOR ═══ -->
     <Style Selector="Separator.unified-separator">
         <Setter Property="Height" Value="1"/>
-        <Setter Property="Background" Value="#30363D"/>
+        <Setter Property="Background" Value="{DynamicResource BorderDefaultBrush}"/>
         <Setter Property="Margin" Value="0,16"/>
     </Style>
 
     <!-- ═══ UNIFIED RANKED TABLE ROW ═══ -->
     <Style Selector="Border.ranked-table-row">
         <Setter Property="Margin" Value="20,2"/>
-        <Setter Property="Background" Value="#161B2220"/>
-        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}"/>
         <Setter Property="Padding" Value="8,4"/>
     </Style>
 
     <Style Selector="Border.ranked-table-row:pointerover">
-        <Setter Property="Background" Value="#21262D"/>
+        <Setter Property="Background" Value="{DynamicResource BackgroundCardBrush}"/>
     </Style>
 
     <Style Selector="TextBlock.rank-number">
         <Setter Property="Width" Value="30"/>
-        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeMedium}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="#F0F6FC"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
     <Style Selector="Border.service-badge">
-        <Setter Property="Background" Value="#1C2128"/>
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
         <Setter Property="CornerRadius" Value="3"/>
         <Setter Property="Padding" Value="4,2"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
@@ -234,13 +234,13 @@
     </Style>
 
     <Style Selector="Border.percentage-track">
-        <Setter Property="Background" Value="#21262D"/>
+        <Setter Property="Background" Value="{DynamicResource BackgroundCardBrush}"/>
         <Setter Property="CornerRadius" Value="3"/>
         <Setter Property="Height" Value="20"/>
     </Style>
 
     <Style Selector="TextBlock.percentage-text">
-        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeXS}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
@@ -248,18 +248,18 @@
     </Style>
 
     <Style Selector="Button.details-btn">
-        <Setter Property="Background" Value="#1C2128"/>
-        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}"/>
         <Setter Property="Padding" Value="8,4"/>
         <Setter Property="Height" Value="24"/>
         <Setter Property="Cursor" Value="Hand"/>
     </Style>
 
     <Style Selector="Button.details-btn:pointerover">
-        <Setter Property="Background" Value="#238636"/>
-        <Setter Property="BorderBrush" Value="#2EA043"/>
+        <Setter Property="Background" Value="{DynamicResource ColorSuccess}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource ColorSuccessHover}"/>
     </Style>
 
     <Style Selector="Button.details-btn:pointerover TextBlock">
@@ -267,30 +267,30 @@
     </Style>
 
     <Style Selector="Button.details-btn TextBlock">
-        <Setter Property="FontSize" Value="11"/>
-        <Setter Property="Foreground" Value="#8B949E"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
     </Style>
 
     <!-- ═══ BOTTOM STATUS BAR ═══ -->
     <Style Selector="Border.status-bar-unified">
-        <Setter Property="Background" Value="#161B22"/>
-        <Setter Property="BorderBrush" Value="#30363D"/>
+        <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}"/>
         <Setter Property="BorderThickness" Value="0,1,0,0"/>
         <Setter Property="Height" Value="32"/>
         <Setter Property="Padding" Value="12,0"/>
     </Style>
 
     <Style Selector="TextBlock.status-bar-label">
-        <Setter Property="FontSize" Value="11"/>
-        <Setter Property="Foreground" Value="#8B949E"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Margin" Value="0,0,6,0"/>
     </Style>
 
     <Style Selector="TextBlock.status-bar-value">
-        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="#F0F6FC"/>
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
     </Style>
 
@@ -299,12 +299,12 @@
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="8,4"/>
         <Setter Property="Height" Value="24"/>
-        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusSmall}"/>
         <Setter Property="Cursor" Value="Hand"/>
     </Style>
 
     <Style Selector="Button.status-bar-btn:pointerover">
-        <Setter Property="Background" Value="#21262D"/>
+        <Setter Property="Background" Value="{DynamicResource BackgroundCardBrush}"/>
     </Style>
 
     <Style Selector="Ellipse.status-indicator">
@@ -316,23 +316,23 @@
 
     <!-- ═══ FILE ANALYSIS VIEW BUTTON STYLES ═══ -->
     <Style Selector="Button.primary-button">
-        <Setter Property="Background" Value="#1F6FEB"/>
+        <Setter Property="Background" Value="{DynamicResource ColorPrimary}"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="BorderBrush" Value="#58A6FF"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentBlueLightBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMedium}"/>
         <Setter Property="Padding" Value="12,8"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
         <Setter Property="Cursor" Value="Hand"/>
     </Style>
 
     <Style Selector="Button.primary-button:pointerover">
-        <Setter Property="Background" Value="#388BFD"/>
-        <Setter Property="BorderBrush" Value="#79C0FF"/>
+        <Setter Property="Background" Value="{DynamicResource ColorPrimaryLight}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource AccentCyanBrush}"/>
     </Style>
 
     <Style Selector="Button.primary-button:pressed">
-        <Setter Property="Background" Value="#1F6FEB"/>
+        <Setter Property="Background" Value="{DynamicResource ColorPrimary}"/>
     </Style>
 
     <Style Selector="Button.success-button">

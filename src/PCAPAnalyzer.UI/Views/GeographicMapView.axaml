@@ -75,7 +75,7 @@
                         <ItemsControl Grid.Row="1" ItemsSource="{Binding TopCountriesByPackets}" Margin="0,10">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Margin="20,0" Background="#161B2220" CornerRadius="4" Padding="4,2">
+                                        <Border Margin="20,0" Background="{DynamicResource Background2Brush}" CornerRadius="{StaticResource RadiusSmall}" Padding="4,2">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="40"/>
@@ -182,7 +182,7 @@
                         <ItemsControl Grid.Row="1" ItemsSource="{Binding TopCountriesByBytes}" Margin="0,10">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border Margin="20,0" Background="#161B2220" CornerRadius="4" Padding="4,2">
+                                        <Border Margin="20,0" Background="{DynamicResource Background2Brush}" CornerRadius="{StaticResource RadiusSmall}" Padding="4,2">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="40"/>

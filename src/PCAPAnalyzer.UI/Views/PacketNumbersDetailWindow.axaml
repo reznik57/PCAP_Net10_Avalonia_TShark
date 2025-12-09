@@ -16,28 +16,21 @@
         <StyleInclude Source="/Styles/UnifiedDarkTheme.axaml"/>
         
         <Style Selector="Border.header-panel">
-            <Setter Property="Background">
-                <Setter.Value>
-                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,0%">
-                        <GradientStop Offset="0" Color="#2A2A3A"/>
-                        <GradientStop Offset="1" Color="#1A1A24"/>
-                    </LinearGradientBrush>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Padding" Value="20,20,20,20"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderPrimary}"/>
+            <Setter Property="Background" Value="{DynamicResource Background2Brush}"/>
+            <Setter Property="Padding" Value="20"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
         </Style>
 
         <Style Selector="TextBlock.detail-label">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="#B8D4E8"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBase}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
             <Setter Property="Margin" Value="0,0,8,0"/>
         </Style>
 
         <Style Selector="TextBlock.detail-value">
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeInput}"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
     </Window.Styles>
@@ -108,7 +101,7 @@
                           Text="Associated Packet Numbers"
                           FontSize="{StaticResource FontSizeInput}"
                           FontWeight="SemiBold"
-                          Foreground="#B8D4E8"
+                          Foreground="{DynamicResource TextSecondaryBrush}"
                           Margin="0,0,0,10"/>
                 
                 <ScrollViewer Grid.Row="1" 
@@ -122,15 +115,15 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:PacketNumberViewModel">
-                                <Border Background="{DynamicResource BackgroundPanel}"
-                                        BorderBrush="{DynamicResource BorderPrimary}"
+                                <Border Background="{DynamicResource BackgroundCardBrush}"
+                                        BorderBrush="{DynamicResource BorderSubtleBrush}"
                                         BorderThickness="1"
-                                        CornerRadius="4"
-                                        Margin="3,3,3,3"
+                                        CornerRadius="{StaticResource RadiusSmall}"
+                                        Margin="3"
                                         Padding="8,4"
                                         ToolTip.Tip="{Binding PacketInfo}">
                                     <TextBlock Text="{Binding Number, StringFormat='#{0}'}"
-                                              Foreground="#00D4FF"
+                                              Foreground="{DynamicResource AccentCyanBrush}"
                                               FontFamily="Consolas,monospace"
                                               FontSize="{StaticResource FontSizeMedium}"/>
                                 </Border>
@@ -157,7 +150,7 @@
                 <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="5">
                     <TextBlock Text="Display Range:"
                               VerticalAlignment="Center"
-                              Foreground="#B8D4E8"
+                              Foreground="{DynamicResource TextSecondaryBrush}"
                               Margin="0,0,10,0"/>
                     <ComboBox SelectedItem="{Binding DisplayRange}"
                              MinWidth="100">
@@ -181,8 +174,8 @@
                            Padding="12,6"/>
                     <Button Content="Close"
                            Click="CloseButton_Click"
-                           Background="#6B7280"
-                           Foreground="White"
+                           Background="{DynamicResource BackgroundElevatedBrush}"
+                           Foreground="{DynamicResource TextPrimaryBrush}"
                            Padding="12,6"/>
                 </StackPanel>
             </Grid>
