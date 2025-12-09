@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -243,10 +244,174 @@ public partial class PacketFilterViewModel : ObservableObject
 
     // ==================== HELPER METHODS ====================
 
+    /// <summary>
+    /// Creates a PacketFilter from the BasicFilters component.
+    /// Handles IP (with CIDR), port ranges, protocol parsing, and NOT toggles.
+    /// </summary>
+    [SuppressMessage("Maintainability", "CA1502:Avoid excessive complexity",
+        Justification = "Filter creation requires comprehensive checks across IP, port, protocol with CIDR/range/NOT support")]
     private PacketFilter? CreateBasicFilter()
     {
-        // Placeholder - full implementation would handle CIDR, port ranges, etc.
-        return null;
+        if (!BasicFilters.HasActiveFilters)
+            return null;
+
+        var filters = new List<PacketFilter>();
+        var descriptions = new List<string>();
+
+        // ═══════════════════════════════════════════════════════════════════
+        // IP Filters
+        // ═══════════════════════════════════════════════════════════════════
+
+        // General IP filter (matches either source OR destination)
+        if (!string.IsNullOrWhiteSpace(BasicFilters.IpFilterText))
+        {
+            var ipPattern = BasicFilters.IpFilterText.Trim();
+            var negate = BasicFilters.NotSourceIp || BasicFilters.UseNotFilter;
+
+            filters.Add(new PacketFilter
+            {
+                CustomPredicate = p =>
+                {
+                    var matchesSrc = NetworkHelper.MatchesIpPattern(p.SourceIP, ipPattern);
+                    var matchesDst = NetworkHelper.MatchesIpPattern(p.DestinationIP, ipPattern);
+                    var matches = matchesSrc || matchesDst;
+                    return negate ? !matches : matches;
+                },
+                Description = negate ? $"IP NOT {ipPattern}" : $"IP: {ipPattern}"
+            });
+            descriptions.Add(negate ? $"IP ≠ {ipPattern}" : $"IP = {ipPattern}");
+        }
+
+        // Source IP/CIDR filter
+        if (!string.IsNullOrWhiteSpace(BasicFilters.SourceIpCidrFilter))
+        {
+            var negate = BasicFilters.NotSourceIp || BasicFilters.UseNotFilter;
+            filters.Add(new PacketFilter
+            {
+                SourceIpFilter = BasicFilters.SourceIpCidrFilter.Trim(),
+                NegateSourceIp = negate,
+                Description = negate ? $"Src IP NOT {BasicFilters.SourceIpCidrFilter}" : $"Src IP: {BasicFilters.SourceIpCidrFilter}"
+            });
+            descriptions.Add(negate ? $"Src ≠ {BasicFilters.SourceIpCidrFilter}" : $"Src = {BasicFilters.SourceIpCidrFilter}");
+        }
+
+        // Destination IP/CIDR filter
+        if (!string.IsNullOrWhiteSpace(BasicFilters.DestIpCidrFilter))
+        {
+            var negate = BasicFilters.NotDestIp || BasicFilters.UseNotFilter;
+            filters.Add(new PacketFilter
+            {
+                DestinationIpFilter = BasicFilters.DestIpCidrFilter.Trim(),
+                NegateDestinationIp = negate,
+                Description = negate ? $"Dst IP NOT {BasicFilters.DestIpCidrFilter}" : $"Dst IP: {BasicFilters.DestIpCidrFilter}"
+            });
+            descriptions.Add(negate ? $"Dst ≠ {BasicFilters.DestIpCidrFilter}" : $"Dst = {BasicFilters.DestIpCidrFilter}");
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // Port Filters
+        // ═══════════════════════════════════════════════════════════════════
+
+        // General port filter (matches either source OR destination)
+        if (!string.IsNullOrWhiteSpace(BasicFilters.PortFilterText))
+        {
+            var portPattern = BasicFilters.PortFilterText.Trim();
+            var negate = BasicFilters.NotSourcePort || BasicFilters.UseNotFilter;
+
+            filters.Add(new PacketFilter
+            {
+                CustomPredicate = p =>
+                {
+                    var matchesSrc = NetworkHelper.MatchesPortPattern(p.SourcePort, portPattern);
+                    var matchesDst = NetworkHelper.MatchesPortPattern(p.DestinationPort, portPattern);
+                    var matches = matchesSrc || matchesDst;
+                    return negate ? !matches : matches;
+                },
+                Description = negate ? $"Port NOT {portPattern}" : $"Port: {portPattern}"
+            });
+            descriptions.Add(negate ? $"Port ≠ {portPattern}" : $"Port = {portPattern}");
+        }
+
+        // Source port range filter
+        if (!string.IsNullOrWhiteSpace(BasicFilters.SourcePortRangeFilter))
+        {
+            var negate = BasicFilters.NotSourcePort || BasicFilters.UseNotFilter;
+            filters.Add(new PacketFilter
+            {
+                SourcePortFilter = BasicFilters.SourcePortRangeFilter.Trim(),
+                NegateSourcePort = negate,
+                Description = negate ? $"Src Port NOT {BasicFilters.SourcePortRangeFilter}" : $"Src Port: {BasicFilters.SourcePortRangeFilter}"
+            });
+            descriptions.Add(negate ? $"SrcPort ≠ {BasicFilters.SourcePortRangeFilter}" : $"SrcPort = {BasicFilters.SourcePortRangeFilter}");
+        }
+
+        // Destination port range filter
+        if (!string.IsNullOrWhiteSpace(BasicFilters.DestPortRangeFilter))
+        {
+            var negate = BasicFilters.NotDestPort || BasicFilters.UseNotFilter;
+            filters.Add(new PacketFilter
+            {
+                DestinationPortFilter = BasicFilters.DestPortRangeFilter.Trim(),
+                NegateDestinationPort = negate,
+                Description = negate ? $"Dst Port NOT {BasicFilters.DestPortRangeFilter}" : $"Dst Port: {BasicFilters.DestPortRangeFilter}"
+            });
+            descriptions.Add(negate ? $"DstPort ≠ {BasicFilters.DestPortRangeFilter}" : $"DstPort = {BasicFilters.DestPortRangeFilter}");
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // Protocol Filter
+        // ═══════════════════════════════════════════════════════════════════
+
+        if (!string.IsNullOrWhiteSpace(BasicFilters.ProtocolFilterText))
+        {
+            var protocolText = BasicFilters.ProtocolFilterText.Trim().ToUpperInvariant();
+            var negate = BasicFilters.NotProtocol || BasicFilters.UseNotFilter;
+
+            // Try to parse as Protocol enum
+            if (Enum.TryParse<Protocol>(protocolText, true, out var protocol))
+            {
+                filters.Add(new PacketFilter
+                {
+                    ProtocolFilter = protocol,
+                    NegateProtocol = negate,
+                    Description = negate ? $"Protocol NOT {protocolText}" : $"Protocol: {protocolText}"
+                });
+                descriptions.Add(negate ? $"Proto ≠ {protocolText}" : $"Proto = {protocolText}");
+            }
+            else
+            {
+                // Match against L7Protocol string (e.g., "HTTP", "TLS", "SSH")
+                filters.Add(new PacketFilter
+                {
+                    CustomPredicate = p =>
+                    {
+                        var matches = p.L7Protocol?.Equals(protocolText, StringComparison.OrdinalIgnoreCase) == true ||
+                                     p.Protocol.ToString().Equals(protocolText, StringComparison.OrdinalIgnoreCase);
+                        return negate ? !matches : matches;
+                    },
+                    Description = negate ? $"Protocol NOT {protocolText}" : $"Protocol: {protocolText}"
+                });
+                descriptions.Add(negate ? $"Proto ≠ {protocolText}" : $"Proto = {protocolText}");
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // Combine all filters
+        // ═══════════════════════════════════════════════════════════════════
+
+        if (filters.Count == 0)
+            return null;
+
+        if (filters.Count == 1)
+            return filters[0];
+
+        var mode = BasicFilters.UseAndMode ? " AND " : " OR ";
+        return new PacketFilter
+        {
+            CombinedFilters = filters,
+            CombineMode = BasicFilters.UseAndMode ? FilterCombineMode.And : FilterCombineMode.Or,
+            Description = string.Join(mode, descriptions)
+        };
     }
 
     private static PacketFilter CombineFilters(List<PacketFilter> filters, bool useAndMode)
