@@ -233,10 +233,11 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
             _filterService.FilterChanged += OnFilterServiceChanged;
         }
 
-        // Subscribe to GlobalFilterState changes for tab-specific filtering (country, region)
+        // Subscribe to GlobalFilterState for explicit Apply button clicks only
+        // NOTE: Using OnFiltersApplied (not OnFilterChanged) to avoid auto-apply on chip removal
         if (_globalFilterState is not null)
         {
-            _globalFilterState.OnFilterChanged += OnGlobalFilterChanged;
+            _globalFilterState.OnFiltersApplied += OnGlobalFilterChanged;
         }
 
         // Subscribe to CommonFilters property changes
@@ -383,7 +384,41 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     }
 
     /// <summary>
-    /// Applies country-specific criteria from GlobalFilterState (country, region filters from UnifiedFilterPanel).
+    /// Maps UI region names to ContinentData display names for consistent filtering.
+    /// </summary>
+    private static readonly Dictionary<string, string> RegionNameMapping = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["North America"] = "N. America",
+        ["South America"] = "S. America",
+        ["Middle East"] = "Asia",  // Middle East countries are mapped to Asia in ContinentData
+        ["Europe"] = "Europe",
+        ["Asia"] = "Asia",
+        ["Africa"] = "Africa",
+        ["Oceania"] = "Oceania"
+    };
+
+    /// <summary>
+    /// Normalizes a region name from UI to match ContinentData display names.
+    /// </summary>
+    private static string NormalizeRegionName(string uiRegionName)
+        => RegionNameMapping.TryGetValue(uiRegionName, out var mapped) ? mapped : uiRegionName;
+
+    /// <summary>
+    /// Checks if a country matches a direction filter (Inbound, Outbound, Internal).
+    /// </summary>
+    private static bool MatchesDirection(CountryTrafficStatistics country, string direction)
+    {
+        return direction switch
+        {
+            "Inbound" => country.IncomingPackets > 0,
+            "Outbound" => country.OutgoingPackets > 0,
+            "Internal" => country.CountryCode is "INT" or "PRIV" or "Internal" or "PRV",
+            _ => false
+        };
+    }
+
+    /// <summary>
+    /// Applies country-specific criteria from GlobalFilterState (country, region, direction filters from UnifiedFilterPanel).
     /// Uses ContinentData.CountryToContinentMap for region lookups.
     /// </summary>
     private IEnumerable<CountryTrafficStatistics> ApplyGlobalFilterStateCriteria(IEnumerable<CountryTrafficStatistics> countries)
@@ -393,8 +428,8 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
 
         var result = countries;
 
-        // Use helper to collect all criteria
-        var (includeCountries, includeRegions, excludeCountries, excludeRegions) =
+        // Use helper to collect all criteria (now includes Directions)
+        var (includeCountries, includeRegions, includeDirections, excludeCountries, excludeRegions, excludeDirections) =
             GlobalFilterStateHelper.CollectCountryCriteria(_globalFilterState);
 
         // Apply include country filter - match against country code or name
@@ -405,15 +440,21 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
                 includeCountries.Any(ic => c.CountryName.Contains(ic, StringComparison.OrdinalIgnoreCase)));
         }
 
-        // Apply include region filter - use ContinentData.CountryToContinentMap for lookup
+        // Apply include region filter - normalize UI names to ContinentData names
         if (includeRegions.Count > 0)
         {
+            var normalizedRegions = includeRegions.Select(NormalizeRegionName).ToHashSet(StringComparer.OrdinalIgnoreCase);
             result = result.Where(c =>
             {
                 var continent = GetContinentForCountry(c.CountryCode);
-                return includeRegions.Contains(continent) ||
-                       includeRegions.Any(ir => continent.Contains(ir, StringComparison.OrdinalIgnoreCase));
+                return normalizedRegions.Contains(continent);
             });
+        }
+
+        // Apply include direction filter (Inbound, Outbound, Internal)
+        if (includeDirections.Count > 0)
+        {
+            result = result.Where(c => includeDirections.Any(d => MatchesDirection(c, d)));
         }
 
         // Apply exclude country filter
@@ -424,15 +465,21 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
                 !excludeCountries.Any(ec => c.CountryName.Contains(ec, StringComparison.OrdinalIgnoreCase)));
         }
 
-        // Apply exclude region filter
+        // Apply exclude region filter - normalize UI names to ContinentData names
         if (excludeRegions.Count > 0)
         {
+            var normalizedExcludeRegions = excludeRegions.Select(NormalizeRegionName).ToHashSet(StringComparer.OrdinalIgnoreCase);
             result = result.Where(c =>
             {
                 var continent = GetContinentForCountry(c.CountryCode);
-                return !excludeRegions.Contains(continent) &&
-                       !excludeRegions.Any(er => continent.Contains(er, StringComparison.OrdinalIgnoreCase));
+                return !normalizedExcludeRegions.Contains(continent);
             });
+        }
+
+        // Apply exclude direction filter
+        if (excludeDirections.Count > 0)
+        {
+            result = result.Where(c => !excludeDirections.Any(d => MatchesDirection(c, d)));
         }
 
         return result;
@@ -1014,7 +1061,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         // Unsubscribe from GlobalFilterState to prevent memory leaks
         if (_globalFilterState is not null)
         {
-            _globalFilterState.OnFilterChanged -= OnGlobalFilterChanged;
+            _globalFilterState.OnFiltersApplied -= OnGlobalFilterChanged;
         }
 
         // Unsubscribe from filter service events

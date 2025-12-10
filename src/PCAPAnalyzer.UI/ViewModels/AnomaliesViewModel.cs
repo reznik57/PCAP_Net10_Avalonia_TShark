@@ -38,6 +38,38 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
     // GeoIP throttling: max 5 concurrent lookups to avoid overwhelming the service
     private static readonly SemaphoreSlim _geoIPThrottle = new(5, 5);
 
+    /// <summary>
+    /// Maps UI detector chip names to actual anomaly Type values.
+    /// UI shows user-friendly attack names; data contains full type strings.
+    /// </summary>
+    private static readonly Dictionary<string, HashSet<string>> DetectorTypeMapping =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            // Network anomalies
+            ["SYN Flood"] = ["SYN Flood Attack", "SYN Flood"],
+            ["ARP Spoofing"] = ["ARP Spoofing"],
+            ["ICMP Flood"] = ["ICMP Flood"],
+
+            // Application anomalies
+            ["DNS Tunneling"] = ["DNS Tunneling"],
+            ["Beaconing"] = ["Beaconing"],
+
+            // Security anomalies
+            ["Cryptomining"] = ["Cryptomining", "Cryptomining Pool Scanning", "Stratum Mining Protocol"],
+            ["Data Exfiltration"] = ["Data Exfiltration", "Slow Data Exfiltration",
+                                      "Encoded Data Transfer", "Unusual Outbound Traffic"],
+
+            // TCP anomalies
+            ["TCP Retransmission"] = ["TCP Retransmission"],
+            ["Duplicate ACK"] = ["TCP Duplicate ACK"],
+
+            // VoIP anomalies
+            ["VoIP Flooding"] = ["VoIP SIP Flooding"],
+
+            // IoT anomalies
+            ["IoT Flooding"] = ["IoT MQTT Flooding", "IoT CoAP Amplification"]
+        };
+
     // Component ViewModels
     public AnomaliesStatisticsViewModel Statistics { get; }
     public AnomaliesChartsViewModel Charts { get; }
@@ -81,7 +113,8 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
         // Subscribe to filter changes
         Filters.FiltersChanged += OnFiltersChanged;
         _globalFilterState.PropertyChanged += OnGlobalFilterStateChanged;
-        _globalFilterState.OnFilterChanged += OnGlobalFilterGroupsChanged;
+        // NOTE: Using OnFiltersApplied (not OnFilterChanged) to avoid auto-apply on chip removal
+        _globalFilterState.OnFiltersApplied += OnGlobalFilterGroupsChanged;
     }
 
     /// <summary>
@@ -620,13 +653,44 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
         }
 
         // Anomaly detector filter (from Anomalies filter tab)
+        // NOTE: UI chips use attack type names (e.g., "SYN Flood"), but anomaly.DetectorName
+        // contains detector class names (e.g., "Network Anomaly Detector").
+        // We check both anomaly.Type (preferred) and DetectorName for flexibility.
         if (group.AnomalyDetectors?.Count > 0)
         {
-            if (!group.AnomalyDetectors.Contains(anomaly.DetectorName))
+            if (!MatchesAnyDetectorType(anomaly, group.AnomalyDetectors))
                 return false;
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Checks if an anomaly matches any of the specified detector/type filters.
+    /// Supports both UI chip names (mapped to Types) and actual DetectorName values.
+    /// </summary>
+    private static bool MatchesAnyDetectorType(NetworkAnomaly anomaly, List<string> detectorFilters)
+    {
+        foreach (var filter in detectorFilters)
+        {
+            // First, try mapping UI chip name → actual Type values
+            if (DetectorTypeMapping.TryGetValue(filter, out var typeMatches))
+            {
+                // Check if anomaly.Type matches any of the mapped types
+                if (typeMatches.Any(t => anomaly.Type.Equals(t, StringComparison.OrdinalIgnoreCase)))
+                    return true;
+            }
+
+            // Fallback: direct match on DetectorName (for dynamically populated detector lists)
+            if (anomaly.DetectorName.Equals(filter, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            // Fallback: contains match on Type (for partial matches like "SYN" in "SYN Flood Attack")
+            if (anomaly.Type.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>
@@ -744,7 +808,7 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
 
         Filters.FiltersChanged -= OnFiltersChanged;
         _globalFilterState.PropertyChanged -= OnGlobalFilterStateChanged;
-        _globalFilterState.OnFilterChanged -= OnGlobalFilterGroupsChanged;
+        _globalFilterState.OnFiltersApplied -= OnGlobalFilterGroupsChanged;
         _filterCts?.Cancel();
         _filterCts?.Dispose();
         _geoIPCts?.Cancel();

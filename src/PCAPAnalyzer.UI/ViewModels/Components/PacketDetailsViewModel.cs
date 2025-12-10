@@ -22,8 +22,9 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 /// - Packet Analysis: Quick Summary (instant) + Cleartext Detection + Protocol Layers (on-demand TShark)
 /// - Stream Context: Stream navigation, statistics, security analysis, traffic direction
 /// </summary>
-public partial class PacketDetailsViewModel : ObservableObject
+public partial class PacketDetailsViewModel : ObservableObject, IDisposable
 {
+    private bool _disposed;
     private IDispatcherService Dispatcher => _dispatcher ??= App.Services?.GetService<IDispatcherService>()
         ?? throw new InvalidOperationException("IDispatcherService not registered");
     private IDispatcherService? _dispatcher;
@@ -139,6 +140,17 @@ public partial class PacketDetailsViewModel : ObservableObject
         _protocolParser = protocolParser;
         _streamAnalyzer = streamAnalyzer;
         _deepDiveService = deepDiveService; // Optional - deep dive disabled if null
+    }
+
+    /// <summary>
+    /// Disposes the stream cache and releases resources.
+    /// </summary>
+    public void Dispose()
+    {
+        if (_disposed) return;
+        _disposed = true;
+        _streamCache.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     /// <summary>

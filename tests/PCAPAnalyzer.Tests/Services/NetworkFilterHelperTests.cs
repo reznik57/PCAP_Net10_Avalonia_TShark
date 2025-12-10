@@ -93,11 +93,21 @@ public class NetworkFilterHelperTests
 
     #region Broadcast Tests
 
+    // IMPORTANT: IsBroadcast() can ONLY detect the limited broadcast (255.255.255.255)
+    // without subnet mask information. Subnet broadcasts (*.*.*.255) require knowing
+    // the network mask, which isn't available at the IP layer.
+    //
+    // Common misconceptions:
+    // - *.*.*.255 is NOT always broadcast (e.g., 10.0.0.255 is valid host in /8)
+    // - *.*.*.0 is NEVER broadcast (it's the network address!)
+    //
+    // For comprehensive broadcast detection, use IsBroadcastPacket() which checks
+    // L2 MAC address (ff:ff:ff:ff:ff:ff) and protocol hints (ARP, DHCP Discover).
     [Theory]
-    [InlineData("255.255.255.255", true)]
-    [InlineData("192.168.1.255", true)]
-    [InlineData("10.0.0.255", true)]
-    [InlineData("192.168.1.0", true)] // Network broadcast
+    [InlineData("255.255.255.255", true)]   // Limited broadcast - always broadcast
+    [InlineData("192.168.1.255", false)]    // Subnet broadcast - requires mask context
+    [InlineData("10.0.0.255", false)]       // Could be valid host in /8 network
+    [InlineData("192.168.1.0", false)]      // Network address, NEVER broadcast
     [InlineData("192.168.1.1", false)]
     [InlineData("8.8.8.8", false)]
     public void IsBroadcast_WithVariousIPs_ReturnsCorrectResult(string ip, bool expected)

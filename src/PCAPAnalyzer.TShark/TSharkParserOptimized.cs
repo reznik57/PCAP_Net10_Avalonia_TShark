@@ -27,9 +27,9 @@ public static class TSharkParserOptimized
 
     /// <summary>
     /// Maximum number of fields in TShark output.
-    /// Core: 0-17, Credentials: 18-37, OS Fingerprint: 38-55, Security: 56-57
+    /// Core: 0-17, Credentials: 18-37, OS Fingerprint: 38-56, Security: 57-58
     /// </summary>
-    private const int MAX_TSHARK_FIELDS = 58;
+    private const int MAX_TSHARK_FIELDS = 59;
 
     // Diagnostic counters for OS fingerprinting
     private static int _totalPacketsParsed;
@@ -477,16 +477,17 @@ public static class TSharkParserOptimized
     }
 
     /// <summary>
-    /// Extracts OS fingerprinting fields (38-55).
-    /// Only called when tabCount >= 39 (&lt;5% of packets).
+    /// Extracts OS fingerprinting fields (38-56).
+    /// Only called when tabCount >= 40 (&lt;5% of packets).
     /// Note: tcp.options (raw), tcp.options.sack_perm, tcp.options.timestamp.tsval removed as low-value.
+    /// Field 41 (eth.dst) added for reliable L2 broadcast detection.
     /// </summary>
     public static OsFingerprintRawFields? ExtractOsFingerprintFields(ReadOnlySpan<char> line)
     {
         Span<int> tabIndices = stackalloc int[MAX_TSHARK_FIELDS];
         int tabCount = FindTabIndices(line, tabIndices);
 
-        if (tabCount < 39)
+        if (tabCount < 40)
             return null;
 
         return new OsFingerprintRawFields
@@ -494,24 +495,25 @@ public static class TSharkParserOptimized
             IpTtl = GetFieldString(line, tabIndices, tabCount, 38),
             IpDfFlag = GetFieldString(line, tabIndices, tabCount, 39),
             EthSrc = GetFieldString(line, tabIndices, tabCount, 40),
+            EthDst = GetFieldString(line, tabIndices, tabCount, 41),  // NEW: Destination MAC for broadcast detection
             TcpOptions = null, // Removed - raw hex blob, low value
-            TcpMss = GetFieldString(line, tabIndices, tabCount, 41),
-            TcpWindowScale = GetFieldString(line, tabIndices, tabCount, 42),
+            TcpMss = GetFieldString(line, tabIndices, tabCount, 42),
+            TcpWindowScale = GetFieldString(line, tabIndices, tabCount, 43),
             TcpSackPerm = null, // Removed - low value
             TcpTimestamp = null, // Removed - low value
-            TcpWindowSize = GetFieldString(line, tabIndices, tabCount, 43),
-            TlsHandshakeType = GetFieldString(line, tabIndices, tabCount, 44),
-            TlsVersion = GetFieldString(line, tabIndices, tabCount, 45),
-            TlsCipherSuites = GetFieldString(line, tabIndices, tabCount, 46),
-            TlsExtensions = GetFieldString(line, tabIndices, tabCount, 47),
-            TlsEllipticCurves = GetFieldString(line, tabIndices, tabCount, 48), // Now: extensions_supported_groups
-            TlsEcPointFormats = GetFieldString(line, tabIndices, tabCount, 49),
-            DhcpMessageType = GetFieldString(line, tabIndices, tabCount, 50),
-            DhcpOption55 = GetFieldString(line, tabIndices, tabCount, 51),
-            DhcpVendorClassId = GetFieldString(line, tabIndices, tabCount, 52),
-            DhcpHostname = GetFieldString(line, tabIndices, tabCount, 53),
-            SshProtocol = GetFieldString(line, tabIndices, tabCount, 54),
-            HttpServer = GetFieldString(line, tabIndices, tabCount, 55)
+            TcpWindowSize = GetFieldString(line, tabIndices, tabCount, 44),
+            TlsHandshakeType = GetFieldString(line, tabIndices, tabCount, 45),
+            TlsVersion = GetFieldString(line, tabIndices, tabCount, 46),
+            TlsCipherSuites = GetFieldString(line, tabIndices, tabCount, 47),
+            TlsExtensions = GetFieldString(line, tabIndices, tabCount, 48),
+            TlsEllipticCurves = GetFieldString(line, tabIndices, tabCount, 49), // Now: extensions_supported_groups
+            TlsEcPointFormats = GetFieldString(line, tabIndices, tabCount, 50),
+            DhcpMessageType = GetFieldString(line, tabIndices, tabCount, 51),
+            DhcpOption55 = GetFieldString(line, tabIndices, tabCount, 52),
+            DhcpVendorClassId = GetFieldString(line, tabIndices, tabCount, 53),
+            DhcpHostname = GetFieldString(line, tabIndices, tabCount, 54),
+            SshProtocol = GetFieldString(line, tabIndices, tabCount, 55),
+            HttpServer = GetFieldString(line, tabIndices, tabCount, 56)
         };
     }
 

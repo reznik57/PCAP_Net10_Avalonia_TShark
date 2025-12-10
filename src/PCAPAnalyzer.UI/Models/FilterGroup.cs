@@ -209,10 +209,10 @@ public partial class FilterGroup : ObservableObject
     /// Extracts country-specific filter criteria from this group.
     /// Returns null if no country criteria are set.
     /// </summary>
-    public (List<string>? Countries, List<string>? Regions)? GetCountryCriteria()
+    public (List<string>? Countries, List<string>? Regions, List<string>? Directions)? GetCountryCriteria()
     {
-        if ((Countries?.Count ?? 0) == 0 && (Regions?.Count ?? 0) == 0)
+        if ((Countries?.Count ?? 0) == 0 && (Regions?.Count ?? 0) == 0 && (Directions?.Count ?? 0) == 0)
             return null;
-        return (Countries, Regions);
+        return (Countries, Regions, Directions);
     }
 }

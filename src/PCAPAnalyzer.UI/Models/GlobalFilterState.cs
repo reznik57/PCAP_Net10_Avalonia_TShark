@@ -38,7 +38,17 @@ public partial class GlobalFilterState : ObservableObject
     public bool HasActiveFilters => IncludeFilters.HasAny || ExcludeFilters.HasAny ||
                                      IncludeGroups.Count > 0 || ExcludeGroups.Count > 0;
 
+    /// <summary>
+    /// Fired when filter state changes (add/remove). Used by UI to refresh chip display.
+    /// Does NOT trigger filter re-application. Use OnFiltersApplied for that.
+    /// </summary>
     public event Action? OnFilterChanged;
+
+    /// <summary>
+    /// Fired when user explicitly requests filter application (Apply/Clear buttons).
+    /// ViewModels should subscribe to this to re-apply filters, NOT OnFilterChanged.
+    /// </summary>
+    public event Action? OnFiltersApplied;
 
     public void AddIncludeProtocol(string protocol)
     {
@@ -293,6 +303,29 @@ public partial class GlobalFilterState : ObservableObject
     {
         Version++;
         OnFilterChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Explicitly requests filter application. Call this when user clicks Apply button.
+    /// Fires OnFiltersApplied to trigger ViewModels to re-apply filters.
+    /// </summary>
+    public void ApplyFilters()
+    {
+        OnFiltersApplied?.Invoke();
+    }
+
+    /// <summary>
+    /// Clears all filters AND triggers re-application.
+    /// Use this when user clicks Clear button (to show all data).
+    /// </summary>
+    public void ClearAndApply()
+    {
+        IncludeFilters.Clear();
+        ExcludeFilters.Clear();
+        IncludeGroups.Clear();
+        ExcludeGroups.Clear();
+        IncrementVersion();
+        OnFiltersApplied?.Invoke();
     }
 
     // Anomaly filters (global scope - affects all tabs)

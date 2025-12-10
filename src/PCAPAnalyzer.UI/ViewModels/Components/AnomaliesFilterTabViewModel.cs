@@ -26,7 +26,11 @@ public partial class AnomaliesFilterTabViewModel : ObservableObject
         foreach (var c in categories)
             CategoryChips.Add(new FilterChipViewModel(c));
 
-        var detectors = new[] { "SYN Flood", "ARP Spoofing", "Port Scan", "DNS Tunneling", "Cryptomining", "Data Exfiltration" };
+        // Attack type chips matching actual anomaly Type values from detectors
+        // NOTE: "Port Scan" removed - no detector creates this type
+        // Added: ICMP Flood, Beaconing, TCP Retransmission (common attack types)
+        var detectors = new[] { "SYN Flood", "ARP Spoofing", "ICMP Flood", "DNS Tunneling",
+                                "Cryptomining", "Data Exfiltration", "Beaconing" };
         foreach (var d in detectors)
             DetectorChips.Add(new FilterChipViewModel(d));
     }

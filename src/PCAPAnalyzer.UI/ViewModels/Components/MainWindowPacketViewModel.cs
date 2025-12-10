@@ -785,5 +785,8 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
         {
             DebugLogger.Log($"[MainWindowPacketViewModel] Failed to dispose DuckDB store: {ex.Message}");
         }
+
+        // Dispose stream cache in PacketDetails
+        PacketDetails.Dispose();
     }
 }

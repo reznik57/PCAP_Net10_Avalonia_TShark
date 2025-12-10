@@ -307,11 +307,12 @@
                             </Style>
                         </TabControl.Styles>
 
-                        <!-- 0: General Tab Content -->
+                        <!-- 0: General Tab Content - Network analysis with security filters -->
                         <TabItem>
                             <StackPanel Spacing="16" DataContext="{Binding GeneralTab}">
+                                <!-- L4 Transport Protocols -->
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="PROTOCOLS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <TextBlock Text="L4 PROTOCOLS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
                                     <ItemsControl ItemsSource="{Binding ProtocolChips}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
@@ -326,8 +327,65 @@
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                                 </StackPanel>
+                                <!-- Network Type Filters (Version → Scope → Delivery) -->
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="SECURITY" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <TextBlock Text="NETWORK" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding NetworkChips}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                        Classes="filter-chip-slack"
+                                                        Classes.included="{Binding IsIncluded}"
+                                                        Classes.excluded="{Binding IsExcluded}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                                <!-- TCP Flags (all flags exposed) -->
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="TCP FLAGS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding TcpFlagsChips}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                        Classes="filter-chip-slack"
+                                                        Classes.included="{Binding IsIncluded}"
+                                                        Classes.excluded="{Binding IsExcluded}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                                <!-- L7 Application Protocols -->
+                                <StackPanel Spacing="8">
+                                    <TextBlock Text="APPLICATION" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding ApplicationChips}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                        Classes="filter-chip-slack"
+                                                        Classes.included="{Binding IsIncluded}"
+                                                        Classes.excluded="{Binding IsExcluded}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                                <!-- Security (Deprecated Crypto, Cleartext Auth) -->
+                                <StackPanel Spacing="8">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="SECURITY" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                        <Border Background="{DynamicResource SlackDanger}" CornerRadius="4" Padding="6,2" Opacity="0.7">
+                                            <TextBlock Text="⚠️ deprecated crypto" FontSize="{StaticResource FontSizeXS}" Foreground="White"/>
+                                        </Border>
+                                    </StackPanel>
                                     <ItemsControl ItemsSource="{Binding SecurityChips}">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
@@ -673,61 +731,72 @@
             <Setter Property="Foreground" Value="White"/>
         </Style>
 
-        <!-- Slack-style filter chips (pill shape, no borders) -->
+        <!-- Slack-style filter chips (pill shape, border highlight on hover) -->
         <Style Selector="Button.filter-chip-slack">
             <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="Padding" Value="10,4"/>
             <Setter Property="Margin" Value="0,0,6,6"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Transitions">
                 <Transitions>
                     <BrushTransition Property="Background" Duration="0:0:0.15"/>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
                 </Transitions>
             </Setter>
         </Style>
+        <!-- Hover: Keep background color, only highlight border -->
         <Style Selector="Button.filter-chip-slack:pointerover">
-            <Setter Property="Background" Value="{StaticResource BorderPrimary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentCyan}"/>
         </Style>
+        <!-- Included (green) state -->
         <Style Selector="Button.filter-chip-slack.included">
             <Setter Property="Background" Value="{StaticResource SlackSuccess}"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style Selector="Button.filter-chip-slack.included:pointerover">
-            <Setter Property="Background" Value="{StaticResource SlackSuccess}"/>
+            <Setter Property="BorderBrush" Value="White"/>
         </Style>
+        <!-- Excluded (red) state -->
         <Style Selector="Button.filter-chip-slack.excluded">
             <Setter Property="Background" Value="{StaticResource SlackDanger}"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style Selector="Button.filter-chip-slack.excluded:pointerover">
-            <Setter Property="Background" Value="{StaticResource SlackDanger}"/>
+            <Setter Property="BorderBrush" Value="White"/>
         </Style>
 
         <!-- Quick filter chip toggle button styles (purple theme for OR logic) -->
         <Style Selector="ToggleButton.quick-filter-chip">
             <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
             <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BackgroundElevated}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Padding" Value="8,4"/>
             <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Transitions">
+                <Transitions>
+                    <BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
+                </Transitions>
+            </Setter>
         </Style>
+        <!-- Hover: Keep background, highlight border only -->
         <Style Selector="ToggleButton.quick-filter-chip:pointerover">
-            <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
             <Setter Property="BorderBrush" Value="{StaticResource AccentPurpleLight}"/>
         </Style>
+        <!-- Checked (purple) state -->
         <Style Selector="ToggleButton.quick-filter-chip:checked">
             <Setter Property="Background" Value="{StaticResource AccentPurpleDark}"/>
             <Setter Property="BorderBrush" Value="{StaticResource AccentPurpleLight}"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
         <Style Selector="ToggleButton.quick-filter-chip:checked:pointerover">
-            <Setter Property="Background" Value="{StaticResource AccentPurpleMedium}"/>
+            <Setter Property="BorderBrush" Value="White"/>
         </Style>
 
         <!-- Segment radio button styles (for tab switching) - underline style like main tabs -->

@@ -73,11 +73,14 @@ public readonly record struct OsFingerprintRawFields
     /// <summary>Don't Fragment flag (field 40: ip.flags.df)</summary>
     public string? IpDfFlag { get; init; }
 
-    // Ethernet (field 41)
-    /// <summary>Source MAC address (field 41: eth.src)</summary>
+    // Ethernet (fields 40-41)
+    /// <summary>Source MAC address (field 40: eth.src)</summary>
     public string? EthSrc { get; init; }
 
-    // TCP Options (fields 42-47)
+    /// <summary>Destination MAC address (field 41: eth.dst) - used for L2 broadcast detection (ff:ff:ff:ff:ff:ff)</summary>
+    public string? EthDst { get; init; }
+
+    // TCP Options (fields 42-44)
     /// <summary>Raw TCP options (field 42: tcp.options)</summary>
     public string? TcpOptions { get; init; }
 

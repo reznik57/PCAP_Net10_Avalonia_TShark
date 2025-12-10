@@ -33,6 +33,10 @@ public readonly record struct PacketInfo
     // OS Fingerprinting data (nullable - only populated when packet has fingerprint signals)
     public PCAPAnalyzer.Core.Services.OsFingerprinting.OsFingerprintRawFields? OsFingerprintData { get; init; }
 
+    // Layer 2: Destination MAC address for broadcast detection (ff:ff:ff:ff:ff:ff = broadcast)
+    // Extracted from eth.dst TShark field via OsFingerprintData for direct filter access
+    public string? DestinationMAC => OsFingerprintData?.EthDst;
+
     // Deprecated - use L7Protocol instead
     public string? WiresharkProtocol => L7Protocol;
     

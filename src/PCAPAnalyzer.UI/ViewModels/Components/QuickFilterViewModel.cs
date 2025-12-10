@@ -25,6 +25,37 @@ public partial class QuickFilterViewModel : ObservableObject
     [ObservableProperty] private bool _multicastToggle;
     [ObservableProperty] private bool _broadcastToggle;
     [ObservableProperty] private bool _anycastToggle;
+    [ObservableProperty] private bool _unicastToggle;
+
+    // ==================== L4 PROTOCOL FILTERS ====================
+    /// <summary>TCP protocol (L4)</summary>
+    [ObservableProperty] private bool _tcpToggle;
+    /// <summary>UDP protocol (L4)</summary>
+    [ObservableProperty] private bool _udpToggle;
+    /// <summary>ICMP protocol</summary>
+    [ObservableProperty] private bool _icmpToggle;
+    /// <summary>ARP - Address Resolution Protocol</summary>
+    [ObservableProperty] private bool _arpToggle;
+    /// <summary>IGMP - Internet Group Management Protocol (multicast)</summary>
+    [ObservableProperty] private bool _igmpToggle;
+    /// <summary>GRE - Generic Routing Encapsulation</summary>
+    [ObservableProperty] private bool _greToggle;
+
+    // ==================== TCP FLAGS FILTERS ====================
+    /// <summary>SYN packets (connection initiation, no ACK)</summary>
+    [ObservableProperty] private bool _tcpSynToggle;
+    /// <summary>RST packets (connection reset/refused)</summary>
+    [ObservableProperty] private bool _tcpRstToggle;
+    /// <summary>FIN packets (connection termination)</summary>
+    [ObservableProperty] private bool _tcpFinToggle;
+    /// <summary>ACK-only packets (pure acknowledgments, no data)</summary>
+    [ObservableProperty] private bool _tcpAckOnlyToggle;
+
+    // ==================== FRAME CHARACTERISTICS ====================
+    /// <summary>IP fragmented packets</summary>
+    [ObservableProperty] private bool _fragmentedToggle;
+    /// <summary>Small frames under 64 bytes</summary>
+    [ObservableProperty] private bool _smallFrameToggle;
 
     // Security filters
     [ObservableProperty] private bool _insecureToggle;
@@ -101,7 +132,15 @@ public partial class QuickFilterViewModel : ObservableObject
     {
         Rfc1918Toggle, PublicIpToggle, ApipaToggle, IPv4Toggle, IPv6Toggle,
         LoopbackToggle, LinkLocalToggle, MulticastToggle, BroadcastToggle,
-        AnycastToggle, InsecureToggle, AnomaliesToggle, SuspiciousToggle,
+        AnycastToggle, UnicastToggle,
+        // L4 Protocols
+        TcpToggle, UdpToggle, IcmpToggle, ArpToggle, IgmpToggle, GreToggle,
+        // TCP Flags
+        TcpSynToggle, TcpRstToggle, TcpFinToggle, TcpAckOnlyToggle,
+        // Frame characteristics
+        FragmentedToggle, SmallFrameToggle,
+        // Security
+        InsecureToggle, AnomaliesToggle, SuspiciousToggle,
         TcpIssuesToggle, DnsAnomaliesToggle, PortScansToggle,
         PrivateToPublicToggle, PublicToPrivateToggle, JumboFramesToggle,
         RetransmissionsToggle, ZeroWindowToggle, KeepAliveToggle,
@@ -138,6 +177,22 @@ public partial class QuickFilterViewModel : ObservableObject
         MulticastToggle = false;
         BroadcastToggle = false;
         AnycastToggle = false;
+        UnicastToggle = false;
+        // L4 Protocol filters
+        TcpToggle = false;
+        UdpToggle = false;
+        IcmpToggle = false;
+        ArpToggle = false;
+        IgmpToggle = false;
+        GreToggle = false;
+        // TCP Flags filters
+        TcpSynToggle = false;
+        TcpRstToggle = false;
+        TcpFinToggle = false;
+        TcpAckOnlyToggle = false;
+        // Frame characteristics
+        FragmentedToggle = false;
+        SmallFrameToggle = false;
         // Security filters
         InsecureToggle = false;
         AnomaliesToggle = false;
@@ -190,6 +245,23 @@ public partial class QuickFilterViewModel : ObservableObject
         (() => MulticastToggle, "Multicast", "Multicast"),
         (() => BroadcastToggle, "Broadcast", "Broadcast"),
         (() => AnycastToggle, "Anycast", "Anycast"),
+        (() => UnicastToggle, "Unicast", "Unicast"),
+        // L4 Protocols
+        (() => TcpToggle, "TCP", "TCP"),
+        (() => UdpToggle, "UDP", "UDP"),
+        (() => IcmpToggle, "ICMP", "ICMP"),
+        (() => ArpToggle, "ARP", "ARP"),
+        (() => IgmpToggle, "IGMP", "IGMP"),
+        (() => GreToggle, "GRE", "GRE"),
+        // TCP Flags
+        (() => TcpSynToggle, "SYN", "TcpSyn"),
+        (() => TcpRstToggle, "RST", "TcpRst"),
+        (() => TcpFinToggle, "FIN", "TcpFin"),
+        (() => TcpAckOnlyToggle, "ACK-only", "TcpAckOnly"),
+        // Frame characteristics
+        (() => FragmentedToggle, "Fragmented", "Fragmented"),
+        (() => SmallFrameToggle, "Small (<64B)", "SmallFrame"),
+        // Security
         (() => InsecureToggle, "Insecure", "Insecure"),
         (() => AnomaliesToggle, "Anomalies", "Anomalies"),
         (() => SuspiciousToggle, "Suspicious", "Suspicious"),
@@ -246,6 +318,26 @@ public partial class QuickFilterViewModel : ObservableObject
     partial void OnMulticastToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
     partial void OnBroadcastToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
     partial void OnAnycastToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnUnicastToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+
+    // L4 Protocol handlers
+    partial void OnTcpToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnUdpToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnIcmpToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnArpToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnIgmpToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnGreToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+
+    // TCP Flags handlers
+    partial void OnTcpSynToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnTcpRstToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnTcpFinToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnTcpAckOnlyToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+
+    // Frame characteristic handlers
+    partial void OnFragmentedToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+    partial void OnSmallFrameToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
+
     partial void OnInsecureToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
     partial void OnAnomaliesToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);
     partial void OnSuspiciousToggleChanged(bool value) => FilterChanged?.Invoke(this, EventArgs.Empty);

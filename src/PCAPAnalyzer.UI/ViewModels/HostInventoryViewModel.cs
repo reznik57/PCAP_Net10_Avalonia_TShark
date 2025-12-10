@@ -84,11 +84,12 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
         _fingerprintService = fingerprintService;
         _globalFilterState = globalFilterState;
 
-        // Subscribe to GlobalFilterState changes for IP-based filtering
+        // Subscribe to GlobalFilterState for explicit Apply button clicks only
+        // NOTE: Using OnFiltersApplied (not OnFilterChanged) to avoid auto-apply on chip removal
         if (_globalFilterState is not null)
         {
-            _globalFilterState.OnFilterChanged += OnGlobalFilterChanged;
-            DebugLogger.Log("[HostInventoryViewModel] Subscribed to GlobalFilterState.OnFilterChanged");
+            _globalFilterState.OnFiltersApplied += OnGlobalFilterChanged;
+            DebugLogger.Log("[HostInventoryViewModel] Subscribed to GlobalFilterState.OnFiltersApplied");
         }
     }
 
@@ -300,12 +301,10 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
                 return false;
         }
 
-        // Host role filter (based on open ports - server if has server ports, client otherwise)
+        // Host role filter (based on open ports and IP characteristics)
         if (group.HostRoles?.Count > 0)
         {
-            var hasServerPorts = host.OpenPorts.Any(p => p < 1024 || IsCommonServerPort(p));
-            var isServer = hasServerPorts;
-            if (!group.HostRoles.Any(r => MatchesHostRole(isServer, r)))
+            if (!group.HostRoles.Any(r => MatchesHostRole(host, r)))
                 return false;
         }
 
@@ -314,12 +313,13 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
 
     /// <summary>
     /// Matches device type string to enum without string allocation.
+    /// Supports both UI chip names and DeviceType enum names.
     /// </summary>
     private static bool MatchesDeviceType(DeviceType hostType, string filterType)
     {
         return filterType.ToLowerInvariant() switch
         {
-            "desktop" => hostType == DeviceType.Desktop,
+            "desktop" or "workstation" => hostType == DeviceType.Desktop,  // UI uses "Workstation"
             "server" => hostType == DeviceType.Server,
             "mobile" => hostType == DeviceType.Mobile,
             "iot" => hostType == DeviceType.IoT,
@@ -332,16 +332,50 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     }
 
     /// <summary>
-    /// Matches host role string to server/client status without repeated string allocations.
+    /// Matches host role filter to host characteristics.
+    /// Supports: Server, Client, Gateway, DNS, DHCP, Internal, External
     /// </summary>
-    private static bool MatchesHostRole(bool isServer, string roleFilter)
+    private static bool MatchesHostRole(HostFingerprint host, string roleFilter)
     {
+        var hasServerPorts = host.OpenPorts.Any(p => p < 1024 || IsCommonServerPort(p));
+        var isPrivateIp = IsPrivateIpAddress(host.IpAddress);
+
         return roleFilter.ToLowerInvariant() switch
         {
-            "server" => isServer,
-            "client" => !isServer,
+            "server" => hasServerPorts,
+            "client" => !hasServerPorts,
+            "dns" => host.OpenPorts.Contains(53),
+            "dhcp" => host.OpenPorts.Contains(67) || host.OpenPorts.Contains(68),
+            "gateway" => host.OsDetection?.DeviceType == DeviceType.NetworkEquipment ||
+                         host.OpenPorts.Any(p => p == 179 || p == 520 || p == 1723),  // BGP, RIP, PPTP
+            "internal" => isPrivateIp,
+            "external" => !isPrivateIp,
             _ => false
         };
+    }
+
+    /// <summary>
+    /// Checks if an IP address is a private (RFC 1918) address.
+    /// </summary>
+    private static bool IsPrivateIpAddress(string? ip)
+    {
+        if (string.IsNullOrEmpty(ip) || !System.Net.IPAddress.TryParse(ip, out var addr))
+            return false;
+
+        var bytes = addr.GetAddressBytes();
+        if (bytes.Length != 4) // Only IPv4 for now
+            return addr.IsIPv6LinkLocal || addr.IsIPv6SiteLocal;
+
+        // 10.0.0.0/8
+        if (bytes[0] == 10) return true;
+        // 172.16.0.0/12
+        if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return true;
+        // 192.168.0.0/16
+        if (bytes[0] == 192 && bytes[1] == 168) return true;
+        // 127.0.0.0/8 (loopback)
+        if (bytes[0] == 127) return true;
+
+        return false;
     }
 
     /// <summary>
@@ -763,7 +797,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
         // Unsubscribe from GlobalFilterState to prevent memory leaks
         if (_globalFilterState is not null)
         {
-            _globalFilterState.OnFilterChanged -= OnGlobalFilterChanged;
+            _globalFilterState.OnFiltersApplied -= OnGlobalFilterChanged;
             DebugLogger.Log("[HostInventoryViewModel] Unsubscribed from GlobalFilterState.OnFilterChanged");
         }
 

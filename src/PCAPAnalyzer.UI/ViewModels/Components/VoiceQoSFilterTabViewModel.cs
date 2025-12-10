@@ -19,7 +19,10 @@ public partial class VoiceQoSFilterTabViewModel : ObservableObject
 
     private void InitializeChips()
     {
-        var codecs = new[] { "G.711", "G.729", "Opus", "H.264", "VP8", "VP9" };
+        // Audio codecs first (VoIP-focused), then video codecs for comprehensive media QoS
+        // Audio: G.711 (μ-law/A-law), G.729 (low bandwidth), G.722 (wideband), Opus (modern), AMR/AMR-WB (mobile), iLBC (packet loss resilient)
+        // Video: H.264, VP8, VP9 (for video conferencing scenarios)
+        var codecs = new[] { "G.711", "G.729", "G.722", "Opus", "AMR", "iLBC", "H.264", "VP8", "VP9" };
         foreach (var c in codecs)
             CodecChips.Add(new FilterChipViewModel(c));
 

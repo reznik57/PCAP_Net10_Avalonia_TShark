@@ -56,15 +56,16 @@ public static class GlobalFilterStateHelper
     }
 
     /// <summary>
-    /// Collects VoiceQoS criteria (codecs, quality levels) from GlobalFilterState.
+    /// Collects VoiceQoS criteria (codecs, quality levels, VoIP issues) from GlobalFilterState.
     /// </summary>
-    /// <returns>Tuple of (includeCodecs, includeQualities, excludeCodecs, excludeQualities)</returns>
-    public static (HashSet<string> IncludeCodecs, HashSet<string> IncludeQualities,
-                   HashSet<string> ExcludeCodecs, HashSet<string> ExcludeQualities)
+    /// <returns>Tuple of (includeCodecs, includeQualities, includeIssues, excludeCodecs, excludeQualities, excludeIssues)</returns>
+    public static (HashSet<string> IncludeCodecs, HashSet<string> IncludeQualities, HashSet<string> IncludeIssues,
+                   HashSet<string> ExcludeCodecs, HashSet<string> ExcludeQualities, HashSet<string> ExcludeIssues)
         CollectVoiceQoSCriteria(GlobalFilterState state)
     {
         var includeCodecs = new HashSet<string>(state.IncludeFilters.Codecs, StringComparer.OrdinalIgnoreCase);
         var includeQualities = new HashSet<string>(state.IncludeFilters.QualityLevels, StringComparer.OrdinalIgnoreCase);
+        var includeIssues = new HashSet<string>(state.IncludeFilters.VoipIssues, StringComparer.OrdinalIgnoreCase);
 
         foreach (var group in state.IncludeGroups)
         {
@@ -77,11 +78,15 @@ public static class GlobalFilterStateHelper
                 if (criteria.Value.Qualities is not null)
                     foreach (var q in criteria.Value.Qualities)
                         includeQualities.Add(q);
+                if (criteria.Value.Issues is not null)
+                    foreach (var i in criteria.Value.Issues)
+                        includeIssues.Add(i);
             }
         }
 
         var excludeCodecs = new HashSet<string>(state.ExcludeFilters.Codecs, StringComparer.OrdinalIgnoreCase);
         var excludeQualities = new HashSet<string>(state.ExcludeFilters.QualityLevels, StringComparer.OrdinalIgnoreCase);
+        var excludeIssues = new HashSet<string>(state.ExcludeFilters.VoipIssues, StringComparer.OrdinalIgnoreCase);
 
         foreach (var group in state.ExcludeGroups)
         {
@@ -94,22 +99,26 @@ public static class GlobalFilterStateHelper
                 if (criteria.Value.Qualities is not null)
                     foreach (var q in criteria.Value.Qualities)
                         excludeQualities.Add(q);
+                if (criteria.Value.Issues is not null)
+                    foreach (var i in criteria.Value.Issues)
+                        excludeIssues.Add(i);
             }
         }
 
-        return (includeCodecs, includeQualities, excludeCodecs, excludeQualities);
+        return (includeCodecs, includeQualities, includeIssues, excludeCodecs, excludeQualities, excludeIssues);
     }
 
     /// <summary>
-    /// Collects country criteria (countries, regions) from GlobalFilterState.
+    /// Collects country criteria (countries, regions, directions) from GlobalFilterState.
     /// </summary>
-    /// <returns>Tuple of (includeCountries, includeRegions, excludeCountries, excludeRegions)</returns>
-    public static (HashSet<string> IncludeCountries, HashSet<string> IncludeRegions,
-                   HashSet<string> ExcludeCountries, HashSet<string> ExcludeRegions)
+    /// <returns>Tuple of (includeCountries, includeRegions, includeDirections, excludeCountries, excludeRegions, excludeDirections)</returns>
+    public static (HashSet<string> IncludeCountries, HashSet<string> IncludeRegions, HashSet<string> IncludeDirections,
+                   HashSet<string> ExcludeCountries, HashSet<string> ExcludeRegions, HashSet<string> ExcludeDirections)
         CollectCountryCriteria(GlobalFilterState state)
     {
         var includeCountries = new HashSet<string>(state.IncludeFilters.Countries, StringComparer.OrdinalIgnoreCase);
         var includeRegions = new HashSet<string>(state.IncludeFilters.Regions, StringComparer.OrdinalIgnoreCase);
+        var includeDirections = new HashSet<string>(state.IncludeFilters.Directions, StringComparer.OrdinalIgnoreCase);
 
         foreach (var group in state.IncludeGroups)
         {
@@ -122,11 +131,15 @@ public static class GlobalFilterStateHelper
                 if (criteria.Value.Regions is not null)
                     foreach (var r in criteria.Value.Regions)
                         includeRegions.Add(r);
+                if (criteria.Value.Directions is not null)
+                    foreach (var d in criteria.Value.Directions)
+                        includeDirections.Add(d);
             }
         }
 
         var excludeCountries = new HashSet<string>(state.ExcludeFilters.Countries, StringComparer.OrdinalIgnoreCase);
         var excludeRegions = new HashSet<string>(state.ExcludeFilters.Regions, StringComparer.OrdinalIgnoreCase);
+        var excludeDirections = new HashSet<string>(state.ExcludeFilters.Directions, StringComparer.OrdinalIgnoreCase);
 
         foreach (var group in state.ExcludeGroups)
         {
@@ -139,10 +152,13 @@ public static class GlobalFilterStateHelper
                 if (criteria.Value.Regions is not null)
                     foreach (var r in criteria.Value.Regions)
                         excludeRegions.Add(r);
+                if (criteria.Value.Directions is not null)
+                    foreach (var d in criteria.Value.Directions)
+                        excludeDirections.Add(d);
             }
         }
 
-        return (includeCountries, includeRegions, excludeCountries, excludeRegions);
+        return (includeCountries, includeRegions, includeDirections, excludeCountries, excludeRegions, excludeDirections);
     }
 
     /// <summary>

@@ -312,10 +312,11 @@ namespace PCAPAnalyzer.UI.ViewModels
                 _filterService.FilterChanged += OnFilterServiceChanged;
             }
 
-            // Subscribe to GlobalFilterState changes for tab-specific filtering
+            // Subscribe to GlobalFilterState for explicit Apply button clicks only
+            // NOTE: Using OnFiltersApplied (not OnFilterChanged) to avoid auto-apply on chip removal
             if (_globalFilterState is not null)
             {
-                _globalFilterState.OnFilterChanged += OnGlobalFilterChanged;
+                _globalFilterState.OnFiltersApplied += OnGlobalFilterChanged;
             }
 
             // Subscribe to CommonFilters property changes
@@ -1028,6 +1029,43 @@ namespace PCAPAnalyzer.UI.ViewModels
         // ==================== GLOBAL FILTER STATE FILTERING ====================
 
         /// <summary>
+        /// Maps abstract UI category names to specific ThreatCategory enum values.
+        /// Allows user-friendly filter chips while matching technical threat types.
+        /// </summary>
+        private static readonly Dictionary<string, HashSet<ThreatCategory>> CategoryMapping = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Network"] = [ThreatCategory.InsecureProtocol, ThreatCategory.UnencryptedService,
+                           ThreatCategory.LegacyProtocol, ThreatCategory.Reconnaissance, ThreatCategory.DenialOfService],
+            ["Application"] = [ThreatCategory.KnownVulnerability, ThreatCategory.MaliciousActivity,
+                               ThreatCategory.CommandAndControl],
+            ["Crypto"] = [ThreatCategory.CleartextCredentials, ThreatCategory.DefaultCredentials,
+                          ThreatCategory.UnencryptedService],
+            ["Exfiltration"] = [ThreatCategory.DataExfiltration],
+            ["IoT"] = [ThreatCategory.InsecureProtocol, ThreatCategory.DefaultCredentials],  // IoT often uses insecure protocols
+            ["VoIP"] = [ThreatCategory.InsecureProtocol, ThreatCategory.UnencryptedService]  // VoIP security issues
+        };
+
+        /// <summary>
+        /// Checks if a threat's category matches any of the UI category filters.
+        /// Uses CategoryMapping to translate abstract UI categories to specific ThreatCategory enums.
+        /// </summary>
+        private static bool MatchesCategory(ThreatCategory threatCategory, HashSet<string> uiCategories)
+        {
+            // First check direct match (in case user passes actual enum names)
+            if (uiCategories.Contains(threatCategory.ToString()))
+                return true;
+
+            // Then check mapped categories
+            foreach (var uiCategory in uiCategories)
+            {
+                if (CategoryMapping.TryGetValue(uiCategory, out var mappedCategories) &&
+                    mappedCategories.Contains(threatCategory))
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Applies threat-specific criteria from GlobalFilterState (severity, category filters from UnifiedFilterPanel).
         /// Supports both flat IncludeFilters/ExcludeFilters and AND-grouped IncludeGroups/ExcludeGroups.
         /// </summary>
@@ -1049,10 +1087,10 @@ namespace PCAPAnalyzer.UI.ViewModels
                 HasFiltersApplied = true;
             }
 
-            // Apply include category filter (OR within categories)
+            // Apply include category filter (OR within categories) - uses mapping for UI categories
             if (includeCategories.Count > 0)
             {
-                result = result.Where(t => includeCategories.Contains(t.Category.ToString()));
+                result = result.Where(t => MatchesCategory(t.Category, includeCategories));
                 HasFiltersApplied = true;
             }
 
@@ -1063,10 +1101,10 @@ namespace PCAPAnalyzer.UI.ViewModels
                 HasFiltersApplied = true;
             }
 
-            // Apply exclude category filter
+            // Apply exclude category filter - uses mapping for UI categories
             if (excludeCategories.Count > 0)
             {
-                result = result.Where(t => !excludeCategories.Contains(t.Category.ToString()));
+                result = result.Where(t => !MatchesCategory(t.Category, excludeCategories));
                 HasFiltersApplied = true;
             }
 
@@ -1087,7 +1125,7 @@ namespace PCAPAnalyzer.UI.ViewModels
             // Unsubscribe from GlobalFilterState to prevent memory leaks
             if (_globalFilterState is not null)
             {
-                _globalFilterState.OnFilterChanged -= OnGlobalFilterChanged;
+                _globalFilterState.OnFiltersApplied -= OnGlobalFilterChanged;
             }
 
             // Unsubscribe from filter service events

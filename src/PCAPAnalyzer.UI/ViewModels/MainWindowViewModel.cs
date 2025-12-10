@@ -284,11 +284,12 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             anomalyFrameIndexService: anomalyFrameIndexService,
             navigateToTab: HandleDashboardNavigation);
 
-        // Subscribe to GlobalFilterState changes to propagate filters to all tabs
+        // Subscribe to GlobalFilterState for explicit Apply button clicks only
+        // NOTE: Using OnFiltersApplied (not OnFilterChanged) to avoid auto-apply on chip removal
         if (_globalFilterState is not null)
         {
-            _globalFilterState.OnFilterChanged += OnGlobalFilterStateChanged;
-            DebugLogger.Log("[MainWindowViewModel] Subscribed to GlobalFilterState.OnFilterChanged");
+            _globalFilterState.OnFiltersApplied += OnGlobalFilterStateChanged;
+            DebugLogger.Log("[MainWindowViewModel] Subscribed to GlobalFilterState.OnFiltersApplied");
         }
 
         _suricataService = new SuricataService(
@@ -927,22 +928,43 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         return false;
     }
 
-    private void AddQuickFilters(List<PacketFilter> filters, FilterGroup group)
+    private static void AddQuickFilters(List<PacketFilter> filters, FilterGroup group)
     {
         if (group.QuickFilters?.Count == 0) return;
         if (group.QuickFilters is null) return;
 
+        // Build individual QuickFilter predicates
+        var quickFilterList = new List<PacketFilter>();
         foreach (var qf in group.QuickFilters)
         {
             var pred = BuildQuickFilterPredicate(qf);
             if (pred is not null)
             {
-                filters.Add(new PacketFilter
+                quickFilterList.Add(new PacketFilter
                 {
                     CustomPredicate = pred,
                     Description = qf
                 });
             }
+        }
+
+        if (quickFilterList.Count == 0) return;
+
+        // ✅ FIX: Combine QuickFilters with OR logic (any can match)
+        // User selecting [SYN] + [RST] expects: "show SYN OR RST packets"
+        // Previously: each added separately → AND'd → 0 packets!
+        if (quickFilterList.Count == 1)
+        {
+            filters.Add(quickFilterList[0]);
+        }
+        else
+        {
+            filters.Add(new PacketFilter
+            {
+                CombinedFilters = quickFilterList,
+                CombineMode = FilterCombineMode.Or,
+                Description = $"QuickFilter: ({string.Join("|", quickFilterList.Select(f => f.Description))})"
+            });
         }
     }
 
@@ -991,18 +1013,17 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         return false;
     }
 
+    /// <summary>
+    /// Builds predicate for QuickFilter strings.
+    /// Delegates to SmartFilterBuilderService.GetQuickFilterPredicate for consistency.
+    /// This ensures all quick filters work identically across all tabs.
+    /// </summary>
     private static Func<PacketInfo, bool>? BuildQuickFilterPredicate(string quickFilter)
     {
-        return quickFilter.ToUpperInvariant() switch
-        {
-            "TCP" => p => p.Protocol == Protocol.TCP,
-            "UDP" => p => p.Protocol == Protocol.UDP,
-            "ICMP" => p => p.Protocol == Protocol.ICMP,
-            "INSECURE" => p => NetworkFilterHelper.IsInsecureProtocol(p.L7Protocol ?? p.Protocol.ToString()),
-            // Note: ANOMALIES, SUSPICIOUS, TCP ISSUES require threat/anomaly analysis data
-            // which is stored separately in AnalysisResult, not in PacketInfo
-            _ => null
-        };
+        // Delegate to the shared service - SINGLE SOURCE OF TRUTH
+        // Try exact case first (e.g., "SYN"), then uppercase (e.g., "INSECURE")
+        return Services.SmartFilterBuilderService.GetQuickFilterPredicate(quickFilter)
+            ?? Services.SmartFilterBuilderService.GetQuickFilterPredicate(quickFilter.ToUpperInvariant());
     }
 
     private void OnFilteredPacketsChanged(object? sender, int filteredCount)
@@ -1268,6 +1289,9 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
             _tsharkService?.Dispose();
             Analysis?.Dispose();
             _dashboardComponent?.Dispose();
+
+            // Dispose PacketManager (which owns PacketDetailsViewModel with stream cache)
+            PacketManager?.DisposeAsync().AsTask().GetAwaiter().GetResult();
 
             if (DashboardViewModel is IDisposable disposableDashboard)
                 disposableDashboard.Dispose();

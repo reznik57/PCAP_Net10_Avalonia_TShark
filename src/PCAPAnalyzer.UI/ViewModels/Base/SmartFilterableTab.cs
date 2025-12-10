@@ -67,6 +67,25 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
         public bool FilterMulticastToggle { get => NetworkQuickFilters.MulticastToggle; set => NetworkQuickFilters.MulticastToggle = value; }
         public bool FilterBroadcastToggle { get => NetworkQuickFilters.BroadcastToggle; set => NetworkQuickFilters.BroadcastToggle = value; }
         public bool FilterAnycastToggle { get => NetworkQuickFilters.AnycastToggle; set => NetworkQuickFilters.AnycastToggle = value; }
+        public bool FilterUnicastToggle { get => NetworkQuickFilters.UnicastToggle; set => NetworkQuickFilters.UnicastToggle = value; }
+
+        // L4 Protocol Filters
+        public bool FilterTcpToggle { get => NetworkQuickFilters.TcpToggle; set => NetworkQuickFilters.TcpToggle = value; }
+        public bool FilterUdpToggle { get => NetworkQuickFilters.UdpToggle; set => NetworkQuickFilters.UdpToggle = value; }
+        public bool FilterIcmpToggle { get => NetworkQuickFilters.IcmpToggle; set => NetworkQuickFilters.IcmpToggle = value; }
+        public bool FilterArpToggle { get => NetworkQuickFilters.ArpToggle; set => NetworkQuickFilters.ArpToggle = value; }
+        public bool FilterIgmpToggle { get => NetworkQuickFilters.IgmpToggle; set => NetworkQuickFilters.IgmpToggle = value; }
+        public bool FilterGreToggle { get => NetworkQuickFilters.GreToggle; set => NetworkQuickFilters.GreToggle = value; }
+
+        // TCP Flags Filters
+        public bool FilterTcpSynToggle { get => NetworkQuickFilters.TcpSynToggle; set => NetworkQuickFilters.TcpSynToggle = value; }
+        public bool FilterTcpRstToggle { get => NetworkQuickFilters.TcpRstToggle; set => NetworkQuickFilters.TcpRstToggle = value; }
+        public bool FilterTcpFinToggle { get => NetworkQuickFilters.TcpFinToggle; set => NetworkQuickFilters.TcpFinToggle = value; }
+        public bool FilterTcpAckOnlyToggle { get => NetworkQuickFilters.TcpAckOnlyToggle; set => NetworkQuickFilters.TcpAckOnlyToggle = value; }
+
+        // Frame Characteristics Filters
+        public bool FilterFragmentedToggle { get => NetworkQuickFilters.FragmentedToggle; set => NetworkQuickFilters.FragmentedToggle = value; }
+        public bool FilterSmallFrameToggle { get => NetworkQuickFilters.SmallFrameToggle; set => NetworkQuickFilters.SmallFrameToggle = value; }
 
         // Security Filters
         public bool FilterInsecureToggle { get => NetworkQuickFilters.InsecureToggle; set => NetworkQuickFilters.InsecureToggle = value; }
@@ -164,6 +183,23 @@ namespace PCAPAnalyzer.UI.ViewModels.Base
 
         /// <summary>Title color: Green for INCLUDE, Red for EXCLUDE</summary>
         public string QuickFilterTitleColor => ThemeColorHelper.GetQuickFilterBorderColorHex(QuickFilterIsIncludeMode);
+
+        // ==================== TAB-SPECIFIC FILTER ROW VISIBILITY ====================
+        // Override these in derived classes to hide security-related filters on non-security tabs
+
+        /// <summary>
+        /// Whether to show Security quick filters (Insecure, Anomalies, Suspicious, TCP Issues, Port Scans).
+        /// Override to return false on General/Packet Analysis tab.
+        /// Default: true (show filters).
+        /// </summary>
+        public virtual bool ShowSecurityFilters => true;
+
+        /// <summary>
+        /// Whether to show Security Audit quick filters (Clear Auth, Old Crypto, DNS Tunnel, Scan, etc.).
+        /// Override to return false on General/Packet Analysis tab.
+        /// Default: true (show filters).
+        /// </summary>
+        public virtual bool ShowAuditFilters => true;
 
         // ==================== FILTER INPUT PROPERTIES ====================
 

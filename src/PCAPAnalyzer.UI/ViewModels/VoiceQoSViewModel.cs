@@ -220,10 +220,11 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
             _filterService.FilterChanged += OnFilterServiceChanged;
         }
 
-        // Subscribe to GlobalFilterState changes for tab-specific filtering (codec, quality, issues)
+        // Subscribe to GlobalFilterState for explicit Apply button clicks only
+        // NOTE: Using OnFiltersApplied (not OnFilterChanged) to avoid auto-apply on chip removal
         if (_globalFilterState is not null)
         {
-            _globalFilterState.OnFilterChanged += OnGlobalFilterChanged;
+            _globalFilterState.OnFiltersApplied += OnGlobalFilterChanged;
         }
 
         // Subscribe to CommonFilters property changes and forward to existing SourceIP/DestIP filters
@@ -389,7 +390,7 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
         // Unsubscribe from GlobalFilterState to prevent memory leaks
         if (_globalFilterState is not null)
         {
-            _globalFilterState.OnFilterChanged -= OnGlobalFilterChanged;
+            _globalFilterState.OnFiltersApplied -= OnGlobalFilterChanged;
         }
 
         // Unsubscribe from filter service events

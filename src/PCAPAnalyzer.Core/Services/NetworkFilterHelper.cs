@@ -73,38 +73,75 @@ namespace PCAPAnalyzer.Core.Services
             }
         }
 
-        // Broadcast: 255.255.255.255 or network broadcast addresses
+        /// <summary>
+        /// Checks if an IP address is a broadcast address.
+        ///
+        /// IMPORTANT: True broadcast detection requires Layer 2 MAC address (ff:ff:ff:ff:ff:ff).
+        /// Without subnet mask information, we can ONLY reliably detect:
+        /// - Limited broadcast: 255.255.255.255
+        ///
+        /// Common misconceptions this method AVOIDS:
+        /// - *.*.*.255 is NOT always broadcast (e.g., 10.0.0.255 is valid unicast in /8)
+        /// - *.*.*.0 is NEVER broadcast (it's the network address!)
+        ///
+        /// For comprehensive broadcast detection, use IsBroadcastPacket(PacketInfo) which
+        /// also checks protocol-level indicators (ARP requests, DHCP Discover, etc.)
+        /// </summary>
         public static bool IsBroadcast(string ipAddress)
         {
             if (string.IsNullOrWhiteSpace(ipAddress))
                 return false;
 
-            try
-            {
-                var ip = IPAddress.Parse(ipAddress);
-                var bytes = ip.GetAddressBytes();
+            // Only the limited broadcast address is guaranteed to be broadcast
+            // without knowing the subnet mask
+            return ipAddress == "255.255.255.255";
+        }
 
-                if (bytes.Length == 4) // IPv4
-                {
-                    // Full broadcast
-                    if (bytes.All(b => b == 255))
-                        return true;
+        /// <summary>
+        /// Layer 2 broadcast MAC address constant.
+        /// </summary>
+        public const string BroadcastMAC = "ff:ff:ff:ff:ff:ff";
 
-                    // Limited broadcast (last octet is 255)
-                    if (bytes[3] == 255)
-                        return true;
+        /// <summary>
+        /// Enhanced broadcast detection using packet-level information.
+        /// Checks L2 MAC, IP address, AND protocol-specific indicators.
+        /// </summary>
+        /// <remarks>
+        /// Broadcast indicators (in order of reliability):
+        /// 1. Destination MAC = ff:ff:ff:ff:ff:ff (L2 broadcast - 100% reliable)
+        /// 2. Destination IP = 255.255.255.255 (limited broadcast)
+        /// 3. ARP Request (always L2 broadcast)
+        /// 4. DHCP Discover/Request (always broadcast)
+        /// 5. NetBIOS Name Query to port 137 (usually broadcast)
+        /// </remarks>
+        public static bool IsBroadcastPacket(string destinationIP, string? protocol, string? info, string? destinationMAC = null)
+        {
+            // 1. L2 broadcast MAC address (100% reliable when available)
+            if (!string.IsNullOrEmpty(destinationMAC) &&
+                destinationMAC.Equals(BroadcastMAC, StringComparison.OrdinalIgnoreCase))
+                return true;
 
-                    // Network broadcast (ends with .0)
-                    if (bytes[3] == 0 && bytes[2] != 0)
-                        return true;
-                }
+            // 2. Limited broadcast IP (100% reliable)
+            if (destinationIP == "255.255.255.255")
+                return true;
 
-                return false;
-            }
-            catch
-            {
-                return false;
-            }
+            // 3. ARP requests are always broadcast at Layer 2
+            if (protocol?.Contains("ARP", StringComparison.OrdinalIgnoreCase) == true &&
+                info?.Contains("request", StringComparison.OrdinalIgnoreCase) == true)
+                return true;
+
+            // 4. DHCP Discover and Request are broadcast
+            if (protocol?.Contains("DHCP", StringComparison.OrdinalIgnoreCase) == true &&
+                (info?.Contains("Discover", StringComparison.OrdinalIgnoreCase) == true ||
+                 info?.Contains("Request", StringComparison.OrdinalIgnoreCase) == true))
+                return true;
+
+            // 5. NBNS (NetBIOS Name Service) queries to port 137 are typically broadcast
+            if (protocol?.Contains("NBNS", StringComparison.OrdinalIgnoreCase) == true &&
+                info?.Contains("query", StringComparison.OrdinalIgnoreCase) == true)
+                return true;
+
+            return false;
         }
 
         // Anycast detection (common anycast addresses)
@@ -130,7 +167,7 @@ namespace PCAPAnalyzer.Core.Services
             return anycastAddresses.Contains(ipAddress);
         }
 
-        // Link-local addresses: 169.254.0.0/16
+        // Link-local addresses: IPv4 169.254.0.0/16 (APIPA), IPv6 fe80::/10
         public static bool IsLinkLocal(string ipAddress)
         {
             if (string.IsNullOrWhiteSpace(ipAddress))
@@ -141,9 +178,14 @@ namespace PCAPAnalyzer.Core.Services
                 var ip = IPAddress.Parse(ipAddress);
                 var bytes = ip.GetAddressBytes();
 
-                if (bytes.Length == 4) // IPv4
+                if (bytes.Length == 4) // IPv4: 169.254.0.0/16
                 {
                     return bytes[0] == 169 && bytes[1] == 254;
+                }
+                else if (bytes.Length == 16) // IPv6: fe80::/10
+                {
+                    // fe80::/10 means first byte is 0xfe, second byte high 2 bits are 10 (0x80-0xbf)
+                    return bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80;
                 }
 
                 return false;

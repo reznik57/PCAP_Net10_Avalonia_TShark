@@ -406,20 +406,17 @@ public partial class DashboardViewModel
     }
 
     /// <summary>
-    /// Builds predicate for QuickFilter strings
+    /// Builds predicate for QuickFilter strings.
+    /// These come from GeneralFilterTabViewModel.GetPendingFilters() via UnifiedFilterPanelControl.
+    /// Delegates to SmartFilterBuilderService.GetQuickFilterPredicate for consistency.
+    /// This ensures all quick filters work identically across all tabs.
     /// </summary>
-    private Func<PacketInfo, bool>? BuildQuickFilterPredicate(string quickFilter)
+    private static Func<PacketInfo, bool>? BuildQuickFilterPredicate(string quickFilter)
     {
-        return quickFilter.ToUpperInvariant() switch
-        {
-            "TCP" => p => p.Protocol == Protocol.TCP,
-            "UDP" => p => p.Protocol == Protocol.UDP,
-            "ICMP" => p => p.Protocol == Protocol.ICMP,
-            "ENCRYPTED" => p => p.L7Protocol?.Contains("TLS", System.StringComparison.OrdinalIgnoreCase) ?? false,
-            "PRIVATE" => p => IsPrivateIP(p.SourceIP) || IsPrivateIP(p.DestinationIP),
-            "PUBLIC" => p => !IsPrivateIP(p.SourceIP) || !IsPrivateIP(p.DestinationIP),
-            _ => null
-        };
+        // Delegate to the shared service - SINGLE SOURCE OF TRUTH
+        // Try exact case first (e.g., "SYN"), then uppercase (e.g., "INSECURE")
+        return Services.SmartFilterBuilderService.GetQuickFilterPredicate(quickFilter)
+            ?? Services.SmartFilterBuilderService.GetQuickFilterPredicate(quickFilter.ToUpperInvariant());
     }
 
     /// <summary>

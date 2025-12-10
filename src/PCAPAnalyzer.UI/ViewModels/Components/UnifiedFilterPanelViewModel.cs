@@ -283,7 +283,10 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         // Update tab indicators
         NotifyTabIndicatorsChanged();
 
-        // Fire event to trigger filter execution (handlers will set progress)
+        // Explicitly trigger filter application (this fires OnFiltersApplied)
+        _filterState.ApplyFilters();
+
+        // Fire event for any additional local handling
         ApplyFiltersRequested?.Invoke();
     }
 
@@ -303,13 +306,13 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         CountryTab.Reset();
         HostInventoryTab.Reset();
 
-        // Clear GlobalFilterState
-        _filterState.Clear();
+        // Clear GlobalFilterState AND trigger re-application (show all data)
+        _filterState.ClearAndApply();
 
         // Update tab indicators
         NotifyTabIndicatorsChanged();
 
-        // Fire event to trigger filter execution (show all data)
+        // Fire event for any additional local handling
         ApplyFiltersRequested?.Invoke();
     }
 }

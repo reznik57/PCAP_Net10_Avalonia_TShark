@@ -184,6 +184,19 @@ public partial class VoiceQoSViewModel
     }
 
     /// <summary>
+    /// Maps UI quality chip names to actual severity values used in data models.
+    /// UI uses user-friendly terms; data uses severity-based terms.
+    /// </summary>
+    private static readonly Dictionary<string, string> QualityToSeverityMapping =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Poor"] = "Critical",
+            ["Fair"] = "High",
+            ["Good"] = "Medium",
+            ["Excellent"] = "Low"
+        };
+
+    /// <summary>
     /// Applies VoiceQoS-specific criteria from GlobalFilterState (codec, DSCP, quality filters from UnifiedFilterPanel).
     /// Supports common VoIP codecs: G.711, G.729, G.722, Opus, RTP, SIP, RTCP, H.323, MGCP, SCCP
     /// Supports DSCP classes: EF (voice), AF41-43 (video), CS3/CS5 (signaling)
@@ -195,8 +208,8 @@ public partial class VoiceQoSViewModel
 
         var result = items;
 
-        // Use helper to collect all criteria
-        var (includeCodecs, _, excludeCodecs, _) =
+        // Use helper to collect all criteria (6-tuple now includes VoipIssues)
+        var (includeCodecs, _, _, excludeCodecs, _, _) =
             GlobalFilterStateHelper.CollectVoiceQoSCriteria(_globalFilterState);
 
         // Apply include codec/protocol filter - match against QoSType, Protocol, or DSCP marking
@@ -235,7 +248,8 @@ public partial class VoiceQoSViewModel
     }
 
     /// <summary>
-    /// Applies GlobalFilterState quality and threshold criteria to latency connections.
+    /// Applies GlobalFilterState quality, threshold, and VoipIssues criteria to latency connections.
+    /// Maps UI quality values (Poor/Fair/Good/Excellent) to data severity values (Critical/High/Medium/Low).
     /// </summary>
     private IEnumerable<LatencyConnectionItem> ApplyGlobalLatencyFilters(IEnumerable<LatencyConnectionItem> items)
     {
@@ -244,20 +258,30 @@ public partial class VoiceQoSViewModel
 
         var result = items;
 
-        // Use helper to collect quality level filters
-        var (_, includeQualities, _, excludeQualities) =
+        // Use helper to collect quality level and VoIP issues filters (6-tuple)
+        var (_, includeQualities, includeIssues, _, excludeQualities, excludeIssues) =
             GlobalFilterStateHelper.CollectVoiceQoSCriteria(_globalFilterState);
 
+        // Map UI quality values to data severity values
+        var mappedIncludeQualities = MapQualitiesToSeverities(includeQualities);
+        var mappedExcludeQualities = MapQualitiesToSeverities(excludeQualities);
+
         // Apply include quality filter
-        if (includeQualities.Count > 0)
+        if (mappedIncludeQualities.Count > 0)
         {
-            result = result.Where(l => includeQualities.Contains(l.LatencySeverity));
+            result = result.Where(l => mappedIncludeQualities.Contains(l.LatencySeverity));
         }
 
         // Apply exclude quality filter
-        if (excludeQualities.Count > 0)
+        if (mappedExcludeQualities.Count > 0)
         {
-            result = result.Where(l => !excludeQualities.Contains(l.LatencySeverity));
+            result = result.Where(l => !mappedExcludeQualities.Contains(l.LatencySeverity));
+        }
+
+        // Apply VoIP issues filter - "High Latency" issue filters latency connections
+        if (includeIssues.Count > 0 && includeIssues.Contains("High Latency"))
+        {
+            result = result.Where(l => l.AverageLatency >= LatencyThreshold);
         }
 
         // Apply latency threshold filter (show only connections above threshold)
@@ -271,7 +295,26 @@ public partial class VoiceQoSViewModel
     }
 
     /// <summary>
-    /// Applies GlobalFilterState quality and threshold criteria to jitter connections.
+    /// Maps UI quality chip values to data severity values.
+    /// Example: "Poor" → "Critical", "Fair" → "High", "Good" → "Medium", "Excellent" → "Low"
+    /// Also includes direct severity values for backwards compatibility.
+    /// </summary>
+    private static HashSet<string> MapQualitiesToSeverities(HashSet<string> qualities)
+    {
+        var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var q in qualities)
+        {
+            if (QualityToSeverityMapping.TryGetValue(q, out var severity))
+                result.Add(severity);
+            else
+                result.Add(q); // Direct pass-through for already-severity values
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Applies GlobalFilterState quality, threshold, and VoipIssues criteria to jitter connections.
+    /// Maps UI quality values (Poor/Fair/Good/Excellent) to data severity values (Critical/High/Medium/Low).
     /// </summary>
     private IEnumerable<JitterConnectionItem> ApplyGlobalJitterFilters(IEnumerable<JitterConnectionItem> items)
     {
@@ -280,20 +323,30 @@ public partial class VoiceQoSViewModel
 
         var result = items;
 
-        // Use helper to collect quality level filters
-        var (_, includeQualities, _, excludeQualities) =
+        // Use helper to collect quality level and VoIP issues filters (6-tuple)
+        var (_, includeQualities, includeIssues, _, excludeQualities, _) =
             GlobalFilterStateHelper.CollectVoiceQoSCriteria(_globalFilterState);
 
+        // Map UI quality values to data severity values
+        var mappedIncludeQualities = MapQualitiesToSeverities(includeQualities);
+        var mappedExcludeQualities = MapQualitiesToSeverities(excludeQualities);
+
         // Apply include quality filter
-        if (includeQualities.Count > 0)
+        if (mappedIncludeQualities.Count > 0)
         {
-            result = result.Where(j => includeQualities.Contains(j.JitterSeverity));
+            result = result.Where(j => mappedIncludeQualities.Contains(j.JitterSeverity));
         }
 
         // Apply exclude quality filter
-        if (excludeQualities.Count > 0)
+        if (mappedExcludeQualities.Count > 0)
         {
-            result = result.Where(j => !excludeQualities.Contains(j.JitterSeverity));
+            result = result.Where(j => !mappedExcludeQualities.Contains(j.JitterSeverity));
+        }
+
+        // Apply VoIP issues filter - "High Jitter" issue filters jitter connections
+        if (includeIssues.Count > 0 && includeIssues.Contains("High Jitter"))
+        {
+            result = result.Where(j => j.AverageJitter >= JitterThreshold);
         }
 
         // Apply jitter threshold filter (show only connections above threshold)

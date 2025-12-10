@@ -51,34 +51,34 @@ public static class TSharkFieldDefinitions
         "-e pgsql.parameter_name -e pgsql.password";                    // 36-37: PostgreSQL
 
     /// <summary>
-    /// OS fingerprinting fields (38-54).
+    /// OS fingerprinting fields (38-55).
     /// Essential TCP/IP stack characteristics for host identification.
     /// Removed low-value fields: tcp.options (raw hex), tcp.options.sack_perm, tcp.options.timestamp.tsval.
     /// Field names updated for Wireshark 4.6.1+ compatibility.
     /// </summary>
     public static readonly string OsFingerprintFields =
         "-e ip.ttl -e ip.flags.df " +                                   // 38-39: TTL, DF flag
-        "-e eth.src " +                                                 // 40: MAC address
-        "-e tcp.options.mss_val -e tcp.options.wscale " +               // 41-42: MSS, Window scale (key fingerprint values)
-        "-e tcp.window_size_value " +                                   // 43: Initial window size
-        "-e tls.handshake.type -e tls.handshake.version " +             // 44-45: TLS handshake info
-        "-e tls.handshake.ciphersuite " +                               // 46: Cipher suites
-        "-e tls.handshake.extension.type " +                            // 47: Extensions
-        "-e tls.handshake.extensions_supported_groups " +               // 48: Supported groups (was elliptic_curves)
-        "-e tls.handshake.extensions_ec_point_formats " +               // 49: EC point formats
-        "-e dhcp.option.dhcp -e dhcp.option.request_list_item " +       // 50-51: DHCP message type, options
-        "-e dhcp.option.vendor_class_id -e dhcp.option.hostname " +     // 52-53: DHCP vendor/hostname
-        "-e ssh.protocol -e http.server";                               // 54-55: SSH banner, HTTP server
+        "-e eth.src -e eth.dst " +                                      // 40-41: Source/Destination MAC (eth.dst for broadcast detection)
+        "-e tcp.options.mss_val -e tcp.options.wscale " +               // 42-43: MSS, Window scale (key fingerprint values)
+        "-e tcp.window_size_value " +                                   // 44: Initial window size
+        "-e tls.handshake.type -e tls.handshake.version " +             // 45-46: TLS handshake info
+        "-e tls.handshake.ciphersuite " +                               // 47: Cipher suites
+        "-e tls.handshake.extension.type " +                            // 48: Extensions
+        "-e tls.handshake.extensions_supported_groups " +               // 49: Supported groups (was elliptic_curves)
+        "-e tls.handshake.extensions_ec_point_formats " +               // 50: EC point formats
+        "-e dhcp.option.dhcp -e dhcp.option.request_list_item " +       // 51-52: DHCP message type, options
+        "-e dhcp.option.vendor_class_id -e dhcp.option.hostname " +     // 53-54: DHCP vendor/hostname
+        "-e ssh.protocol -e http.server";                               // 55-56: SSH banner, HTTP server
 
     /// <summary>
-    /// Security analysis fields (56-57).
+    /// Security analysis fields (57-58).
     /// High-value native TShark fields that eliminate manual computation.
     /// JA3 hash: Identifies client/malware by TLS fingerprint.
     /// SNI: Target domain even for encrypted traffic.
     /// </summary>
     public static readonly string SecurityFields =
-        "-e tls.handshake.ja3 " +                                       // 56: Native JA3 hash (replaces manual computation)
-        "-e tls.handshake.extensions_server_name";                      // 57: SNI - target domain for encrypted traffic
+        "-e tls.handshake.ja3 " +                                       // 57: Native JA3 hash (replaces manual computation)
+        "-e tls.handshake.extensions_server_name";                      // 58: SNI - target domain for encrypted traffic
 
     /// <summary>
     /// Common base arguments (without -r path) for streaming analysis.
@@ -106,7 +106,7 @@ public static class TSharkFieldDefinitions
         "-e", "pgsql.parameter_name", "-e", "pgsql.password",
         // OS fingerprint fields
         "-e", "ip.ttl", "-e", "ip.flags.df",
-        "-e", "eth.src",
+        "-e", "eth.src", "-e", "eth.dst",
         "-e", "tcp.options.mss_val", "-e", "tcp.options.wscale",
         "-e", "tcp.window_size_value",
         "-e", "tls.handshake.type", "-e", "tls.handshake.version",
@@ -168,7 +168,7 @@ public static class TSharkFieldDefinitions
     /// <summary>
     /// Total number of fields in streaming output.
     /// Must match MAX_TSHARK_FIELDS in TSharkParserOptimized.
-    /// Core (18) + Credentials (20) + OS Fingerprint (18) + Security (2) = 58 fields
+    /// Core (18) + Credentials (20) + OS Fingerprint (19) + Security (2) = 59 fields
     /// </summary>
-    public const int TotalFieldCount = 58;
+    public const int TotalFieldCount = 59;
 }
