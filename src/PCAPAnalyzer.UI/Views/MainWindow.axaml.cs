@@ -9,6 +9,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using SkiaSharp;
 using PCAPAnalyzer.Core.Monitoring;
@@ -401,20 +402,14 @@ public partial class MainWindow : Window
                 DebugLogger.Log("[MainWindow] Cannot capture tab content");
                 return false;
             }
-            
-            // Calculate the size
-            var pixelSize = new PixelSize((int)content.Bounds.Width, (int)content.Bounds.Height);
-            if (pixelSize.Width <= 0 || pixelSize.Height <= 0)
+
+            // CONSOLIDATED: Use unified render helper for DPI-aware, chart-safe capture
+            using var bitmap = await RenderControlToBitmapAsync(content, layoutPasses: 2, delayPerPassMs: 50);
+            if (bitmap is null)
             {
-                DebugLogger.Log("[MainWindow] Invalid content size for screenshot");
+                DebugLogger.Log("[MainWindow] Failed to render content to bitmap");
                 return false;
             }
-            
-            // Render to bitmap
-            using var bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
-            content.Measure(content.Bounds.Size);
-            content.Arrange(new Rect(content.Bounds.Size));
-            bitmap.Render(content);
 
             // Show save dialog
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
@@ -539,61 +534,15 @@ public partial class MainWindow : Window
                 return false;
             }
 
-            // Check if the content is or contains a ScrollViewer
+            // CONSOLIDATED: Use unified render helpers for DPI-aware, chart-safe capture
             var scrollViewer = visualContent as ScrollViewer ?? FindScrollViewer(visualContent);
             RenderTargetBitmap? bitmap = null;
 
             try
             {
-                if (scrollViewer is not null && scrollViewer.Content is Control scrollContent)
-                {
-                    DebugLogger.Log("[MainWindow] Found ScrollViewer, capturing full scrollable content");
-
-                    // Force layout update
-                    scrollContent.InvalidateMeasure();
-                    scrollContent.InvalidateArrange();
-                    scrollViewer.InvalidateMeasure();
-                    scrollViewer.InvalidateArrange();
-
-                    // Force rendering of all content
-                    scrollContent.UpdateLayout();
-                    scrollViewer.UpdateLayout();
-                    await Task.Delay(300); // Increased delay for better rendering
-
-                    // Get the actual size of the content
-                    var measureSize = new Size(scrollViewer.Viewport.Width, double.PositiveInfinity);
-                    scrollContent.Measure(measureSize);
-                    var contentSize = scrollContent.DesiredSize;
-                    var viewportSize = scrollViewer.Viewport;
-
-                    // Use the actual measured size for height, viewport width
-                    var fullSize = new PixelSize(
-                        Math.Max((int)viewportSize.Width, (int)contentSize.Width),
-                        Math.Max((int)contentSize.Height, (int)viewportSize.Height)
-                    );
-
-                    // Ensure minimum size
-                    if (fullSize.Width <= 0 || fullSize.Height <= 0)
-                    {
-                        DebugLogger.Log($"[MainWindow] Invalid full content size: {fullSize.Width}x{fullSize.Height}");
-                        // Use reasonable defaults
-                        fullSize = new PixelSize(
-                            Math.Max((int)scrollViewer.Bounds.Width, 1920),
-                            Math.Max((int)scrollViewer.Bounds.Height, 2000)
-                        );
-                    }
-
-                    DebugLogger.Log($"[MainWindow] Creating bitmap with size: {fullSize.Width}x{fullSize.Height}");
-                    bitmap = new RenderTargetBitmap(fullSize, new Vector(96, 96));
-                    bitmap.Render(scrollContent);
-                }
-                else
-                {
-                    // Standard rendering for non-scrollable content
-                    var size = new PixelSize((int)visualContent.Bounds.Width, (int)visualContent.Bounds.Height);
-                    bitmap = new RenderTargetBitmap(size, new Vector(96, 96));
-                    bitmap.Render(visualContent);
-                }
+                bitmap = scrollViewer is not null
+                    ? await RenderScrollableContentToBitmapAsync(scrollViewer, layoutPasses: 3, delayPerPassMs: 100)
+                    : await RenderControlToBitmapAsync(visualContent, layoutPasses: 2, delayPerPassMs: 50);
 
                 if (bitmap is null)
                 {
@@ -601,7 +550,7 @@ public partial class MainWindow : Window
                     return false;
                 }
 
-                // Save to file (use existing SaveBitmapToStream method for proper JPEG conversion)
+                // Save to file
                 await using var stream = await file.OpenWriteAsync();
                 SaveBitmapToStream(bitmap, stream, file.Name);
 
@@ -639,10 +588,10 @@ public partial class MainWindow : Window
             if (targetTabIndex >= 0 && targetTabIndex < tabControl.ItemCount)
             {
                 tabControl.SelectedIndex = targetTabIndex;
-                // Wait for the tab to render
-                await Task.Delay(100);
+                // FIXED: Increased wait time for tab to render, especially for complex tabs
+                await Task.Delay(300);
             }
-            
+
             // Get the selected tab content
             var selectedTab = tabControl.SelectedItem as TabItem;
             if (selectedTab?.Content is null)
@@ -650,7 +599,7 @@ public partial class MainWindow : Window
                 DebugLogger.Log("[MainWindow] No tab selected for screenshot");
                 return false;
             }
-            
+
             // Get the content control
             var content = selectedTab.Content as Control;
             if (content is null)
@@ -658,108 +607,34 @@ public partial class MainWindow : Window
                 DebugLogger.Log("[MainWindow] Cannot capture tab content");
                 return false;
             }
-            
-            // Special handling for ScrollViewer content
+
+            // CONSOLIDATED: Use unified render helpers for DPI-aware, chart-safe capture
+            var scrollViewer = content as ScrollViewer ?? FindScrollViewer(content);
             RenderTargetBitmap? bitmap = null;
 
             try
             {
-                // Check if the content is or contains a ScrollViewer
-                var scrollViewer = content as ScrollViewer ?? FindScrollViewer(content);
-
-                if (scrollViewer is not null && scrollViewer.Content is Control scrollContent)
+                if (scrollViewer is not null)
                 {
-                    DebugLogger.Log("[MainWindow] Found ScrollViewer, capturing full scrollable content");
-
-                    // Force complete layout cycle to ensure ItemsControls are realized
-                    // FileManagerView uses ItemsControl for Analysis Stages which needs full realization
-                    scrollContent.InvalidateMeasure();
-                    scrollContent.InvalidateArrange();
-                    scrollContent.InvalidateVisual();
-                    scrollViewer.InvalidateMeasure();
-                    scrollViewer.InvalidateArrange();
-                    scrollViewer.InvalidateVisual();
-
-                    // Force multiple layout passes to ensure ItemsControl content is realized
-                    for (int i = 0; i < 3; i++)
-                    {
-                        scrollContent.UpdateLayout();
-                        scrollViewer.UpdateLayout();
-                        await Task.Delay(200); // Increased delay for better rendering
-                    }
-
-                    // Get the actual size of the content
-                    // For Dashboard, we need to measure the StackPanel inside the ScrollViewer
-                    var measureSize = new Size(scrollViewer.Viewport.Width, double.PositiveInfinity);
-                    scrollContent.Measure(measureSize);
-                    var contentSize = scrollContent.DesiredSize;
-                    var viewportSize = scrollViewer.Viewport;
-
-                    // Use the actual measured size for height, viewport width
-                    var fullSize = new PixelSize(
-                        Math.Max((int)viewportSize.Width, (int)contentSize.Width),
-                        Math.Max((int)contentSize.Height, (int)viewportSize.Height)
-                    );
-
-                    // Ensure minimum size
-                    if (fullSize.Width <= 0 || fullSize.Height <= 0)
-                    {
-                        DebugLogger.Log($"[MainWindow] Invalid full content size: {fullSize.Width}x{fullSize.Height}");
-                        // Use reasonable defaults
-                        fullSize = new PixelSize(
-                            Math.Max((int)scrollViewer.Bounds.Width, 1920),
-                            Math.Max((int)scrollViewer.Bounds.Height, 2000) // Increased height for dashboard
-                        );
-                    }
-
-                    DebugLogger.Log($"[MainWindow] Capturing full content: {fullSize.Width}x{fullSize.Height}");
-                    DebugLogger.Log($"[MainWindow] Content bounds: {scrollContent.Bounds}");
-                    DebugLogger.Log($"[MainWindow] Content desired size: {contentSize}");
-
-                    // Create bitmap for full content
-                    bitmap = new RenderTargetBitmap(fullSize, new Vector(96, 96));
-
-                    // Store original scroll position
-                    var originalOffset = scrollViewer.Offset;
-
-                    // Scroll to top to ensure all content is visible
-                    scrollViewer.Offset = new Vector(0, 0);
-                    await Task.Delay(100);
-
-                    // Force one more layout pass after scrolling
-                    scrollContent.UpdateLayout();
-                    await Task.Delay(50);
-
-                    // Render the content directly
-                    // This works for all tabs including Dashboard
-                    bitmap.Render(scrollContent);
-
-                    // Restore scroll position
-                    scrollViewer.Offset = originalOffset;
+                    // Full page capture with scroll-to-top for virtualized content
+                    bitmap = await RenderScrollableContentToBitmapAsync(
+                        scrollViewer,
+                        layoutPasses: 4,
+                        delayPerPassMs: 150,
+                        scrollToTop: true);
                 }
                 else
                 {
-                    // Fallback to regular screenshot for non-scrollable content
+                    // Non-scrollable content - prefer UserControl itself over just content
+                    var targetControl = content is UserControl ? content : content;
                     DebugLogger.Log("[MainWindow] No ScrollViewer found, capturing visible content");
+                    bitmap = await RenderControlToBitmapAsync(targetControl, layoutPasses: 2, delayPerPassMs: 100);
+                }
 
-                    // For UserControls, try to capture the UserControl itself, not just its content
-                    var targetControl = content;
-                    if (content is UserControl userControl)
-                    {
-                        DebugLogger.Log("[MainWindow] Capturing UserControl directly");
-                        targetControl = userControl;
-                    }
-
-                    var pixelSize = new PixelSize((int)targetControl.Bounds.Width, (int)targetControl.Bounds.Height);
-
-                    if (pixelSize.Width <= 0 || pixelSize.Height <= 0)
-                    {
-                        DebugLogger.Log($"[MainWindow] Invalid content size: {pixelSize.Width}x{pixelSize.Height}");
-                        return false;
-                    }
-
-                    bitmap = new RenderTargetBitmap(pixelSize, new Vector(96, 96));
-                    bitmap.Render(targetControl);
+                if (bitmap is null)
+                {
+                    DebugLogger.Log("[MainWindow] Failed to capture content");
+                    return false;
                 }
 
                 // Show save dialog
@@ -852,6 +727,287 @@ public partial class MainWindow : Window
         return null;
     }
     
+    #region Screenshot DPI Helpers
+
+    /// <summary>
+    /// Gets DPI-aware parameters for RenderTargetBitmap creation.
+    ///
+    /// CRITICAL: Avalonia's Control.Bounds are in DIPs (Device Independent Pixels).
+    /// RenderTargetBitmap expects physical pixels. On high-DPI displays (125%, 150%, 200%),
+    /// using DIPs directly causes:
+    /// - Blurry screenshots (undersized bitmap scaled up)
+    /// - Black areas (bitmap smaller than rendered content)
+    /// - Complete black screenshots (zero-size after truncation)
+    /// </summary>
+    /// <param name="control">The control to measure</param>
+    /// <returns>Tuple of (PixelSize in physical pixels, DPI vector for RenderTargetBitmap)</returns>
+    private (PixelSize size, Vector dpi) GetRenderTargetParams(Control control)
+    {
+        var scaling = RenderScaling;
+        var width = Math.Max(1, (int)(control.Bounds.Width * scaling));
+        var height = Math.Max(1, (int)(control.Bounds.Height * scaling));
+
+        DebugLogger.Log($"[Screenshot] DPI scaling: {scaling:F2}, DIPs: {control.Bounds.Width:F0}x{control.Bounds.Height:F0}, Pixels: {width}x{height}");
+
+        return (new PixelSize(width, height), new Vector(96 * scaling, 96 * scaling));
+    }
+
+    /// <summary>
+    /// Gets DPI-aware parameters for a custom size (e.g., scrollable content).
+    /// </summary>
+    private (PixelSize size, Vector dpi) GetRenderTargetParams(double widthDips, double heightDips)
+    {
+        var scaling = RenderScaling;
+        var width = Math.Max(1, (int)(widthDips * scaling));
+        var height = Math.Max(1, (int)(heightDips * scaling));
+
+        DebugLogger.Log($"[Screenshot] DPI scaling: {scaling:F2}, DIPs: {widthDips:F0}x{heightDips:F0}, Pixels: {width}x{height}");
+
+        return (new PixelSize(width, height), new Vector(96 * scaling, 96 * scaling));
+    }
+
+    /// <summary>
+    /// Ensures layout is complete before rendering. Critical for:
+    /// - Virtualized controls (DataGrid, ItemsControl) that lazy-load content
+    /// - Data-bound controls that update asynchronously
+    /// - Complex layouts with nested measure/arrange passes
+    /// </summary>
+    private async Task EnsureLayoutCompleteAsync(Control control, int layoutPasses = 2, int delayPerPassMs = 100)
+    {
+        for (int i = 0; i < layoutPasses; i++)
+        {
+            control.InvalidateMeasure();
+            control.InvalidateArrange();
+            control.InvalidateVisual();
+            control.UpdateLayout();
+
+            // Process pending UI operations by yielding to the dispatcher
+            await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+
+            if (delayPerPassMs > 0)
+                await Task.Delay(delayPerPassMs);
+        }
+    }
+
+    /// <summary>
+    /// Forces all LiveCharts controls in the visual tree to redraw.
+    /// LiveCharts2 uses GPU rendering which may not be captured by RenderTargetBitmap.
+    /// Calling InvalidateVisual() forces a CPU render pass.
+    /// </summary>
+    private async Task ForceChartsRedrawAsync(Control root)
+    {
+        var charts = FindAllChartsInVisualTree(root);
+        if (charts.Count == 0)
+        {
+            DebugLogger.Log("[Screenshot] No charts found in visual tree");
+            return;
+        }
+
+        DebugLogger.Log($"[Screenshot] Found {charts.Count} charts, forcing redraw");
+
+        foreach (var chart in charts)
+        {
+            chart.InvalidateVisual();
+        }
+
+        // Wait for GPU → CPU sync
+        await Task.Delay(200);
+
+        // Additional layout pass after chart invalidation
+        root.UpdateLayout();
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+    }
+
+    /// <summary>
+    /// Finds all LiveCharts CartesianChart and PieChart controls in the visual tree.
+    /// </summary>
+    private List<Control> FindAllChartsInVisualTree(Control root)
+    {
+        var charts = new List<Control>();
+        FindChartsRecursive(root, charts);
+        return charts;
+    }
+
+    private void FindChartsRecursive(Control control, List<Control> charts)
+    {
+        // LiveCharts2 chart types
+        var typeName = control.GetType().Name;
+        if (typeName is "CartesianChart" or "PieChart" or "PolarChart" or "GeoMap")
+        {
+            charts.Add(control);
+        }
+
+        // Recurse into children
+        if (control is Panel panel)
+        {
+            foreach (var child in panel.Children)
+            {
+                if (child is Control childControl)
+                    FindChartsRecursive(childControl, charts);
+            }
+        }
+        else if (control is ContentControl cc && cc.Content is Control content)
+        {
+            FindChartsRecursive(content, charts);
+        }
+        else if (control is Decorator decorator && decorator.Child is Control child)
+        {
+            FindChartsRecursive(child, charts);
+        }
+        else if (control is UserControl uc && uc.Content is Control ucContent)
+        {
+            FindChartsRecursive(ucContent, charts);
+        }
+        else if (control is ItemsControl itemsControl)
+        {
+            foreach (var item in itemsControl.GetRealizedContainers())
+            {
+                if (item is Control itemControl)
+                    FindChartsRecursive(itemControl, charts);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Core rendering method that captures a control to a DPI-aware bitmap.
+    /// Handles layout completion, chart redraw, and proper scaling.
+    /// </summary>
+    /// <param name="control">Control to render</param>
+    /// <param name="widthDips">Width in DIPs (use null to auto-detect from control bounds)</param>
+    /// <param name="heightDips">Height in DIPs (use null to auto-detect from control bounds)</param>
+    /// <param name="layoutPasses">Number of layout invalidation passes</param>
+    /// <param name="delayPerPassMs">Delay between layout passes</param>
+    /// <returns>DPI-scaled RenderTargetBitmap (caller must dispose)</returns>
+    private async Task<RenderTargetBitmap?> RenderControlToBitmapAsync(
+        Control control,
+        double? widthDips = null,
+        double? heightDips = null,
+        int layoutPasses = 2,
+        int delayPerPassMs = 100)
+    {
+        // DIAGNOSTIC: Log control tree context
+        var controlType = control.GetType().Name;
+        var parentType = (control.Parent as Control)?.GetType().Name ?? "none";
+        DebugLogger.Log($"[Screenshot] RenderControl: {controlType} (parent: {parentType})");
+        DebugLogger.Log($"[Screenshot]   Bounds: {control.Bounds}, IsVisible: {control.IsVisible}, IsEffectivelyVisible: {control.IsEffectivelyVisible}");
+
+        // Calculate dimensions
+        var w = widthDips ?? control.Bounds.Width;
+        var h = heightDips ?? control.Bounds.Height;
+
+        if (w <= 0 || h <= 0)
+        {
+            DebugLogger.Log($"[Screenshot] ⚠️ Invalid dimensions: {w}x{h} - control may not be laid out yet");
+            return null;
+        }
+
+        // Get DPI-aware parameters
+        var (pixelSize, dpiVector) = GetRenderTargetParams(w, h);
+        DebugLogger.Log($"[Screenshot]   DIPs: {w:F0}x{h:F0} → Pixels: {pixelSize.Width}x{pixelSize.Height} (DPI: {dpiVector.X:F0})");
+
+        // Complete layout
+        await EnsureLayoutCompleteAsync(control, layoutPasses, delayPerPassMs);
+        DebugLogger.Log($"[Screenshot]   Layout complete ({layoutPasses} passes, {delayPerPassMs}ms/pass)");
+
+        // Force chart redraw
+        await ForceChartsRedrawAsync(control);
+
+        // Render
+        var bitmap = new RenderTargetBitmap(pixelSize, dpiVector);
+        bitmap.Render(control);
+        DebugLogger.Log($"[Screenshot]   ✓ Rendered to {pixelSize.Width}x{pixelSize.Height} bitmap");
+
+        return bitmap;
+    }
+
+    /// <summary>
+    /// Captures the full scrollable content of a ScrollViewer.
+    /// Measures content, adjusts scroll position, and renders the entire content.
+    /// </summary>
+    /// <param name="scrollViewer">ScrollViewer to capture</param>
+    /// <param name="layoutPasses">Layout passes for content</param>
+    /// <param name="delayPerPassMs">Delay between layout passes</param>
+    /// <param name="scrollToTop">Whether to scroll to top before capture (restores position after)</param>
+    private async Task<RenderTargetBitmap?> RenderScrollableContentToBitmapAsync(
+        ScrollViewer scrollViewer,
+        int layoutPasses = 3,
+        int delayPerPassMs = 100,
+        bool scrollToTop = false)
+    {
+        if (scrollViewer.Content is not Control scrollContent)
+        {
+            DebugLogger.Log("[Screenshot] ⚠️ ScrollViewer has no content");
+            return null;
+        }
+
+        // DIAGNOSTIC: Log scrollviewer state
+        var contentType = scrollContent.GetType().Name;
+        DebugLogger.Log($"[Screenshot] RenderScrollableContent: ScrollViewer → {contentType}");
+        DebugLogger.Log($"[Screenshot]   Viewport: {scrollViewer.Viewport}, Extent: {scrollViewer.Extent}");
+        DebugLogger.Log($"[Screenshot]   ScrollOffset: {scrollViewer.Offset}, scrollToTop: {scrollToTop}");
+
+        // First layout pass on content and scrollviewer
+        await EnsureLayoutCompleteAsync(scrollContent, layoutPasses, delayPerPassMs);
+        await EnsureLayoutCompleteAsync(scrollViewer, layoutPasses: 1, delayPerPassMs: 50);
+        DebugLogger.Log($"[Screenshot]   Layout complete ({layoutPasses} passes, {delayPerPassMs}ms/pass)");
+
+        // Measure content to get full size
+        var measureSize = new Size(scrollViewer.Viewport.Width, double.PositiveInfinity);
+        scrollContent.Measure(measureSize);
+        var contentSize = scrollContent.DesiredSize;
+        var viewportSize = scrollViewer.Viewport;
+
+        // Calculate full size in DIPs
+        var fullWidthDips = Math.Max(viewportSize.Width, contentSize.Width);
+        var fullHeightDips = Math.Max(contentSize.Height, viewportSize.Height);
+
+        // DIAGNOSTIC: Log measurement results
+        DebugLogger.Log($"[Screenshot]   DesiredSize: {contentSize}, Viewport: {viewportSize}");
+        DebugLogger.Log($"[Screenshot]   Calculated: {fullWidthDips:F0}x{fullHeightDips:F0} DIPs");
+
+        // Ensure minimum size
+        if (fullWidthDips <= 0 || fullHeightDips <= 0)
+        {
+            DebugLogger.Log($"[Screenshot] ⚠️ Invalid content size, using fallback from Bounds");
+            fullWidthDips = Math.Max(scrollViewer.Bounds.Width, 1920);
+            fullHeightDips = Math.Max(scrollViewer.Bounds.Height, 2000);
+        }
+
+        // Get DPI-aware parameters
+        var (pixelSize, dpiVector) = GetRenderTargetParams(fullWidthDips, fullHeightDips);
+        DebugLogger.Log($"[Screenshot]   DIPs: {fullWidthDips:F0}x{fullHeightDips:F0} → Pixels: {pixelSize.Width}x{pixelSize.Height} (DPI: {dpiVector.X:F0})");
+
+        // Handle scroll position if requested
+        Vector? originalOffset = null;
+        if (scrollToTop)
+        {
+            originalOffset = scrollViewer.Offset;
+            scrollViewer.Offset = new Vector(0, 0);
+            DebugLogger.Log($"[Screenshot]   Scrolled to top (was: {originalOffset})");
+            await Task.Delay(300); // Wait for virtualized content after scroll
+            await EnsureLayoutCompleteAsync(scrollContent, layoutPasses: 1, delayPerPassMs: 100);
+        }
+
+        // Force chart redraw before capture
+        await ForceChartsRedrawAsync(scrollContent);
+
+        // Render
+        var bitmap = new RenderTargetBitmap(pixelSize, dpiVector);
+        bitmap.Render(scrollContent);
+        DebugLogger.Log($"[Screenshot]   ✓ Rendered to {pixelSize.Width}x{pixelSize.Height} bitmap");
+
+        // Restore scroll position if we changed it
+        if (originalOffset.HasValue)
+        {
+            scrollViewer.Offset = originalOffset.Value;
+            DebugLogger.Log($"[Screenshot]   Restored scroll position to {originalOffset}");
+        }
+
+        return bitmap;
+    }
+
+    #endregion
+
     private void SaveBitmapToStream(RenderTargetBitmap bitmap, System.IO.Stream stream, string fileName)
     {
         try
