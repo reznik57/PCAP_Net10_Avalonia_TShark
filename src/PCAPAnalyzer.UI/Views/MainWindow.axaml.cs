@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
@@ -143,6 +144,13 @@ public partial class MainWindow : Window
             if (selectedTab?.Content is Control content)
             {
                 await AnimateTabContentFadeIn(content);
+            }
+
+            // Reset scroll position for Packet Analysis tab (index 1) to prevent showing bottom of page
+            if (tabControl.SelectedIndex == 1 && PacketAnalysisScrollViewer is not null)
+            {
+                PacketAnalysisScrollViewer.Offset = new Vector(0, 0);
+                DebugLogger.Log("[MainWindow] Reset Packet Analysis scroll position to top");
             }
 
             // Continue with original logic
@@ -790,6 +798,88 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
+    /// Forces template application and binding evaluation for all templated controls.
+    /// Critical for ItemsControl/DataTemplate content that uses deferred container generation.
+    /// Without this, data-bound TextBlocks inside templates won't render in screenshots.
+    /// </summary>
+    private async Task ForceTemplatesAndBindingsAsync(Control root, int maxDepth = 20)
+    {
+        var templatedControls = new List<Control>();
+        var itemsControls = new List<ItemsControl>();
+        FindTemplatedControlsRecursive(root, templatedControls, itemsControls, maxDepth, 0);
+
+        DebugLogger.Log($"[Screenshot] Found {templatedControls.Count} templated controls, {itemsControls.Count} ItemsControls");
+
+        // Phase 1: Force template application on all templated controls
+        foreach (var control in templatedControls)
+        {
+            if (control is TemplatedControl tc)
+            {
+                tc.ApplyTemplate();
+            }
+        }
+
+        // Phase 2: Force ItemsControl container materialization
+        foreach (var ic in itemsControls)
+        {
+            // Force container generation by accessing realized containers
+            var containerCount = 0;
+            foreach (var container in ic.GetRealizedContainers())
+            {
+                if (container is TemplatedControl tc)
+                {
+                    tc.ApplyTemplate();
+                }
+                container.InvalidateMeasure();
+                container.InvalidateArrange();
+                containerCount++;
+            }
+
+            // Force layout update on the ItemsControl itself
+            ic.InvalidateMeasure();
+            ic.InvalidateArrange();
+            ic.UpdateLayout();
+
+            if (containerCount > 0)
+            {
+                DebugLogger.Log($"[Screenshot]   {ic.GetType().Name}: {containerCount} containers materialized");
+            }
+        }
+
+        // Phase 3: Yield to dispatcher to process binding updates
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+        await Task.Delay(50); // Allow binding propagation
+
+        // Phase 4: Final layout pass
+        root.UpdateLayout();
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Render);
+    }
+
+    private void FindTemplatedControlsRecursive(Control control, List<Control> templatedControls, List<ItemsControl> itemsControls, int maxDepth, int currentDepth)
+    {
+        if (currentDepth >= maxDepth) return;
+
+        if (control is TemplatedControl)
+        {
+            templatedControls.Add(control);
+        }
+
+        if (control is ItemsControl ic)
+        {
+            itemsControls.Add(ic);
+        }
+
+        // Recurse into visual children
+        foreach (var child in control.GetVisualChildren())
+        {
+            if (child is Control childControl)
+            {
+                FindTemplatedControlsRecursive(childControl, templatedControls, itemsControls, maxDepth, currentDepth + 1);
+            }
+        }
+    }
+
+    /// <summary>
     /// Forces all LiveCharts controls in the visual tree to redraw.
     /// LiveCharts2 uses GPU rendering which may not be captured by RenderTargetBitmap.
     /// Calling InvalidateVisual() forces a CPU render pass.
@@ -828,42 +918,25 @@ public partial class MainWindow : Window
         return charts;
     }
 
-    private void FindChartsRecursive(Control control, List<Control> charts)
+    private void FindChartsRecursive(Control control, List<Control> charts, int depth = 0)
     {
+        // Prevent infinite recursion
+        if (depth > 50) return;
+
         // LiveCharts2 chart types
         var typeName = control.GetType().Name;
         if (typeName is "CartesianChart" or "PieChart" or "PolarChart" or "GeoMap")
         {
             charts.Add(control);
+            DebugLogger.Log($"[Screenshot]   Found chart: {typeName} at depth {depth}");
         }
 
-        // Recurse into children
-        if (control is Panel panel)
+        // Traverse the full visual tree (catches all container types: Border, Grid, etc.)
+        foreach (var child in control.GetVisualChildren())
         {
-            foreach (var child in panel.Children)
+            if (child is Control childControl)
             {
-                if (child is Control childControl)
-                    FindChartsRecursive(childControl, charts);
-            }
-        }
-        else if (control is ContentControl cc && cc.Content is Control content)
-        {
-            FindChartsRecursive(content, charts);
-        }
-        else if (control is Decorator decorator && decorator.Child is Control child)
-        {
-            FindChartsRecursive(child, charts);
-        }
-        else if (control is UserControl uc && uc.Content is Control ucContent)
-        {
-            FindChartsRecursive(ucContent, charts);
-        }
-        else if (control is ItemsControl itemsControl)
-        {
-            foreach (var item in itemsControl.GetRealizedContainers())
-            {
-                if (item is Control itemControl)
-                    FindChartsRecursive(itemControl, charts);
+                FindChartsRecursive(childControl, charts, depth + 1);
             }
         }
     }
@@ -908,6 +981,9 @@ public partial class MainWindow : Window
         // Complete layout
         await EnsureLayoutCompleteAsync(control, layoutPasses, delayPerPassMs);
         DebugLogger.Log($"[Screenshot]   Layout complete ({layoutPasses} passes, {delayPerPassMs}ms/pass)");
+
+        // Force templates and bindings for ItemsControl/DataTemplate content
+        await ForceTemplatesAndBindingsAsync(control);
 
         // Force chart redraw
         await ForceChartsRedrawAsync(control);
@@ -987,6 +1063,9 @@ public partial class MainWindow : Window
             await Task.Delay(300); // Wait for virtualized content after scroll
             await EnsureLayoutCompleteAsync(scrollContent, layoutPasses: 1, delayPerPassMs: 100);
         }
+
+        // Force templates and bindings for ItemsControl/DataTemplate content
+        await ForceTemplatesAndBindingsAsync(scrollContent);
 
         // Force chart redraw before capture
         await ForceChartsRedrawAsync(scrollContent);

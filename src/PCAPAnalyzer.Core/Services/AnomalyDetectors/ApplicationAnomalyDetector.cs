@@ -157,7 +157,7 @@ public sealed class ApplicationAnomalyDetector : IAnomalyDetector
                     DestinationIP = flow.Key.DestinationIP ?? "",
                     DestinationPort = flow.Key.DestinationPort,
                     Protocol = flowPackets.First().Protocol.ToString(),
-                    AffectedFrames = flowPackets.Select(p => (long)p.FrameNumber).ToList(),
+                    AffectedFrames = flowPackets.Select(p => (long)p.FrameNumber).Take(100).ToList(),
                     Metrics = new Dictionary<string, object>
                     {
                         { "AverageInterval", avgInterval },
@@ -206,7 +206,7 @@ public sealed class ApplicationAnomalyDetector : IAnomalyDetector
                 SourceIP = topSource,
                 DestinationIP = topDestination,
                 Protocol = "Various",
-                AffectedFrames = malformed.Select(p => (long)p.FrameNumber).ToList(),
+                AffectedFrames = malformed.Select(p => (long)p.FrameNumber).Take(100).ToList(),
                 Metrics = new Dictionary<string, object>
                 {
                     { "MalformedCount", malformed.Count },

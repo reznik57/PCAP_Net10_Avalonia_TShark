@@ -264,12 +264,12 @@ public partial class ThreatsChartsViewModel : ObservableObject
 
     private static TimeSpan GetBucketSize(TimeSpan timeRange)
     {
-        if (timeRange.TotalSeconds < 60) return TimeSpan.FromSeconds(1);
-        if (timeRange.TotalMinutes < 5) return TimeSpan.FromSeconds(5);
-        if (timeRange.TotalMinutes < 30) return TimeSpan.FromSeconds(30);
-        if (timeRange.TotalHours < 1) return TimeSpan.FromMinutes(1);
-        if (timeRange.TotalHours < 6) return TimeSpan.FromMinutes(5);
-        return TimeSpan.FromMinutes(30);
+        // Use 1-second granularity for captures up to 10 minutes
+        if (timeRange.TotalMinutes < 10) return TimeSpan.FromSeconds(1);
+        if (timeRange.TotalMinutes < 30) return TimeSpan.FromSeconds(5);
+        if (timeRange.TotalHours < 1) return TimeSpan.FromSeconds(15);
+        if (timeRange.TotalHours < 6) return TimeSpan.FromMinutes(1);
+        return TimeSpan.FromMinutes(5);
     }
 
     private static Dictionary<DateTime, int> CreateTimeBuckets(DateTime minTime, DateTime maxTime, TimeSpan bucketSize)
@@ -330,9 +330,13 @@ public partial class ThreatsChartsViewModel : ObservableObject
     private void UpdateTimelineAxes(DateTime minTime, DateTime maxTime)
     {
         var timeRange = maxTime - minTime;
-        var stepSize = timeRange.TotalHours > 1 ? TimeSpan.FromMinutes(30) :
-                      timeRange.TotalMinutes > 30 ? TimeSpan.FromMinutes(5) :
-                      TimeSpan.FromMinutes(1);
+        // Match axis granularity to bucket sizes for readability
+        var stepSize = timeRange.TotalHours > 6 ? TimeSpan.FromMinutes(30) :
+                      timeRange.TotalHours > 1 ? TimeSpan.FromMinutes(5) :
+                      timeRange.TotalMinutes > 30 ? TimeSpan.FromMinutes(1) :
+                      timeRange.TotalMinutes > 10 ? TimeSpan.FromSeconds(30) :
+                      timeRange.TotalMinutes > 2 ? TimeSpan.FromSeconds(10) :
+                      TimeSpan.FromSeconds(5);
 
         XAxes = new[]
         {
@@ -575,10 +579,13 @@ public partial class ThreatsChartsViewModel : ObservableObject
 
         ThreatPortActivitySeries = newSeries;
 
-        // Update axes
-        var stepSize = timeRange.TotalHours > 1 ? TimeSpan.FromMinutes(30) :
-                      timeRange.TotalMinutes > 30 ? TimeSpan.FromMinutes(5) :
-                      TimeSpan.FromMinutes(1);
+        // Update axes - match granularity to bucket sizes
+        var stepSize = timeRange.TotalHours > 6 ? TimeSpan.FromMinutes(30) :
+                      timeRange.TotalHours > 1 ? TimeSpan.FromMinutes(5) :
+                      timeRange.TotalMinutes > 30 ? TimeSpan.FromMinutes(1) :
+                      timeRange.TotalMinutes > 10 ? TimeSpan.FromSeconds(30) :
+                      timeRange.TotalMinutes > 2 ? TimeSpan.FromSeconds(10) :
+                      TimeSpan.FromSeconds(5);
 
         ThreatPortActivityXAxes = new[]
         {

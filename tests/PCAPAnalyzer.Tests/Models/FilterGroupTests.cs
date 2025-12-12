@@ -196,25 +196,25 @@ public class FilterGroupTests
     }
 
     [Fact]
-    public void GetFieldDescriptions_WithMultipleSeverities_ReturnsAll()
+    public void GetFieldDescriptions_WithMultipleSeverities_ReturnsGrouped()
     {
+        // Domain-based grouping: multiple severities grouped into single description with OR
         var group = new FilterGroup { Severities = new List<string> { "Critical", "High" } };
         var descriptions = group.GetFieldDescriptions();
 
-        descriptions.Should().HaveCount(2);
-        descriptions.Should().Contain("Severity: Critical");
-        descriptions.Should().Contain("Severity: High");
+        descriptions.Should().ContainSingle()
+            .Which.Should().Be("Severity: Critical OR High");
     }
 
     [Fact]
-    public void GetFieldDescriptions_WithCountries_ReturnsAll()
+    public void GetFieldDescriptions_WithCountries_ReturnsGrouped()
     {
+        // Domain-based grouping: countries grouped into IP domain with / separator
         var group = new FilterGroup { Countries = new List<string> { "US", "DE" } };
         var descriptions = group.GetFieldDescriptions();
 
-        descriptions.Should().HaveCount(2);
-        descriptions.Should().Contain("Country: US");
-        descriptions.Should().Contain("Country: DE");
+        descriptions.Should().ContainSingle()
+            .Which.Should().Be("Country: US/DE");
     }
 
     [Fact]
@@ -238,8 +238,10 @@ public class FilterGroupTests
     }
 
     [Fact]
-    public void GetFieldDescriptions_WithMultipleCriteria_ReturnsAllInOrder()
+    public void GetFieldDescriptions_WithMultipleCriteria_ReturnsDomainGrouped()
     {
+        // Domain-based grouping: SourceIP and DestIP are in same domain (IP Address)
+        // so they're grouped together with OR. Port and Protocol are separate domains.
         var group = new FilterGroup
         {
             SourceIP = "192.168.1.1",
@@ -249,11 +251,10 @@ public class FilterGroupTests
         };
         var descriptions = group.GetFieldDescriptions();
 
-        descriptions.Should().HaveCount(4);
-        descriptions[0].Should().Be("Src IP: 192.168.1.1");
-        descriptions[1].Should().Be("Dest IP: 10.0.0.1");
-        descriptions[2].Should().Be("Port: 443");
-        descriptions[3].Should().Be("Protocol: TCP");
+        descriptions.Should().HaveCount(3);
+        descriptions[0].Should().Be("(Src IP: 192.168.1.1 OR Dest IP: 10.0.0.1)");
+        descriptions[1].Should().Be("Port: 443");
+        descriptions[2].Should().Be("Protocol: TCP");
     }
 
     #endregion
@@ -293,8 +294,10 @@ public class FilterGroupTests
     }
 
     [Fact]
-    public void BuildDisplayLabel_OrGroup_JoinsWithComma()
+    public void BuildDisplayLabel_DifferentDomains_AlwaysJoinsWithAND()
     {
+        // Domain-based grouping: different domains (IP vs Port) always AND'd together
+        // regardless of IsAndGroup flag (OR logic only applies within domains)
         var group = new FilterGroup
         {
             SourceIP = "192.168.1.1",
@@ -303,7 +306,7 @@ public class FilterGroupTests
         };
         group.BuildDisplayLabel();
 
-        group.DisplayLabel.Should().Be("Src IP: 192.168.1.1, Port: 443");
+        group.DisplayLabel.Should().Be("Src IP: 192.168.1.1 AND Port: 443");
     }
 
     [Fact]

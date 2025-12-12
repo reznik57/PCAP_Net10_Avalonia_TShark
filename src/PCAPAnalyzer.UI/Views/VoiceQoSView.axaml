@@ -91,39 +91,8 @@
             <!-- UnifiedFilterPanelControl with VoiceQoS tab auto-selected (index 2) -->
             <ctrl:UnifiedFilterPanelControl Grid.Row="0" DefaultTabIndex="2" Margin="0,0,0,10" />
 
-            <!-- Quality Statistics - SLACK STYLE -->
-            <Border Grid.Row="2" Classes="modern-card-unified" Padding="20" Margin="0,0,0,20">
-                <Grid ColumnDefinitions="*,*,*,*" RowDefinitions="Auto,12,Auto,12,Auto,20,Auto">
-                    <!-- Accent Bar - SLACK STYLE -->
-                    <Border Grid.Row="0" Grid.ColumnSpan="4" Height="3" Background="{DynamicResource AccentPrimary}" CornerRadius="2"/>
-                    <TextBlock Grid.Row="2" Grid.ColumnSpan="4" Text="QUALITY OVERVIEW" FontSize="{DynamicResource FontSizeInput}" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-
-                    <!-- Row 1: Core Metrics -->
-                    <Border Grid.Row="4" Grid.Column="0" Classes="stat-card-modern" Margin="0,0,8,0">
-                        <StackPanel><TextBlock Text="TOTAL QoS PACKETS" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/><TextBlock Text="{Binding TotalQoSPackets, StringFormat='{}{0:N0}'}" FontSize="{DynamicResource FontSizeDisplay}" FontWeight="SemiBold" Foreground="{DynamicResource AccentPrimary}"/></StackPanel>
-                    </Border>
-                    <Border Grid.Row="4" Grid.Column="1" Classes="stat-card-modern" Margin="4,0">
-                        <StackPanel><TextBlock Text="HIGH LATENCY CONNS" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/><TextBlock Text="{Binding HighLatencyCount, StringFormat='{}{0:N0}'}" FontSize="{DynamicResource FontSizeDisplay}" FontWeight="SemiBold" Foreground="{DynamicResource SlackWarning}"/></StackPanel>
-                    </Border>
-                    <Border Grid.Row="4" Grid.Column="2" Classes="stat-card-modern" Margin="4,0">
-                        <StackPanel><TextBlock Text="HIGH JITTER CONNS" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/><TextBlock Text="{Binding HighJitterCount, StringFormat='{}{0:N0}'}" FontSize="{DynamicResource FontSizeDisplay}" FontWeight="SemiBold" Foreground="{DynamicResource SlackDanger}"/></StackPanel>
-                    </Border>
-                    <Border Grid.Row="4" Grid.Column="3" Classes="stat-card-modern" Margin="8,0,0,0">
-                        <StackPanel><TextBlock Text="AVG LATENCY" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/><TextBlock Text="{Binding AverageLatency, StringFormat='{}{0:F2} ms'}" FontSize="{DynamicResource FontSizeDisplay}" FontWeight="SemiBold" Foreground="{DynamicResource AccentPrimary}"/></StackPanel>
-                    </Border>
-
-                    <!-- Row 2: Additional Metrics -->
-                    <Border Grid.Row="6" Grid.Column="0" Classes="stat-card-modern" Margin="0,0,8,0">
-                        <StackPanel><TextBlock Text="AVG JITTER" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/><TextBlock Text="{Binding AverageJitter, StringFormat='{}{0:F2} ms'}" FontSize="{DynamicResource FontSizeDisplay}" FontWeight="SemiBold" Foreground="{DynamicResource SlackSuccess}"/></StackPanel>
-                    </Border>
-                    <Border Grid.Row="6" Grid.Column="1" Classes="stat-card-modern" Margin="4,0">
-                        <StackPanel><TextBlock Text="MAX LATENCY" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/><TextBlock Text="{Binding MaxLatency, StringFormat='{}{0:F2} ms'}" FontSize="{DynamicResource FontSizeDisplay}" FontWeight="SemiBold" Foreground="{DynamicResource SlackWarning}"/></StackPanel>
-                    </Border>
-                    <Border Grid.Row="6" Grid.Column="2" Classes="stat-card-modern" Margin="4,0">
-                        <StackPanel><TextBlock Text="MAX JITTER" FontSize="{DynamicResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/><TextBlock Text="{Binding MaxJitter, StringFormat='{}{0:F2} ms'}" FontSize="{DynamicResource FontSizeDisplay}" FontWeight="SemiBold" Foreground="{DynamicResource SlackDanger}"/></StackPanel>
-                    </Border>
-                </Grid>
-            </Border>
+            <!-- Quality Statistics - Using unified StatsBarControl -->
+            <ctrl:StatsBarControl Grid.Row="2" DataContext="{Binding VoiceQoSStatsBar}" Margin="0,0,0,20"/>
 
             <!-- Timeline Chart Section -->
             <Border Grid.Row="3" Classes="modern-card-unified" Padding="24" Margin="0,0,0,24">

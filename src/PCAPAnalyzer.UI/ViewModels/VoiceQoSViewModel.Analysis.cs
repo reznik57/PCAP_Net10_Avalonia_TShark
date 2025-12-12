@@ -8,6 +8,7 @@ using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.UI.Interfaces;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Utilities;
 using PCAPAnalyzer.UI.ViewModels.VoiceQoS;
 
 namespace PCAPAnalyzer.UI.ViewModels;
@@ -118,6 +119,9 @@ public partial class VoiceQoSViewModel
         {
             DebugLogger.Log($"[VoiceQoSViewModel] SetFromCache - QoS: {analysisResult.QoSTraffic.Count}, Latency: {analysisResult.HighLatencyConnections.Count}, Jitter: {analysisResult.HighJitterConnections.Count}");
 
+            // Reset filter state when loading fresh data
+            IsGlobalFilterActive = false;
+
             // Store reference to packets (no copy)
             lock (_collectionLock)
             {
@@ -189,6 +193,9 @@ public partial class VoiceQoSViewModel
             // Apply local filters to populate collections (also updates top endpoints via StatisticsViewModel)
             ApplyLocalFilters();
 
+            // Store unfiltered packet totals for Total/Filtered display pattern
+            StatisticsViewModel.StoreUnfilteredTotals(_allPackets.Count);
+
             // Update chart from cached time-series
             if (_cachedTimeSeriesData is not null)
             {
@@ -206,13 +213,68 @@ public partial class VoiceQoSViewModel
     }
 
     /// <summary>
+    /// Sets the filtered packet set and re-analyzes VoiceQoS data from filtered packets only.
+    /// Called by MainWindowViewModel when global filters are applied.
+    /// This clears existing data to ensure VoiceQoS is recalculated from the filtered packet set.
+    /// </summary>
+    /// <param name="filteredPackets">The filtered packet list from PacketManager</param>
+    public async Task SetFilteredPacketsAsync(IReadOnlyList<PacketInfo> filteredPackets)
+    {
+        DebugLogger.Log($"[VoiceQoSViewModel] SetFilteredPacketsAsync called with {filteredPackets.Count:N0} filtered packets");
+
+        // Set filter active flag for Total/Filtered display
+        IsGlobalFilterActive = true;
+
+        // Update Statistics component with filtered packet count for Total/Filtered header display
+        StatisticsViewModel.SetFilteredState(filteredPackets.Count, isFiltered: true);
+
+        // Clear existing data to force fresh analysis
+        lock (_collectionLock)
+        {
+            _allQoSTraffic.Clear();
+            _allLatencyConnections.Clear();
+            _allJitterConnections.Clear();
+            _cachedTimeSeriesData = null;
+        }
+
+        // Clear AnalysisViewModel's cached data as well
+        AnalysisViewModel.ClearCachedData();
+
+        // Re-analyze with filtered packets (forceReanalysis=true bypass cache check)
+        await AnalyzePacketsInternalAsync(filteredPackets, forceReanalysis: true);
+
+        // Notify percentage property changes
+        NotifyPercentageChanges();
+
+        DebugLogger.Log($"[VoiceQoSViewModel] SetFilteredPacketsAsync complete - {_allQoSTraffic.Count} QoS, {_allLatencyConnections.Count} latency, {_allJitterConnections.Count} jitter");
+    }
+
+    /// <summary>
+    /// Notifies UI of percentage property changes (computed properties don't auto-notify).
+    /// </summary>
+    private void NotifyPercentageChanges()
+    {
+        OnPropertyChanged(nameof(TotalQoSPacketsPercentage));
+        OnPropertyChanged(nameof(HighLatencyCountPercentage));
+        OnPropertyChanged(nameof(HighJitterCountPercentage));
+    }
+
+    /// <summary>
     /// Analyzes packets for QoS, latency, and jitter metrics
     /// </summary>
     public async Task AnalyzePacketsAsync(IReadOnlyList<PacketInfo> packets)
     {
-        // ✅ CACHE HIT CHECK: Skip if already populated via SetFromCacheAsync
+        await AnalyzePacketsInternalAsync(packets, forceReanalysis: false);
+    }
+
+    /// <summary>
+    /// Internal analysis method with optional cache bypass
+    /// </summary>
+    private async Task AnalyzePacketsInternalAsync(IReadOnlyList<PacketInfo> packets, bool forceReanalysis)
+    {
+        // ✅ CACHE HIT CHECK: Skip if already populated via SetFromCacheAsync (unless forced)
         // This prevents 25s re-analysis when session cache already has VoiceQoS data
-        if (_allQoSTraffic.Count > 0 || _allLatencyConnections.Count > 0 || _allJitterConnections.Count > 0)
+        if (!forceReanalysis && (_allQoSTraffic.Count > 0 || _allLatencyConnections.Count > 0 || _allJitterConnections.Count > 0))
         {
             DebugLogger.Log($"[VoiceQoSViewModel] ⏭️ Skipping AnalyzePacketsAsync - already populated ({_allQoSTraffic.Count} QoS, {_allLatencyConnections.Count} latency, {_allJitterConnections.Count} jitter)");
             return;
@@ -295,6 +357,60 @@ public partial class VoiceQoSViewModel
 
         // Calculate QoS packet count from filtered data
         TotalQoSPackets = QosTraffic.Sum(q => q.PacketCount);
+
+        // Notify percentage property changes for Total/Filtered display
+        NotifyPercentageChanges();
+
+        // Update unified stats bar
+        UpdateVoiceQoSStatsBar();
+    }
+
+    /// <summary>
+    /// Updates VoiceQoSStatsBar with unified Total/Filtered display pattern.
+    /// Call after filtering or when statistics change.
+    /// </summary>
+    private void UpdateVoiceQoSStatsBar()
+    {
+        VoiceQoSStatsBar.ClearStats();
+
+        // Determine filter state
+        var hasFilter = IsGlobalFilterActive ||
+            _globalFilterState?.HasActiveFilters == true;
+
+        // QoS Packets
+        TabStatsHelper.AddNumericStat(VoiceQoSStatsBar, "QoS PACKETS", "📡",
+            TotalQoSPacketsAll, TotalQoSPackets, hasFilter,
+            ThemeColorHelper.GetColorHex("AccentPrimary", "#58A6FF"));
+
+        // High Latency Connections
+        TabStatsHelper.AddNumericStat(VoiceQoSStatsBar, "HIGH LATENCY", "⏱️",
+            HighLatencyCountAll, HighLatencyCount, hasFilter,
+            ThemeColorHelper.GetColorHex("SlackWarning", "#F0883E"));
+
+        // High Jitter Connections
+        TabStatsHelper.AddNumericStat(VoiceQoSStatsBar, "HIGH JITTER", "📊",
+            HighJitterCountAll, HighJitterCount, hasFilter,
+            ThemeColorHelper.GetColorHex("SlackDanger", "#DA3633"));
+
+        // Avg Latency (no total/filtered, just a metric)
+        TabStatsHelper.AddSimpleStat(VoiceQoSStatsBar, "AVG LATENCY", "⚡",
+            $"{AverageLatency:F2} ms",
+            ThemeColorHelper.GetColorHex("AccentPrimary", "#58A6FF"));
+
+        // Avg Jitter
+        TabStatsHelper.AddSimpleStat(VoiceQoSStatsBar, "AVG JITTER", "🔀",
+            $"{AverageJitter:F2} ms",
+            ThemeColorHelper.GetColorHex("SlackSuccess", "#3FB950"));
+
+        // Max Latency
+        TabStatsHelper.AddSimpleStat(VoiceQoSStatsBar, "MAX LATENCY", "🔺",
+            $"{MaxLatency:F2} ms",
+            ThemeColorHelper.GetColorHex("SlackWarning", "#F0883E"));
+
+        // Max Jitter
+        TabStatsHelper.AddSimpleStat(VoiceQoSStatsBar, "MAX JITTER", "⚠️",
+            $"{MaxJitter:F2} ms",
+            ThemeColorHelper.GetColorHex("SlackDanger", "#DA3633"));
     }
 
     private void CalculateTopEndpoints() =>

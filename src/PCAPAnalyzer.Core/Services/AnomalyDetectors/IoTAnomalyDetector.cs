@@ -144,7 +144,7 @@ public sealed class IoTAnomalyDetector : ISpecializedDetector
                     DestinationIP = topBroker,
                     DestinationPort = MQTT_PORT,
                     Protocol = "MQTT",
-                    AffectedFrames = devicePackets.Select(p => (long)p.FrameNumber).ToList(),
+                    AffectedFrames = devicePackets.Select(p => (long)p.FrameNumber).Take(100).ToList(),
                     Metrics = new Dictionary<string, object>
                     {
                         { "BrokerCount", uniqueBrokers.Count },
@@ -279,7 +279,7 @@ public sealed class IoTAnomalyDetector : ISpecializedDetector
                     DestinationIP = topTarget,
                     DestinationPort = attempts.First().DestinationPort,
                     Protocol = attempts.First().DestinationPort == MQTT_PORT ? "MQTT" : "CoAP",
-                    AffectedFrames = attempts.Select(p => (long)p.FrameNumber).ToList(),
+                    AffectedFrames = attempts.Select(p => (long)p.FrameNumber).Take(100).ToList(),
                     Metrics = new Dictionary<string, object>
                     {
                         { "ConnectionAttempts", attempts.Count },

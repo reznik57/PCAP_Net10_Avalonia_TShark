@@ -80,12 +80,4 @@
     <AvaloniaXaml Remove="..\legacy\**\*.xaml" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\..\native\duckdb.dll" Condition="'$(RuntimeIdentifier)' == '' Or '$(RuntimeIdentifier)' == 'win-x64'">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\..\native\libduckdb.so" Condition="'$(RuntimeIdentifier)' == 'linux-x64'">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 </Project>

@@ -12,6 +12,7 @@ using PCAPAnalyzer.Core.Interfaces;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Interfaces;
+using PCAPAnalyzer.UI.Models;
 using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.Utilities;
 
@@ -33,10 +34,12 @@ public partial class CompareViewModel : ObservableObject, IDisposable
 
     private readonly IPacketComparer _packetComparer;
     private readonly IFileDialogService? _fileDialogService;
+    private readonly GlobalFilterState? _globalFilterState;
 
     // ==================== STATE ====================
 
     private CancellationTokenSource? _comparisonCts;
+    private HashSet<string>? _filteredPacketIPs;  // IPs from filtered packets for result filtering
     private bool _isDisposed;
 
     // ==================== FILE SELECTION ====================
@@ -85,11 +88,19 @@ public partial class CompareViewModel : ObservableObject, IDisposable
 
     // ==================== CONSTRUCTOR ====================
 
-    public CompareViewModel(IPacketComparer packetComparer, IFileDialogService? fileDialogService = null)
+    public CompareViewModel(IPacketComparer packetComparer, IFileDialogService? fileDialogService = null, GlobalFilterState? globalFilterState = null)
     {
         ArgumentNullException.ThrowIfNull(packetComparer);
         _packetComparer = packetComparer;
         _fileDialogService = fileDialogService;
+        _globalFilterState = globalFilterState;
+
+        // Subscribe to GlobalFilterState for explicit Apply button clicks
+        if (_globalFilterState is not null)
+        {
+            _globalFilterState.OnFiltersApplied += OnGlobalFilterChanged;
+            DebugLogger.Log("[CompareViewModel] Subscribed to GlobalFilterState.OnFiltersApplied");
+        }
 
         DebugLogger.Log("[CompareViewModel] Initialized");
     }
@@ -234,6 +245,88 @@ public partial class CompareViewModel : ObservableObject, IDisposable
 
     partial void OnSearchTextChanged(string value) => RefreshDisplayedPackets();
 
+    // ==================== GLOBAL FILTER INTEGRATION ====================
+
+    /// <summary>
+    /// Sets the filtered packet set and filters comparison results to only those whose IPs appear in filtered packets.
+    /// Called by MainWindowViewModel when global filters are applied.
+    /// </summary>
+    /// <param name="filteredPackets">The filtered packet list from PacketManager</param>
+    public async Task SetFilteredPacketsAsync(IReadOnlyList<PacketInfo> filteredPackets)
+    {
+        DebugLogger.Log($"[CompareViewModel] SetFilteredPacketsAsync called with {filteredPackets.Count:N0} filtered packets");
+
+        if (_allPackets.Count == 0)
+        {
+            DebugLogger.Log("[CompareViewModel] SetFilteredPacketsAsync: No comparison results to filter");
+            return;
+        }
+
+        // Build set of unique IPs from filtered packets for O(1) lookup
+        _filteredPacketIPs = await Task.Run(() =>
+        {
+            var ipSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var packet in filteredPackets)
+            {
+                if (!string.IsNullOrEmpty(packet.SourceIP))
+                    ipSet.Add(packet.SourceIP);
+                if (!string.IsNullOrEmpty(packet.DestinationIP))
+                    ipSet.Add(packet.DestinationIP);
+            }
+            return ipSet;
+        });
+
+        DebugLogger.Log($"[CompareViewModel] Built IP set with {_filteredPacketIPs.Count:N0} unique IPs from filtered packets");
+
+        await Dispatcher.InvokeAsync(() =>
+        {
+            RefreshDisplayedPackets();
+            UpdateFilteredStatistics();
+        });
+
+        DebugLogger.Log($"[CompareViewModel] SetFilteredPacketsAsync complete - {DisplayedPackets.Count} packets displayed");
+    }
+
+    /// <summary>
+    /// Clears the filtered IP set, showing all comparison results again.
+    /// Called when filters are cleared.
+    /// </summary>
+    public void ClearFilteredPackets()
+    {
+        _filteredPacketIPs = null;
+        RefreshDisplayedPackets();
+        DebugLogger.Log("[CompareViewModel] Cleared filtered packet IPs - showing all comparison results");
+    }
+
+    /// <summary>
+    /// Handles GlobalFilterState changes - re-applies filters to comparison results.
+    /// </summary>
+    private void OnGlobalFilterChanged()
+    {
+        DebugLogger.Log("[CompareViewModel] GlobalFilterState changed - refreshing displayed packets");
+        Dispatcher.InvokeAsync(RefreshDisplayedPackets);
+    }
+
+    /// <summary>
+    /// Updates statistics based on filtered results.
+    /// </summary>
+    private void UpdateFilteredStatistics()
+    {
+        if (_filteredPacketIPs is null || _filteredPacketIPs.Count == 0)
+            return;
+
+        // Recalculate statistics based on filtered packets
+        var filteredResults = _allPackets.Where(p =>
+            _filteredPacketIPs.Contains(p.SourceIP) ||
+            _filteredPacketIPs.Contains(p.DestinationIP)).ToList();
+
+        var uniqueA = filteredResults.Count(p => p.Source == PacketSource.FileA);
+        var uniqueB = filteredResults.Count(p => p.Source == PacketSource.FileB);
+        var common = filteredResults.Count(p => p.Source == PacketSource.Both);
+
+        StatusMessage = $"Filtered: {common:N0} common, {uniqueA:N0} unique to A, {uniqueB:N0} unique to B";
+    }
+
     // ==================== PRIVATE METHODS ====================
 
     private bool CanCompare() =>
@@ -292,6 +385,15 @@ public partial class CompareViewModel : ObservableObject, IDisposable
     {
         var filtered = _allPackets.AsEnumerable();
 
+        // CRITICAL: Filter packets to only those whose IPs appear in filtered packets from main analysis
+        // This ensures Compare shows only results relevant to the current global filter
+        if (_filteredPacketIPs is not null && _filteredPacketIPs.Count > 0)
+        {
+            filtered = filtered.Where(p =>
+                _filteredPacketIPs.Contains(p.SourceIP) ||
+                _filteredPacketIPs.Contains(p.DestinationIP));
+        }
+
         // Apply source filter
         filtered = CurrentFilter switch
         {
@@ -323,6 +425,14 @@ public partial class CompareViewModel : ObservableObject, IDisposable
 
         _comparisonCts?.Cancel();
         _comparisonCts?.Dispose();
+
+        // Unsubscribe from GlobalFilterState to prevent memory leaks
+        if (_globalFilterState is not null)
+        {
+            _globalFilterState.OnFiltersApplied -= OnGlobalFilterChanged;
+            DebugLogger.Log("[CompareViewModel] Unsubscribed from GlobalFilterState.OnFiltersApplied");
+        }
+
         _isDisposed = true;
 
         DebugLogger.Log("[CompareViewModel] Disposed");

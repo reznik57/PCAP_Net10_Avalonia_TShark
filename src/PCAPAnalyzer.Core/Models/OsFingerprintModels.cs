@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using PCAPAnalyzer.Core.Services.MacVendor;
 
 namespace PCAPAnalyzer.Core.Models;
 
@@ -23,6 +24,11 @@ public class HostFingerprint
     /// MAC vendor name (OUI lookup).
     /// </summary>
     public string? MacVendor { get; set; }
+
+    /// <summary>
+    /// MAC address type classification (Global, Randomized, LocallyAdministered, etc.).
+    /// </summary>
+    public MacAddressType MacAddressType { get; set; } = MacAddressType.Global;
 
     /// <summary>
     /// Primary OS detection result.

@@ -18,7 +18,7 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 
 /// <summary>
 /// Manages packet storage, filtering, and collection management.
-/// Handles packet stores (DuckDB, Memory, Null) and maintains filtered/unfiltered packet lists.
+/// Handles packet stores (Memory, Null) and maintains filtered/unfiltered packet lists.
 /// </summary>
 public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposable
 {
@@ -27,12 +27,9 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
     private IDispatcherService? _dispatcher;
 
     // Packet stores
-    private readonly IPacketStore _duckPacketStore = new DuckDbPacketStore();
     private readonly IPacketStore _memoryPacketStore = new InMemoryPacketStore();
     private readonly IPacketStore _nullPacketStore = new NullPacketStore();
     private IPacketStore _activePacketStore;
-    private string _currentStorePath = string.Empty;
-    private readonly bool _preferInMemoryStore;
 
     // Collections
     private readonly BatchObservableCollection<PacketInfo> _packets;
@@ -131,11 +128,6 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
         _recentPacketsBuffer = new CircularBuffer<PacketInfo>(RecentWindowCapacity);
         _activePacketStore = _nullPacketStore;
 
-        _preferInMemoryStore = !string.Equals(
-            Environment.GetEnvironmentVariable("PCAP_ANALYZER_USE_DUCKDB"),
-            "1",
-            StringComparison.OrdinalIgnoreCase);
-
         // Subscribe to filter service
         _filterService.FilterChanged += OnFilterServiceChanged;
     }
@@ -146,38 +138,17 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
     public async Task InitializePacketStoreAsync(CancellationToken cancellationToken)
     {
         _activePacketStore = _nullPacketStore;
-        _currentStorePath = string.Empty;
 
-        if (_preferInMemoryStore)
+        try
         {
-            try
-            {
-                await _memoryPacketStore.InitializeAsync(string.Empty, cancellationToken);
-                _activePacketStore = _memoryPacketStore;
-                DebugLogger.Log("[MainWindowPacketViewModel] Using high-performance in-memory packet store");
-            }
-            catch (Exception ex)
-            {
-                DebugLogger.Log($"[WARN] In-memory packet store initialization failed: {ex.Message}");
-                _activePacketStore = _nullPacketStore;
-            }
+            await _memoryPacketStore.InitializeAsync(string.Empty, cancellationToken);
+            _activePacketStore = _memoryPacketStore;
+            DebugLogger.Log("[MainWindowPacketViewModel] Using in-memory packet store");
         }
-
-        if (_activePacketStore == _nullPacketStore)
+        catch (Exception ex)
         {
-            _currentStorePath = System.IO.Path.Combine(Environment.CurrentDirectory, "analysis", "db", $"packets_{DateTime.Now:yyyyMMdd_HHmmss}.duckdb");
-            try
-            {
-                await _duckPacketStore.InitializeAsync(_currentStorePath, cancellationToken);
-                _activePacketStore = _duckPacketStore;
-                DebugLogger.Log("[MainWindowPacketViewModel] Using DuckDB packet store");
-            }
-            catch (Exception ex)
-            {
-                DebugLogger.Log($"[WARN] Packet store initialization failed: {ex.Message}");
-                _activePacketStore = _nullPacketStore;
-                _currentStorePath = string.Empty;
-            }
+            DebugLogger.Log($"[WARN] In-memory packet store initialization failed: {ex.Message}");
+            _activePacketStore = _nullPacketStore;
         }
 
         // Provide packet store to PacketDetails for stream analysis
@@ -185,9 +156,20 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
     }
 
     /// <summary>
-    /// Applies a packet filter
+    /// Applies a packet filter (sync version for backwards compatibility)
     /// </summary>
     public void ApplyFilter(PacketFilter filter)
+    {
+        _ = ApplyFilterAsync(filter);
+    }
+
+    /// <summary>
+    /// Applies a packet filter asynchronously, running the filtering on a background thread
+    /// to prevent UI freezes with large packet counts and complex filters (e.g., GeoIP-based region filters).
+    /// </summary>
+    /// <param name="filter">The filter to apply</param>
+    /// <param name="progressCallback">Optional callback for filtering progress (0.0 to 1.0)</param>
+    public async Task ApplyFilterAsync(PacketFilter filter, Action<double>? progressCallback = null)
     {
         _currentFilter = filter;
 
@@ -197,9 +179,15 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
             return;
         }
 
-        FilterPackets();
-        UpdateFilterStatus(filter, _filteredPackets.Count);
-        FilteredPacketsChanged?.Invoke(this, _filteredPackets.Count);
+        // Run filtering on background thread to prevent UI freeze
+        await FilterPacketsAsync(progressCallback);
+
+        // UI updates must happen on dispatcher thread
+        await Dispatcher.InvokeAsync(() =>
+        {
+            UpdateFilterStatus(filter, _filteredPackets.Count);
+            FilteredPacketsChanged?.Invoke(this, _filteredPackets.Count);
+        });
     }
 
     /// <summary>
@@ -207,31 +195,84 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
     /// </summary>
     private void FilterPackets()
     {
+        FilterPacketsCore(null);
+    }
+
+    /// <summary>
+    /// Filters packets asynchronously on a background thread with optional progress reporting.
+    /// Prevents UI freeze when filtering large packet counts with complex predicates (GeoIP, etc.)
+    /// </summary>
+    private async Task FilterPacketsAsync(Action<double>? progressCallback = null)
+    {
+        await Task.Run(() => FilterPacketsCore(progressCallback)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Core filtering logic - can run on any thread.
+    /// </summary>
+    private void FilterPacketsCore(Action<double>? progressCallback)
+    {
         PacketInfo[] sourceSnapshot;
+        string statsTitle;
+
         if (_allPackets.Count > 0)
         {
             sourceSnapshot = _allPackets.ToArray();
-            CapturedStatsTitle = "Captured Traffic Statistics";
+            statsTitle = "Captured Traffic Statistics";
         }
         else
         {
             sourceSnapshot = _recentPacketsBuffer.ToArray();
-            CapturedStatsTitle = "Recent Traffic Statistics";
+            statsTitle = "Recent Traffic Statistics";
         }
+
+        List<PacketInfo> result;
 
         if (_currentFilter.IsEmpty)
         {
             // ✅ No filter - sort by FrameNumber ascending (packet capture order)
-            _filteredPackets = sourceSnapshot.OrderBy(p => p.FrameNumber).ToList();
+            result = sourceSnapshot.OrderBy(p => p.FrameNumber).ToList();
+            progressCallback?.Invoke(1.0);
         }
         else
         {
-            // ✅ Apply filter and sort by FrameNumber ascending
-            _filteredPackets = sourceSnapshot
-                .Where(_currentFilter.MatchesPacket)
-                .OrderBy(p => p.FrameNumber)
-                .ToList();
+            // ✅ Apply filter with progress reporting for large datasets
+            var totalCount = sourceSnapshot.Length;
+
+            if (totalCount > 10000 && progressCallback is not null)
+            {
+                // Chunked filtering with progress for large datasets
+                result = new List<PacketInfo>(totalCount / 10); // Pre-allocate with estimate
+                const int chunkSize = 10000;
+                var processed = 0;
+
+                for (var i = 0; i < totalCount; i += chunkSize)
+                {
+                    var chunk = sourceSnapshot.Skip(i).Take(chunkSize);
+                    var matches = chunk.Where(_currentFilter.MatchesPacket);
+                    result.AddRange(matches);
+
+                    processed = Math.Min(i + chunkSize, totalCount);
+                    progressCallback((double)processed / totalCount);
+                }
+
+                // Sort after all filtering complete
+                result = result.OrderBy(p => p.FrameNumber).ToList();
+            }
+            else
+            {
+                // Standard LINQ for smaller datasets or when no progress needed
+                result = sourceSnapshot
+                    .Where(_currentFilter.MatchesPacket)
+                    .OrderBy(p => p.FrameNumber)
+                    .ToList();
+                progressCallback?.Invoke(1.0);
+            }
         }
+
+        // Thread-safe assignment
+        _filteredPackets = result;
+        CapturedStatsTitle = statsTitle;
 
         // Set first packet timestamp for Time Delta calculations
         FirstPacketTimestamp = _filteredPackets.Count > 0 ? _filteredPackets[0].Timestamp : null;
@@ -432,37 +473,6 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
             pageNumber++;
         }
 
-        // ✅ DIAGNOSTIC: Run database diagnostics to verify frame numbers
-        if (_activePacketStore is DuckDbPacketStore duckDbStore)
-        {
-            try
-            {
-                var (dbCount, minFrame, maxFrame) = duckDbStore.GetFrameNumberDiagnostics();
-                DebugLogger.Log($"[LoadAllPacketsForDashboard] DB: {dbCount:N0} packets, Frames: {minFrame:N0}-{maxFrame:N0}");
-
-                if (allPackets.Count > 0)
-                {
-                    var memMinFrame = allPackets.Min(p => p.FrameNumber);
-                    var memMaxFrame = allPackets.Max(p => p.FrameNumber);
-
-                    // Check for duplicates in loaded memory
-                    var duplicateFrames = allPackets.GroupBy(p => p.FrameNumber).Where(g => g.Count() > 1).Take(10).ToList();
-                    if (duplicateFrames.Any())
-                    {
-                        DebugLogger.Log($"[LoadAllPacketsForDashboard] DUPLICATES: {string.Join(", ", duplicateFrames.Select(g => $"{g.Key} (x{g.Count()})"))}");
-                    }
-
-                    if (memMinFrame != minFrame || memMaxFrame != maxFrame)
-                    {
-                        DebugLogger.Log($"[LoadAllPacketsForDashboard] FRAME MISMATCH! DB: {minFrame}-{maxFrame}, Memory: {memMinFrame}-{memMaxFrame}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                DebugLogger.Log($"[LoadAllPacketsForDashboard] Diagnostics failed: {ex.Message}");
-            }
-        }
 
         // Cache with metadata
         _dashboardPacketCache = allPackets;
@@ -779,11 +789,11 @@ public partial class MainWindowPacketViewModel : ObservableObject, IAsyncDisposa
 
         try
         {
-            await _duckPacketStore.DisposeAsync();
+            await _memoryPacketStore.DisposeAsync();
         }
         catch (Exception ex)
         {
-            DebugLogger.Log($"[MainWindowPacketViewModel] Failed to dispose DuckDB store: {ex.Message}");
+            DebugLogger.Log($"[MainWindowPacketViewModel] Failed to dispose packet store: {ex.Message}");
         }
 
         // Dispose stream cache in PacketDetails

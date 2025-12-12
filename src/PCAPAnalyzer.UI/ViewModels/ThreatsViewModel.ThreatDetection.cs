@@ -16,6 +16,42 @@ namespace PCAPAnalyzer.UI.ViewModels;
 /// </summary>
 public partial class ThreatsViewModel
 {
+    /// <summary>
+    /// Sets the filtered packet set and re-analyzes threats from filtered packets only.
+    /// Called by MainWindowViewModel when global filters are applied.
+    /// This bypasses the cache to ensure threats are recalculated from the filtered packet set.
+    /// </summary>
+    /// <param name="filteredPackets">The filtered packet list from PacketManager</param>
+    public async Task SetFilteredPacketsAsync(IReadOnlyList<PacketInfo> filteredPackets)
+    {
+        DebugLogger.Log($"[ThreatsViewModel] SetFilteredPacketsAsync called with {filteredPackets.Count:N0} filtered packets");
+
+        // Set filter active flag for Total/Filtered display
+        IsGlobalFilterActive = true;
+
+        // Update Statistics component with filtered packet count for Total/Filtered header display
+        Statistics.SetFilteredState(filteredPackets.Count, isFiltered: true);
+
+        // Reset cache tracking to force re-analysis
+        _lastAnalyzedPacketCount = -1;
+        _lastFilterState = false;
+
+        // Clear existing threats to force fresh analysis
+        _allThreats.Clear();
+        _metrics = null;
+
+        // Re-analyze with filtered packets
+        await UpdateThreatsAsync(filteredPackets);
+
+        // Notify percentage property changes
+        NotifyThreatPercentageChanges();
+
+        // Update stats bar for filtered state
+        UpdateThreatsStatsBar();
+
+        DebugLogger.Log($"[ThreatsViewModel] SetFilteredPacketsAsync complete - {_allThreats.Count:N0} threats from {filteredPackets.Count:N0} packets");
+    }
+
     [SuppressMessage("Maintainability", "CA1502:Avoid excessive complexity", Justification = "Complex threat detection requires filtering, caching, parallel batching, anomaly detection, and UI updates - justified for performance optimization")]
     public async Task UpdateThreatsAsync(IReadOnlyList<PacketInfo> packets)
     {

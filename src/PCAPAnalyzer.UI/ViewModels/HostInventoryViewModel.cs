@@ -17,6 +17,7 @@ using PCAPAnalyzer.UI.Interfaces;
 using PCAPAnalyzer.UI.Models;
 using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.Utilities;
+using PCAPAnalyzer.UI.ViewModels.Components;
 
 namespace PCAPAnalyzer.UI.ViewModels;
 
@@ -34,6 +35,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     private readonly IOsFingerprintService? _fingerprintService;
     private readonly GlobalFilterState? _globalFilterState;
     private IReadOnlyList<HostFingerprint>? _allHosts;
+    private HashSet<string>? _filteredPacketIPs;  // IPs from filtered packets for host filtering
     private bool _disposed;
 
     // Fingerprints for early-exit optimization
@@ -53,7 +55,7 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     [ObservableProperty] private string _deviceTypeFilter = "All";
     [ObservableProperty] private bool _showVerifiedOnly;
 
-    // Statistics
+    // Statistics (filtered values - what's currently displayed)
     [ObservableProperty] private int _totalHosts;
     [ObservableProperty] private int _windowsHosts;
     [ObservableProperty] private int _linuxHosts;
@@ -61,6 +63,54 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     [ObservableProperty] private int _mobileHosts;
     [ObservableProperty] private int _iotHosts;
     [ObservableProperty] private int _unknownHosts;
+
+    // Unfiltered totals (stored when data first loads, before any filters)
+    [ObservableProperty] private int _unfilteredTotalHosts;
+    [ObservableProperty] private int _unfilteredWindowsHosts;
+    [ObservableProperty] private int _unfilteredLinuxHosts;
+    [ObservableProperty] private int _unfilteredMacOsHosts;
+    [ObservableProperty] private int _unfilteredMobileHosts;
+    [ObservableProperty] private int _unfilteredIotHosts;
+    [ObservableProperty] private int _unfilteredUnknownHosts;
+
+    // Filter state
+    [ObservableProperty] private bool _isFilterActive;
+
+    // StatsBarControl for unified statistics display
+    public StatsBarControlViewModel HostStatsBar { get; } = new()
+    {
+        SectionTitle = "HOST INVENTORY",
+        AccentColor = ThemeColorHelper.GetColorHex("AccentPrimary", "#58A6FF"),
+        ColumnCount = 7
+    };
+
+    // ==================== PACKET-LEVEL FILTERED STATISTICS ====================
+
+    /// <summary>
+    /// Filtered packet count (from global filter application)
+    /// </summary>
+    [ObservableProperty] private long _filteredTotalPackets;
+
+    /// <summary>
+    /// Unfiltered packet count (stored on first load)
+    /// </summary>
+    [ObservableProperty] private long _unfilteredTotalPackets;
+
+    /// <summary>
+    /// Percentage of packets shown after filtering
+    /// </summary>
+    public double FilteredPacketsPercentage => UnfilteredTotalPackets > 0
+        ? (FilteredTotalPackets * 100.0 / UnfilteredTotalPackets)
+        : 100;
+
+    // Percentage calculations (computed properties)
+    public double TotalHostsPercentage => UnfilteredTotalHosts > 0 ? (TotalHosts * 100.0 / UnfilteredTotalHosts) : 0;
+    public double WindowsHostsPercentage => UnfilteredWindowsHosts > 0 ? (WindowsHosts * 100.0 / UnfilteredWindowsHosts) : 0;
+    public double LinuxHostsPercentage => UnfilteredLinuxHosts > 0 ? (LinuxHosts * 100.0 / UnfilteredLinuxHosts) : 0;
+    public double MacOsHostsPercentage => UnfilteredMacOsHosts > 0 ? (MacOsHosts * 100.0 / UnfilteredMacOsHosts) : 0;
+    public double MobileHostsPercentage => UnfilteredMobileHosts > 0 ? (MobileHosts * 100.0 / UnfilteredMobileHosts) : 0;
+    public double IotHostsPercentage => UnfilteredIotHosts > 0 ? (IotHosts * 100.0 / UnfilteredIotHosts) : 0;
+    public double UnknownHostsPercentage => UnfilteredUnknownHosts > 0 ? (UnknownHosts * 100.0 / UnfilteredUnknownHosts) : 0;
 
     // Filter options
     public ObservableCollection<string> OsFilterOptions { get; } = new()
@@ -111,6 +161,9 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
 
         await Dispatcher.InvokeAsync(() =>
         {
+            // Store unfiltered totals on first load (before any filters)
+            StoreUnfilteredTotals();
+            IsFilterActive = false;
             RefreshHostList();
             UpdateStatistics();
         });
@@ -124,6 +177,69 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
         _allHosts = hosts;
         RefreshHostList();
         UpdateStatistics();
+    }
+
+    /// <summary>
+    /// Sets the filtered packet set and filters hosts to only those whose IPs appear in filtered packets.
+    /// Called by MainWindowViewModel when global filters are applied.
+    /// </summary>
+    /// <param name="filteredPackets">The filtered packet list from PacketManager</param>
+    public async Task SetFilteredPacketsAsync(IReadOnlyList<PacketInfo> filteredPackets)
+    {
+        DebugLogger.Log($"[HostInventoryViewModel] SetFilteredPacketsAsync called with {filteredPackets.Count:N0} filtered packets");
+
+        if (_allHosts is null || _allHosts.Count == 0)
+        {
+            DebugLogger.Log("[HostInventoryViewModel] SetFilteredPacketsAsync: No hosts loaded yet");
+            return;
+        }
+
+        // Build set of unique IPs from filtered packets for O(1) lookup
+        var filteredIPs = await Task.Run(() =>
+        {
+            var ipSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var packet in filteredPackets)
+            {
+                if (!string.IsNullOrEmpty(packet.SourceIP))
+                    ipSet.Add(packet.SourceIP);
+                if (!string.IsNullOrEmpty(packet.DestinationIP))
+                    ipSet.Add(packet.DestinationIP);
+            }
+            return ipSet;
+        });
+
+        DebugLogger.Log($"[HostInventoryViewModel] Built IP set with {filteredIPs.Count:N0} unique IPs from filtered packets");
+
+        // Store filtered IP set for use in RefreshHostList
+        _filteredPacketIPs = filteredIPs;
+        IsFilterActive = true;
+
+        // Update packet-level filtered stats for Total/Filtered header display
+        FilteredTotalPackets = filteredPackets.Count;
+        OnPropertyChanged(nameof(FilteredPacketsPercentage));
+
+        await Dispatcher.InvokeAsync(() =>
+        {
+            RefreshHostList();
+            UpdateStatistics();
+        });
+
+        DebugLogger.Log($"[HostInventoryViewModel] SetFilteredPacketsAsync complete - {Hosts.Count} hosts displayed, {filteredPackets.Count:N0} filtered packets");
+    }
+
+    /// <summary>
+    /// Clears the filtered IP set, showing all hosts again.
+    /// Called when filters are cleared.
+    /// </summary>
+    public void ClearFilteredPackets()
+    {
+        _filteredPacketIPs = null;
+        IsFilterActive = false;
+        FilteredTotalPackets = UnfilteredTotalPackets;
+        OnPropertyChanged(nameof(FilteredPacketsPercentage));
+        RefreshHostList();
+        UpdateStatistics();
+        DebugLogger.Log("[HostInventoryViewModel] Cleared filtered packet IPs - showing all hosts");
     }
 
     // ==================== FILTER HANDLERS ====================
@@ -141,6 +257,13 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
             return;
 
         var filtered = _allHosts.AsEnumerable();
+
+        // CRITICAL: Filter hosts to only those whose IPs appear in filtered packets
+        // This ensures HostInventory shows only hosts from the filtered traffic set
+        if (_filteredPacketIPs is not null && _filteredPacketIPs.Count > 0)
+        {
+            filtered = filtered.Where(h => _filteredPacketIPs.Contains(h.IpAddress));
+        }
 
         // Apply GlobalFilterState IP filters (from UnifiedFilterPanel)
         filtered = ApplyGlobalFilterStateFilters(filtered);
@@ -581,17 +704,83 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     }
 
     /// <summary>
-    /// Updates statistics using single-pass aggregation.
-    /// Previous: 7 separate traversals. Now: 1 traversal with category buckets.
+    /// Notifies UI of percentage property changes (computed properties don't auto-notify).
     /// </summary>
-    private void UpdateStatistics()
+    private void NotifyPercentageChanges()
+    {
+        OnPropertyChanged(nameof(TotalHostsPercentage));
+        OnPropertyChanged(nameof(WindowsHostsPercentage));
+        OnPropertyChanged(nameof(LinuxHostsPercentage));
+        OnPropertyChanged(nameof(MacOsHostsPercentage));
+        OnPropertyChanged(nameof(MobileHostsPercentage));
+        OnPropertyChanged(nameof(IotHostsPercentage));
+        OnPropertyChanged(nameof(UnknownHostsPercentage));
+    }
+
+    /// <summary>
+    /// Stores unfiltered totals from _allHosts. Called once when hosts first load.
+    /// </summary>
+    private void StoreUnfilteredTotals()
     {
         if (_allHosts is null || _allHosts.Count == 0)
         {
-            if (_lastStatisticsFingerprint == "0")
-                return;
-            _lastStatisticsFingerprint = "0";
+            UnfilteredTotalHosts = 0;
+            UnfilteredWindowsHosts = 0;
+            UnfilteredLinuxHosts = 0;
+            UnfilteredMacOsHosts = 0;
+            UnfilteredMobileHosts = 0;
+            UnfilteredIotHosts = 0;
+            UnfilteredUnknownHosts = 0;
+            return;
+        }
 
+        int windows = 0, linux = 0, macOs = 0, mobile = 0, iot = 0, unknown = 0;
+
+        foreach (var host in _allHosts)
+        {
+            var osFamily = host.OsDetection?.OsFamily;
+            var deviceType = host.OsDetection?.DeviceType;
+
+            if (!string.IsNullOrEmpty(osFamily) && osFamily != "Unknown")
+            {
+                if (osFamily.Contains("Windows", StringComparison.OrdinalIgnoreCase))
+                    windows++;
+                else if (osFamily.Contains("Linux", StringComparison.OrdinalIgnoreCase))
+                    linux++;
+                else if (osFamily.Contains("macOS", StringComparison.OrdinalIgnoreCase) ||
+                         osFamily.Contains("iOS", StringComparison.OrdinalIgnoreCase))
+                    macOs++;
+            }
+            else
+            {
+                unknown++;
+            }
+
+            if (deviceType == DeviceType.Mobile)
+                mobile++;
+            else if (deviceType == DeviceType.IoT || deviceType == DeviceType.NetworkEquipment)
+                iot++;
+        }
+
+        UnfilteredTotalHosts = _allHosts.Count;
+        UnfilteredWindowsHosts = windows;
+        UnfilteredLinuxHosts = linux;
+        UnfilteredMacOsHosts = macOs;
+        UnfilteredMobileHosts = mobile;
+        UnfilteredIotHosts = iot;
+        UnfilteredUnknownHosts = unknown;
+
+        DebugLogger.Log($"[HostInventoryViewModel] Stored unfiltered totals: {UnfilteredTotalHosts} hosts");
+    }
+
+    /// <summary>
+    /// Updates statistics from the currently displayed (filtered) Hosts collection.
+    /// Uses single-pass aggregation for efficiency.
+    /// </summary>
+    private void UpdateStatistics()
+    {
+        if (Hosts.Count == 0)
+        {
             TotalHosts = 0;
             WindowsHosts = 0;
             LinuxHosts = 0;
@@ -599,14 +788,18 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
             MobileHosts = 0;
             IotHosts = 0;
             UnknownHosts = 0;
+            NotifyPercentageChanges();
             return;
         }
 
-        // Single-pass aggregation
+        // Single-pass aggregation over displayed (filtered) hosts
         int windows = 0, linux = 0, macOs = 0, mobile = 0, iot = 0, unknown = 0;
 
-        foreach (var host in _allHosts)
+        foreach (var item in Hosts)
         {
+            var host = item.RawHost;
+            if (host is null) continue;
+
             var osFamily = host.OsDetection?.OsFamily;
             var deviceType = host.OsDetection?.DeviceType;
 
@@ -634,18 +827,71 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
         }
 
         // Fingerprint check for early-exit
-        var fingerprint = $"{_allHosts.Count}|{windows}|{linux}|{macOs}|{mobile}|{iot}|{unknown}";
+        var fingerprint = $"{Hosts.Count}|{windows}|{linux}|{macOs}|{mobile}|{iot}|{unknown}";
         if (fingerprint == _lastStatisticsFingerprint)
             return;
         _lastStatisticsFingerprint = fingerprint;
 
-        TotalHosts = _allHosts.Count;
+        TotalHosts = Hosts.Count;
         WindowsHosts = windows;
         LinuxHosts = linux;
         MacOsHosts = macOs;
         MobileHosts = mobile;
         IotHosts = iot;
         UnknownHosts = unknown;
+
+        // Notify percentage changes for Total/Filtered display
+        NotifyPercentageChanges();
+
+        // Update unified stats bar
+        UpdateHostStatsBar();
+    }
+
+    /// <summary>
+    /// Updates HostStatsBar with unified Total/Filtered display pattern.
+    /// Call after updating statistics or when filters change.
+    /// </summary>
+    private void UpdateHostStatsBar()
+    {
+        HostStatsBar.ClearStats();
+
+        var hasFilter = IsFilterActive ||
+            _globalFilterState?.HasActiveFilters == true;
+
+        // Total Hosts
+        TabStatsHelper.AddNumericStat(HostStatsBar, "TOTAL HOSTS", "🖥️",
+            UnfilteredTotalHosts, TotalHosts, hasFilter,
+            ThemeColorHelper.GetColorHex("AccentPrimary", "#58A6FF"));
+
+        // Windows
+        TabStatsHelper.AddNumericStat(HostStatsBar, "WINDOWS", "🪟",
+            UnfilteredWindowsHosts, WindowsHosts, hasFilter,
+            ThemeColorHelper.GetColorHex("SlackInfo", "#58A6FF"));
+
+        // Linux
+        TabStatsHelper.AddNumericStat(HostStatsBar, "LINUX", "🐧",
+            UnfilteredLinuxHosts, LinuxHosts, hasFilter,
+            ThemeColorHelper.GetColorHex("SlackWarning", "#F0883E"));
+
+        // Apple
+        TabStatsHelper.AddNumericStat(HostStatsBar, "APPLE", "🍎",
+            UnfilteredMacOsHosts, MacOsHosts, hasFilter,
+            ThemeColorHelper.GetColorHex("TextSecondary", "#848D97"));
+
+        // Mobile
+        TabStatsHelper.AddNumericStat(HostStatsBar, "MOBILE", "📱",
+            UnfilteredMobileHosts, MobileHosts, hasFilter,
+            ThemeColorHelper.GetColorHex("SlackSuccess", "#3FB950"));
+
+        // IoT/Network
+        TabStatsHelper.AddNumericStat(HostStatsBar, "IoT/NETWORK", "📡",
+            UnfilteredIotHosts, IotHosts, hasFilter,
+            ThemeColorHelper.GetColorHex("SlackWarning", "#F0883E"));
+
+        // Unknown
+        TabStatsHelper.AddNumericStat(HostStatsBar, "UNKNOWN", "❓",
+            UnfilteredUnknownHosts, UnknownHosts, hasFilter,
+            ThemeColorHelper.GetColorHex("TextMuted", "#6E7681"));
     }
 
     // ==================== COMMANDS ====================
@@ -779,6 +1025,14 @@ public partial class HostInventoryViewModel : ObservableObject, ITabPopulationTa
     {
         DebugLogger.Log("[HostInventoryViewModel] PopulateFromCacheAsync called");
         await UpdateHostsAsync();
+
+        // Store unfiltered packet totals for Total/Filtered display pattern
+        var packetCount = result.AllPackets?.Count ?? 0;
+        UnfilteredTotalPackets = packetCount;
+        FilteredTotalPackets = packetCount;
+        IsFilterActive = false;
+        OnPropertyChanged(nameof(FilteredPacketsPercentage));
+        DebugLogger.Log($"[HostInventoryViewModel] Stored unfiltered packet totals: {packetCount:N0} packets");
     }
 
     // ==================== IDisposable ====================

@@ -11,5 +11,14 @@
       "extensionId": "ms-dotnettools.csharp",
       "path": "C:\\Program Files\\dotnet\\dotnet.exe"
     }
-  ]
+  ],
+  "dotnet.server.suppressLspErrorToasts": false,
+  "csharp.suppressBuildAssetsNotification": true,
+  "dotnet.backgroundAnalysis.analyzerDiagnosticsScope": "openFiles",
+  "dotnet.backgroundAnalysis.compilerDiagnosticsScope": "openFiles",
+  "files.watcherExclude": {
+    "**/bin/**": true,
+    "**/obj/**": true,
+    "**/.git/objects/**": true
+  }
 }

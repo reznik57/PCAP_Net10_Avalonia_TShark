@@ -101,6 +101,23 @@ public partial class FileAnalysisStagesViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Stop all active stage timers without changing stage state.
+    /// Called on analysis error to prevent infinite timer loops.
+    /// </summary>
+    public void StopAllTimers()
+    {
+        DebugLogger.Log($"[FileAnalysisStagesViewModel] Stopping all stage timers");
+        foreach (var stage in Stages)
+        {
+            if (stage.State == AnalysisStageState.Active)
+            {
+                stage.StopTiming();
+                stage.State = AnalysisStageState.Error;
+            }
+        }
+    }
+
+    /// <summary>
     /// Fully clear all stages (used by Clear button).
     /// Reinitializes stages to pristine state.
     /// </summary>

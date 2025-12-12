@@ -17,6 +17,7 @@ using PCAPAnalyzer.Core.Services.Caching;
 using PCAPAnalyzer.Core.Services.Capture;
 using PCAPAnalyzer.Core.Services.Credentials;
 using PCAPAnalyzer.Core.Services.GeoIP;
+using PCAPAnalyzer.Core.Services.MacVendor;
 using PCAPAnalyzer.Core.Services.OsFingerprinting;
 using PCAPAnalyzer.Core.Services.Reporting;
 using PCAPAnalyzer.Core.Services.Statistics;
@@ -271,20 +272,7 @@ namespace PCAPAnalyzer.UI
             services.AddSingleton<IPacketSizeAnalyzer, PacketSizeAnalyzer>();
 
             // Packet Store (Singleton - holds data)
-            services.AddSingleton<IPacketStore>(provider =>
-            {
-                // Check environment variable for DuckDB usage
-                var useDuckDb = Environment.GetEnvironmentVariable("PCAP_ANALYZER_USE_DUCKDB") == "1";
-
-                if (useDuckDb)
-                {
-                    return new DuckDbPacketStore();
-                }
-                else
-                {
-                    return new InMemoryPacketStore();
-                }
-            });
+            services.AddSingleton<IPacketStore, InMemoryPacketStore>();
 
             // TShark Service (Singleton - process management)
             // ⚡ PERFORMANCE: Use ParallelTSharkService for 3-4× faster packet loading
@@ -336,10 +324,18 @@ namespace PCAPAnalyzer.UI
             // Kerberos, NTLM, MySQL, and PostgreSQL protocols
             services.AddSingleton<ICredentialDetectionService, CredentialDetectionService>();
 
+            // MAC Vendor Service (Singleton - OUI-based vendor lookup with IEEE database)
+            // Supports ~40K vendors from IEEE registry with downloadable updates
+            // Detects randomized MACs (iOS 14+, Android 10+) and locally administered MACs
+            services.AddSingleton<IMacVendorService, MacVendorService>();
+
             // OS Fingerprinting (Singleton - passive OS detection from TCP/JA3/MAC/DHCP signals)
             // NetworkMiner-inspired host inventory with p0f-style TCP fingerprinting, JA3 TLS hashes,
-            // MAC vendor OUI lookup, DHCP Option 55, and server banner parsing
+            // MAC vendor OUI lookup (via MacVendorService), DHCP Option 55, and server banner parsing
             services.AddSingleton<IOsFingerprintService, OsFingerprintService>();
+
+            // Dependency Service (Singleton - collects NuGet packages, tools, data files info)
+            services.AddSingleton<IDependencyService, DependencyService>();
 
             // ✅ ARCHITECTURE REDESIGN: Analysis Orchestrator (Singleton - central coordinator)
             // Replaces fragmented MainWindowViewModel analysis logic with unified orchestration
@@ -474,10 +470,15 @@ namespace PCAPAnalyzer.UI
             // Global Filter State (Singleton - centralized filter state for unified filter panel)
             services.AddSingleton<GlobalFilterState>();
 
-            // Smart Filter Builder Service (Singleton - stateless filter building logic)
+            // Smart Filter Builder Service (Singleton - stateful for GeoIP caching)
             // Provides sophisticated packet filtering with INCLUDE/EXCLUDE groups, AND/OR logic,
-            // port range patterns, and protocol matching - shared across all analysis tabs
-            services.AddSingleton<ISmartFilterBuilder, SmartFilterBuilderService>();
+            // port range patterns, region/country filtering, and protocol matching - shared across all tabs
+            // Injected with IGeoIPService for region/country filtering support
+            services.AddSingleton<ISmartFilterBuilder>(provider =>
+            {
+                var geoIPService = provider.GetService<IGeoIPService>();
+                return new SmartFilterBuilderService(geoIPService);
+            });
 
             // Dashboard Filter Service (Singleton - stateless filter logic for Dashboard tab)
             // Extracted from DashboardViewModel.UpdateFilteredStatistics() for testability
@@ -613,6 +614,9 @@ namespace PCAPAnalyzer.UI
                 var globalFilterState = provider.GetService<GlobalFilterState>();
                 return new HostInventoryViewModel(fingerprintService, globalFilterState);
             });
+
+            // About Tab ViewModel (Transient - displays dependency and version information)
+            services.AddTransient<AboutViewModel>();
 
             // Compare Tab Services
             services.AddSingleton<Core.Interfaces.IPacketLoader, TShark.TSharkPacketLoader>();

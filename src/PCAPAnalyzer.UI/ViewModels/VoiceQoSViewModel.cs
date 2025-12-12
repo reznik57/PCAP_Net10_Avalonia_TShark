@@ -17,6 +17,7 @@ using PCAPAnalyzer.UI.ViewModels.Components;
 using PCAPAnalyzer.UI.Constants;
 using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
 using PCAPAnalyzer.UI.ViewModels.Base;
 
 namespace PCAPAnalyzer.UI.ViewModels;
@@ -98,6 +99,14 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
     [ObservableProperty] private bool _isAnalyzing;
     [ObservableProperty] private string _statusMessage = "No data loaded";
 
+    // Global filter state indicator for Total/Filtered display pattern
+    [ObservableProperty] private bool _isGlobalFilterActive;
+
+    // Percentage calculations for Total/Filtered display
+    public double TotalQoSPacketsPercentage => TotalQoSPacketsAll > 0 ? (TotalQoSPackets * 100.0 / TotalQoSPacketsAll) : 0;
+    public double HighLatencyCountPercentage => HighLatencyCountAll > 0 ? (HighLatencyCount * 100.0 / HighLatencyCountAll) : 0;
+    public double HighJitterCountPercentage => HighJitterCountAll > 0 ? (HighJitterCount * 100.0 / HighJitterCountAll) : 0;
+
     // PAGINATION: Reusable pagination components for three main tables
     [ObservableProperty] private PaginationViewModel _qosTrafficPagination;
     [ObservableProperty] private PaginationViewModel _latencyPagination;
@@ -113,6 +122,14 @@ public partial class VoiceQoSViewModel : SmartFilterableTab, IDisposable, ILazyL
     [ObservableProperty] private VoiceQoSPopupViewModel _popupViewModel = new();
     [ObservableProperty] private VoiceQoSStatisticsViewModel _statisticsViewModel = new();
     [ObservableProperty] private VoiceQoSAnalysisViewModel _analysisViewModel;
+
+    // StatsBarControl for unified statistics display
+    public StatsBarControlViewModel VoiceQoSStatsBar { get; } = new()
+    {
+        SectionTitle = "QUALITY OVERVIEW",
+        AccentColor = ThemeColorHelper.GetColorHex("AccentPrimary", "#58A6FF"),
+        ColumnCount = 7
+    };
 
     // Cached pre-aggregated chart data (generated ONCE during analysis, reused for filtering)
     private Core.Models.VoiceQoSTimeSeriesData? _cachedTimeSeriesData;

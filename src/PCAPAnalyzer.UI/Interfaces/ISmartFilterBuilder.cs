@@ -1,6 +1,7 @@
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.UI.Models;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace PCAPAnalyzer.UI.Interfaces
 {
@@ -14,6 +15,22 @@ namespace PCAPAnalyzer.UI.Interfaces
     /// </summary>
     public interface ISmartFilterBuilder
     {
+        /// <summary>
+        /// Pre-warms the IP→Country cache for all unique IPs in the packet collection.
+        /// MUST be called before applying region/country filters to avoid UI freeze.
+        /// </summary>
+        /// <param name="packets">Packets to extract unique IPs from</param>
+        /// <param name="progressCallback">Optional callback (progress 0-1, resolved count, total count)</param>
+        /// <returns>Number of IPs cached</returns>
+        Task<int> PreWarmCountryCacheAsync(
+            IEnumerable<PacketInfo> packets,
+            Action<double, int, int>? progressCallback = null);
+
+        /// <summary>
+        /// Checks if a filter group contains region or country criteria that require GeoIP lookups.
+        /// </summary>
+        bool HasGeoIPCriteria(FilterGroup group);
+
         /// <summary>
         /// Builds a combined PacketFilter from filter groups and individual chips.
         /// Logic: (All INCLUDE filters OR'd together) AND NOT (All EXCLUDE filters OR'd together)

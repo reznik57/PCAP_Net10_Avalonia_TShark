@@ -159,7 +159,7 @@ public sealed class NetworkAnomalyDetector : IAnomalyDetector
                 SourceIP = mapping.Key,
                 DestinationIP = topDestination,
                 Protocol = "ARP",
-                AffectedFrames = relatedPackets.Select(p => (long)p.FrameNumber).ToList(),
+                AffectedFrames = relatedPackets.Select(p => (long)p.FrameNumber).Take(100).ToList(),
                 Metrics = new Dictionary<string, object>
                 {
                     { "MACAddressCount", mapping.Value.Count },

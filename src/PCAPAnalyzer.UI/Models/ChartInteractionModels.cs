@@ -141,7 +141,11 @@ namespace PCAPAnalyzer.UI.Models
         public List<PortActivityData> TopPorts { get; set; } = [];
         public List<IPAddressData> TopSourceIPs { get; set; } = [];
         public List<IPAddressData> TopDestinationIPs { get; set; } = [];
-        
+
+        // Anomalies and Threats for this time window
+        public List<AnomalyDisplayData> Anomalies { get; set; } = [];
+        public List<ThreatDisplayData> Threats { get; set; } = [];
+
         // Statistics for this time window
         public long PacketCount { get; set; }
         public long ByteCount { get; set; }
@@ -195,6 +199,8 @@ namespace PCAPAnalyzer.UI.Models
             {
                 if (SetProperty(ref _pointData, value))
                 {
+                    OnPropertyChanged(nameof(AnomalySummary));
+                    OnPropertyChanged(nameof(ThreatSummary));
                     UpdateDisplayItems();
                 }
             }
@@ -228,7 +234,9 @@ namespace PCAPAnalyzer.UI.Models
         {
             "Ports",
             "Source IPs",
-            "Destination IPs"
+            "Destination IPs",
+            "Anomalies",
+            "Threats"
         };
         
         public string TimeWindowDisplay => PointData is not null 
@@ -237,6 +245,14 @@ namespace PCAPAnalyzer.UI.Models
         
         public string TrafficSummary => PointData is not null
             ? $"{PointData.PacketCount:N0} packets ({NumberFormatter.FormatBytes(PointData.ByteCount)})"
+            : "";
+
+        public string AnomalySummary => PointData is not null
+            ? $"{PointData.Anomalies.Count} anomalies"
+            : "";
+
+        public string ThreatSummary => PointData is not null
+            ? $"{PointData.Threats.Count} threats"
             : "";
 
         private void UpdateDisplayItems()
@@ -264,6 +280,16 @@ namespace PCAPAnalyzer.UI.Models
                 case "Destination IPs":
                     foreach (var ip in PointData.TopDestinationIPs)
                         items.Add(ip);
+                    break;
+
+                case "Anomalies":
+                    foreach (var anomaly in PointData.Anomalies)
+                        items.Add(anomaly);
+                    break;
+
+                case "Threats":
+                    foreach (var threat in PointData.Threats)
+                        items.Add(threat);
                     break;
             }
 

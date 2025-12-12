@@ -10,7 +10,7 @@ namespace PCAPAnalyzer.UI.ViewModels.Components;
 /// - Network: IP version (IPv4/IPv6), address scope (RFC1918/Public), delivery (Unicast/Multicast/Broadcast)
 /// - TCP Flags: SYN, SYN-ACK, RST, FIN, PSH, ACK-only, URG
 /// - Application: L7 protocols (DNS, HTTP, HTTPS, SSH, FTP, SMTP, SNMP, STUN, DHCP)
-/// - Security: Deprecated crypto (TLSv1.0, TLSv1.1, ObsoleteCrypto, SSHv1, SmbV1), CleartextAuth, Insecure
+/// NOTE: Security filters moved to Threats tab, TCP quality filters moved to Anomalies tab
 /// </summary>
 public partial class GeneralFilterTabViewModel : ObservableObject
 {
@@ -32,12 +32,6 @@ public partial class GeneralFilterTabViewModel : ObservableObject
 
     /// <summary>L7 Application protocols: DNS, HTTP, HTTPS, SSH, FTP, SMTP, SNMP, STUN, DHCP</summary>
     public ObservableCollection<FilterChipViewModel> ApplicationChips { get; } = [];
-
-    /// <summary>
-    /// Security filters: Deprecated crypto, cleartext auth, insecure protocols
-    /// Moved from Threats tab for immediate visibility during packet analysis
-    /// </summary>
-    public ObservableCollection<FilterChipViewModel> SecurityChips { get; } = [];
 
     public GeneralFilterTabViewModel()
     {
@@ -65,28 +59,16 @@ public partial class GeneralFilterTabViewModel : ObservableObject
         foreach (var n in networkTypes)
             NetworkChips.Add(new FilterChipViewModel(n));
 
-        // TCP flags chips (connection state analysis) - all flags now exposed
+        // TCP flags chips (connection state analysis)
         var tcpFlags = new[] { "SYN", "SYN-ACK", "RST", "FIN", "PSH", "ACK-only", "URG" };
         foreach (var f in tcpFlags)
             TcpFlagsChips.Add(new FilterChipViewModel(f));
 
         // L7 Application protocol chips (core + network services)
-        // TLS moved to SecurityChips since it's about encryption security
+        // NOTE: Telnet moved to Threats tab (insecure protocol)
         var apps = new[] { "DNS", "HTTP", "HTTPS", "SSH", "FTP", "SMTP", "SNMP", "STUN", "DHCP" };
         foreach (var a in apps)
             ApplicationChips.Add(new FilterChipViewModel(a));
-
-        // Security chips (deprecated crypto, cleartext auth, insecure protocols)
-        // Grouped per user request: TLS with security-related filters
-        var security = new[]
-        {
-            "TlsV10", "TlsV11",           // Deprecated TLS (⚠️ per RFC 8996)
-            "ObsoleteCrypto",              // Combined SSL + deprecated TLS
-            "SSHv1", "SmbV1",              // Deprecated protocols
-            "CleartextAuth", "Insecure"    // Authentication risks
-        };
-        foreach (var s in security)
-            SecurityChips.Add(new FilterChipViewModel(s));
     }
 
     public void SetMode(FilterChipMode mode)
@@ -95,20 +77,13 @@ public partial class GeneralFilterTabViewModel : ObservableObject
         foreach (var chip in NetworkChips) chip.SetMode(mode);
         foreach (var chip in TcpFlagsChips) chip.SetMode(mode);
         foreach (var chip in ApplicationChips) chip.SetMode(mode);
-        foreach (var chip in SecurityChips) chip.SetMode(mode);
     }
 
     public (List<string> Protocols, List<string> QuickFilters) GetPendingFilters()
     {
-        var allChips = ProtocolChips
-            .Concat(NetworkChips)
-            .Concat(TcpFlagsChips)
-            .Concat(ApplicationChips)
-            .Concat(SecurityChips);
-
         return (
             ProtocolChips.Concat(ApplicationChips).Where(c => c.IsSelected).Select(c => c.Name).ToList(),
-            NetworkChips.Concat(TcpFlagsChips).Concat(SecurityChips).Where(c => c.IsSelected).Select(c => c.Name).ToList()
+            NetworkChips.Concat(TcpFlagsChips).Where(c => c.IsSelected).Select(c => c.Name).ToList()
         );
     }
 
@@ -118,6 +93,5 @@ public partial class GeneralFilterTabViewModel : ObservableObject
         foreach (var chip in NetworkChips) chip.Reset();
         foreach (var chip in TcpFlagsChips) chip.Reset();
         foreach (var chip in ApplicationChips) chip.Reset();
-        foreach (var chip in SecurityChips) chip.Reset();
     }
 }

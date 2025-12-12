@@ -49,7 +49,10 @@ packages/
 *.7z
 *.rar
 
-# Screenshots (archive in docs/screenshots/ directory)
+# Screenshots folder (local development screenshots)
+Screenshots/
+
+# Root-level images
 /*.jpg
 /*.png
 /*.jpeg

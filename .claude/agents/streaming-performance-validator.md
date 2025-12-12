@@ -1,3 +1,7 @@
+---
+name: streaming-performance-validator
+---
+
 # Streaming Performance Validator Agent
 
 ## When to Use This Agent
@@ -325,9 +329,6 @@ PCAP_ANALYZER_LARGE_FILE_MODE=1
 
 # Reduce memory usage (smaller buffers, more GC)
 PCAP_ANALYZER_LOW_MEMORY=1
-
-# Use DuckDB for out-of-core processing
-PCAP_ANALYZER_USE_DUCKDB=1
 ```
 
 ## Instructions for This Agent

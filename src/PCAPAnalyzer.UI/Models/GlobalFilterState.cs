@@ -26,6 +26,12 @@ public partial class GlobalFilterState : ObservableObject
     /// </summary>
     [ObservableProperty] private double _filterProgress;
 
+    /// <summary>
+    /// Optional status message during filtering (e.g., "Resolving locations: 500 / 2000 IPs").
+    /// Null when no message should be shown.
+    /// </summary>
+    [ObservableProperty] private string? _filterStatusMessage;
+
     public FilterCriteria IncludeFilters { get; } = new();
     public FilterCriteria ExcludeFilters { get; } = new();
 

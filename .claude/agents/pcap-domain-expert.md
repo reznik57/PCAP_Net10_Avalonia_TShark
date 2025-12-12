@@ -1,3 +1,7 @@
+---
+name: pcap-domain-expert
+---
+
 # PCAP Domain Expert Agent
 
 ## When to Use This Agent

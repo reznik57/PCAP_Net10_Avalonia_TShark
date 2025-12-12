@@ -30,4 +30,10 @@ public static class NumberFormatter
     /// Formats bytes to human-readable size with appropriate unit (B, KB, MB, GB, TB).
     /// </summary>
     public static string FormatBytes(long bytes) => bytes.ToFormattedBytes();
+
+    /// <summary>
+    /// Formats bytes with European/German thousand separators (dots).
+    /// Example: 1106937 bytes → "1,08 MB" (using comma as decimal separator)
+    /// </summary>
+    public static string FormatBytesGerman(long bytes) => CoreFormatter.FormatBytesGerman(bytes);
 }

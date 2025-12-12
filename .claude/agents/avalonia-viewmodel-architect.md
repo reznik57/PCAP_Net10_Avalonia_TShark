@@ -1,3 +1,7 @@
+---
+name: avalonia-viewmodel-architect
+---
+
 # Avalonia ViewModel Architect Agent
 
 ## When to Use This Agent

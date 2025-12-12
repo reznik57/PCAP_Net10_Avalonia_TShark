@@ -34,6 +34,35 @@ public partial class CountryStatisticsViewModel : ObservableObject
     [ObservableProperty] private long _totalPackets;
     [ObservableProperty] private long _totalBytes;
 
+    // ==================== FILTERED STATISTICS (Total/Filtered display pattern) ====================
+
+    /// <summary>
+    /// Filtered packet count (from global filter application)
+    /// </summary>
+    [ObservableProperty] private long _filteredTotalPackets;
+
+    /// <summary>
+    /// Unfiltered packet count (stored on first load, before any filters)
+    /// </summary>
+    [ObservableProperty] private long _unfilteredTotalPackets;
+
+    /// <summary>
+    /// Unfiltered byte count (stored on first load, before any filters)
+    /// </summary>
+    [ObservableProperty] private long _unfilteredTotalBytes;
+
+    /// <summary>
+    /// Indicates if global filter is active
+    /// </summary>
+    [ObservableProperty] private bool _isFilterActive;
+
+    /// <summary>
+    /// Percentage of packets shown after filtering
+    /// </summary>
+    public double FilteredPacketsPercentage => UnfilteredTotalPackets > 0
+        ? (FilteredTotalPackets * 100.0 / UnfilteredTotalPackets)
+        : 100;
+
     // Continent traffic statistics
     [ObservableProperty] private string _northAmericaTraffic = "0 packets";
     [ObservableProperty] private string _southAmericaTraffic = "0 packets";
@@ -284,5 +313,45 @@ public partial class CountryStatisticsViewModel : ObservableObject
     public NetworkStatistics? GetCurrentStatistics()
     {
         return _currentStatistics;
+    }
+
+    /// <summary>
+    /// Stores unfiltered totals for Total/Filtered display pattern.
+    /// Call this when data is first loaded, before any filters are applied.
+    /// </summary>
+    /// <param name="actualPackets">The ACTUAL packet count from statistics.TotalPackets (not GeolocatedPackets which is doubled)</param>
+    /// <param name="actualBytes">The ACTUAL byte count from statistics.TotalBytes (not GeolocatedBytes which is doubled)</param>
+    public void StoreUnfilteredTotals(long actualPackets, long actualBytes)
+    {
+        // CRITICAL: Use the actual packet/byte count from the original statistics,
+        // NOT TotalPackets/TotalBytes which may contain GeolocatedPackets (doubled count)
+        UnfilteredTotalPackets = actualPackets;
+        UnfilteredTotalBytes = actualBytes;
+        IsFilterActive = false;
+        DebugLogger.Log($"[CountryStatisticsViewModel] Stored unfiltered totals: {UnfilteredTotalPackets:N0} packets, {UnfilteredTotalBytes:N0} bytes (actual, not doubled)");
+    }
+
+    /// <summary>
+    /// Sets filtered state for Total/Filtered display pattern.
+    /// Call this when global filters are applied.
+    /// </summary>
+    public void SetFilteredState(long filteredPacketCount, bool isFiltered)
+    {
+        FilteredTotalPackets = filteredPacketCount;
+        IsFilterActive = isFiltered;
+        OnPropertyChanged(nameof(FilteredPacketsPercentage));
+        DebugLogger.Log($"[CountryStatisticsViewModel] SetFilteredState: {filteredPacketCount:N0} packets (isFiltered={isFiltered}, {FilteredPacketsPercentage:F1}%)");
+    }
+
+    /// <summary>
+    /// Clears filtered state, restoring unfiltered display.
+    /// Call when filters are cleared.
+    /// </summary>
+    public void ClearFilteredState()
+    {
+        FilteredTotalPackets = UnfilteredTotalPackets;
+        IsFilterActive = false;
+        OnPropertyChanged(nameof(FilteredPacketsPercentage));
+        DebugLogger.Log("[CountryStatisticsViewModel] Cleared filtered state");
     }
 }

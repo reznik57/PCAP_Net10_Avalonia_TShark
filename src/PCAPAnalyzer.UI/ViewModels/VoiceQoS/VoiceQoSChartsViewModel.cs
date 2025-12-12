@@ -165,11 +165,19 @@ namespace PCAPAnalyzer.UI.ViewModels.VoiceQoS
             _cachedDataPoints = dataPoints;
             CalculatePercentileStatistics(dataPoints);
 
-            // Update time range display
+            // Update time range display and lock X-axis to prevent rescaling on highlight
             if (timeSeriesData.StartTime >= DateTime.MinValue.AddDays(1) &&
                 timeSeriesData.EndTime <= DateTime.MaxValue.AddDays(-1))
             {
                 TimeRange = $"{timeSeriesData.StartTime:HH:mm:ss} - {timeSeriesData.EndTime:HH:mm:ss}";
+
+                // Lock X-axis range to prevent rescaling when highlight series are added
+                if (XAxes.Length > 0)
+                {
+                    var padding = (timeSeriesData.EndTime - timeSeriesData.StartTime).Ticks * 0.02; // 2% padding
+                    XAxes[0].MinLimit = timeSeriesData.StartTime.Ticks - padding;
+                    XAxes[0].MaxLimit = timeSeriesData.EndTime.Ticks + padding;
+                }
             }
             else
             {

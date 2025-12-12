@@ -215,7 +215,7 @@ public sealed class DataExfiltrationDetector : ISpecializedDetector
                         DetectorName = Name,
                         SourceIP = source.Key ?? "",
                         Protocol = sourcePackets.First().Protocol.ToString(),
-                        AffectedFrames = sourcePackets.Select(p => (long)p.FrameNumber).ToList(),
+                        AffectedFrames = sourcePackets.Select(p => (long)p.FrameNumber).Take(100).ToList(),
                         Metrics = new Dictionary<string, object>
                         {
                             { "EncodedPackets", sourcePackets.Count },

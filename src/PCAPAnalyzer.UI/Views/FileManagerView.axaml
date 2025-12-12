@@ -589,43 +589,56 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="local:AnalysisProgressStage">
-                                <!-- Compact pill badge -->
+                                <!-- Stage pill with optional subtask detail row -->
                                 <Border Background="{DynamicResource BackgroundCard}"
                                         BorderBrush="{Binding StateColor}"
                                         BorderThickness="1"
-                                        CornerRadius="16"
-                                        Padding="12,6"
-                                        Margin="0,0,8,8">
+                                        CornerRadius="12"
+                                        Padding="12,8"
+                                        Margin="0,0,8,8"
+                                        MinWidth="160">
                                     <ToolTip.Tip>
                                         <StackPanel Spacing="4" MaxWidth="300">
                                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
                                             <TextBlock Text="{Binding DisplayDetail}" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}"/>
                                         </StackPanel>
                                     </ToolTip.Tip>
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <!-- Status icon -->
-                                        <TextBlock Text="{Binding StateIcon}"
-                                                  FontSize="{StaticResource FontSizeBase}"
-                                                  Foreground="{Binding StateColor}"
-                                                  VerticalAlignment="Center"
-                                                  Classes="StageIcon"
-                                                  Classes.ActiveStageIcon="{Binding State, Converter={StaticResource EnumEqualsConverter}, ConverterParameter={x:Static local:AnalysisStageState.Active}}"/>
-                                        <!-- Stage name -->
-                                        <TextBlock Text="{Binding Name}"
-                                                  FontSize="{StaticResource FontSizeSmall}"
-                                                  FontWeight="Medium"
-                                                  Foreground="{DynamicResource TextPrimaryBrush}"
-                                                  VerticalAlignment="Center"/>
-                                        <!-- Time badge -->
-                                        <Border Background="{DynamicResource BackgroundElevated}"
-                                                CornerRadius="8"
-                                                Padding="6,2"
-                                                IsVisible="{Binding ElapsedTime, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
-                                            <TextBlock Text="{Binding ElapsedTime}"
-                                                      FontSize="{StaticResource FontSizeXS}"
-                                                      FontWeight="SemiBold"
-                                                      Foreground="{DynamicResource SlackInfo}"/>
-                                        </Border>
+                                    <StackPanel Spacing="4">
+                                        <!-- Row 1: Icon + Name + Time -->
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <!-- Status icon -->
+                                            <TextBlock Text="{Binding StateIcon}"
+                                                      FontSize="{StaticResource FontSizeBase}"
+                                                      Foreground="{Binding StateColor}"
+                                                      VerticalAlignment="Center"
+                                                      Classes="StageIcon"
+                                                      Classes.ActiveStageIcon="{Binding State, Converter={StaticResource EnumEqualsConverter}, ConverterParameter={x:Static local:AnalysisStageState.Active}}"/>
+                                            <!-- Stage name -->
+                                            <TextBlock Text="{Binding Name}"
+                                                      FontSize="{StaticResource FontSizeSmall}"
+                                                      FontWeight="Medium"
+                                                      Foreground="{DynamicResource TextPrimaryBrush}"
+                                                      VerticalAlignment="Center"/>
+                                            <!-- Time badge -->
+                                            <Border Background="{DynamicResource BackgroundElevated}"
+                                                    CornerRadius="8"
+                                                    Padding="6,2"
+                                                    IsVisible="{Binding ElapsedTime, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                                <TextBlock Text="{Binding ElapsedTime}"
+                                                          FontSize="{StaticResource FontSizeXS}"
+                                                          FontWeight="SemiBold"
+                                                          Foreground="{DynamicResource SlackInfo}"/>
+                                            </Border>
+                                        </StackPanel>
+                                        <!-- Row 2: Subtask detail (only when active and has detail) -->
+                                        <TextBlock Text="{Binding Detail}"
+                                                  FontSize="{StaticResource FontSizeXS}"
+                                                  Foreground="{DynamicResource TextMutedBrush}"
+                                                  TextTrimming="CharacterEllipsis"
+                                                  MaxWidth="220"
+                                                  Margin="22,0,0,0"
+                                                  Opacity="0.8"
+                                                  IsVisible="{Binding IsActiveWithDetail}"/>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>

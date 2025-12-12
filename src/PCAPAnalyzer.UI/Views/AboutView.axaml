@@ -1,0 +1,339 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:PCAPAnalyzer.UI.ViewModels"
+             xmlns:models="using:PCAPAnalyzer.Core.Models"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="900"
+             x:Class="PCAPAnalyzer.UI.Views.AboutView"
+             x:DataType="vm:AboutViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.modern-card">
+            <Setter Property="Background" Value="{DynamicResource BackgroundDark}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BackgroundElevated}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="ClipToBounds" Value="True"/>
+        </Style>
+        <Style Selector="Border.stat-card">
+            <Setter Property="Background" Value="{DynamicResource BackgroundPanel}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BackgroundElevated}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="MinHeight" Value="80"/>
+        </Style>
+        <Style Selector="Border.section-header">
+            <Setter Property="Background" Value="{DynamicResource BackgroundPanel}"/>
+            <Setter Property="CornerRadius" Value="8,8,0,0"/>
+            <Setter Property="Padding" Value="16,12"/>
+        </Style>
+        <Style Selector="TextBlock.section-title">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.dep-name">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Medium"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.dep-version">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource AccentBlueBrush}"/>
+            <Setter Property="FontFamily" Value="Consolas, monospace"/>
+        </Style>
+        <Style Selector="TextBlock.dep-desc">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+        <Style Selector="Border.status-available">
+            <Setter Property="Background" Value="#1A22C55E"/>
+            <Setter Property="BorderBrush" Value="#22C55E"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,2"/>
+        </Style>
+        <Style Selector="Border.status-notfound">
+            <Setter Property="Background" Value="#1AEF4444"/>
+            <Setter Property="BorderBrush" Value="#EF4444"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="6,2"/>
+        </Style>
+        <Style Selector="Button.action-btn">
+            <Setter Property="Background" Value="{DynamicResource BackgroundElevated}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="Button.action-btn:pointerover">
+            <Setter Property="Background" Value="{DynamicResource BackgroundPanel}"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="{Binding ApplicationName}"
+                           FontSize="24" FontWeight="Bold"
+                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <TextBlock Text="{Binding ApplicationVersion, StringFormat='Version {0}'}"
+                               FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                    <TextBlock Text="{Binding RuntimeVersion}"
+                               FontSize="14" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+                <TextBlock Text="{Binding OsDescription}"
+                           FontSize="12" Foreground="{DynamicResource TextTertiaryBrush}"/>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Button Classes="action-btn" Command="{Binding CopyToClipboardCommand}" ToolTip.Tip="Copy all dependency info to clipboard">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="Copy" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button Classes="action-btn" Command="{Binding RefreshCommand}" ToolTip.Tip="Refresh dependency information">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="Refresh" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <!-- Statistics Cards -->
+        <Grid Grid.Row="1" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Classes="stat-card" Margin="0,0,8,0">
+                <StackPanel>
+                    <TextBlock Text="{Binding TotalDependencies}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource AccentBlueBrush}"/>
+                    <TextBlock Text="Total Dependencies" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Classes="stat-card" Margin="4,0">
+                <StackPanel>
+                    <TextBlock Text="{Binding AvailableCount}" FontSize="28" FontWeight="Bold" Foreground="#22C55E"/>
+                    <TextBlock Text="Available" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2" Classes="stat-card" Margin="8,0,0,0">
+                <StackPanel>
+                    <TextBlock Text="{Binding NotFoundCount}" FontSize="28" FontWeight="Bold" Foreground="#EF4444"/>
+                    <TextBlock Text="Not Found" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Dependency Sections -->
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="16">
+                <!-- External Tools (Most Important) -->
+                <Border Classes="modern-card">
+                    <StackPanel>
+                        <Border Classes="section-header">
+                            <Grid>
+                                <TextBlock Classes="section-title" Text="External Tools"/>
+                                <TextBlock Text="{Binding ExternalTools.Count, StringFormat='{}{0} items'}"
+                                           HorizontalAlignment="Right" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Grid>
+                        </Border>
+                        <ItemsControl ItemsSource="{Binding ExternalTools}" Margin="0,8,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:DependencyInfo">
+                                    <Border Padding="16,10" BorderThickness="0,0,0,1"
+                                            BorderBrush="{DynamicResource BackgroundElevated}">
+                                        <Grid ColumnDefinitions="*,Auto,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="2">
+                                                <TextBlock Classes="dep-name" Text="{Binding Name}"/>
+                                                <TextBlock Classes="dep-desc" Text="{Binding Description}"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Classes="dep-version" Text="{Binding Version}"
+                                                       VerticalAlignment="Center" Margin="16,0"/>
+                                            <Border Grid.Column="2"
+                                                    Classes.status-available="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:DependencyStatus.Available}}"
+                                                    Classes.status-notfound="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:DependencyStatus.NotFound}}">
+                                                <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="Medium"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Data Files -->
+                <Border Classes="modern-card">
+                    <StackPanel>
+                        <Border Classes="section-header">
+                            <Grid>
+                                <TextBlock Classes="section-title" Text="Data Files"/>
+                                <TextBlock Text="{Binding DataFiles.Count, StringFormat='{}{0} items'}"
+                                           HorizontalAlignment="Right" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Grid>
+                        </Border>
+                        <ItemsControl ItemsSource="{Binding DataFiles}" Margin="0,8,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:DependencyInfo">
+                                    <Border Padding="16,10" BorderThickness="0,0,0,1"
+                                            BorderBrush="{DynamicResource BackgroundElevated}">
+                                        <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="2">
+                                                <TextBlock Classes="dep-name" Text="{Binding Name}"/>
+                                                <TextBlock Classes="dep-desc" Text="{Binding Description}"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Classes="dep-version" Text="{Binding Version}"
+                                                       VerticalAlignment="Center" Margin="16,0"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding License}" FontSize="11"
+                                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                                       VerticalAlignment="Center" Margin="8,0"/>
+                                            <Border Grid.Column="3"
+                                                    Classes.status-available="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:DependencyStatus.Available}}"
+                                                    Classes.status-notfound="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static models:DependencyStatus.NotFound}}">
+                                                <TextBlock Text="{Binding Status}" FontSize="11" FontWeight="Medium"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"/>
+                                            </Border>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Framework -->
+                <Border Classes="modern-card">
+                    <StackPanel>
+                        <Border Classes="section-header">
+                            <Grid>
+                                <TextBlock Classes="section-title" Text="Framework"/>
+                                <TextBlock Text="{Binding FrameworkDependencies.Count, StringFormat='{}{0} items'}"
+                                           HorizontalAlignment="Right" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Grid>
+                        </Border>
+                        <ItemsControl ItemsSource="{Binding FrameworkDependencies}" Margin="0,8,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:DependencyInfo">
+                                    <Border Padding="16,10" BorderThickness="0,0,0,1"
+                                            BorderBrush="{DynamicResource BackgroundElevated}">
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="2">
+                                                <TextBlock Classes="dep-name" Text="{Binding Name}"/>
+                                                <TextBlock Classes="dep-desc" Text="{Binding Description}"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Classes="dep-version" Text="{Binding Version}"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- UI Framework -->
+                <Border Classes="modern-card">
+                    <StackPanel>
+                        <Border Classes="section-header">
+                            <Grid>
+                                <TextBlock Classes="section-title" Text="UI Framework"/>
+                                <TextBlock Text="{Binding UiFrameworkDependencies.Count, StringFormat='{}{0} items'}"
+                                           HorizontalAlignment="Right" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Grid>
+                        </Border>
+                        <ItemsControl ItemsSource="{Binding UiFrameworkDependencies}" Margin="0,8,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:DependencyInfo">
+                                    <Border Padding="16,10" BorderThickness="0,0,0,1"
+                                            BorderBrush="{DynamicResource BackgroundElevated}">
+                                        <Grid ColumnDefinitions="*,Auto,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="2">
+                                                <TextBlock Classes="dep-name" Text="{Binding Name}"/>
+                                                <TextBlock Classes="dep-desc" Text="{Binding Description}"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding License}" FontSize="11"
+                                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                                       VerticalAlignment="Center" Margin="16,0"/>
+                                            <TextBlock Grid.Column="2" Classes="dep-version" Text="{Binding Version}"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+
+                <!-- Core Libraries -->
+                <Border Classes="modern-card">
+                    <StackPanel>
+                        <Border Classes="section-header">
+                            <Grid>
+                                <TextBlock Classes="section-title" Text="Core Libraries"/>
+                                <TextBlock Text="{Binding CoreLibraries.Count, StringFormat='{}{0} items'}"
+                                           HorizontalAlignment="Right" FontSize="12"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"/>
+                            </Grid>
+                        </Border>
+                        <ItemsControl ItemsSource="{Binding CoreLibraries}" Margin="0,8,0,8">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:DependencyInfo">
+                                    <Border Padding="16,10" BorderThickness="0,0,0,1"
+                                            BorderBrush="{DynamicResource BackgroundElevated}">
+                                        <Grid ColumnDefinitions="*,Auto,Auto">
+                                            <StackPanel Grid.Column="0" Spacing="2">
+                                                <TextBlock Classes="dep-name" Text="{Binding Name}"/>
+                                                <TextBlock Classes="dep-desc" Text="{Binding Description}"/>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="1" Text="{Binding License}" FontSize="11"
+                                                       Foreground="{DynamicResource TextTertiaryBrush}"
+                                                       VerticalAlignment="Center" Margin="16,0"/>
+                                            <TextBlock Grid.Column="2" Classes="dep-version" Text="{Binding Version}"
+                                                       VerticalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Loading Overlay -->
+        <Border Grid.RowSpan="3" Background="#80000000" IsVisible="{Binding IsLoading}">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="16">
+                <ProgressBar IsIndeterminate="True" Width="200"/>
+                <TextBlock Text="Loading dependencies..." Foreground="{DynamicResource TextPrimaryBrush}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

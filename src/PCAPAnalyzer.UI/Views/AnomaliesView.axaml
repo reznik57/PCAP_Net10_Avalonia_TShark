@@ -66,68 +66,8 @@
                              Height="4"
                              Foreground="{DynamicResource AccentPrimary}"/>
 
-                <!-- KPI Row -->
-                <Grid ColumnDefinitions="*,*,*,*,*,*">
-                    <!-- Total Anomalies -->
-                    <Border Classes="kpi-card" Grid.Column="0" Margin="0,0,8,0">
-                        <StackPanel>
-                            <TextBlock Text="{Binding Statistics.TotalAnomalies}"
-                                       Classes="kpi-value"
-                                       Foreground="{DynamicResource AccentPrimary}"/>
-                            <TextBlock Text="Total Anomalies" Classes="kpi-label"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Critical -->
-                    <Border Classes="kpi-card" Grid.Column="1" Margin="4,0">
-                        <StackPanel>
-                            <TextBlock Text="{Binding Statistics.CriticalCount}"
-                                       Classes="kpi-value"
-                                       Foreground="{DynamicResource SlackDanger}"/>
-                            <TextBlock Text="Critical" Classes="kpi-label"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- High -->
-                    <Border Classes="kpi-card" Grid.Column="2" Margin="4,0">
-                        <StackPanel>
-                            <TextBlock Text="{Binding Statistics.HighCount}"
-                                       Classes="kpi-value"
-                                       Foreground="{DynamicResource SlackWarning}"/>
-                            <TextBlock Text="High" Classes="kpi-label"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Unique Sources -->
-                    <Border Classes="kpi-card" Grid.Column="3" Margin="4,0">
-                        <StackPanel>
-                            <TextBlock Text="{Binding Statistics.UniqueSourceIPs}"
-                                       Classes="kpi-value"
-                                       Foreground="{DynamicResource SlackInfo}"/>
-                            <TextBlock Text="Unique Sources" Classes="kpi-label"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Unique Targets -->
-                    <Border Classes="kpi-card" Grid.Column="4" Margin="4,0">
-                        <StackPanel>
-                            <TextBlock Text="{Binding Statistics.UniqueTargetIPs}"
-                                       Classes="kpi-value"
-                                       Foreground="{DynamicResource SlackDanger}"/>
-                            <TextBlock Text="Unique Targets" Classes="kpi-label"/>
-                        </StackPanel>
-                    </Border>
-
-                    <!-- Time Span -->
-                    <Border Classes="kpi-card" Grid.Column="5" Margin="8,0,0,0">
-                        <StackPanel>
-                            <TextBlock Text="{Binding Statistics.TimeSpanFormatted}"
-                                       Classes="kpi-value"
-                                       Foreground="{DynamicResource AccentSecondary}"/>
-                            <TextBlock Text="Time Span" Classes="kpi-label"/>
-                        </StackPanel>
-                    </Border>
-                </Grid>
+                <!-- Anomaly Overview - Using unified StatsBarControl -->
+                <ctrl:StatsBarControl DataContext="{Binding AnomaliesStatsBar}" Margin="0,0,0,20"/>
 
                 <!-- Anomaly Timeline (Hero Chart) - Dashboard Style -->
                 <Border Classes="modern-card-unified" MinHeight="400">

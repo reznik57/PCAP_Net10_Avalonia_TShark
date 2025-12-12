@@ -331,13 +331,14 @@ namespace PCAPAnalyzer.Core.Orchestration
             }, cancellationToken);
 
             // Threat detection using UnifiedAnomalyDetectionService
-            // Maps to 65-80% overall
+            // Maps to 65-80% overall (within parallel phase 55-73%)
             var threatsTask = Task.Run(async () =>
             {
                 coordinator.ReportThreats(0, "Starting threat detection...");
 
                 // Use DetectAllAnomaliesAsync from IUnifiedAnomalyDetectionService
-                var anomalies = await _anomalyService.DetectAllAnomaliesAsync(allPackets, null); // Don't pass child progress
+                // ✅ FIX: Pass progress callback to get real-time detector feedback
+                var anomalies = await _anomalyService.DetectAllAnomaliesAsync(allPackets, threatsProgress);
 
                 // Convert NetworkAnomaly to SecurityThreat for compatibility
                 var threats = ConvertAномaliesToThreats(anomalies);

@@ -25,6 +25,10 @@ public partial class ThreatsFilterTabViewModel : ObservableObject
     public ObservableCollection<FilterChipViewModel> SeverityChips { get; } = [];
     public ObservableCollection<FilterChipViewModel> ThreatCategoryChips { get; } = [];
 
+    // ==================== SECURITY PACKET FILTERS ====================
+    /// <summary>Security-related packet filters: deprecated crypto, insecure protocols, cleartext auth</summary>
+    public ObservableCollection<FilterChipViewModel> SecurityChips { get; } = [];
+
     // ==================== QUICK FILTER TOGGLES (OR logic) ====================
     [ObservableProperty] private bool _showCriticalOnly;
     [ObservableProperty] private bool _showHighOnly;
@@ -107,12 +111,25 @@ public partial class ThreatsFilterTabViewModel : ObservableObject
         var categories = new[] { "Network", "Application", "Crypto", "Exfiltration", "IoT", "VoIP" };
         foreach (var c in categories)
             ThreatCategoryChips.Add(new FilterChipViewModel(c));
+
+        // Security packet filters with user-friendly display names
+        // Key (internal) → DisplayName (UI)
+        SecurityChips.Add(new FilterChipViewModel("Telnet", "Telnet"));
+        SecurityChips.Add(new FilterChipViewModel("Insecure", "Insecure"));
+        SecurityChips.Add(new FilterChipViewModel("CleartextAuth", "Cleartext Auth"));
+        SecurityChips.Add(new FilterChipViewModel("TlsV10", "TLS v1.0"));
+        SecurityChips.Add(new FilterChipViewModel("TlsV11", "TLS v1.1"));
+        SecurityChips.Add(new FilterChipViewModel("ObsoleteCrypto", "SSL/Obsolete"));
+        SecurityChips.Add(new FilterChipViewModel("SSHv1", "SSH v1"));
+        SecurityChips.Add(new FilterChipViewModel("SmbV1", "SMB v1"));
+        SecurityChips.Add(new FilterChipViewModel("Encrypted", "Encrypted"));
     }
 
     public void SetMode(FilterChipMode mode)
     {
         foreach (var chip in SeverityChips) chip.SetMode(mode);
         foreach (var chip in ThreatCategoryChips) chip.SetMode(mode);
+        foreach (var chip in SecurityChips) chip.SetMode(mode);
     }
 
     public (List<string> Severities, List<string> Categories) GetPendingFilters()
@@ -162,6 +179,7 @@ public partial class ThreatsFilterTabViewModel : ObservableObject
     {
         foreach (var chip in SeverityChips) chip.Reset();
         foreach (var chip in ThreatCategoryChips) chip.Reset();
+        foreach (var chip in SecurityChips) chip.Reset();
         ClearQuickFilters();
     }
 

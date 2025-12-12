@@ -3,6 +3,7 @@ using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using PCAPAnalyzer.Core.Models;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Utilities;
 
 namespace PCAPAnalyzer.UI.ViewModels;
 
@@ -113,5 +114,65 @@ public partial class DashboardViewModel
         Charts.TimelineSeries.Clear();
         Charts.ThroughputSeries.Clear();
         Charts.ProtocolSeries.Clear();
+        NetworkStatsBar.ClearStats();
+    }
+
+    // ==================== NETWORK STATS BAR (Total/Filtered Pattern) ====================
+
+    /// <summary>
+    /// Updates NetworkStatsBar with unified Total/Filtered display pattern.
+    /// Call after filtering or when statistics change.
+    /// </summary>
+    public void UpdateNetworkStatsBar()
+    {
+        NetworkStatsBar.ClearStats();
+
+        // Get totals from unfiltered statistics, filtered from current
+        var totalPackets = _unfilteredStatistics?.TotalPackets ?? Statistics.TotalPackets;
+        var totalBytes = _unfilteredStatistics?.TotalBytes ?? 0L;
+        var totalIPs = _unfilteredStatistics?.AllUniqueIPs.Count ?? Statistics.UniqueIPs;
+        var totalPorts = _unfilteredStatistics?.UniquePortCount ?? Statistics.DifferentPorts;
+        var totalStreams = _unfilteredStatistics?.TotalStreamCount ?? Statistics.ActiveConversations;
+
+        var filteredPackets = _filteredStatistics?.TotalPackets ?? Statistics.FilteredTotalPackets;
+        var filteredBytes = _filteredStatistics?.TotalBytes ?? 0L;
+        var filteredIPs = _filteredStatistics?.AllUniqueIPs.Count ?? Statistics.FilteredUniqueIPs;
+        var filteredPorts = _filteredStatistics?.UniquePortCount ?? Statistics.FilteredDifferentPorts;
+        var filteredStreams = _filteredStatistics?.TotalStreamCount ?? Statistics.FilteredConversationCount;
+
+        // If no filter active, show unfiltered totals only
+        if (!IsFilterActive)
+        {
+            filteredPackets = totalPackets;
+            filteredBytes = totalBytes;
+            filteredIPs = totalIPs;
+            filteredPorts = totalPorts;
+            filteredStreams = totalStreams;
+        }
+
+        // Packets
+        TabStatsHelper.AddNumericStat(NetworkStatsBar, "PACKETS", "📦",
+            totalPackets, filteredPackets, IsFilterActive,
+            ThemeColorHelper.GetColorHex("StatPackets", "#58A6FF"));
+
+        // Traffic
+        TabStatsHelper.AddBytesStat(NetworkStatsBar, "TRAFFIC", "💾",
+            totalBytes, filteredBytes, IsFilterActive,
+            ThemeColorHelper.GetColorHex("StatBytes", "#A371F7"));
+
+        // Unique IPs
+        TabStatsHelper.AddNumericStat(NetworkStatsBar, "UNIQUE IPs", "🌐",
+            totalIPs, filteredIPs, IsFilterActive,
+            ThemeColorHelper.GetColorHex("StatIPs", "#7EE787"));
+
+        // Streams
+        TabStatsHelper.AddNumericStat(NetworkStatsBar, "STREAMS", "💬",
+            totalStreams, filteredStreams, IsFilterActive,
+            ThemeColorHelper.GetColorHex("StatConversations", "#F0883E"));
+
+        // Destination Ports
+        TabStatsHelper.AddNumericStat(NetworkStatsBar, "DEST PORTS", "🔌",
+            totalPorts, filteredPorts, IsFilterActive,
+            ThemeColorHelper.GetColorHex("StatPorts", "#79C0FF"));
     }
 }

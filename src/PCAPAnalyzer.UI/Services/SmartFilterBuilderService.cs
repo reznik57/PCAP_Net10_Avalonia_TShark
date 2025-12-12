@@ -1,9 +1,16 @@
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.UI.Interfaces;
 using PCAPAnalyzer.UI.Models;
+using PCAPAnalyzer.UI.Services.Filters;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+
+// Type alias for extracted FilterDomain enum
+using FilterDomain = PCAPAnalyzer.UI.Services.Filters.FilterDomainClassifier.FilterDomain;
 
 namespace PCAPAnalyzer.UI.Services
 {
@@ -12,17 +19,32 @@ namespace PCAPAnalyzer.UI.Services
     /// Implements complex filter logic including INCLUDE/EXCLUDE groups, AND/OR combinations,
     /// port range patterns, and protocol matching.
     ///
-    /// Extracted from MainWindowViewModel (250+ lines) to enable reuse across all analysis tabs:
-    /// - Packet Analysis
-    /// - Dashboard
-    /// - Security Threats
-    /// - Voice/QoS
-    /// - Country Traffic
+    /// Refactored to delegate to extracted components:
+    /// - QuickFilterPredicateRegistry: 100+ quick filter predicates
+    /// - GeoDataConstants: Continent/country geographic data
+    /// - FilterDomainClassifier: Domain classification for OR/AND logic
     ///
-    /// Each tab can now have the same sophisticated filtering UI without code duplication.
+    /// Used by all analysis tabs:
+    /// - Packet Analysis, Dashboard, Security Threats, Voice/QoS, Country Traffic
     /// </summary>
     public sealed class SmartFilterBuilderService : ISmartFilterBuilder
     {
+        private readonly IGeoIPService? _geoIPService;
+
+        // Thread-safe cache for IP -> country code lookups
+        private readonly ConcurrentDictionary<string, string> _ipCountryCache = new();
+
+        // Use extracted type alias for cleaner code
+        private static FilterDomainClassifier.FilterDomain GetQuickFilterDomain(string quickFilterCodeName)
+            => FilterDomainClassifier.GetDomain(quickFilterCodeName);
+
+        /// <summary>
+        /// Creates a new SmartFilterBuilderService with optional GeoIP service for region filtering.
+        /// </summary>
+        public SmartFilterBuilderService(IGeoIPService? geoIPService = null)
+        {
+            _geoIPService = geoIPService;
+        }
         /// <summary>
         /// Builds a combined PacketFilter from filter groups and individual chips.
         ///
@@ -117,58 +139,386 @@ namespace PCAPAnalyzer.UI.Services
         }
 
         /// <summary>
-        /// Builds PacketFilters from a FilterGroup's fields.
-        /// Each non-empty field (SourceIP, DestinationIP, PortRange, Protocol) creates a separate filter.
-        /// These filters are later combined with AND logic to enforce group semantics.
+        /// Builds PacketFilters from a FilterGroup's fields using domain-based grouping.
+        ///
+        /// DOMAIN-BASED LOGIC:
+        /// - Filters within the SAME domain use OR logic (e.g., SourceIP OR Country OR Region)
+        /// - Filters across DIFFERENT domains use AND logic (e.g., IP-domain AND Port-domain)
+        ///
+        /// This allows intuitive filter combinations like:
+        /// - "From Germany OR From USA" (both in IP domain → OR)
+        /// - "From Germany AND Port 443" (IP domain AND Port domain → AND)
+        /// - "Source IP: 8.8.8.8 OR Country: DE" (both target IPs → OR)
         /// </summary>
         /// <param name="group">Filter group containing user-specified criteria</param>
-        /// <returns>List of PacketFilters, one per populated field (0-4 filters)</returns>
+        /// <returns>List of PacketFilters, one per domain (0-N filters, each domain OR'd internally)</returns>
         private List<PacketFilter> BuildFilterFromGroup(FilterGroup group)
         {
-            var groupFilters = new List<PacketFilter>();
+            // Collect all filters with their domain classification
+            var domainFilters = new Dictionary<FilterDomain, List<(PacketFilter Filter, string Description)>>();
 
+            void AddToDomain(FilterDomain domain, PacketFilter filter, string description)
+            {
+                if (!domainFilters.ContainsKey(domain))
+                    domainFilters[domain] = [];
+                domainFilters[domain].Add((filter, description));
+            }
+
+            // === SPECIFIC IP FILTERS: SourceIP and DestIP in separate domains (AND logic) ===
+            // When user specifies BOTH Source and Dest IP, they want a specific traffic path
+            // (Src=X AND Dest=Y), not any traffic involving either IP (Src=X OR Dest=Y).
             if (!string.IsNullOrWhiteSpace(group.SourceIP))
             {
-                groupFilters.Add(new PacketFilter
+                AddToDomain(FilterDomain.SourceIpSpecific, new PacketFilter
                 {
                     SourceIpFilter = group.SourceIP,
                     Description = $"Src IP: {group.SourceIP}"
-                });
+                }, $"Src IP: {group.SourceIP}");
             }
 
             if (!string.IsNullOrWhiteSpace(group.DestinationIP))
             {
-                groupFilters.Add(new PacketFilter
+                AddToDomain(FilterDomain.DestIpSpecific, new PacketFilter
                 {
                     DestinationIpFilter = group.DestinationIP,
                     Description = $"Dest IP: {group.DestinationIP}"
-                });
+                }, $"Dest IP: {group.DestinationIP}");
             }
 
+            // === GENERAL IP ADDRESS DOMAIN: Regions, Countries (check either endpoint, OR logic) ===
+
+            if (group.Regions?.Count > 0)
+            {
+                var regionFilter = BuildRegionFilter(group.Regions);
+                if (regionFilter is not null)
+                {
+                    AddToDomain(FilterDomain.IpAddress, regionFilter, regionFilter.Description ?? "Region");
+                }
+            }
+
+            if (group.Countries?.Count > 0)
+            {
+                var countryFilter = BuildCountryFilter(group.Countries);
+                if (countryFilter is not null)
+                {
+                    AddToDomain(FilterDomain.IpAddress, countryFilter, countryFilter.Description ?? "Country");
+                }
+            }
+
+            // === PORT DOMAIN ===
             if (!string.IsNullOrWhiteSpace(group.PortRange))
             {
-                // ✅ DEFENSIVE: Trim whitespace to protect against UI model changes
                 var portTrimmed = group.PortRange.Trim();
-                groupFilters.Add(new PacketFilter
+                AddToDomain(FilterDomain.Port, new PacketFilter
                 {
                     CustomPredicate = p => MatchesPortPattern(p.SourcePort, portTrimmed) ||
                                            MatchesPortPattern(p.DestinationPort, portTrimmed),
                     Description = $"Port: {portTrimmed}"
-                });
+                }, $"Port: {portTrimmed}");
             }
 
+            // === PROTOCOL DOMAIN ===
             if (!string.IsNullOrWhiteSpace(group.Protocol))
             {
-                // ✅ DEFENSIVE: Trim whitespace to protect against UI model changes
                 var protocolTrimmed = group.Protocol.Trim();
-                groupFilters.Add(new PacketFilter
+                AddToDomain(FilterDomain.Transport, new PacketFilter
                 {
                     CustomPredicate = p => MatchesProtocol(p, protocolTrimmed),
                     Description = $"Protocol: {protocolTrimmed}"
-                });
+                }, $"Protocol: {protocolTrimmed}");
             }
 
-            return groupFilters;
+            // === DIRECTION DOMAIN ===
+            if (group.Directions?.Count > 0)
+            {
+                var directionFilter = BuildDirectionFilter(group.Directions);
+                if (directionFilter is not null)
+                {
+                    AddToDomain(FilterDomain.Direction, directionFilter, directionFilter.Description ?? "Direction");
+                }
+            }
+
+            // === QUICK FILTERS: Classify each by its domain ===
+            if (group.QuickFilters?.Count > 0)
+            {
+                // Group quick filters by their domain
+                var quickFiltersByDomain = group.QuickFilters
+                    .Select(qf => (Name: qf, Domain: GetQuickFilterDomain(qf), Predicate: GetQuickFilterPredicate(qf)))
+                    .Where(x => x.Predicate is not null)
+                    .GroupBy(x => x.Domain);
+
+                foreach (var domainGroup in quickFiltersByDomain)
+                {
+                    var predicates = domainGroup.Select(x => x.Predicate!).ToList();
+                    var names = domainGroup.Select(x => x.Name).ToList();
+
+                    // Create OR filter for all quick filters in this domain
+                    var filter = new PacketFilter
+                    {
+                        CustomPredicate = p => predicates.Any(pred => pred(p)),
+                        Description = string.Join(" OR ", names)
+                    };
+                    AddToDomain(domainGroup.Key, filter, string.Join(" OR ", names));
+                }
+            }
+
+            // === COMBINE: OR within domain, result in list for AND across domains ===
+            var result = new List<PacketFilter>();
+
+            foreach (var kvp in domainFilters)
+            {
+                var filtersInDomain = kvp.Value;
+                if (filtersInDomain.Count == 0) continue;
+
+                if (filtersInDomain.Count == 1)
+                {
+                    // Single filter in domain - use directly
+                    result.Add(filtersInDomain[0].Filter);
+                }
+                else
+                {
+                    // Multiple filters in same domain - OR them together
+                    var domainDescription = string.Join(" OR ", filtersInDomain.Select(f => f.Description));
+                    var domainPredicates = filtersInDomain.Select(f => f.Filter).ToList();
+
+                    result.Add(new PacketFilter
+                    {
+                        CombinedFilters = domainPredicates,
+                        CombineMode = FilterCombineMode.Or,
+                        Description = $"({domainDescription})"
+                    });
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Builds a filter for multiple regions with OR logic between them.
+        /// Example: "Europe OR Asia" matches packets from either region.
+        /// Delegates to GeoDataConstants for geographic lookups.
+        /// </summary>
+        private PacketFilter? BuildRegionFilter(List<string> regions)
+        {
+            if (regions.Count == 0) return null;
+
+            // Delegate to GeoDataConstants for country code lookup
+            var regionCountryCodes = GeoDataConstants.GetCountriesForRegions(regions);
+
+            if (regionCountryCodes.Count == 0) return null;
+
+            return new PacketFilter
+            {
+                CustomPredicate = p => PacketMatchesCountryCodes(p, regionCountryCodes),
+                Description = $"Region: {string.Join(" OR ", regions)}"
+            };
+        }
+
+        /// <summary>
+        /// Builds a filter for multiple countries with OR logic between them.
+        /// Example: "DE OR US" matches packets from Germany or USA.
+        /// </summary>
+        private PacketFilter? BuildCountryFilter(List<string> countries)
+        {
+            if (countries.Count == 0) return null;
+
+            var countryCodes = new HashSet<string>(countries, StringComparer.OrdinalIgnoreCase);
+
+            return new PacketFilter
+            {
+                CustomPredicate = p => PacketMatchesCountryCodes(p, countryCodes),
+                Description = $"Country: {string.Join(" OR ", countries)}"
+            };
+        }
+
+        /// <summary>
+        /// Builds a filter for traffic directions with OR logic between them.
+        /// Directions: Inbound (external->internal), Outbound (internal->external), Internal (internal<->internal)
+        /// </summary>
+        private static PacketFilter? BuildDirectionFilter(List<string> directions)
+        {
+            if (directions.Count == 0) return null;
+
+            var directionPredicates = new List<Func<PacketInfo, bool>>();
+
+            foreach (var direction in directions)
+            {
+                var pred = direction.ToUpperInvariant() switch
+                {
+                    "INBOUND" or "INCOMING" => (Func<PacketInfo, bool>)(p =>
+                        !Core.Services.NetworkFilterHelper.IsRFC1918(p.SourceIP) &&
+                        Core.Services.NetworkFilterHelper.IsRFC1918(p.DestinationIP)),
+                    "OUTBOUND" or "OUTGOING" => (Func<PacketInfo, bool>)(p =>
+                        Core.Services.NetworkFilterHelper.IsRFC1918(p.SourceIP) &&
+                        !Core.Services.NetworkFilterHelper.IsRFC1918(p.DestinationIP)),
+                    "INTERNAL" or "LOCAL" => (Func<PacketInfo, bool>)(p =>
+                        Core.Services.NetworkFilterHelper.IsRFC1918(p.SourceIP) &&
+                        Core.Services.NetworkFilterHelper.IsRFC1918(p.DestinationIP)),
+                    _ => null
+                };
+
+                if (pred is not null)
+                    directionPredicates.Add(pred);
+            }
+
+            if (directionPredicates.Count == 0) return null;
+
+            return new PacketFilter
+            {
+                CustomPredicate = p => directionPredicates.Any(pred => pred(p)),
+                Description = $"Direction: {string.Join(" OR ", directions)}"
+            };
+        }
+
+        /// <summary>
+        /// Checks if a packet's source or destination IP belongs to any of the specified country codes.
+        /// Uses GeoIP service with caching for efficient lookups.
+        /// </summary>
+        private bool PacketMatchesCountryCodes(PacketInfo packet, HashSet<string> countryCodes)
+        {
+            var srcCountry = GetCountryCodeForIP(packet.SourceIP);
+            var dstCountry = GetCountryCodeForIP(packet.DestinationIP);
+
+            return (srcCountry is not null && countryCodes.Contains(srcCountry)) ||
+                   (dstCountry is not null && countryCodes.Contains(dstCountry));
+        }
+
+        /// <summary>
+        /// Gets the country code for an IP address using cached GeoIP lookups.
+        /// Returns null for private/internal IPs or lookup failures.
+        /// </summary>
+        private string? GetCountryCodeForIP(string? ip)
+        {
+            if (string.IsNullOrWhiteSpace(ip)) return null;
+
+            // Check cache first
+            if (_ipCountryCache.TryGetValue(ip, out var cached))
+                return string.IsNullOrEmpty(cached) ? null : cached;
+
+            // Skip private IPs
+            if (Core.Services.NetworkFilterHelper.IsRFC1918(ip) ||
+                Core.Services.NetworkFilterHelper.IsLoopback(ip) ||
+                Core.Services.NetworkFilterHelper.IsLinkLocal(ip))
+            {
+                _ipCountryCache[ip] = "";
+                return null;
+            }
+
+            // Use GeoIP service if available
+            if (_geoIPService is not null)
+            {
+                try
+                {
+                    // Use synchronous lookup from cache (GeoIP service caches results)
+                    var location = _geoIPService.GetLocationAsync(ip).GetAwaiter().GetResult();
+                    var countryCode = location?.CountryCode?.ToUpperInvariant() ?? "";
+                    _ipCountryCache[ip] = countryCode;
+                    return string.IsNullOrEmpty(countryCode) ? null : countryCode;
+                }
+                catch
+                {
+                    _ipCountryCache[ip] = "";
+                    return null;
+                }
+            }
+
+            _ipCountryCache[ip] = "";
+            return null;
+        }
+
+        /// <summary>
+        /// Pre-warms the IP→Country cache for all unique IPs in the packet collection.
+        /// Runs GeoIP lookups in parallel batches to avoid blocking the UI thread.
+        /// MUST be called before applying region/country filters to avoid UI freeze.
+        /// </summary>
+        /// <param name="packets">Packets to extract unique IPs from</param>
+        /// <param name="progressCallback">Optional callback for progress updates (0.0 to 1.0)</param>
+        /// <returns>Number of IPs cached</returns>
+        public async Task<int> PreWarmCountryCacheAsync(
+            IEnumerable<PacketInfo> packets,
+            Action<double, int, int>? progressCallback = null)
+        {
+            if (_geoIPService is null)
+                return 0;
+
+            // Extract unique public IPs that aren't already cached
+            var uniqueIps = new HashSet<string>();
+            foreach (var packet in packets)
+            {
+                AddIfPublicAndNotCached(packet.SourceIP, uniqueIps);
+                AddIfPublicAndNotCached(packet.DestinationIP, uniqueIps);
+            }
+
+            if (uniqueIps.Count == 0)
+                return 0;
+
+            // Smaller batches (100) for smoother progress updates - trades raw speed for UX
+            // Each batch completes with await, naturally yielding to UI thread
+            const int batchSize = 100;
+            var ipList = uniqueIps.ToList();
+            var totalIps = ipList.Count;
+            var cachedCount = 0;
+
+            for (var i = 0; i < ipList.Count; i += batchSize)
+            {
+                var batch = ipList.Skip(i).Take(batchSize).ToList();
+                var tasks = batch.Select(async ip =>
+                {
+                    try
+                    {
+                        var location = await _geoIPService.GetLocationAsync(ip).ConfigureAwait(false);
+                        var countryCode = location?.CountryCode?.ToUpperInvariant() ?? "";
+                        _ipCountryCache[ip] = countryCode;
+                    }
+                    catch
+                    {
+                        _ipCountryCache[ip] = "";
+                    }
+                });
+
+                await Task.WhenAll(tasks).ConfigureAwait(false);
+                cachedCount += batch.Count;
+
+                // Report progress after each batch for smooth UX
+                // Progress is 0.0 to 1.0 representing cache-warming phase
+                var progress = (double)cachedCount / totalIps;
+                progressCallback?.Invoke(progress, cachedCount, totalIps);
+            }
+
+            return cachedCount;
+        }
+
+        /// <summary>
+        /// Adds an IP to the set if it's public (not private/loopback/link-local) and not already cached.
+        /// </summary>
+        private void AddIfPublicAndNotCached(string? ip, HashSet<string> targetSet)
+        {
+            if (string.IsNullOrWhiteSpace(ip))
+                return;
+
+            // Skip if already cached
+            if (_ipCountryCache.ContainsKey(ip))
+                return;
+
+            // Skip private/special IPs
+            if (Core.Services.NetworkFilterHelper.IsRFC1918(ip) ||
+                Core.Services.NetworkFilterHelper.IsLoopback(ip) ||
+                Core.Services.NetworkFilterHelper.IsLinkLocal(ip))
+            {
+                _ipCountryCache[ip] = ""; // Cache empty result for private IPs
+                return;
+            }
+
+            targetSet.Add(ip);
+        }
+
+        /// <summary>
+        /// Checks if a filter group contains region or country criteria that require GeoIP lookups.
+        /// Used to determine if cache pre-warming is needed before applying filters.
+        /// </summary>
+        public bool HasGeoIPCriteria(FilterGroup group)
+        {
+            return (group.Regions?.Count > 0) || (group.Countries?.Count > 0);
         }
 
         /// <summary>
@@ -227,379 +577,17 @@ namespace PCAPAnalyzer.UI.Services
 
         /// <summary>
         /// Gets a predicate for a quick filter by code name.
+        /// Delegates to QuickFilterPredicateRegistry for consistent behavior across all tabs.
+        ///
         /// This is the SINGLE SOURCE OF TRUTH for all quick filter predicates.
         /// Both ViewModels and the chip-based filter path use this method.
         /// </summary>
         /// <param name="quickFilterCodeName">The code name of the quick filter (e.g., "SYN", "TCP", "IPv4")</param>
         /// <returns>A predicate function, or null if the filter name is not recognized</returns>
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "CA1502:Avoid excessive complexity",
-            Justification = "Switch expression for quick filter types is intentionally comprehensive")]
         public static Func<PacketInfo, bool>? GetQuickFilterPredicate(string? quickFilterCodeName)
-        {
-            if (string.IsNullOrWhiteSpace(quickFilterCodeName))
-                return null;
+            => QuickFilterPredicateRegistry.GetPredicate(quickFilterCodeName);
 
-            return quickFilterCodeName switch
-            {
-                // ╔══════════════════════════════════════════════════════════════════╗
-                // ║                    IP ADDRESS CLASSIFICATION                      ║
-                // ╠══════════════════════════════════════════════════════════════════╣
-                // ║  Logical grouping for network analysts:                          ║
-                // ║  • Version: IPv4, IPv6                                           ║
-                // ║  • Scope: RFC1918 (private), PublicIP, APIPA (link-local)        ║
-                // ║  • Special: Loopback, LinkLocal, Anycast                         ║
-                // ║  • Delivery: Unicast, Multicast, Broadcast                       ║
-                // ╚══════════════════════════════════════════════════════════════════╝
-
-                // --- IP Version ---
-                "IPv4" => p => Core.Services.NetworkFilterHelper.IsIPv4(p.SourceIP) ||
-                               Core.Services.NetworkFilterHelper.IsIPv4(p.DestinationIP),
-                "IPv6" => p => Core.Services.NetworkFilterHelper.IsIPv6(p.SourceIP) ||
-                               Core.Services.NetworkFilterHelper.IsIPv6(p.DestinationIP),
-
-                // --- Address Scope ---
-                "RFC1918" => p => Core.Services.NetworkFilterHelper.IsRFC1918(p.SourceIP) ||
-                                  Core.Services.NetworkFilterHelper.IsRFC1918(p.DestinationIP),
-                "PublicIP" or "Public" => p => !Core.Services.NetworkFilterHelper.IsRFC1918(p.SourceIP) &&
-                                               !Core.Services.NetworkFilterHelper.IsLoopback(p.SourceIP) &&
-                                               !Core.Services.NetworkFilterHelper.IsLinkLocal(p.SourceIP),
-                "APIPA" => p => Core.Services.NetworkFilterHelper.IsLinkLocal(p.SourceIP) ||
-                                Core.Services.NetworkFilterHelper.IsLinkLocal(p.DestinationIP),
-
-                // --- Special Addresses ---
-                "Loopback" => p => Core.Services.NetworkFilterHelper.IsLoopback(p.SourceIP) ||
-                                   Core.Services.NetworkFilterHelper.IsLoopback(p.DestinationIP),
-                "LinkLocal" => p => Core.Services.NetworkFilterHelper.IsLinkLocal(p.SourceIP) ||
-                                    Core.Services.NetworkFilterHelper.IsLinkLocal(p.DestinationIP),
-                "Anycast" => p => Core.Services.NetworkFilterHelper.IsAnycast(p.SourceIP) ||
-                                  Core.Services.NetworkFilterHelper.IsAnycast(p.DestinationIP),
-
-                // --- Delivery Method ---
-                "Unicast" => p => !Core.Services.NetworkFilterHelper.IsBroadcastPacket(
-                                      p.DestinationIP, p.L7Protocol, p.Info, p.DestinationMAC) &&
-                                  !Core.Services.NetworkFilterHelper.IsMulticast(p.DestinationIP),
-                "Multicast" => p => Core.Services.NetworkFilterHelper.IsMulticast(p.SourceIP) ||
-                                    Core.Services.NetworkFilterHelper.IsMulticast(p.DestinationIP),
-                // Broadcast: Uses L2 MAC + IP + protocol-level indicators (DHCP, ARP)
-                "Broadcast" => p => Core.Services.NetworkFilterHelper.IsBroadcastPacket(
-                                        p.DestinationIP, p.L7Protocol, p.Info, p.DestinationMAC),
-
-                // ==================== TRAFFIC DIRECTION ====================
-                // PrivateToPublic: RFC1918 source → non-RFC1918 destination
-                "PrivateToPublic" => p => Core.Services.NetworkFilterHelper.IsRFC1918(p.SourceIP) &&
-                                          !Core.Services.NetworkFilterHelper.IsRFC1918(p.DestinationIP) &&
-                                          !Core.Services.NetworkFilterHelper.IsLoopback(p.DestinationIP) &&
-                                          !Core.Services.NetworkFilterHelper.IsMulticast(p.DestinationIP) &&
-                                          !Core.Services.NetworkFilterHelper.IsBroadcastPacket(
-                                              p.DestinationIP, p.L7Protocol, p.Info, p.DestinationMAC),
-                // PublicToPrivate: Non-RFC1918 source → RFC1918 destination
-                "PublicToPrivate" => p => !Core.Services.NetworkFilterHelper.IsRFC1918(p.SourceIP) &&
-                                          !Core.Services.NetworkFilterHelper.IsLoopback(p.SourceIP) &&
-                                          Core.Services.NetworkFilterHelper.IsRFC1918(p.DestinationIP),
-
-                // ==================== L4 TRANSPORT PROTOCOLS ====================
-                "TCP" => p => p.Protocol == Protocol.TCP,
-                "UDP" => p => p.Protocol == Protocol.UDP,
-                "ICMP" => p => p.Protocol == Protocol.ICMP,
-                "ARP" => p => p.L7Protocol?.Equals("ARP", StringComparison.OrdinalIgnoreCase) == true,
-                "IGMP" => p => p.L7Protocol?.Contains("IGMP", StringComparison.OrdinalIgnoreCase) == true ||
-                               p.Protocol.ToString().Contains("IGMP", StringComparison.OrdinalIgnoreCase),
-                "GRE" => p => p.L7Protocol?.Contains("GRE", StringComparison.OrdinalIgnoreCase) == true ||
-                              p.Protocol.ToString().Contains("GRE", StringComparison.OrdinalIgnoreCase),
-
-                // ==================== TCP FLAGS FILTERS ====================
-                // TCP flag bits: FIN=0x01, SYN=0x02, RST=0x04, PSH=0x08, ACK=0x10, URG=0x20
-                // Canonical names with aliases for backwards compatibility
-                "SYN" or "TcpSyn" => p => p.Protocol == Protocol.TCP &&
-                                          (p.TcpFlags & 0x02) != 0 && (p.TcpFlags & 0x10) == 0,  // SYN without ACK
-                // SYN-ACK: Connection response (server accepting connection)
-                "SYN-ACK" or "TcpSynAck" => p => p.Protocol == Protocol.TCP &&
-                                                 (p.TcpFlags & 0x12) == 0x12,  // Both SYN (0x02) and ACK (0x10) set
-                "RST" or "TcpRst" => p => p.Protocol == Protocol.TCP && (p.TcpFlags & 0x04) != 0,
-                "FIN" or "TcpFin" => p => p.Protocol == Protocol.TCP && (p.TcpFlags & 0x01) != 0,
-                // PSH: Push flag - data packets requesting immediate delivery to application
-                "PSH" or "TcpPsh" => p => p.Protocol == Protocol.TCP && (p.TcpFlags & 0x08) != 0,
-                // ACK-only: Has ACK, but no SYN, FIN, or RST (pure ACK packets)
-                "ACK-only" or "TcpAckOnly" => p => p.Protocol == Protocol.TCP &&
-                                                   (p.TcpFlags & 0x10) != 0 &&  // Has ACK
-                                                   (p.TcpFlags & 0x07) == 0,     // No SYN, FIN, RST
-                // URG: Urgent pointer flag (rarely used in modern traffic)
-                "URG" or "TcpUrg" => p => p.Protocol == Protocol.TCP && (p.TcpFlags & 0x20) != 0,
-
-                // ==================== FRAME SIZE FILTERS ====================
-                // SmallFrame: < 60 bytes (Ethernet minimum is 64, but frame.len excludes 4-byte CRC)
-                "SmallFrame" => p => p.Length < 60,
-                "Fragmented" => p => MatchesAnyInfoPattern(p.Info, ["fragment", "frag offset"]),
-
-                // ==================== L7 APPLICATION PROTOCOL FILTERS ====================
-                // HTTP: Plaintext HTTP including HTTP/2 (h2c), excluding HTTPS/TLS
-                "HTTP" => p => (p.L7Protocol?.Contains("HTTP", StringComparison.OrdinalIgnoreCase) == true ||
-                                p.L7Protocol?.Equals("HTTP2", StringComparison.OrdinalIgnoreCase) == true ||
-                                p.L7Protocol?.Equals("h2c", StringComparison.OrdinalIgnoreCase) == true) &&
-                               p.L7Protocol?.Contains("HTTPS", StringComparison.OrdinalIgnoreCase) != true &&
-                               p.L7Protocol?.Contains("TLS", StringComparison.OrdinalIgnoreCase) != true,
-                "HTTPS" => p => p.L7Protocol?.Contains("HTTPS", StringComparison.OrdinalIgnoreCase) == true ||
-                                p.L7Protocol?.Contains("TLS", StringComparison.OrdinalIgnoreCase) == true,
-                "DNS" => p => p.L7Protocol?.Contains("DNS", StringComparison.OrdinalIgnoreCase) == true ||
-                              p.SourcePort == 53 || p.DestinationPort == 53,
-                "SSH" => p => p.SourcePort == 22 || p.DestinationPort == 22,
-                "FTP" => p => p.SourcePort == 21 || p.DestinationPort == 21 ||
-                              p.SourcePort == 20 || p.DestinationPort == 20,
-                "SMTP" => p => p.SourcePort == 25 || p.DestinationPort == 25 ||
-                               p.SourcePort == 587 || p.DestinationPort == 587,
-                "SNMP" => p => p.SourcePort == 161 || p.DestinationPort == 161 ||
-                               p.SourcePort == 162 || p.DestinationPort == 162,
-                "DHCP" => p => p.SourcePort == 67 || p.DestinationPort == 67 ||
-                               p.SourcePort == 68 || p.DestinationPort == 68,
-                // STUN: Standard port 3478, STUN over TLS uses 5349
-                "STUN" => p => p.SourcePort == 3478 || p.DestinationPort == 3478 ||
-                               p.SourcePort == 5349 || p.DestinationPort == 5349,
-
-                // ==================== VOIP PROTOCOL FILTERS ====================
-                // SIP: Session Initiation Protocol (signaling for VoIP calls)
-                "SIP" => p => p.L7Protocol?.Contains("SIP", StringComparison.OrdinalIgnoreCase) == true ||
-                              p.SourcePort == 5060 || p.DestinationPort == 5060 ||
-                              p.SourcePort == 5061 || p.DestinationPort == 5061,  // SIP over TLS
-                // RTP: Real-time Transport Protocol (actual audio/video payload)
-                "RTP" => p => p.L7Protocol?.Contains("RTP", StringComparison.OrdinalIgnoreCase) == true &&
-                              p.L7Protocol?.Contains("RTCP", StringComparison.OrdinalIgnoreCase) != true,
-                // RTCP: RTP Control Protocol (QoS feedback for RTP streams)
-                "RTCP" => p => p.L7Protocol?.Contains("RTCP", StringComparison.OrdinalIgnoreCase) == true,
-                // H.323: Legacy VoIP signaling protocol (enterprise PBX systems)
-                "H323" or "H.323" => p => p.L7Protocol?.Contains("H.323", StringComparison.OrdinalIgnoreCase) == true ||
-                                          p.L7Protocol?.Contains("H323", StringComparison.OrdinalIgnoreCase) == true ||
-                                          p.SourcePort == 1720 || p.DestinationPort == 1720,
-                // MGCP: Media Gateway Control Protocol (telecom infrastructure)
-                "MGCP" => p => p.L7Protocol?.Contains("MGCP", StringComparison.OrdinalIgnoreCase) == true ||
-                               p.SourcePort == 2427 || p.DestinationPort == 2427 ||
-                               p.SourcePort == 2727 || p.DestinationPort == 2727,
-                // SCCP: Skinny Client Control Protocol (Cisco VoIP)
-                "SCCP" or "Skinny" => p => p.L7Protocol?.Contains("SCCP", StringComparison.OrdinalIgnoreCase) == true ||
-                                           p.L7Protocol?.Contains("Skinny", StringComparison.OrdinalIgnoreCase) == true ||
-                                           p.SourcePort == 2000 || p.DestinationPort == 2000,
-                // WebRTC ICE candidates: Uses STUN/TURN for NAT traversal
-                "WebRTC" => p => p.L7Protocol?.Contains("WebRTC", StringComparison.OrdinalIgnoreCase) == true ||
-                                 p.L7Protocol?.Contains("DTLS", StringComparison.OrdinalIgnoreCase) == true ||
-                                 p.Info?.Contains("ICE", StringComparison.OrdinalIgnoreCase) == true,
-
-                // ╔══════════════════════════════════════════════════════════════════╗
-                // ║                  SECURITY & COMPLIANCE                            ║
-                // ╠══════════════════════════════════════════════════════════════════╣
-                // ║  Consolidated security filters:                                   ║
-                // ║  • Deprecated crypto: TLSv1.0, TLSv1.1, SSLv3, SSHv1, SmbV1       ║
-                // ║  • Authentication: CleartextAuth, HTTP Basic                      ║
-                // ║  • Attack indicators: SYNFlood, PortScan, InvalidTTL              ║
-                // ║  • Certificate issues: TLSCertError                               ║
-                // ╚══════════════════════════════════════════════════════════════════╝
-
-                // --- Deprecated Crypto (⚠️ Security Risk) ---
-                // TLSv1.0 and TLSv1.1 are deprecated per RFC 8996 (March 2021)
-                "TlsV10" => p => p.L7Protocol?.Contains("TLS 1.0", StringComparison.OrdinalIgnoreCase) == true ||
-                                 p.L7Protocol?.Contains("TLSv1.0", StringComparison.OrdinalIgnoreCase) == true,
-                "TlsV11" => p => p.L7Protocol?.Contains("TLS 1.1", StringComparison.OrdinalIgnoreCase) == true ||
-                                 p.L7Protocol?.Contains("TLSv1.1", StringComparison.OrdinalIgnoreCase) == true,
-                // ObsoleteCrypto: Combined SSL + deprecated TLS versions
-                "ObsoleteCrypto" => p => p.L7Protocol?.Contains("SSL", StringComparison.OrdinalIgnoreCase) == true ||
-                                         p.L7Protocol?.Contains("TLS 1.0", StringComparison.OrdinalIgnoreCase) == true ||
-                                         p.L7Protocol?.Contains("TLSv1.0", StringComparison.OrdinalIgnoreCase) == true ||
-                                         p.L7Protocol?.Contains("TLS 1.1", StringComparison.OrdinalIgnoreCase) == true ||
-                                         p.L7Protocol?.Contains("TLSv1.1", StringComparison.OrdinalIgnoreCase) == true,
-                // SSHv1: Deprecated SSH version 1 (insecure, should not be used)
-                "SSHv1" => p => p.L7Protocol?.Contains("SSH-1", StringComparison.OrdinalIgnoreCase) == true ||
-                                p.L7Protocol?.Contains("SSHv1", StringComparison.OrdinalIgnoreCase) == true ||
-                                p.Info?.Contains("SSH-1.", StringComparison.OrdinalIgnoreCase) == true,
-                // SMBv1: Vulnerable to EternalBlue (WannaCry, NotPetya)
-                "SmbV1" => p => p.L7Protocol?.Contains("SMBv1", StringComparison.OrdinalIgnoreCase) == true ||
-                                p.L7Protocol?.Contains("SMB1", StringComparison.OrdinalIgnoreCase) == true,
-
-                // --- Cleartext Authentication (⚠️ Credential Exposure) ---
-                "Insecure" or "INSECURE" => p => Core.Services.NetworkFilterHelper.IsInsecureProtocol(
-                                                     p.L7Protocol ?? p.Protocol.ToString()),
-                // CleartextAuth: Matches USER/PASS commands in FTP, SMTP, POP3, IMAP, Telnet, HTTP Basic
-                "CleartextAuth" => p =>
-                    // FTP/SMTP/POP3/IMAP/Telnet - check for USER/PASS commands
-                    ((p.L7Protocol?.Contains("FTP", StringComparison.OrdinalIgnoreCase) == true ||
-                      p.L7Protocol?.Contains("SMTP", StringComparison.OrdinalIgnoreCase) == true ||
-                      p.L7Protocol?.Contains("POP", StringComparison.OrdinalIgnoreCase) == true ||
-                      p.L7Protocol?.Contains("IMAP", StringComparison.OrdinalIgnoreCase) == true ||
-                      p.L7Protocol?.Contains("TELNET", StringComparison.OrdinalIgnoreCase) == true ||
-                      p.DestinationPort == 21 || p.DestinationPort == 23 || p.DestinationPort == 25 ||
-                      p.DestinationPort == 110 || p.DestinationPort == 143 || p.DestinationPort == 587) &&
-                     (p.Info?.Contains("USER ", StringComparison.Ordinal) == true ||
-                      p.Info?.Contains("PASS ", StringComparison.Ordinal) == true ||
-                      p.Info?.Contains("AUTH ", StringComparison.Ordinal) == true ||
-                      p.Info?.Contains("LOGIN ", StringComparison.Ordinal) == true)) ||
-                    // HTTP Basic Auth header
-                    (p.L7Protocol?.Contains("HTTP", StringComparison.OrdinalIgnoreCase) == true &&
-                     p.Info?.Contains("Authorization: Basic", StringComparison.OrdinalIgnoreCase) == true),
-
-                // --- Attack Indicators ---
-                // SYNFlood: SYN packets without ACK (potential scan/flood)
-                "SYNFlood" or "SynFlood" => p => p.Protocol == Protocol.TCP &&
-                                                 (p.TcpFlags & 0x02) != 0 &&  // SYN flag set
-                                                 (p.TcpFlags & 0x10) == 0,     // ACK flag NOT set
-                // PortScan: Connect to many ports in sequence (targeting well-known ports)
-                "PortScan" => p => p.Protocol == Protocol.TCP &&
-                                   (p.TcpFlags & 0x02) != 0 &&  // SYN flag set
-                                   (p.TcpFlags & 0x10) == 0 &&  // ACK flag NOT set
-                                   p.DestinationPort < 1024,    // Targeting well-known ports
-                // InvalidTTL: TTL=0 or TTL=1 (routing issues, traceroute, or TTL-based attacks)
-                "InvalidTTL" or "LowTTL" => p => p.Info?.Contains("TTL=1 ", StringComparison.Ordinal) == true ||
-                                                 p.Info?.Contains("TTL=0 ", StringComparison.Ordinal) == true ||
-                                                 p.Info?.Contains("ttl=1 ", StringComparison.OrdinalIgnoreCase) == true ||
-                                                 p.Info?.Contains("ttl=0 ", StringComparison.OrdinalIgnoreCase) == true,
-
-                // --- Certificate Issues ---
-                "TLSCertError" or "CertError" => p => p.Info?.Contains("Certificate", StringComparison.OrdinalIgnoreCase) == true &&
-                                                      (p.Info?.Contains("error", StringComparison.OrdinalIgnoreCase) == true ||
-                                                       p.Info?.Contains("expired", StringComparison.OrdinalIgnoreCase) == true ||
-                                                       p.Info?.Contains("invalid", StringComparison.OrdinalIgnoreCase) == true ||
-                                                       p.Info?.Contains("untrusted", StringComparison.OrdinalIgnoreCase) == true ||
-                                                       p.Info?.Contains("self-signed", StringComparison.OrdinalIgnoreCase) == true),
-
-                // ==================== MODERN ENCRYPTION ====================
-                // TLSv1.2 and TLSv1.3 are current secure standards
-                "TlsV12" => p => p.L7Protocol?.Contains("TLS 1.2", StringComparison.OrdinalIgnoreCase) == true ||
-                                 p.L7Protocol?.Contains("TLSv1.2", StringComparison.OrdinalIgnoreCase) == true,
-                "TlsV13" => p => p.L7Protocol?.Contains("TLS 1.3", StringComparison.OrdinalIgnoreCase) == true ||
-                                 p.L7Protocol?.Contains("TLSv1.3", StringComparison.OrdinalIgnoreCase) == true,
-
-                // ==================== VPN PROTOCOLS ====================
-                "WireGuard" => p => p.SourcePort == 51820 || p.DestinationPort == 51820,
-                "OpenVPN" => p => p.SourcePort == 1194 || p.DestinationPort == 1194,
-                "IKEv2" => p => p.SourcePort == 500 || p.DestinationPort == 500 ||
-                                p.SourcePort == 4500 || p.DestinationPort == 4500,
-                "IPSec" => p => p.L7Protocol?.Contains("ESP", StringComparison.OrdinalIgnoreCase) == true ||
-                                p.L7Protocol?.Contains("AH", StringComparison.OrdinalIgnoreCase) == true ||
-                                p.L7Protocol?.Contains("ISAKMP", StringComparison.OrdinalIgnoreCase) == true ||
-                                p.L7Protocol?.Contains("IKE", StringComparison.OrdinalIgnoreCase) == true,
-                "L2TP" => p => p.SourcePort == 1701 || p.DestinationPort == 1701,
-                "PPTP" => p => p.SourcePort == 1723 || p.DestinationPort == 1723,
-
-                // ==================== TCP PERFORMANCE ====================
-                "Retransmissions" or "Retransmission" => p => p.Info?.Contains("Retransmission", StringComparison.OrdinalIgnoreCase) == true,
-                "DuplicateAck" or "DupAck" => p => MatchesAnyInfoPattern(p.Info,
-                    ["Dup ACK", "DupACK", "Duplicate ACK"]),
-                "ZeroWindow" => p => MatchesAnyInfoPattern(p.Info, ["Zero window", "ZeroWindow"]),
-                "KeepAlive" => p => p.Info?.Contains("Keep-Alive", StringComparison.OrdinalIgnoreCase) == true,
-                "ConnectionRefused" => p =>
-                    (p.Protocol == Protocol.TCP && (p.TcpFlags & 0x04) != 0 && (p.TcpFlags & 0x10) == 0) ||  // RST without ACK
-                    MatchesAnyInfoPattern(p.Info, ["refused", "Connection reset"]),
-                "WindowFull" => p => p.Info?.Contains("Window full", StringComparison.OrdinalIgnoreCase) == true,
-
-                // ==================== FRAME SIZE ====================
-                "JumboFrames" => p => p.Length > 1514,  // > standard Ethernet MTU
-
-                // ==================== PROTOCOL ERROR FILTERS ====================
-                // HTTPErrors: Match HTTP 4xx/5xx responses - supports multiple TShark output formats
-                // TShark may output "HTTP/1.1 404 Not Found" or "404 Not Found" or just response codes
-                "HTTPErrors" => p => p.L7Protocol?.Contains("HTTP", StringComparison.OrdinalIgnoreCase) == true &&
-                                     MatchesHttpErrorCode(p.Info),
-                "DNSFailures" => p => p.Info?.Contains("NXDOMAIN", StringComparison.OrdinalIgnoreCase) == true ||
-                                      p.Info?.Contains("SERVFAIL", StringComparison.OrdinalIgnoreCase) == true,
-                "ICMPUnreachable" => p => p.Info?.Contains("unreachable", StringComparison.OrdinalIgnoreCase) == true,
-
-                // ==================== ICMP TYPE FILTERS ====================
-                // ICMP Echo Request (ping): Type 8 - TShark shows "Echo (ping) request"
-                "ICMPEchoRequest" or "PingRequest" => p => p.Protocol == Protocol.ICMP &&
-                                                           MatchesAnyInfoPattern(p.Info, ["Echo (ping) request", "Echo request"]),
-                // ICMP Echo Reply (pong): Type 0 - TShark shows "Echo (ping) reply"
-                "ICMPEchoReply" or "PingReply" => p => p.Protocol == Protocol.ICMP &&
-                                                       MatchesAnyInfoPattern(p.Info, ["Echo (ping) reply", "Echo reply"]),
-                // ICMP Time Exceeded: Type 11 - indicates TTL expired (traceroute)
-                "ICMPTimeExceeded" => p => p.Protocol == Protocol.ICMP &&
-                                           p.Info?.Contains("Time-to-live exceeded", StringComparison.OrdinalIgnoreCase) == true,
-                // ICMP Redirect: Type 5 - potential routing issue or MITM
-                "ICMPRedirect" => p => p.Protocol == Protocol.ICMP &&
-                                       p.Info?.Contains("Redirect", StringComparison.OrdinalIgnoreCase) == true,
-
-                // ==================== DNS TYPE FILTERS ====================
-                // DNS Query: TShark shows "Standard query" for requests (but NOT "Standard query response")
-                "DNSQuery" => p => (p.L7Protocol?.Contains("DNS", StringComparison.OrdinalIgnoreCase) == true ||
-                                    p.SourcePort == 53 || p.DestinationPort == 53) &&
-                                   p.Info?.Contains("Standard query", StringComparison.OrdinalIgnoreCase) == true &&
-                                   p.Info?.Contains("response", StringComparison.OrdinalIgnoreCase) != true,
-                // DNS Response: TShark shows "Standard query response" for answers
-                "DNSResponse" => p => (p.L7Protocol?.Contains("DNS", StringComparison.OrdinalIgnoreCase) == true ||
-                                       p.SourcePort == 53 || p.DestinationPort == 53) &&
-                                      p.Info?.Contains("Standard query response", StringComparison.OrdinalIgnoreCase) == true,
-
-                // ==================== PORT RANGE FILTERS ====================
-                // Well-known ports: 0-1023 (privileged, require root on Unix)
-                "WellKnownPorts" => p => (p.SourcePort >= 0 && p.SourcePort <= 1023) ||
-                                         (p.DestinationPort >= 0 && p.DestinationPort <= 1023),
-                // Registered ports: 1024-49151 (assigned by IANA for specific services)
-                "RegisteredPorts" => p => (p.SourcePort >= 1024 && p.SourcePort <= 49151) ||
-                                          (p.DestinationPort >= 1024 && p.DestinationPort <= 49151),
-                // Dynamic/Ephemeral ports: 49152-65535 (client-side, OS-assigned)
-                "EphemeralPorts" or "HighPorts" => p => (p.SourcePort >= 49152 && p.SourcePort <= 65535) ||
-                                                        (p.DestinationPort >= 49152 && p.DestinationPort <= 65535),
-
-                // Default: not recognized
-                _ => null
-            };
-        }
-
-        /// <summary>
-        /// Matches HTTP 4xx/5xx error status codes in packet info.
-        /// Handles multiple TShark output formats:
-        /// - "HTTP/1.1 404 Not Found"
-        /// - "404 Not Found"
-        /// - Response codes at various positions
-        /// </summary>
-        private static bool MatchesHttpErrorCode(string? info)
-        {
-            if (string.IsNullOrEmpty(info))
-                return false;
-
-            // Common HTTP error status codes (4xx client errors, 5xx server errors)
-            ReadOnlySpan<string> errorCodes =
-            [
-                "400", "401", "402", "403", "404", "405", "406", "407", "408", "409",
-                "410", "411", "412", "413", "414", "415", "416", "417", "418", "421",
-                "422", "423", "424", "425", "426", "428", "429", "431", "451",
-                "500", "501", "502", "503", "504", "505", "506", "507", "508", "510", "511"
-            ];
-
-            foreach (var code in errorCodes)
-            {
-                // Match with space before (most common): " 404 " or " 404\n" or " 404" at end
-                if (info.Contains($" {code} ", StringComparison.Ordinal) ||
-                    info.Contains($" {code}\r", StringComparison.Ordinal) ||
-                    info.Contains($" {code}\n", StringComparison.Ordinal) ||
-                    info.EndsWith($" {code}", StringComparison.Ordinal))
-                    return true;
-
-                // Match at start of info (rare but possible): "404 Not Found"
-                if (info.StartsWith($"{code} ", StringComparison.Ordinal))
-                    return true;
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Matches if the Info field contains any of the specified patterns.
-        /// Useful for TShark output variations (e.g., "Dup ACK", "DupACK", "Duplicate ACK").
-        /// </summary>
-        /// <param name="info">The packet Info field to search</param>
-        /// <param name="patterns">Alternative patterns to match (any match returns true)</param>
-        /// <param name="comparisonType">String comparison type (default: OrdinalIgnoreCase)</param>
-        /// <returns>True if any pattern matches</returns>
-        private static bool MatchesAnyInfoPattern(string? info, ReadOnlySpan<string> patterns,
-            StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
-        {
-            if (string.IsNullOrEmpty(info))
-                return false;
-
-            foreach (var pattern in patterns)
-            {
-                if (info.Contains(pattern, comparisonType))
-                    return true;
-            }
-
-            return false;
-        }
+        // NOTE: MatchesHttpErrorCode and MatchesAnyInfoPattern moved to QuickFilterPredicateRegistry
 
         /// <summary>
         /// Builds a PacketFilter from a Quick Filter chip (IPv4, IPv6, RFC1918, etc.)

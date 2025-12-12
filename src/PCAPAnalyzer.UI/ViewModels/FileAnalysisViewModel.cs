@@ -539,6 +539,8 @@ public partial class FileAnalysisViewModel : ObservableObject, IDisposable
             IsAnalyzing = false;
             IsAnalysisComplete = false;
             _progressTimer.Stop();
+            // ✅ FIX: Stop all stage timers to prevent infinite timer loop after OOM/error
+            StagesViewModel.StopAllTimers();
         });
     }
 

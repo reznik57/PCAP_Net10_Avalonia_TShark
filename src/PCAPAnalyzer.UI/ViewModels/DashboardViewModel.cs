@@ -43,6 +43,16 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     public AnomalySummaryViewModel AnomalySummary { get; }
     public DrillDownPopupViewModel DrillDown { get; }
 
+    /// <summary>
+    /// Stats bar using unified Total/Filtered pattern (like Packet Analysis tab).
+    /// </summary>
+    public StatsBarControlViewModel NetworkStatsBar { get; } = new()
+    {
+        SectionTitle = "NETWORK STATISTICS",
+        AccentColor = ThemeColorHelper.GetColorHex("StatPackets", "#58A6FF"),
+        ColumnCount = 5
+    };
+
     // ==================== SERVICES ====================
 
     private readonly IDispatcherService _dispatcher;
@@ -60,6 +70,7 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
     // Anomaly frame number caches for efficient filtering
     private HashSet<long> _anomalyFrameNumbers = [];
+    private List<NetworkAnomaly> _currentAnomalies = [];  // Full anomaly list for time-based filtering
     private HashSet<long> _highSeverityFrames = [];  // Critical + High severity
     private HashSet<long> _tcpAnomalyFrames = [];
     private HashSet<long> _networkAnomalyFrames = [];
@@ -293,6 +304,14 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         // Register with FilterCopyService
         _filterCopyService?.RegisterTab(TabName, this);
 
+        // Subscribe to GlobalFilterState changes for UnifiedFilterPanel integration
+        // NOTE: Using OnFiltersApplied (not OnFilterChanged) to avoid auto-apply on chip removal
+        if (_globalFilterState is not null)
+        {
+            _globalFilterState.OnFiltersApplied += OnGlobalFilterChanged;
+            DebugLogger.Log("[DashboardViewModel] Subscribed to GlobalFilterState.OnFiltersApplied");
+        }
+
         // Load filter presets
         _ = LoadPresetsAsync();
 
@@ -335,12 +354,14 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
             // Calculate statistics
             NetworkStatistics statistics;
+            var isUsingFilteredOverride = false;
 
             if (_nextStatisticsOverride is not null)
             {
                 var overrideStart = DateTime.Now;
                 statistics = _nextStatisticsOverride;
                 _nextStatisticsOverride = null;
+                isUsingFilteredOverride = true;  // Mark that we're using filtered stats
                 var overrideElapsed = (DateTime.Now - overrideStart).TotalSeconds;
                 DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [DashboardViewModel.UpdateStatisticsAsync] Using pre-calculated statistics override in {overrideElapsed:F3}s - TotalPackets: {statistics.TotalPackets:N0}, UniquePortCount: {statistics.UniquePortCount}");
             }
@@ -372,7 +393,19 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
             }
 
             _currentStatistics = statistics;
-            _unfilteredStatistics = statistics;
+            // Only update _unfilteredStatistics when NOT using filtered override
+            // This preserves the original total for "Total: X / Filtered: Y (Z%)" display
+            if (!isUsingFilteredOverride)
+            {
+                _unfilteredStatistics = statistics;
+                DebugLogger.Log($"[DashboardViewModel] Stored unfiltered statistics: {statistics.TotalPackets:N0} packets");
+            }
+            else
+            {
+                // Store filtered statistics for display
+                _filteredStatistics = statistics;
+                DebugLogger.Log($"[DashboardViewModel] Stored filtered statistics: {statistics.TotalPackets:N0} packets (unfiltered preserved: {_unfilteredStatistics?.TotalPackets:N0})");
+            }
 
             var componentsStart = DateTime.Now;
             DebugLogger.Log($"[{componentsStart:HH:mm:ss.fff}] [DashboardViewModel.UpdateStatisticsAsync] About to update all components with statistics");
@@ -382,6 +415,9 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
 
             var componentsElapsed = (DateTime.Now - componentsStart).TotalSeconds;
             DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [DashboardViewModel.UpdateStatisticsAsync] Components updated in {componentsElapsed:F3}s");
+
+            // Update NetworkStatsBar with unified Total/Filtered pattern
+            UpdateNetworkStatsBar();
 
             var totalElapsed = (DateTime.Now - methodStart).TotalSeconds;
             DebugLogger.Log($"[{DateTime.Now:HH:mm:ss.fff}] [DashboardViewModel.UpdateStatisticsAsync] ========== METHOD COMPLETE in {totalElapsed:F3}s ==========");
@@ -473,6 +509,9 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
         DebugLogger.Log($"[DashboardViewModel] Updating anomaly summary: {anomalies?.Count ?? 0} anomalies");
         AnomalySummary.UpdateFromAnomalies(anomalies);
 
+        // Store full anomaly list for time-based filtering in chart popups
+        _currentAnomalies = anomalies?.ToList() ?? [];
+
         // Build frame number caches for efficient anomaly filtering by category
         var anomalyList = anomalies?.ToList() ?? new List<NetworkAnomaly>();
 
@@ -499,6 +538,16 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     }
 
     // ==================== FILTER COMMANDS ====================
+
+    /// <summary>
+    /// Handles GlobalFilterState changes - re-applies global filters from UnifiedFilterPanel to Dashboard.
+    /// This is triggered when user clicks Apply/Clear in the UnifiedFilterPanel.
+    /// </summary>
+    private void OnGlobalFilterChanged()
+    {
+        DebugLogger.Log("[DashboardViewModel] GlobalFilterState.OnFiltersApplied fired - applying global filters");
+        ApplyGlobalFilters();
+    }
 
     public new void ApplyFilters()
     {
@@ -869,6 +918,13 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
                     _filterService.FilterChanged -= OnFilterServiceChanged;
                 }
 
+                // Unsubscribe from GlobalFilterState to prevent memory leaks
+                if (_globalFilterState is not null)
+                {
+                    _globalFilterState.OnFiltersApplied -= OnGlobalFilterChanged;
+                    DebugLogger.Log("[DashboardViewModel] Unsubscribed from GlobalFilterState.OnFiltersApplied");
+                }
+
                 // Unregister from FilterCopyService
                 _filterCopyService?.UnregisterTab(TabName);
 
@@ -991,6 +1047,14 @@ public partial class DashboardViewModel : SmartFilterableTab, IDisposable, ITabP
     public async Task PopulateFromCacheAsync(AnalysisResult result)
     {
         DebugLogger.Log($"[DashboardViewModel.PopulateFromCacheAsync] Populating from cache with {result.AllPackets.Count:N0} packets");
+
+        // CRITICAL: Store unfiltered statistics BEFORE using override
+        // This is initial population, so these ARE the unfiltered totals.
+        // SetStatisticsOverride + UpdateStatisticsAsync will set isUsingFilteredOverride=true,
+        // which preserves _unfilteredStatistics (doesn't overwrite it).
+        _unfilteredStatistics = result.Statistics;
+        DebugLogger.Log($"[DashboardViewModel] Initial load - stored unfiltered statistics: {result.Statistics.TotalPackets:N0} packets, {result.Statistics.TotalBytes:N0} bytes");
+
         SetStatisticsOverride(result.Statistics);
         await UpdateStatisticsAsync(result.AllPackets);
     }

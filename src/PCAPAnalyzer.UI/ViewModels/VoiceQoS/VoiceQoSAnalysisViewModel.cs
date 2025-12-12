@@ -55,6 +55,20 @@ public partial class VoiceQoSAnalysisViewModel : ObservableObject
     }
 
     /// <summary>
+    /// Clears all cached analysis data to force re-analysis.
+    /// Called when global filters change and data needs recalculation from filtered packets.
+    /// </summary>
+    public void ClearCachedData()
+    {
+        AllQoSTraffic.Clear();
+        AllLatencyConnections.Clear();
+        AllJitterConnections.Clear();
+        AllPackets.Clear();
+        CachedTimeSeriesData = null;
+        DebugLogger.Log("[VoiceQoSAnalysisViewModel] Cached data cleared - ready for re-analysis");
+    }
+
+    /// <summary>
     /// Analyzes packets for QoS, latency, and jitter metrics.
     /// </summary>
     /// <param name="packets">Packets to analyze</param>

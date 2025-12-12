@@ -50,13 +50,40 @@ public class ShapefileWorldMapControl : Control
     private Rect _zoomOutButtonRect;
     private Rect _zoomResetButtonRect;
 
-    // Special traffic indicator rects (INT and IP6)
+    // Special traffic indicator rect (Internal = all non-routable traffic)
     private Rect _internalTrafficRect;
-    private Rect _ipv6TrafficRect;
 
     // Rendering
     private static readonly IBrush BorderBrush = new SolidColorBrush(Color.FromRgb(55, 65, 81));
     private static readonly IBrush DefaultLandBrush = new SolidColorBrush(Color.FromRgb(75, 85, 99));
+
+    /// <summary>
+    /// Mapping from ISO_A3 codes to ISO_A2 codes for countries where Natural Earth
+    /// uses "-99" for ISO_A2 due to overseas territories or disputed status.
+    /// See: https://github.com/nvkelso/natural-earth-vector/issues/284
+    /// </summary>
+    private static readonly Dictionary<string, string> IsoA3ToA2Mapping = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // Countries with overseas territories causing "-99" in ISO_A2
+        ["FRA"] = "FR",  // France (overseas: Guiana, Guadeloupe, Martinique, Réunion, Mayotte)
+        ["NOR"] = "NO",  // Norway (Svalbard, Jan Mayen)
+        ["NLD"] = "NL",  // Netherlands (Caribbean territories)
+        ["DNK"] = "DK",  // Denmark (Greenland, Faroe Islands)
+        ["GBR"] = "GB",  // United Kingdom (overseas territories)
+        ["USA"] = "US",  // United States (territories)
+        ["AUS"] = "AU",  // Australia (external territories)
+        ["NZL"] = "NZ",  // New Zealand (associated states)
+        ["PRT"] = "PT",  // Portugal (Azores, Madeira)
+        ["ESP"] = "ES",  // Spain (Canary Islands, Ceuta, Melilla)
+        ["FIN"] = "FI",  // Finland (Åland)
+
+        // Disputed/special status countries
+        ["KOS"] = "XK",  // Kosovo
+        ["SDS"] = "SS",  // South Sudan
+        ["SOM"] = "SO",  // Somalia (Somaliland)
+        ["CYN"] = "CY",  // Northern Cyprus (uses Cyprus code)
+        ["TWN"] = "TW",  // Taiwan
+    };
 
     // Traffic intensity colors (gray -> blue -> green -> amber -> red)
     private static readonly Color[] TrafficColors =
@@ -261,12 +288,17 @@ public class ShapefileWorldMapControl : Control
 
                 // Access attributes directly by name - no manual index tracking needed
                 var isoA2 = GetAttributeString(feature.Attributes, "ISO_A2");
+                var isoA2Eh = GetAttributeString(feature.Attributes, "ISO_A2_EH"); // v5.0.0+ "expected homeland" fix
                 var isoA3 = GetAttributeString(feature.Attributes, "ISO_A3");
                 var name = GetAttributeString(feature.Attributes, "NAME")
                         ?? GetAttributeString(feature.Attributes, "ADMIN");
 
-                // Use ISO A2 code, fall back to A3 if needed
-                var countryCode = !string.IsNullOrEmpty(isoA2) && isoA2 != "-99" ? isoA2 : isoA3;
+                // Resolve country code with fallback chain:
+                // 1. ISO_A2 if valid (not "-99")
+                // 2. ISO_A2_EH if available (Natural Earth v5.0.0+ fix for overseas territories)
+                // 3. Map ISO_A3 to ISO_A2 using our mapping (France FRA→FR, Norway NOR→NO, etc.)
+                // 4. Fall back to ISO_A3 as last resort
+                var countryCode = ResolveCountryCode(isoA2, isoA2Eh, isoA3);
 
                 if (string.IsNullOrEmpty(countryCode) || countryCode == "-99")
                     continue;
@@ -318,6 +350,28 @@ public class ShapefileWorldMapControl : Control
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Resolves the best ISO A2 country code using a fallback chain.
+    /// Handles Natural Earth's "-99" placeholder for countries with overseas territories.
+    /// </summary>
+    private static string? ResolveCountryCode(string? isoA2, string? isoA2Eh, string? isoA3)
+    {
+        // 1. Use ISO_A2 if valid
+        if (!string.IsNullOrEmpty(isoA2) && isoA2 != "-99")
+            return isoA2;
+
+        // 2. Use ISO_A2_EH (Natural Earth v5.0.0+ "expected homeland" fix)
+        if (!string.IsNullOrEmpty(isoA2Eh) && isoA2Eh != "-99")
+            return isoA2Eh;
+
+        // 3. Map ISO_A3 to ISO_A2 using our mapping table
+        if (!string.IsNullOrEmpty(isoA3) && isoA3 != "-99" && IsoA3ToA2Mapping.TryGetValue(isoA3, out var mappedCode))
+            return mappedCode;
+
+        // 4. Fall back to ISO_A3 (3-letter code) - better than nothing
+        return isoA3;
     }
 
     #endregion
@@ -434,62 +488,127 @@ public class ShapefileWorldMapControl : Control
 
     private void DrawSpecialTrafficIndicators(DrawingContext context, Rect bounds)
     {
-        var boxWidth = 80;
-        var boxHeight = 50;
-        var spacing = 8;
-        var margin = 12;
-        var startX = bounds.Width - margin - boxWidth * 2 - spacing;
-        var startY = bounds.Height - margin - boxHeight;
+        // Single pill for all non-routable traffic (Internal IPv4 + IPv6 link-local/ULA/etc.)
+        var pillWidth = 75;
+        var pillHeight = 32;
+        var margin = 14;
+        var startX = bounds.Width - margin - pillWidth;
+        var startY = bounds.Height - margin - pillHeight;
 
-        var bgBrush = new SolidColorBrush(Color.FromArgb(220, 30, 41, 59));
-        var borderPen = new Pen(new SolidColorBrush(Color.FromRgb(75, 85, 99)), 1);
+        var bgBrush = new SolidColorBrush(Color.FromArgb(180, 30, 41, 59));
         var labelTypeface = new Typeface("Inter", FontStyle.Normal, FontWeight.SemiBold);
-        var valueTypeface = new Typeface("Inter");
-        var dimColor = new SolidColorBrush(Color.FromRgb(156, 163, 175));
 
-        // Internal Traffic indicator (data key is "Internal" not "INT")
-        _internalTrafficRect = new Rect(startX, startY, boxWidth, boxHeight);
-        var intStats = TrafficData?.GetValueOrDefault("Internal");
-        var intColor = intStats is not null ? GetIntensityBrush(GetTrafficIntensityForStats(intStats)) : bgBrush;
+        // Combined Internal Traffic indicator (IPv4 private + all non-routable IPv6)
+        _internalTrafficRect = new Rect(startX, startY, pillWidth, pillHeight);
+        var combinedStats = GetCombinedInternalStats();
+        var intIntensity = combinedStats.totalPackets > 0 ? GetTrafficIntensityForPackets(combinedStats.totalPackets, combinedStats.percentage) : 0;
         var isIntHovered = _hoveredCountryCode == "INT";
 
-        // Draw INT box
-        var intBorderPen = isIntHovered
-            ? new Pen(new SolidColorBrush(Color.FromRgb(139, 148, 158)), 2)
-            : borderPen;
-        context.DrawRectangle(intColor, intBorderPen, new RoundedRect(_internalTrafficRect, 6));
+        DrawTrafficPill(context, _internalTrafficRect, "🏠 Internal", intIntensity, isIntHovered, bgBrush, labelTypeface);
+    }
 
-        // INT label and value
-        var intLabel = new FormattedText("🏠 Internal", System.Globalization.CultureInfo.CurrentCulture,
-            FlowDirection.LeftToRight, labelTypeface, 10, Brushes.White);
-        context.DrawText(intLabel, new AvaloniaPoint(startX + (boxWidth - intLabel.Width) / 2, startY + 8));
+    /// <summary>
+    /// Combines all non-routable traffic stats (Internal + IPv6 link-local, ULA, etc.)
+    /// </summary>
+    private (long totalPackets, double percentage) GetCombinedInternalStats()
+    {
+        if (TrafficData is null) return (0, 0);
 
-        var intValue = intStats is not null ? $"{intStats.TotalPackets:N0}" : "0";
-        var intValueText = new FormattedText(intValue, System.Globalization.CultureInfo.CurrentCulture,
-            FlowDirection.LeftToRight, valueTypeface, 11, dimColor);
-        context.DrawText(intValueText, new AvaloniaPoint(startX + (boxWidth - intValueText.Width) / 2, startY + 28));
+        // Keys for non-routable traffic
+        string[] nonRoutableKeys = ["Internal", "IP6_LINK", "IP6_LOOP", "IP6_ULA", "IP6_SITE", "IP6_MCAST"];
 
-        // IPv6 Traffic indicator (data key is "IP6_LINK" not "IP6")
-        _ipv6TrafficRect = new Rect(startX + boxWidth + spacing, startY, boxWidth, boxHeight);
-        var ip6Stats = TrafficData?.GetValueOrDefault("IP6_LINK");
-        var ip6Color = ip6Stats is not null ? GetIntensityBrush(GetTrafficIntensityForStats(ip6Stats)) : bgBrush;
-        var isIp6Hovered = _hoveredCountryCode == "IP6";
+        long totalPackets = 0;
+        double totalPercentage = 0;
 
-        // Draw IP6 box
-        var ip6BorderPen = isIp6Hovered
-            ? new Pen(new SolidColorBrush(Color.FromRgb(139, 148, 158)), 2)
-            : borderPen;
-        context.DrawRectangle(ip6Color, ip6BorderPen, new RoundedRect(_ipv6TrafficRect, 6));
+        foreach (var key in nonRoutableKeys)
+        {
+            if (TrafficData.TryGetValue(key, out var stats))
+            {
+                totalPackets += stats.TotalPackets;
+                totalPercentage += stats.Percentage;
+            }
+        }
 
-        // IP6 label and value
-        var ip6Label = new FormattedText("🛰️ IPv6", System.Globalization.CultureInfo.CurrentCulture,
-            FlowDirection.LeftToRight, labelTypeface, 10, Brushes.White);
-        context.DrawText(ip6Label, new AvaloniaPoint(startX + boxWidth + spacing + (boxWidth - ip6Label.Width) / 2, startY + 8));
+        return (totalPackets, totalPercentage);
+    }
 
-        var ip6Value = ip6Stats is not null ? $"{ip6Stats.TotalPackets:N0}" : "0";
-        var ip6ValueText = new FormattedText(ip6Value, System.Globalization.CultureInfo.CurrentCulture,
-            FlowDirection.LeftToRight, valueTypeface, 11, dimColor);
-        context.DrawText(ip6ValueText, new AvaloniaPoint(startX + boxWidth + spacing + (boxWidth - ip6ValueText.Width) / 2, startY + 28));
+    /// <summary>
+    /// Gets traffic intensity based on combined packet count and percentage.
+    /// </summary>
+    private static int GetTrafficIntensityForPackets(long packets, double percentage)
+    {
+        if (percentage >= 10) return 4;
+        if (percentage >= 5) return 3;
+        if (percentage >= 1) return 2;
+        if (packets > 0) return 1;
+        return 0;
+    }
+
+    /// <summary>
+    /// Draws a pill-shaped traffic indicator with color-only visualization (no numbers).
+    /// Color intensity reflects traffic volume relative to total.
+    /// </summary>
+    private void DrawTrafficPill(DrawingContext context, Rect rect, string label, int intensity,
+        bool isHovered, IBrush defaultBg, Typeface typeface)
+    {
+        var cornerRadius = rect.Height / 2; // Full pill shape
+
+        // Background: gradient based on traffic intensity
+        IBrush fillBrush;
+        if (intensity > 0)
+        {
+            // Create a subtle gradient from the intensity color
+            var baseColor = TrafficColors[Math.Clamp(intensity, 0, TrafficColors.Length - 1)];
+            fillBrush = new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                GradientStops =
+                {
+                    new GradientStop(Color.FromArgb(240, baseColor.R, baseColor.G, baseColor.B), 0),
+                    new GradientStop(Color.FromArgb(200, (byte)(baseColor.R * 0.7), (byte)(baseColor.G * 0.7), (byte)(baseColor.B * 0.7)), 1)
+                }
+            };
+        }
+        else
+        {
+            fillBrush = defaultBg;
+        }
+
+        // Border: brighter on hover
+        var borderColor = isHovered
+            ? Color.FromRgb(200, 210, 220)
+            : Color.FromRgb(75, 85, 99);
+        var borderPen = new Pen(new SolidColorBrush(borderColor), isHovered ? 2 : 1);
+
+        // Draw pill background
+        context.DrawRectangle(fillBrush, borderPen, new RoundedRect(rect, cornerRadius));
+
+        // Glow effect for high traffic when hovered
+        if (isHovered && intensity >= 3)
+        {
+            var glowBrush = new SolidColorBrush(Color.FromArgb(60, 255, 255, 255));
+            var glowRect = rect.Inflate(2);
+            context.DrawRectangle(glowBrush, null, new RoundedRect(glowRect, cornerRadius + 2));
+        }
+
+        // Label text - centered
+        var labelText = new FormattedText(label, System.Globalization.CultureInfo.CurrentCulture,
+            FlowDirection.LeftToRight, typeface, 11, Brushes.White);
+        var textX = rect.X + (rect.Width - labelText.Width) / 2;
+        var textY = rect.Y + (rect.Height - labelText.Height) / 2;
+        context.DrawText(labelText, new AvaloniaPoint(textX, textY));
+
+        // Traffic intensity indicator bar at bottom (subtle)
+        if (intensity > 0)
+        {
+            var barHeight = 3;
+            var barWidth = rect.Width * 0.6 * (intensity / 4.0); // Scale by intensity
+            var barX = rect.X + (rect.Width - barWidth) / 2;
+            var barY = rect.Y + rect.Height - barHeight - 4;
+            var barColor = new SolidColorBrush(Color.FromArgb(150, 255, 255, 255));
+            context.DrawRectangle(barColor, null, new RoundedRect(new Rect(barX, barY, barWidth, barHeight), 1.5));
+        }
     }
 
     private int GetTrafficIntensityForStats(CountryTrafficStatistics stats)
@@ -830,14 +949,21 @@ public class ShapefileWorldMapControl : Control
 
             if (_hoveredCountryCode is not null)
             {
-                // Special handling for INT and IP6
+                // Special handling for Internal (all non-routable traffic)
                 if (_hoveredCountryCode == "INT")
                 {
                     HoveredCountryName = "Internal Traffic";
-                }
-                else if (_hoveredCountryCode == "IP6")
-                {
-                    HoveredCountryName = "IPv6 Traffic";
+                    // Get combined stats for Internal indicator
+                    var combined = GetCombinedInternalStats();
+                    HoveredCountryStats = combined.totalPackets > 0
+                        ? new CountryTrafficStatistics
+                        {
+                            CountryCode = "INT",
+                            CountryName = "Internal Traffic",
+                            TotalPackets = combined.totalPackets,
+                            Percentage = combined.percentage
+                        }
+                        : null;
                 }
                 else
                 {
@@ -845,16 +971,15 @@ public class ShapefileWorldMapControl : Control
                     var country = _countries.FirstOrDefault(c =>
                         c.IsoCode?.Trim().TrimEnd('\0').Equals(_hoveredCountryCode, StringComparison.OrdinalIgnoreCase) == true);
                     HoveredCountryName = country?.Name ?? _hoveredCountryCode;
-                }
 
-                // Get traffic stats (map UI codes to data keys)
-                var dataKey = MapToDataKey(_hoveredCountryCode);
-                HoveredCountryStats = TrafficData?.GetValueOrDefault(dataKey);
+                    // Get traffic stats for regular country
+                    HoveredCountryStats = TrafficData?.GetValueOrDefault(_hoveredCountryCode);
+                }
 
                 if (TrafficData is not null)
                 {
-                    var hasTrafficData = TrafficData.ContainsKey(dataKey);
-                    DebugLogger.Log($"[ShapefileWorldMap] Hover: '{_hoveredCountryCode}' -> dataKey='{dataKey}', name='{HoveredCountryName}', hasData={hasTrafficData}");
+                    var hasData = HoveredCountryStats is not null;
+                    DebugLogger.Log($"[ShapefileWorldMap] Hover: '{_hoveredCountryCode}' -> name='{HoveredCountryName}', hasData={hasData}");
                 }
             }
             else
@@ -980,11 +1105,9 @@ public class ShapefileWorldMapControl : Control
 
     private string? HitTestCountry(AvaloniaPoint screenPos)
     {
-        // Check special indicators first (INT and IP6 boxes)
+        // Check Internal traffic indicator first
         if (_internalTrafficRect.Contains(screenPos))
             return "INT";
-        if (_ipv6TrafficRect.Contains(screenPos))
-            return "IP6";
 
         // Check cached geometries for hit testing
         foreach (var country in _countries)
@@ -1032,20 +1155,6 @@ public class ShapefileWorldMapControl : Control
         var colorIndex = (int)(intensity * (TrafficColors.Length - 1));
         colorIndex = Math.Clamp(colorIndex, 0, TrafficColors.Length - 1);
         return new SolidColorBrush(TrafficColors[colorIndex]);
-    }
-
-    /// <summary>
-    /// Maps UI display codes to TrafficData dictionary keys.
-    /// UI uses "INT"/"IP6" for display, data uses "Internal"/"IP6_LINK".
-    /// </summary>
-    private static string MapToDataKey(string uiCode)
-    {
-        return uiCode switch
-        {
-            "INT" => "Internal",
-            "IP6" => "IP6_LINK",
-            _ => uiCode
-        };
     }
 
     #endregion

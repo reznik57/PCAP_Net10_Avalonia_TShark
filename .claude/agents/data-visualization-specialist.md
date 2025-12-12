@@ -1,3 +1,7 @@
+---
+name: data-visualization-specialist
+---
+
 # Data Visualization Specialist Agent
 
 ## When to Use This Agent

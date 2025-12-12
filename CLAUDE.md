@@ -83,7 +83,6 @@ _ws.col.info, tcp.flags, tcp.seq, tcp.ack, tcp.window_size, _ws.col.protocol
 ```
 PCAP_ANALYZER_LARGE_FILE_MODE=1   # Large file optimization
 PCAP_ANALYZER_LOW_MEMORY=1        # Reduced memory usage
-PCAP_ANALYZER_USE_DUCKDB=1        # DuckDB instead of in-memory
 PCAP_ANALYZER_CACHE_ENABLED=0     # Disable SQLite cache
 ```
 

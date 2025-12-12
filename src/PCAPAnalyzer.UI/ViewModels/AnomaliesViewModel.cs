@@ -12,6 +12,7 @@ using PCAPAnalyzer.Core.Services;
 using PCAPAnalyzer.UI.Helpers;
 using PCAPAnalyzer.UI.Models;
 using PCAPAnalyzer.UI.Services;
+using PCAPAnalyzer.UI.Utilities;
 using PCAPAnalyzer.UI.ViewModels.Components;
 
 namespace PCAPAnalyzer.UI.ViewModels;
@@ -77,6 +78,14 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
     public AnomaliesFilterViewModel Filters { get; }
     public AnomaliesPacketTableViewModel PacketTable { get; }
 
+    // StatsBarControl for unified statistics display
+    public StatsBarControlViewModel AnomaliesStatsBar { get; } = new()
+    {
+        SectionTitle = "ANOMALY OVERVIEW",
+        AccentColor = ThemeColorHelper.GetColorHex("SlackDanger", "#DA3633"),
+        ColumnCount = 6
+    };
+
     // Loading state
     [ObservableProperty] private bool _isLoading;
     [ObservableProperty] private bool _hasData;
@@ -135,6 +144,74 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
         _allPackets = result.AllPackets ?? new List<PacketInfo>();
 
         await LoadFromAnalysisResultAsync(result.Anomalies);
+
+        // Store unfiltered packet totals for Total/Filtered display pattern
+        Statistics.StoreUnfilteredPacketTotals(result.AllPackets?.Count ?? 0);
+    }
+
+    /// <summary>
+    /// Sets the filtered packet set and re-filters anomalies based on filtered packet frame numbers.
+    /// Called by MainWindowViewModel when global filters are applied.
+    /// Unlike Threats/VoiceQoS which re-analyze, anomalies are pre-calculated so we filter by frame numbers.
+    /// </summary>
+    /// <param name="filteredPackets">The filtered packet list from PacketManager</param>
+    public async Task SetFilteredPacketsAsync(IReadOnlyList<PacketInfo> filteredPackets)
+    {
+        _logger.LogInformation("SetFilteredPacketsAsync called with {Count} filtered packets", filteredPackets.Count);
+
+        if (_allAnomalies.Count == 0)
+        {
+            _logger.LogWarning("SetFilteredPacketsAsync called but no anomalies loaded");
+            return;
+        }
+
+        IsLoading = true;
+        LoadingMessage = "Filtering anomalies...";
+
+        try
+        {
+            // Build set of frame numbers from filtered packets for O(1) lookup
+            var filteredFrameNumbers = new HashSet<long>(filteredPackets.Select(p => (long)p.FrameNumber));
+
+            // Filter anomalies: keep only those whose affected frames overlap with filtered packets
+            _filteredAnomalies = await Task.Run(() =>
+            {
+                return _allAnomalies
+                    .Where(a =>
+                    {
+                        // If anomaly has no affected frames, check if source/dest IPs are in filtered packets
+                        if (a.AffectedFrames is null || a.AffectedFrames.Count == 0)
+                        {
+                            return filteredPackets.Any(p =>
+                                p.SourceIP == a.SourceIP || p.DestinationIP == a.SourceIP ||
+                                p.SourceIP == a.DestinationIP || p.DestinationIP == a.DestinationIP);
+                        }
+
+                        // Anomaly has affected frames - check if any overlap with filtered packets
+                        return a.AffectedFrames.Any(f => filteredFrameNumbers.Contains(f));
+                    })
+                    .ToList();
+            });
+
+            _logger.LogInformation("Filtered from {AllCount} to {FilteredCount} anomalies based on {PacketCount} filtered packets",
+                _allAnomalies.Count, _filteredAnomalies.Count, filteredPackets.Count);
+
+            // Update Statistics component with filtered packet count for Total/Filtered header display
+            Statistics.SetPacketFilteredState(filteredPackets.Count, isFiltered: true);
+
+            // Update all UI components with filtered data
+            await UpdateAllComponentsAsync();
+
+            HasData = _filteredAnomalies.Count > 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error filtering anomalies");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 
     public async Task LoadFromAnalysisResultAsync(List<NetworkAnomaly> anomalies)
@@ -159,6 +236,10 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
 
             // Populate available detectors in filter panel
             Filters.SetAvailableDetectors(_frameIndexService.GetDetectorNames());
+
+            // Store unfiltered totals for Total/Filtered display pattern
+            var unfilteredKPIs = CalculateKPIs(_allAnomalies);
+            Statistics.StoreUnfilteredTotals(unfilteredKPIs);
 
             await UpdateAllComponentsAsync();
 
@@ -204,6 +285,9 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
             Statistics.SetFilteredState(
                 _filteredAnomalies.Count != _allAnomalies.Count,
                 _filteredAnomalies.Count);
+
+            // Update unified stats bar
+            UpdateAnomaliesStatsBar();
 
             Charts.UpdateTimeline(timePoints);
             Charts.UpdateCategoryDonut(categories);
@@ -786,6 +870,49 @@ public partial class AnomaliesViewModel : ObservableObject, ITabPopulationTarget
 
         // Filter packet table to show packets of this category
         PacketTable.FilterByCategory(category.Category);
+    }
+
+    /// <summary>
+    /// Updates AnomaliesStatsBar with unified Total/Filtered display pattern.
+    /// Call after updating KPIs or when filters change.
+    /// </summary>
+    private void UpdateAnomaliesStatsBar()
+    {
+        AnomaliesStatsBar.ClearStats();
+
+        // Determine filter state
+        var hasFilter = Statistics.IsFiltered ||
+            _globalFilterState.HasActiveFilters;
+
+        // Total Anomalies
+        TabStatsHelper.AddNumericStat(AnomaliesStatsBar, "ANOMALIES", "🔍",
+            Statistics.TotalAnomaliesAll, Statistics.TotalAnomalies, hasFilter,
+            ThemeColorHelper.GetColorHex("AccentPrimary", "#58A6FF"));
+
+        // Critical
+        TabStatsHelper.AddNumericStat(AnomaliesStatsBar, "CRITICAL", "🔴",
+            Statistics.CriticalCountAll, Statistics.CriticalCount, hasFilter,
+            ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"));
+
+        // High
+        TabStatsHelper.AddNumericStat(AnomaliesStatsBar, "HIGH", "🟠",
+            Statistics.HighCountAll, Statistics.HighCount, hasFilter,
+            ThemeColorHelper.GetColorHex("ColorOrange", "#F97316"));
+
+        // Unique Sources
+        TabStatsHelper.AddSimpleStat(AnomaliesStatsBar, "SOURCES", "📤",
+            Statistics.UniqueSourceIPs.ToString("N0"),
+            ThemeColorHelper.GetColorHex("SlackInfo", "#58A6FF"));
+
+        // Unique Targets
+        TabStatsHelper.AddSimpleStat(AnomaliesStatsBar, "TARGETS", "🎯",
+            Statistics.UniqueTargetIPs.ToString("N0"),
+            ThemeColorHelper.GetColorHex("SlackDanger", "#DA3633"));
+
+        // Time Span
+        TabStatsHelper.AddSimpleStat(AnomaliesStatsBar, "TIME SPAN", "⏱️",
+            Statistics.TimeSpanFormatted,
+            ThemeColorHelper.GetColorHex("AccentSecondary", "#A371F7"));
     }
 
     public void Clear()

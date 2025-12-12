@@ -1,3 +1,7 @@
+---
+name: anomaly-detector-specialist
+---
+
 # Anomaly Detector Specialist Agent
 
 ## When to Use This Agent

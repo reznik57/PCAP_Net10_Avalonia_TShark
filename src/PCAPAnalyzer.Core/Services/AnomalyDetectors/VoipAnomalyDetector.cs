@@ -148,7 +148,7 @@ public sealed class VoipAnomalyDetector : ISpecializedDetector
                         SourceIP = group.Key ?? "",
                         DestinationIP = topDestination,
                         Protocol = "SIP",
-                        AffectedFrames = groupInvites.Select(p => (long)p.FrameNumber).ToList(),
+                        AffectedFrames = groupInvites.Select(p => (long)p.FrameNumber).Take(100).ToList(),
                         Metrics = new Dictionary<string, object>
                         {
                             { "TotalINVITEs", groupInvites.Count },

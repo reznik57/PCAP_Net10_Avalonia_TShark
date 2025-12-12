@@ -235,7 +235,7 @@ public sealed class CryptoMiningDetector : ISpecializedDetector
                         DestinationIP = topPool,
                         DestinationPort = topPoolPort,
                         Protocol = "Stratum/TCP",
-                        AffectedFrames = sourcePackets.Select(p => (long)p.FrameNumber).ToList(),
+                        AffectedFrames = sourcePackets.Select(p => (long)p.FrameNumber).Take(100).ToList(),
                         Metrics = new Dictionary<string, object>
                         {
                             { "StratumSubscribes", subscribes },

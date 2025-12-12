@@ -126,6 +126,7 @@ public partial class DashboardViewModel
                 Charts.UpdateAllCharts(filteredStats);
                 UpdateExtendedCollections();
                 UpdatePortActivityTimeline();
+                UpdateNetworkStatsBar();
             });
 
             FilterProgress = 1.0;
@@ -151,6 +152,7 @@ public partial class DashboardViewModel
         await _dispatcher.InvokeAsync(() =>
         {
             _currentStatistics = _unfilteredStatistics;
+            _filteredStatistics = null; // Clear filtered stats
             Statistics.ClearFilteredStatistics();
 
             if (_unfilteredStatistics is not null)
@@ -162,6 +164,7 @@ public partial class DashboardViewModel
 
             UpdateExtendedCollections();
             UpdatePortActivityTimeline();
+            UpdateNetworkStatsBar();
         });
         DebugLogger.Log("[DashboardViewModel] No filters active, using unfiltered packets");
     }

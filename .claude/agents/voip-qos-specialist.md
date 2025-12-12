@@ -1,3 +1,7 @@
+---
+name: voip-qos-specialist
+---
+
 # VoIP QoS Specialist Agent
 
 ## When to Use This Agent

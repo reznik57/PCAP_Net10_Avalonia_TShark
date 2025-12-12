@@ -20,7 +20,8 @@ using PCAPAnalyzer.UI.Interfaces;
 using PCAPAnalyzer.UI.Constants;
 using PCAPAnalyzer.UI.Services;
 using PCAPAnalyzer.UI.ViewModels.Base;
-using PCAPAnalyzer.Core.Utilities;
+using PCAPAnalyzer.UI.Utilities;
+using DebugLogger = PCAPAnalyzer.Core.Utilities.DebugLogger;
 
 namespace PCAPAnalyzer.UI.ViewModels;
 
@@ -42,6 +43,10 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     private IReadOnlyList<PacketInfo>? _allPackets;
     private bool _disposed;
 
+    // Unfiltered totals for Total/Filtered pattern (stored on initial load)
+    private int _unfilteredCountryCount;
+    private int _unfilteredFlowCount;
+
     // Filter debouncing (300ms throttle to prevent update spam during rapid filter changes)
     private readonly Subject<bool> _filterTrigger = new();
     private IDisposable? _filterSubscription;
@@ -58,6 +63,16 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     /// Drill-down popup for country/flow details (same pattern as Dashboard)
     /// </summary>
     public DrillDownPopupViewModel DrillDown { get; }
+
+    /// <summary>
+    /// Stats bar using unified Total/Filtered pattern (like Packet Analysis tab).
+    /// </summary>
+    public StatsBarControlViewModel GeographicStatsBar { get; } = new()
+    {
+        SectionTitle = "GEOGRAPHIC OVERVIEW",
+        AccentColor = ThemeColorHelper.GetColorHex("AccentPrimary", "#58A6FF"),
+        ColumnCount = 6
+    };
 
     // Top countries list (for legacy compatibility)
     [ObservableProperty] private System.Collections.ObjectModel.ObservableCollection<CountryItemViewModel> _topCountries = [];
@@ -80,10 +95,10 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     [ObservableProperty] private int _filteredCountryCount;
 
     /// <summary>
-    /// Indicates if GlobalFilterState has active filters affecting this tab
+    /// Indicates if GlobalFilterState has active filters affecting this tab.
+    /// Returns true for ANY active filter (not just country criteria) for Total/Filtered display.
     /// </summary>
-    public bool IsGlobalFilterActive => _globalFilterState?.HasActiveFilters == true &&
-        GlobalFilterStateHelper.HasCountryCriteria(_globalFilterState);
+    [ObservableProperty] private bool _isGlobalFilterActive;
 
     /// <summary>
     /// Percentage of packets shown after filtering
@@ -266,6 +281,49 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
     }
 
     /// <summary>
+    /// Sets the filtered packet set and updates statistics accordingly.
+    /// Called by MainWindowViewModel when global filters are applied.
+    /// </summary>
+    /// <param name="packets">The packet list (filtered or full if filters cleared)</param>
+    /// <param name="isFilterActive">Explicit filter state - true if filter active, false if cleared</param>
+    public async Task SetFilteredPacketsAsync(IReadOnlyList<PacketInfo> packets, bool isFilterActive = true)
+    {
+        DebugLogger.Log($"[CountryTrafficViewModel] SetFilteredPacketsAsync called with {packets.Count:N0} packets (isFilterActive={isFilterActive})");
+
+        // CRITICAL: Use explicit parameter, not count comparison (which is unreliable)
+        IsGlobalFilterActive = isFilterActive;
+
+        await _dispatcher.InvokeAsync(() =>
+        {
+            // Update Statistics component with packet count for Total/Filtered display
+            Statistics.SetFilteredState(packets.Count, IsGlobalFilterActive);
+
+            // Update filtered packet/byte counts at ViewModel level too (for header display)
+            FilteredTotalPackets = packets.Count;
+
+            UpdateTopCountriesList();
+
+            // Refresh stats bar to reflect new filter state
+            UpdateGeographicStatsBar();
+        });
+
+        DebugLogger.Log($"[CountryTrafficViewModel] SetFilteredPacketsAsync complete - {FilteredCountryCount} countries displayed, {packets.Count:N0} packets, isFilterActive={IsGlobalFilterActive}");
+    }
+
+    /// <summary>
+    /// Clears the filtered packet state, showing all data again.
+    /// Called when filters are cleared.
+    /// </summary>
+    public void ClearFilteredPackets()
+    {
+        IsGlobalFilterActive = false;
+        Statistics.ClearFilteredState();
+        FilteredTotalPackets = _allPackets?.Count ?? 0;
+        UpdateTopCountriesList();
+        DebugLogger.Log("[CountryTrafficViewModel] Cleared filter state - showing all countries");
+    }
+
+    /// <summary>
     /// Updates all statistics and visualizations
     /// </summary>
     public async Task UpdateStatistics(NetworkStatistics statistics)
@@ -317,6 +375,9 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
 
         // Update Tables component
         Tables.UpdateTables(statistics);
+
+        // Update GeographicStatsBar with unified Total/Filtered pattern
+        UpdateGeographicStatsBar();
     }
 
     /// <summary>
@@ -346,8 +407,7 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         FilteredTotalBytes = filteredCountries.Sum(c => c.TotalBytes);
         FilteredCountryCount = filteredCountries.Count;
 
-        // Notify dependent properties
-        OnPropertyChanged(nameof(IsGlobalFilterActive));
+        // Notify dependent computed properties
         OnPropertyChanged(nameof(FilteredPacketsPercentage));
         OnPropertyChanged(nameof(FilteredTotalBytesFormatted));
 
@@ -737,9 +797,69 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
             _dispatcher.InvokeAsync(() =>
             {
                 UpdateTopCountriesList();
+                UpdateGeographicStatsBar();
                 DebugLogger.Log($"[CountryTrafficViewModel] Country list updated after global filter change");
             });
         }
+    }
+
+    // ==================== GEOGRAPHIC STATS BAR (Total/Filtered Pattern) ====================
+
+    /// <summary>
+    /// Updates GeographicStatsBar with unified Total/Filtered display pattern.
+    /// Call after filtering or when statistics change.
+    /// </summary>
+    private void UpdateGeographicStatsBar()
+    {
+        GeographicStatsBar.ClearStats();
+
+        // Get totals from the full PCAP statistics (stored on initial load)
+        var totalPackets = Statistics.UnfilteredTotalPackets > 0
+            ? Statistics.UnfilteredTotalPackets
+            : _currentStatistics?.TotalPackets ?? 0;
+        var totalBytes = Statistics.UnfilteredTotalBytes > 0
+            ? Statistics.UnfilteredTotalBytes
+            : _currentStatistics?.TotalBytes ?? 0L;
+
+        // Get filtered values from current state
+        var filteredPackets = IsGlobalFilterActive ? FilteredTotalPackets : totalPackets;
+        var filteredBytes = IsGlobalFilterActive ? FilteredTotalBytes : totalBytes;
+
+        // Countries stat - with Total/Filtered pattern
+        var totalCountries = _unfilteredCountryCount > 0 ? _unfilteredCountryCount : UniqueCountries;
+        var filteredCountries = IsGlobalFilterActive ? UniqueCountries : totalCountries;
+        TabStatsHelper.AddNumericStat(GeographicStatsBar, "COUNTRIES", "🌍",
+            totalCountries, filteredCountries, IsGlobalFilterActive,
+            ThemeColorHelper.GetColorHex("AccentPrimary", "#58A6FF"));
+
+        // Packets
+        TabStatsHelper.AddNumericStat(GeographicStatsBar, "PACKETS", "📦",
+            totalPackets, filteredPackets, IsGlobalFilterActive,
+            ThemeColorHelper.GetColorHex("SlackSuccess", "#3FB950"));
+
+        // Traffic
+        TabStatsHelper.AddBytesStat(GeographicStatsBar, "TRAFFIC", "💾",
+            totalBytes, filteredBytes, IsGlobalFilterActive,
+            ThemeColorHelper.GetColorHex("SlackWarning", "#D29922"));
+
+        // Flows - with Total/Filtered pattern
+        var totalFlows = _unfilteredFlowCount > 0 ? _unfilteredFlowCount : CrossBorderFlows;
+        var filteredFlows = IsGlobalFilterActive ? CrossBorderFlows : totalFlows;
+        TabStatsHelper.AddNumericStat(GeographicStatsBar, "FLOWS", "🔄",
+            totalFlows, filteredFlows, IsGlobalFilterActive,
+            ThemeColorHelper.GetColorHex("AccentPurple", "#A371F7"));
+
+        // Top Source Country (from first item in Tables)
+        var topSource = Tables.TopSourceCountriesByPackets.FirstOrDefault()?.CountryName ?? "N/A";
+        TabStatsHelper.AddSimpleStat(GeographicStatsBar, "TOP SOURCE", "📤",
+            topSource, null,
+            ThemeColorHelper.GetColorHex("SlackDanger", "#F85149"));
+
+        // Top Dest Country
+        var topDest = Tables.TopDestinationCountriesByPackets.FirstOrDefault()?.CountryName ?? "N/A";
+        TabStatsHelper.AddSimpleStat(GeographicStatsBar, "TOP DEST", "📥",
+            topDest, null,
+            ThemeColorHelper.GetColorHex("SlackInfo", "#58A6FF"));
     }
 
     // ==================== COMPATIBILITY LAYER ====================
@@ -1041,6 +1161,19 @@ public partial class CountryTrafficViewModel : SmartFilterableTab, ITabPopulatio
         DebugLogger.Log($"[CountryTrafficViewModel.PopulateFromCacheAsync] Populating from cache with {result.AllPackets.Count:N0} packets");
         SetPackets(result.AllPackets);  // Must use SetPackets to populate DataManager
         await UpdateStatistics(result.Statistics);
+
+        // Store unfiltered totals for Total/Filtered display pattern
+        // CRITICAL: Pass the ACTUAL packet/byte counts from result.Statistics,
+        // NOT Statistics.TotalPackets which contains GeolocatedPackets (doubled count)
+        Statistics.StoreUnfilteredTotals(result.Statistics.TotalPackets, result.Statistics.TotalBytes);
+        _unfilteredCountryCount = Statistics.UniqueCountries;
+        _unfilteredFlowCount = Statistics.CrossBorderFlows;
+        IsGlobalFilterActive = false;
+
+        // CRITICAL: Refresh stats bar AFTER storing unfiltered totals
+        // UpdateGeographicStatsBar() was called inside UpdateStatistics() when UnfilteredTotal* were still 0
+        UpdateGeographicStatsBar();
+        DebugLogger.Log($"[CountryTrafficViewModel] Initial load complete - unfiltered: {Statistics.UnfilteredTotalPackets:N0} packets, {Statistics.UnfilteredTotalBytes:N0} bytes, {_unfilteredCountryCount} countries, {_unfilteredFlowCount} flows");
     }
 
     // ==================== IDisposable IMPLEMENTATION ====================

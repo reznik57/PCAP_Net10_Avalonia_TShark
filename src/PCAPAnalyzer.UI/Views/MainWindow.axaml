@@ -168,14 +168,14 @@
             </TabItem>
 
             <!-- Packet Analysis Tab with Badge -->
-            <TabItem IsEnabled="{Binding CanAccessAnalysisTabs}">
+            <TabItem x:Name="PacketAnalysisTab" IsEnabled="{Binding CanAccessAnalysisTabs}">
                 <TabItem.Header>
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <TextBlock Text="{Binding PacketAnalysisBadge}" FontSize="{StaticResource FontSizeInput}" VerticalAlignment="Center"/>
                         <TextBlock Text="📦 Packet Analysis" FontSize="{StaticResource FontSizeMedium}" VerticalAlignment="Center"/>
                     </StackPanel>
                 </TabItem.Header>
-                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="{DynamicResource BackgroundDarkest}" BringIntoViewOnFocusChange="False">
+                <ScrollViewer x:Name="PacketAnalysisScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="{DynamicResource BackgroundDarkest}" BringIntoViewOnFocusChange="False">
                     <Grid Margin="24" RowDefinitions="Auto,16,Auto,16,Auto,16,Auto,16,Auto">
                         <!-- ✅ CLEANUP: FileSelectionControl removed (now in File Manager tab with awesome progress panel) -->
 
@@ -483,6 +483,14 @@
                     </StackPanel>
                 </TabItem.Header>
                 <ns3:ReportView DataContext="{Binding ReportViewModel}" />
+            </TabItem>
+            <TabItem>
+                <TabItem.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="ℹ️ About" FontSize="{StaticResource FontSizeMedium}" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </TabItem.Header>
+                <ns3:AboutView DataContext="{Binding AboutViewModel}" />
             </TabItem>
             </TabControl>
 

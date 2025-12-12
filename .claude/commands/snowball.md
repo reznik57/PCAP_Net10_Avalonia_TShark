@@ -4,6 +4,9 @@ argument-hint: [Feature Name]
 ---
 # Snowball Execution Plan
 
+> **Note**: For complex features requiring architectural debate, use `/ultrathink` instead.
+> Snowball is for straightforward implementations where the approach is already clear.
+
 Create a safe, incremental plan to implement: **$ARGUMENTS**
 
 ## Phase 1: Dependency Verification

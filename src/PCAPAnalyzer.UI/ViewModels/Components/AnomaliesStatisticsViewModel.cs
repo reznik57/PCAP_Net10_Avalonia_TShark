@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.Core.Utilities;
 using PCAPAnalyzer.UI.Models;
 
 namespace PCAPAnalyzer.UI.ViewModels.Components;
@@ -31,9 +32,47 @@ public partial class AnomaliesStatisticsViewModel : ObservableObject
     [ObservableProperty] private int _uniqueTargetIPs;
     [ObservableProperty] private string _timeSpanFormatted = "--";
 
-    // Filtered state
+    // Filtered state and Total/Filtered display pattern
     [ObservableProperty] private bool _isFiltered;
     [ObservableProperty] private int _filteredTotalAnomalies;
+
+    // ==================== PACKET-LEVEL FILTERED STATISTICS ====================
+
+    /// <summary>
+    /// Filtered packet count (from global filter application)
+    /// </summary>
+    [ObservableProperty] private long _filteredTotalPackets;
+
+    /// <summary>
+    /// Unfiltered packet count (stored on first load)
+    /// </summary>
+    [ObservableProperty] private long _unfilteredTotalPackets;
+
+    /// <summary>
+    /// Indicates if global filter is active (packet-level)
+    /// </summary>
+    [ObservableProperty] private bool _isPacketFilterActive;
+
+    /// <summary>
+    /// Percentage of packets shown after filtering
+    /// </summary>
+    public double FilteredPacketsPercentage => UnfilteredTotalPackets > 0
+        ? (FilteredTotalPackets * 100.0 / UnfilteredTotalPackets)
+        : 100;
+
+    // Unfiltered totals (stored on initial load, before any filters)
+    [ObservableProperty] private int _totalAnomaliesAll;
+    [ObservableProperty] private int _criticalCountAll;
+    [ObservableProperty] private int _highCountAll;
+    [ObservableProperty] private int _mediumCountAll;
+    [ObservableProperty] private int _lowCountAll;
+
+    // Percentage calculations for Total/Filtered display
+    public double TotalAnomaliesPercentage => TotalAnomaliesAll > 0 ? (TotalAnomalies * 100.0 / TotalAnomaliesAll) : 0;
+    public double CriticalCountPercentage => CriticalCountAll > 0 ? (CriticalCount * 100.0 / CriticalCountAll) : 0;
+    public double HighCountPercentage => HighCountAll > 0 ? (HighCount * 100.0 / HighCountAll) : 0;
+    public double MediumCountPercentage => MediumCountAll > 0 ? (MediumCount * 100.0 / MediumCountAll) : 0;
+    public double LowCountPercentage => LowCountAll > 0 ? (LowCount * 100.0 / LowCountAll) : 0;
 
     // Ranked tables
     public ObservableCollection<AnomalyEndpointViewModel> TopSources { get; } = [];
@@ -129,6 +168,32 @@ public partial class AnomaliesStatisticsViewModel : ObservableObject
     {
         IsFiltered = isFiltered;
         FilteredTotalAnomalies = filteredCount;
+        NotifyPercentageChanges();
+    }
+
+    /// <summary>
+    /// Stores unfiltered totals for Total/Filtered display pattern.
+    /// Call this when data is first loaded before any filters are applied.
+    /// </summary>
+    public void StoreUnfilteredTotals(AnomalyKPIs kpis)
+    {
+        TotalAnomaliesAll = kpis.TotalAnomalies;
+        CriticalCountAll = kpis.CriticalCount;
+        HighCountAll = kpis.HighCount;
+        MediumCountAll = kpis.MediumCount;
+        LowCountAll = kpis.LowCount;
+    }
+
+    /// <summary>
+    /// Notifies UI of percentage property changes (computed properties don't auto-notify).
+    /// </summary>
+    private void NotifyPercentageChanges()
+    {
+        OnPropertyChanged(nameof(TotalAnomaliesPercentage));
+        OnPropertyChanged(nameof(CriticalCountPercentage));
+        OnPropertyChanged(nameof(HighCountPercentage));
+        OnPropertyChanged(nameof(MediumCountPercentage));
+        OnPropertyChanged(nameof(LowCountPercentage));
     }
 
     public void Clear()
@@ -154,5 +219,43 @@ public partial class AnomaliesStatisticsViewModel : ObservableObject
         _lastTargetsFingerprint = null;
         _lastPortsFingerprint = null;
         _lastCategoriesFingerprint = null;
+    }
+
+    // ==================== PACKET-LEVEL FILTERED STATE METHODS ====================
+
+    /// <summary>
+    /// Stores unfiltered packet totals for Total/Filtered display pattern.
+    /// Call this when data is first loaded, before any filters are applied.
+    /// </summary>
+    public void StoreUnfilteredPacketTotals(long packetCount)
+    {
+        UnfilteredTotalPackets = packetCount;
+        FilteredTotalPackets = packetCount;
+        IsPacketFilterActive = false;
+        DebugLogger.Log($"[AnomaliesStatisticsViewModel] Stored unfiltered packet totals: {UnfilteredTotalPackets:N0} packets");
+    }
+
+    /// <summary>
+    /// Sets packet-level filtered state for Total/Filtered display pattern.
+    /// Call this when global filters are applied.
+    /// </summary>
+    public void SetPacketFilteredState(long filteredPacketCount, bool isFiltered)
+    {
+        FilteredTotalPackets = filteredPacketCount;
+        IsPacketFilterActive = isFiltered;
+        OnPropertyChanged(nameof(FilteredPacketsPercentage));
+        DebugLogger.Log($"[AnomaliesStatisticsViewModel] SetPacketFilteredState: {filteredPacketCount:N0} packets (isFiltered={isFiltered}, {FilteredPacketsPercentage:F1}%)");
+    }
+
+    /// <summary>
+    /// Clears packet-level filtered state, restoring unfiltered display.
+    /// Call when filters are cleared.
+    /// </summary>
+    public void ClearPacketFilteredState()
+    {
+        FilteredTotalPackets = UnfilteredTotalPackets;
+        IsPacketFilterActive = false;
+        OnPropertyChanged(nameof(FilteredPacketsPercentage));
+        DebugLogger.Log("[AnomaliesStatisticsViewModel] Cleared packet filtered state");
     }
 }

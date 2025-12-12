@@ -125,6 +125,9 @@ namespace PCAPAnalyzer.UI.ViewModels
                     .Take(10)
                     .ToList();
                 
+                // Populate anomalies and threats for this time window
+                PopulateAnomaliesAndThreats(chartData, windowStart, windowEnd);
+
                 // Show popup with data
                 ShowChartDataPopup(chartData);
             }
@@ -244,7 +247,10 @@ namespace PCAPAnalyzer.UI.ViewModels
                     .OrderByDescending(ip => ip.ByteCount)
                     .Take(10)
                     .ToList();
-                
+
+                // Populate anomalies and threats for this time window
+                PopulateAnomaliesAndThreats(chartData, windowStart, windowEnd);
+
                 ShowChartDataPopup(chartData);
             }
             catch (Exception ex)
@@ -252,7 +258,65 @@ namespace PCAPAnalyzer.UI.ViewModels
                 DebugLogger.Log($"[DashboardViewModel] Error handling port activity chart point click: {ex.Message}");
             }
         }
-        
+
+
+        /// <summary>
+        /// Gets color for anomaly/threat severity display
+        /// </summary>
+        private static string GetSeverityColor(string severity) => severity.ToLower() switch
+        {
+            "critical" => "#DC2626",  // Red
+            "high" => "#F59E0B",      // Orange  
+            "medium" => "#FBBF24",    // Yellow
+            "low" => "#10B981",       // Green
+            _ => "#6B7280"            // Gray
+        };
+
+        /// <summary>
+        /// Filters anomalies and threats for the given time window and adds to chart data
+        /// </summary>
+        private void PopulateAnomaliesAndThreats(ChartPointData chartData, DateTime windowStart, DateTime windowEnd)
+        {
+            // Filter anomalies by DetectedAt timestamp
+            chartData.Anomalies = _currentAnomalies
+                .Where(a => a.DetectedAt >= windowStart && a.DetectedAt <= windowEnd)
+                .OrderByDescending(a => a.Severity)
+                .Take(10)
+                .Select(a => new AnomalyDisplayData
+                {
+                    Type = a.Type,
+                    Category = a.Category.ToString(),
+                    Severity = a.Severity.ToString(),
+                    SeverityColor = GetSeverityColor(a.Severity.ToString()),
+                    Description = a.Description,
+                    SourceIP = a.SourceIP,
+                    DestinationIP = a.DestinationIP,
+                    AffectedFrameCount = a.AffectedFrames.Count,
+                    DetectedAt = a.DetectedAt,
+                    DetectorName = a.DetectorName
+                })
+                .ToList();
+
+            // Filter threats from statistics by Timestamp
+            var threats = _currentStatistics?.Threats ?? [];
+            chartData.Threats = threats
+                .Where(t => t.Timestamp >= windowStart && t.Timestamp <= windowEnd)
+                .OrderByDescending(t => t.Severity)
+                .Take(10)
+                .Select(t => new ThreatDisplayData
+                {
+                    Type = t.Type,
+                    Severity = t.Severity.ToString(),
+                    SeverityColor = GetSeverityColor(t.Severity.ToString()),
+                    Description = t.Description,
+                    SourceIP = t.SourceIP,
+                    DestinationIP = t.DestinationIP,
+                    Confidence = t.Confidence,
+                    Timestamp = t.Timestamp,
+                    PacketCount = t.PacketNumbers.Count
+                })
+                .ToList();
+        }
         /// <summary>
         /// Shows the chart data popup with the given data
         /// </summary>

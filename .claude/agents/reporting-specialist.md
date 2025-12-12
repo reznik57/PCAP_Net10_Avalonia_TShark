@@ -1,3 +1,7 @@
+---
+name: reporting-specialist
+---
+
 # Reporting Specialist Agent
 
 ## When to Use This Agent

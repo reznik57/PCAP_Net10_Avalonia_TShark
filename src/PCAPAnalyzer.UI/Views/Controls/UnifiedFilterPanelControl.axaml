@@ -185,42 +185,40 @@
                 </StackPanel>
             </Border>
 
-            <!-- Progress Bar (visible during filtering) -->
-            <Border Background="{DynamicResource BackgroundCard}" Padding="16,8" IsVisible="{Binding IsApplyingFilter}">
-                <StackPanel Spacing="6">
-                    <TextBlock Text="Filtering packets..." FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource SlackInfo}"/>
-                    <ProgressBar Height="4" Background="{DynamicResource BackgroundElevated}" Foreground="{DynamicResource AccentPrimary}"
-                                 IsIndeterminate="True" CornerRadius="2"/>
-                </StackPanel>
-            </Border>
-
             <!-- ═══ EXPANDED CONTENT (collapsible) ═══ -->
             <Border IsVisible="{Binding IsExpanded}"
                     BorderBrush="{DynamicResource BackgroundElevated}" BorderThickness="0,1,0,0"
                     Padding="16,12">
                 <StackPanel Spacing="16">
-                    <!-- IP/Port Input Row -->
-                    <Grid ColumnDefinitions="*,16,*,16,*">
-                        <StackPanel Grid.Column="0" Spacing="6">
+                    <!-- IP/Port/Search Input Row -->
+                    <Grid ColumnDefinitions="*,12,*,12,Auto,12,*">
+                        <StackPanel Grid.Column="0" Spacing="4">
                             <TextBlock Text="SOURCE IP" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
                             <TextBox Text="{Binding SourceIPInput}"
                                      Watermark="e.g. 192.168.1.0/24"
                                      Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource BorderPrimary}" BorderThickness="1"
-                                     Foreground="{DynamicResource TextPrimaryBrush}" CornerRadius="6" Padding="12,8" FontSize="{StaticResource FontSizeMedium}"/>
+                                     Foreground="{DynamicResource TextPrimaryBrush}" CornerRadius="6" Padding="10,6" FontSize="{StaticResource FontSizeBase}"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="2" Spacing="6">
+                        <StackPanel Grid.Column="2" Spacing="4">
                             <TextBlock Text="DESTINATION IP" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
                             <TextBox Text="{Binding DestinationIPInput}"
                                      Watermark="e.g. 10.0.0.1"
                                      Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource BorderPrimary}" BorderThickness="1"
-                                     Foreground="{DynamicResource TextPrimaryBrush}" CornerRadius="6" Padding="12,8" FontSize="{StaticResource FontSizeMedium}"/>
+                                     Foreground="{DynamicResource TextPrimaryBrush}" CornerRadius="6" Padding="10,6" FontSize="{StaticResource FontSizeBase}"/>
                         </StackPanel>
-                        <StackPanel Grid.Column="4" Spacing="6">
+                        <StackPanel Grid.Column="4" Spacing="4" Width="120">
                             <TextBlock Text="PORT RANGE" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
                             <TextBox Text="{Binding PortRangeInput}"
                                      Watermark="e.g. 80-443"
                                      Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource BorderPrimary}" BorderThickness="1"
-                                     Foreground="{DynamicResource TextPrimaryBrush}" CornerRadius="6" Padding="12,8" FontSize="{StaticResource FontSizeMedium}"/>
+                                     Foreground="{DynamicResource TextPrimaryBrush}" CornerRadius="6" Padding="10,6" FontSize="{StaticResource FontSizeBase}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="6" Spacing="4">
+                            <TextBlock Text="SEARCH (AND FILTER, MATCH ANYWHERE)" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                            <TextBox Text="{Binding SearchInput}"
+                                     Watermark="Search all fields..."
+                                     Background="{DynamicResource BackgroundDark}" BorderBrush="{DynamicResource BorderPrimary}" BorderThickness="1"
+                                     Foreground="{DynamicResource TextPrimaryBrush}" CornerRadius="6" Padding="10,6" FontSize="{StaticResource FontSizeBase}"/>
                         </StackPanel>
                     </Grid>
 
@@ -319,7 +317,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -336,7 +334,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -353,7 +351,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -370,29 +368,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
-                                                        Classes="filter-chip-slack"
-                                                        Classes.included="{Binding IsIncluded}"
-                                                        Classes.excluded="{Binding IsExcluded}"/>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </StackPanel>
-                                <!-- Security (Deprecated Crypto, Cleartext Auth) -->
-                                <StackPanel Spacing="8">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="SECURITY" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
-                                        <Border Background="{DynamicResource SlackDanger}" CornerRadius="4" Padding="6,2" Opacity="0.7">
-                                            <TextBlock Text="⚠️ deprecated crypto" FontSize="{StaticResource FontSizeXS}" Foreground="White"/>
-                                        </Border>
-                                    </StackPanel>
-                                    <ItemsControl ItemsSource="{Binding SecurityChips}">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -405,8 +381,8 @@
 
                         <!-- 1: Country Tab Content -->
                         <TabItem>
-                            <StackPanel Spacing="16" DataContext="{Binding CountryTab}">
-                                <StackPanel Spacing="8">
+                            <StackPanel Spacing="12" DataContext="{Binding CountryTab}">
+                                <StackPanel Spacing="6">
                                     <TextBlock Text="DIRECTION" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
                                     <ItemsControl ItemsSource="{Binding DirectionChips}">
                                         <ItemsControl.ItemsPanel>
@@ -414,7 +390,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -422,7 +398,7 @@
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>
                                 </StackPanel>
-                                <StackPanel Spacing="8">
+                                <StackPanel Spacing="6">
                                     <TextBlock Text="REGIONS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
                                     <ItemsControl ItemsSource="{Binding RegionChips}">
                                         <ItemsControl.ItemsPanel>
@@ -430,7 +406,23 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
+                                                        Classes="filter-chip-slack"
+                                                        Classes.included="{Binding IsIncluded}"
+                                                        Classes.excluded="{Binding IsExcluded}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="COUNTRIES" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding CountryChips}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -452,7 +444,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -468,7 +460,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -481,83 +473,46 @@
 
                         <!-- 3: Threats Tab Content -->
                         <TabItem>
-                            <StackPanel Spacing="16" DataContext="{Binding ThreatsTab}">
-                                <!-- Search & Dropdowns Row -->
-                                <Grid ColumnDefinitions="180,16,200,16,*">
-                                    <StackPanel Grid.Column="0" Spacing="4">
+                            <StackPanel Spacing="12" DataContext="{Binding ThreatsTab}">
+                                <!-- Dropdowns Row (Category + Threat Type) -->
+                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                    <StackPanel Spacing="4">
                                         <TextBlock Text="CATEGORY" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
-                                        <ComboBox SelectedItem="{Binding SelectedCategory}" ItemsSource="{Binding Categories}" Width="180" FontSize="{StaticResource FontSizeBase}"/>
+                                        <ComboBox SelectedItem="{Binding SelectedCategory}" ItemsSource="{Binding Categories}" Width="160" FontSize="{StaticResource FontSizeBase}"/>
                                     </StackPanel>
-                                    <StackPanel Grid.Column="2" Spacing="4">
+                                    <StackPanel Spacing="4">
                                         <TextBlock Text="THREAT TYPE" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
-                                        <ComboBox SelectedItem="{Binding SelectedThreatType}" ItemsSource="{Binding ThreatTypes}" Width="200" FontSize="{StaticResource FontSizeBase}"/>
+                                        <ComboBox SelectedItem="{Binding SelectedThreatType}" ItemsSource="{Binding ThreatTypes}" Width="180" FontSize="{StaticResource FontSizeBase}"/>
                                     </StackPanel>
-                                    <StackPanel Grid.Column="4" Spacing="4">
-                                        <TextBlock Text="SEARCH THREATS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
-                                        <TextBox Text="{Binding SearchInput}" Watermark="Search threat names, IPs, ports..." FontSize="{StaticResource FontSizeBase}"/>
-                                    </StackPanel>
-                                </Grid>
+                                </StackPanel>
 
-                                <!-- Quick Filter Toggles (OR logic) -->
-                                <StackPanel Spacing="8">
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <TextBlock Text="QUICK FILTERS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center"/>
-                                        <Border Background="{DynamicResource BackgroundCard}" CornerRadius="4" Padding="6,2" VerticalAlignment="Center">
-                                            <TextBlock Text="OR logic - matches any" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource AccentPurpleBrush}"/>
-                                        </Border>
-                                        <Button Command="{Binding ClearQuickFiltersCommand}" Background="Transparent" BorderThickness="0" Padding="4,2" Cursor="Hand"
-                                                IsVisible="{Binding HasActiveQuickFilters}" VerticalAlignment="Center">
-                                            <TextBlock Text="Clear all" FontSize="{StaticResource FontSizeXS}" Foreground="{DynamicResource SlackDanger}"/>
-                                        </Button>
-                                    </StackPanel>
+                                <!-- Quick Filters (OR logic) - matches other tab styles -->
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="QUICK FILTERS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
                                     <WrapPanel>
-                                        <ToggleButton IsChecked="{Binding ShowCriticalOnly}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="Critical severity only">
-                                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <TextBlock Text="🔴" FontSize="{StaticResource FontSizeXS}"/>
-                                                <TextBlock Text="Critical" FontSize="{StaticResource FontSizeSmall}"/>
-                                            </StackPanel>
+                                        <ToggleButton IsChecked="{Binding ShowCriticalOnly}" Classes="filter-chip-toggle" ToolTip.Tip="Critical severity only">
+                                            <TextBlock Text="🔴 Critical" FontSize="{StaticResource FontSizeSmall}"/>
                                         </ToggleButton>
-                                        <ToggleButton IsChecked="{Binding ShowHighOnly}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="High+ severity">
-                                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <TextBlock Text="🟠" FontSize="{StaticResource FontSizeXS}"/>
-                                                <TextBlock Text="High+" FontSize="{StaticResource FontSizeSmall}"/>
-                                            </StackPanel>
+                                        <ToggleButton IsChecked="{Binding ShowHighOnly}" Classes="filter-chip-toggle" ToolTip.Tip="High+ severity">
+                                            <TextBlock Text="🟠 High+" FontSize="{StaticResource FontSizeSmall}"/>
                                         </ToggleButton>
-                                        <ToggleButton IsChecked="{Binding IsInsecureProtocolFilterActive}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="Insecure protocol usage (HTTP, Telnet, FTP)">
-                                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <TextBlock Text="🔓" FontSize="{StaticResource FontSizeXS}"/>
-                                                <TextBlock Text="Insecure" FontSize="{StaticResource FontSizeSmall}"/>
-                                            </StackPanel>
+                                        <ToggleButton IsChecked="{Binding IsInsecureProtocolFilterActive}" Classes="filter-chip-toggle" ToolTip.Tip="Insecure protocols">
+                                            <TextBlock Text="🔓 Insecure" FontSize="{StaticResource FontSizeSmall}"/>
                                         </ToggleButton>
-                                        <ToggleButton IsChecked="{Binding IsKnownCVEFilterActive}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="Known CVE vulnerabilities">
-                                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <TextBlock Text="🛡️" FontSize="{StaticResource FontSizeXS}"/>
-                                                <TextBlock Text="CVEs" FontSize="{StaticResource FontSizeSmall}"/>
-                                            </StackPanel>
+                                        <ToggleButton IsChecked="{Binding IsKnownCVEFilterActive}" Classes="filter-chip-toggle" ToolTip.Tip="Known CVEs">
+                                            <TextBlock Text="🛡️ CVEs" FontSize="{StaticResource FontSizeSmall}"/>
                                         </ToggleButton>
-                                        <ToggleButton IsChecked="{Binding IsWeakEncryptionFilterActive}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="Weak encryption (SSL, RC4, DES)">
-                                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <TextBlock Text="🔐" FontSize="{StaticResource FontSizeXS}"/>
-                                                <TextBlock Text="Weak Crypto" FontSize="{StaticResource FontSizeSmall}"/>
-                                            </StackPanel>
+                                        <ToggleButton IsChecked="{Binding IsWeakEncryptionFilterActive}" Classes="filter-chip-toggle" ToolTip.Tip="Weak encryption">
+                                            <TextBlock Text="🔐 Weak Crypto" FontSize="{StaticResource FontSizeSmall}"/>
                                         </ToggleButton>
-                                        <ToggleButton IsChecked="{Binding IsAuthIssuesFilterActive}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="Authentication issues">
-                                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <TextBlock Text="🔑" FontSize="{StaticResource FontSizeXS}"/>
-                                                <TextBlock Text="Auth" FontSize="{StaticResource FontSizeSmall}"/>
-                                            </StackPanel>
+                                        <ToggleButton IsChecked="{Binding IsAuthIssuesFilterActive}" Classes="filter-chip-toggle" ToolTip.Tip="Auth issues">
+                                            <TextBlock Text="🔑 Auth" FontSize="{StaticResource FontSizeSmall}"/>
                                         </ToggleButton>
-                                        <ToggleButton IsChecked="{Binding IsCleartextFilterActive}" Classes="quick-filter-chip" Margin="0,0,6,6" ToolTip.Tip="Cleartext/unencrypted data">
-                                            <StackPanel Orientation="Horizontal" Spacing="4">
-                                                <TextBlock Text="📝" FontSize="{StaticResource FontSizeXS}"/>
-                                                <TextBlock Text="Cleartext" FontSize="{StaticResource FontSizeSmall}"/>
-                                            </StackPanel>
+                                        <ToggleButton IsChecked="{Binding IsCleartextFilterActive}" Classes="filter-chip-toggle" ToolTip.Tip="Cleartext data">
+                                            <TextBlock Text="📝 Cleartext" FontSize="{StaticResource FontSizeSmall}"/>
                                         </ToggleButton>
                                     </WrapPanel>
                                 </StackPanel>
-
-                                <!-- Divider -->
-                                <Border Height="1" Background="{DynamicResource BackgroundElevated}" Margin="0,4"/>
 
                                 <!-- Severity Chips -->
                                 <StackPanel Spacing="8">
@@ -568,7 +523,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -578,7 +533,7 @@
                                 </StackPanel>
 
                                 <!-- Category Chips -->
-                                <StackPanel Spacing="8">
+                                <StackPanel Spacing="6">
                                     <TextBlock Text="THREAT CATEGORY" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
                                     <ItemsControl ItemsSource="{Binding ThreatCategoryChips}">
                                         <ItemsControl.ItemsPanel>
@@ -586,7 +541,25 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
+                                                        Classes="filter-chip-slack"
+                                                        Classes.included="{Binding IsIncluded}"
+                                                        Classes.excluded="{Binding IsExcluded}"/>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+
+                                <!-- Security Packet Filters (deprecated crypto, insecure protocols) -->
+                                <StackPanel Spacing="6">
+                                    <TextBlock Text="SECURITY FILTERS" FontSize="{StaticResource FontSizeSmall}" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                                    <ItemsControl ItemsSource="{Binding SecurityChips}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="vm:FilterChipViewModel">
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -608,7 +581,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -624,7 +597,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -640,7 +613,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -662,7 +635,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -678,7 +651,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -694,7 +667,7 @@
                                         </ItemsControl.ItemsPanel>
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:FilterChipViewModel">
-                                                <Button Content="{Binding Name}" Command="{Binding ToggleCommand}"
+                                                <Button Content="{Binding DisplayName}" Command="{Binding ToggleCommand}"
                                                         Classes="filter-chip-slack"
                                                         Classes.included="{Binding IsIncluded}"
                                                         Classes.excluded="{Binding IsExcluded}"/>
@@ -707,10 +680,144 @@
                     </TabControl>
                 </StackPanel>
             </Border>
+
+            <!-- ═══ PROMINENT FILTER PROGRESS BAR (sticky footer) ═══ -->
+            <!-- Visible at bottom of panel during filtering - tall bar with glow effect -->
+            <Border IsVisible="{Binding IsApplyingFilter}"
+                    Background="{DynamicResource BackgroundDark}"
+                    BorderBrush="{DynamicResource AccentPrimary}"
+                    BorderThickness="0,2,0,0"
+                    CornerRadius="0,0,12,12"
+                    Padding="20,14"
+                    BoxShadow="0 -4 16 0 #3F51B540">
+                <StackPanel Spacing="10">
+                    <!-- Status row with icon, message, and percentage -->
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <!-- Three-dot pulsing loader (Slack/Discord style) -->
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4"
+                                    Margin="0,0,12,0" VerticalAlignment="Center">
+                            <Border Width="8" Height="8" CornerRadius="4"
+                                    Background="{DynamicResource AccentPrimary}" Classes="pulse-dot-1"/>
+                            <Border Width="8" Height="8" CornerRadius="4"
+                                    Background="{DynamicResource AccentPrimary}" Classes="pulse-dot-2"/>
+                            <Border Width="8" Height="8" CornerRadius="4"
+                                    Background="{DynamicResource AccentPrimary}" Classes="pulse-dot-3"/>
+                        </StackPanel>
+                        <!-- Status message - larger and more prominent -->
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding FilterStatusMessage}"
+                                   FontSize="{StaticResource FontSizeMedium}"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AccentPrimary}"
+                                   VerticalAlignment="Center"/>
+                        <!-- Percentage - larger and bold -->
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding FilterProgress, StringFormat='{}{0:P0}'}"
+                                   FontSize="{StaticResource FontSizeLarge}"
+                                   FontWeight="Bold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                    <!-- Tall progress bar with glow effect -->
+                    <Border CornerRadius="6" ClipToBounds="True">
+                        <Grid>
+                            <!-- Glow background -->
+                            <Border Background="{DynamicResource AccentPrimary}" Opacity="0.15" CornerRadius="6"/>
+                            <!-- Track background -->
+                            <ProgressBar Height="14"
+                                         Background="{DynamicResource BackgroundElevated}"
+                                         Foreground="{DynamicResource AccentPrimary}"
+                                         Value="{Binding FilterProgress}"
+                                         Minimum="0" Maximum="1"
+                                         CornerRadius="6"/>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </Border>
 
     <UserControl.Styles>
+        <!-- Three-dot pulsing loader animations (staggered wave effect) -->
+        <!-- Dot 1: starts immediately -->
+        <Style Selector="Border.pulse-dot-1">
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <ScaleTransform/>
+            </Setter>
+            <Style.Animations>
+                <Animation Duration="0:0:0.6" IterationCount="Infinite" Easing="CubicEaseInOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+                        <Setter Property="Opacity" Value="0.4"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="50%">
+                        <Setter Property="ScaleTransform.ScaleX" Value="1.4"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1.4"/>
+                        <Setter Property="Opacity" Value="1"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+                        <Setter Property="Opacity" Value="0.4"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <!-- Dot 2: 200ms delay -->
+        <Style Selector="Border.pulse-dot-2">
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <ScaleTransform/>
+            </Setter>
+            <Style.Animations>
+                <Animation Duration="0:0:0.6" IterationCount="Infinite" Delay="0:0:0.2" Easing="CubicEaseInOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+                        <Setter Property="Opacity" Value="0.4"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="50%">
+                        <Setter Property="ScaleTransform.ScaleX" Value="1.4"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1.4"/>
+                        <Setter Property="Opacity" Value="1"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+                        <Setter Property="Opacity" Value="0.4"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+        <!-- Dot 3: 400ms delay -->
+        <Style Selector="Border.pulse-dot-3">
+            <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+            <Setter Property="RenderTransform">
+                <ScaleTransform/>
+            </Setter>
+            <Style.Animations>
+                <Animation Duration="0:0:0.6" IterationCount="Infinite" Delay="0:0:0.4" Easing="CubicEaseInOut">
+                    <KeyFrame Cue="0%">
+                        <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+                        <Setter Property="Opacity" Value="0.4"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="50%">
+                        <Setter Property="ScaleTransform.ScaleX" Value="1.4"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1.4"/>
+                        <Setter Property="Opacity" Value="1"/>
+                    </KeyFrame>
+                    <KeyFrame Cue="100%">
+                        <Setter Property="ScaleTransform.ScaleX" Value="1"/>
+                        <Setter Property="ScaleTransform.ScaleY" Value="1"/>
+                        <Setter Property="Opacity" Value="0.4"/>
+                    </KeyFrame>
+                </Animation>
+            </Style.Animations>
+        </Style>
+
         <!-- Mode toggle button styles (Include/Exclude) -->
         <Style Selector="Button.mode-toggle-btn">
             <Setter Property="Background" Value="Transparent"/>
@@ -731,15 +838,15 @@
             <Setter Property="Foreground" Value="White"/>
         </Style>
 
-        <!-- Slack-style filter chips (pill shape, border highlight on hover) -->
+        <!-- Slack-style filter chips (compact pill shape, border highlight on hover) -->
         <Style Selector="Button.filter-chip-slack">
             <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
-            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="CornerRadius" Value="12"/>
-            <Setter Property="Padding" Value="10,4"/>
-            <Setter Property="Margin" Value="0,0,6,6"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="Margin" Value="0,0,4,4"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Transitions">
@@ -770,32 +877,33 @@
             <Setter Property="BorderBrush" Value="White"/>
         </Style>
 
-        <!-- Quick filter chip toggle button styles (purple theme for OR logic) -->
-        <Style Selector="ToggleButton.quick-filter-chip">
+        <!-- Toggle filter chip (matches filter-chip-slack compact style) -->
+        <Style Selector="ToggleButton.filter-chip-toggle">
             <Setter Property="Background" Value="{StaticResource BackgroundElevated}"/>
-            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}"/>
-            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="8,4"/>
+            <Setter Property="CornerRadius" Value="10"/>
+            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="Margin" Value="0,0,4,4"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Transitions">
                 <Transitions>
+                    <BrushTransition Property="Background" Duration="0:0:0.15"/>
                     <BrushTransition Property="BorderBrush" Duration="0:0:0.1"/>
                 </Transitions>
             </Setter>
         </Style>
-        <!-- Hover: Keep background, highlight border only -->
-        <Style Selector="ToggleButton.quick-filter-chip:pointerover">
-            <Setter Property="BorderBrush" Value="{StaticResource AccentPurpleLight}"/>
+        <!-- Hover: highlight border -->
+        <Style Selector="ToggleButton.filter-chip-toggle:pointerover">
+            <Setter Property="BorderBrush" Value="{StaticResource AccentCyan}"/>
         </Style>
-        <!-- Checked (purple) state -->
-        <Style Selector="ToggleButton.quick-filter-chip:checked">
-            <Setter Property="Background" Value="{StaticResource AccentPurpleDark}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource AccentPurpleLight}"/>
+        <!-- Checked (green like included) -->
+        <Style Selector="ToggleButton.filter-chip-toggle:checked">
+            <Setter Property="Background" Value="{StaticResource SlackSuccess}"/>
             <Setter Property="Foreground" Value="White"/>
         </Style>
-        <Style Selector="ToggleButton.quick-filter-chip:checked:pointerover">
+        <Style Selector="ToggleButton.filter-chip-toggle:checked:pointerover">
             <Setter Property="BorderBrush" Value="White"/>
         </Style>
 

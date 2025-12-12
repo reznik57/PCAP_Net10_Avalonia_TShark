@@ -60,6 +60,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
     [ObservableProperty] private AnomalyViewModel? _anomalyViewModel;
     [ObservableProperty] private AnomaliesViewModel? _anomaliesViewModel;
     [ObservableProperty] private HostInventoryViewModel? _hostInventoryViewModel;
+    [ObservableProperty] private AboutViewModel? _aboutViewModel;
 
     // ==================== STATS BAR VIEWMODELS ====================
 
@@ -310,7 +311,7 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
         var packetComparer = App.Services?.GetService<IPacketComparer>();
         var compareFileDialogService = App.Services?.GetService<IFileDialogService>();
         if (packetComparer is not null)
-            CompareViewModel = new CompareViewModel(packetComparer, compareFileDialogService);
+            CompareViewModel = new CompareViewModel(packetComparer, compareFileDialogService, _globalFilterState);
 
         var topTalkersVM = App.Services?.GetService<TopTalkersViewModel>();
         if (topTalkersVM is not null)
@@ -331,6 +332,9 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
         var hostInventoryVM = App.Services?.GetService<HostInventoryViewModel>();
         HostInventoryViewModel = hostInventoryVM ?? new HostInventoryViewModel();
+
+        var aboutVM = App.Services?.GetService<AboutViewModel>();
+        AboutViewModel = aboutVM ?? new AboutViewModel();
 
         if (reportService is not null)
             ReportViewModel = new ReportViewModel(reportService);
@@ -714,19 +718,142 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
         try
         {
+            // Pre-warm GeoIP cache if any filter groups use region/country criteria
+            // This prevents UI freeze from blocking async GeoIP calls
+            var hasGeoIP = _globalFilterState.IncludeGroups.Any(g => FilterBuilder.HasGeoIPCriteria(g)) ||
+                           _globalFilterState.ExcludeGroups.Any(g => FilterBuilder.HasGeoIPCriteria(g));
+
+            if (hasGeoIP && PacketManager.Packets.Count > 0)
+            {
+                DebugLogger.Log("[MainWindowViewModel] Pre-warming GeoIP cache for region/country filter...");
+
+                // Progress callback for smooth UX - cache warming is 0% to 15% of total progress
+                // IMPORTANT: Callback runs on background thread, must dispatch to UI
+                var cachedCount = await FilterBuilder.PreWarmCountryCacheAsync(
+                    PacketManager.Packets,
+                    (progress, resolved, total) =>
+                    {
+                        _dispatcher.InvokeAsync(() =>
+                        {
+                            // Scale cache-warming progress to 0% - 15% of total filter progress
+                            _globalFilterState.FilterProgress = progress * 0.15;
+                            _globalFilterState.FilterStatusMessage = $"Resolving locations: {resolved:N0} / {total:N0} IPs";
+                        });
+                    });
+
+                DebugLogger.Log($"[MainWindowViewModel] GeoIP cache pre-warmed: {cachedCount} IPs");
+                _globalFilterState.FilterStatusMessage = null; // Clear status message
+            }
+
+            _globalFilterState.FilterProgress = 0.2;
+            _globalFilterState.FilterStatusMessage = "Building filter...";
+
             // Build PacketFilter from GlobalFilterState using the same logic as DashboardViewModel
             var filter = BuildPacketFilterFromGlobalState();
-            _globalFilterState.FilterProgress = 0.3;
+            _globalFilterState.FilterProgress = 0.25;
+            _globalFilterState.FilterStatusMessage = "Applying filter...";
 
-            // Apply to Packet Analysis tab
-            PacketManager.ApplyFilter(filter);
-            _globalFilterState.FilterProgress = 0.7;
+            // Apply to Packet Analysis tab - async with progress callback
+            // Progress callback scales filter progress to 25% - 90% range
+            // IMPORTANT: Callback runs on background thread, must dispatch to UI
+            await PacketManager.ApplyFilterAsync(filter, progress =>
+            {
+                // Dispatch to UI thread for property change notifications to work
+                _dispatcher.InvokeAsync(() =>
+                {
+                    _globalFilterState.FilterProgress = 0.25 + (progress * 0.65);
+                    if (progress < 1.0)
+                    {
+                        var pct = (int)(progress * 100);
+                        _globalFilterState.FilterStatusMessage = $"Filtering packets... {pct}%";
+                    }
+                });
+            });
 
-            // Ensure minimum visibility of progress bar for UX feedback
-            await Task.Delay(300);
+            _globalFilterState.FilterProgress = 0.90;
+            _globalFilterState.FilterStatusMessage = "Updating statistics...";
+
+            // Get packets for tab updates
+            // CRITICAL: When filter.IsEmpty (filters cleared), use full packet set, not GetFilteredPackets()
+            // GetFilteredPackets() may return stale filtered data when no filter is active
+            var packetsForTabs = filter.IsEmpty
+                ? PacketManager.Packets.ToList()
+                : PacketManager.GetFilteredPackets();
+            DebugLogger.Log($"[MainWindowViewModel] Recalculating statistics for {packetsForTabs.Count:N0} packets (IsEmpty={filter.IsEmpty})");
+
+            // Calculate statistics from the appropriate packet set
+            var statsForTabs = await Task.Run(() =>
+                _statisticsService.CalculateStatistics(packetsForTabs));
+
+            _globalFilterState.FilterProgress = 0.95;
+            _globalFilterState.FilterStatusMessage = "Updating tabs...";
+
+            // CRITICAL: Update ALL tab ViewModels with statistics
+            // This ensures consistent data across Dashboard, CountryTraffic, Threats, etc.
+            // NOTE: Double-await pattern required! InvokeAsync(async () => ...) returns Task<Task>,
+            // so we must await twice to wait for the inner async work to complete.
+            // Without this, progress bar would hide before tab updates finish.
+            var isFilterActive = !filter.IsEmpty;
+            await (await _dispatcher.InvokeAsync(async () =>
+            {
+                // Update Dashboard with statistics (recalculates all charts/stats)
+                if (DashboardViewModel is not null)
+                {
+                    DashboardViewModel.SetStatisticsOverride(statsForTabs);
+                    await DashboardViewModel.UpdateStatisticsAsync(packetsForTabs);
+                    DebugLogger.Log($"[MainWindowViewModel] Updated DashboardViewModel with {packetsForTabs.Count:N0} packets");
+                }
+
+                // Update CountryTraffic with statistics (recalculates country data)
+                // NOTE: Do NOT call SetPackets here - that would overwrite _allPackets with filtered data!
+                // _allPackets should retain the original unfiltered packets for Total/Filtered comparison.
+                if (CountryTrafficViewModel is not null)
+                {
+                    await CountryTrafficViewModel.UpdateStatistics(statsForTabs);
+                    await CountryTrafficViewModel.SetFilteredPacketsAsync(packetsForTabs, isFilterActive);
+                    DebugLogger.Log($"[MainWindowViewModel] Updated CountryTrafficViewModel with {packetsForTabs.Count:N0} packets (isFilterActive={isFilterActive})");
+                }
+
+                // Update Threats tab with packets (re-analyzes threats from set)
+                if (ThreatsViewModel is not null)
+                {
+                    await ThreatsViewModel.SetFilteredPacketsAsync(packetsForTabs);
+                    DebugLogger.Log($"[MainWindowViewModel] Updated ThreatsViewModel with {packetsForTabs.Count:N0} packets");
+                }
+
+                // Update VoiceQoS tab with packets (re-analyzes QoS from set)
+                if (VoiceQoSViewModel is not null)
+                {
+                    await VoiceQoSViewModel.SetFilteredPacketsAsync(packetsForTabs);
+                    DebugLogger.Log($"[MainWindowViewModel] Updated VoiceQoSViewModel with {packetsForTabs.Count:N0} packets");
+                }
+
+                // Update Anomalies tab with packets (filters anomalies by frame numbers)
+                if (AnomaliesViewModel is not null)
+                {
+                    await AnomaliesViewModel.SetFilteredPacketsAsync(packetsForTabs);
+                    DebugLogger.Log($"[MainWindowViewModel] Updated AnomaliesViewModel with {packetsForTabs.Count:N0} packets");
+                }
+
+                // Update HostInventory tab with packets (filters hosts by IPs in packets)
+                if (HostInventoryViewModel is not null)
+                {
+                    await HostInventoryViewModel.SetFilteredPacketsAsync(packetsForTabs);
+                    DebugLogger.Log($"[MainWindowViewModel] Updated HostInventoryViewModel with {packetsForTabs.Count:N0} packets");
+                }
+
+                // Update Compare tab with packets (filters comparison results by IPs)
+                if (CompareViewModel is not null)
+                {
+                    await CompareViewModel.SetFilteredPacketsAsync(packetsForTabs);
+                    DebugLogger.Log($"[MainWindowViewModel] Updated CompareViewModel with {packetsForTabs.Count:N0} packets");
+                }
+            }));
+
             _globalFilterState.FilterProgress = 1.0;
+            _globalFilterState.FilterStatusMessage = "Done";
 
-            DebugLogger.Log($"[MainWindowViewModel] Applied global filters to PacketManager (IsEmpty={filter.IsEmpty})");
+            DebugLogger.Log($"[MainWindowViewModel] Applied global filters to all tabs (IsEmpty={filter.IsEmpty}, PacketCount={packetsForTabs.Count:N0})");
         }
         catch (Exception ex)
         {
@@ -742,289 +869,31 @@ public partial class MainWindowViewModel : SmartFilterableTab, IDisposable, IAsy
 
     /// <summary>
     /// Builds a PacketFilter from GlobalFilterState groups.
-    /// Simplified version of DashboardViewModel.ApplyGlobalFilters logic.
+    /// Delegates to SmartFilterBuilderService for proper handling of all filter types
+    /// including Regions, Countries, Directions, and complex AND/OR logic.
     /// </summary>
     private PacketFilter BuildPacketFilterFromGlobalState()
     {
         if (_globalFilterState is null || !_globalFilterState.HasActiveFilters)
             return new PacketFilter(); // Empty filter - show all
 
-        var includeFilters = new List<PacketFilter>();
-        var excludeFilters = new List<PacketFilter>();
-
-        // Process Include groups
-        foreach (var group in _globalFilterState.IncludeGroups)
-        {
-            var groupFilter = BuildFilterFromGroup(group);
-            if (groupFilter is not null)
-                includeFilters.Add(groupFilter);
-        }
-
-        // Process Exclude groups
-        foreach (var group in _globalFilterState.ExcludeGroups)
-        {
-            var groupFilter = BuildFilterFromGroup(group);
-            if (groupFilter is not null)
-                excludeFilters.Add(groupFilter);
-        }
-
-        // Combine include filters with OR
-        PacketFilter? includeFilter = includeFilters.Count switch
-        {
-            0 => null,
-            1 => includeFilters[0],
-            _ => new PacketFilter
-            {
-                CombinedFilters = includeFilters,
-                CombineMode = FilterCombineMode.Or,
-                Description = string.Join(" OR ", includeFilters.Select(f => f.Description))
-            }
-        };
-
-        // Combine exclude filters with OR, then invert
-        PacketFilter? excludeFilter = null;
-        if (excludeFilters.Count > 0)
-        {
-            var combinedExclude = excludeFilters.Count == 1 ? excludeFilters[0] : new PacketFilter
-            {
-                CombinedFilters = excludeFilters,
-                CombineMode = FilterCombineMode.Or,
-                Description = string.Join(" OR ", excludeFilters.Select(f => f.Description))
-            };
-            // Invert: packets must NOT match exclude criteria
-            excludeFilter = new PacketFilter
-            {
-                CustomPredicate = p => !combinedExclude.MatchesPacket(p),
-                Description = $"NOT({combinedExclude.Description})"
-            };
-        }
-
-        // Combine: INCLUDE AND NOT(EXCLUDE)
-        var finalFilters = new List<PacketFilter>();
-        if (includeFilter is not null) finalFilters.Add(includeFilter);
-        if (excludeFilter is not null) finalFilters.Add(excludeFilter);
-
-        if (finalFilters.Count == 0)
-            return new PacketFilter();
-        if (finalFilters.Count == 1)
-            return finalFilters[0];
-
-        return new PacketFilter
-        {
-            CombinedFilters = finalFilters,
-            CombineMode = FilterCombineMode.And,
-            Description = string.Join(" AND ", finalFilters.Select(f => f.Description))
-        };
+        // Delegate to SmartFilterBuilderService which handles:
+        // - IP filters, Port filters, Protocol filters
+        // - Region filters (GeoIP-based continent lookup)
+        // - Country filters (GeoIP lookup)
+        // - Direction filters (internal/external/inbound/outbound)
+        // - Quick filters, Threat/Anomaly/VoiceQoS filters
+        // - Proper AND/OR logic within and between categories
+        return FilterBuilder.BuildCombinedPacketFilter(
+            _globalFilterState.IncludeGroups,
+            Enumerable.Empty<FilterChipItem>(), // No individual chips from GlobalFilterState
+            _globalFilterState.ExcludeGroups,
+            Enumerable.Empty<FilterChipItem>());
     }
 
-    /// <summary>
-    /// Builds a PacketFilter from a FilterGroup (all criteria AND'd together).
-    /// </summary>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Maintainability", "CA1502:Avoid excessive class coupling", Justification = "Filter builder with multiple criteria types")]
-    private PacketFilter? BuildFilterFromGroup(FilterGroup group)
-    {
-        var groupFilters = new List<PacketFilter>();
-
-        AddIpFilters(groupFilters, group);
-        AddPortFilter(groupFilters, group);
-        AddProtocolFilter(groupFilters, group);
-        AddDirectionFilter(groupFilters, group);
-        AddQuickFilters(groupFilters, group);
-
-        return CombineGroupFilters(groupFilters, group.DisplayLabel);
-    }
-
-    private static void AddIpFilters(List<PacketFilter> filters, FilterGroup group)
-    {
-        if (!string.IsNullOrWhiteSpace(group.SourceIP))
-        {
-            var srcIp = group.SourceIP;
-            filters.Add(new PacketFilter
-            {
-                CustomPredicate = p => Core.Services.NetworkHelper.MatchesIpPattern(p.SourceIP, srcIp),
-                Description = $"Src IP: {srcIp}"
-            });
-        }
-
-        if (!string.IsNullOrWhiteSpace(group.DestinationIP))
-        {
-            var destIp = group.DestinationIP;
-            filters.Add(new PacketFilter
-            {
-                CustomPredicate = p => Core.Services.NetworkHelper.MatchesIpPattern(p.DestinationIP, destIp),
-                Description = $"Dest IP: {destIp}"
-            });
-        }
-    }
-
-    private static void AddPortFilter(List<PacketFilter> filters, FilterGroup group)
-    {
-        if (!string.IsNullOrWhiteSpace(group.PortRange) && TryParsePortOrRange(group.PortRange, out var portPredicate))
-        {
-            filters.Add(new PacketFilter
-            {
-                CustomPredicate = portPredicate,
-                Description = $"Port: {group.PortRange}"
-            });
-        }
-    }
-
-    private static void AddProtocolFilter(List<PacketFilter> filters, FilterGroup group)
-    {
-        if (string.IsNullOrWhiteSpace(group.Protocol)) return;
-
-        var protocols = group.Protocol.Split(',', StringSplitOptions.RemoveEmptyEntries);
-        var protocolFilters = protocols.Select(proto =>
-        {
-            var p = proto.Trim();
-            return new PacketFilter
-            {
-                CustomPredicate = pkt => pkt.Protocol.ToString().Equals(p, StringComparison.OrdinalIgnoreCase) ||
-                                         (pkt.L7Protocol?.Equals(p, StringComparison.OrdinalIgnoreCase) ?? false),
-                Description = $"Protocol: {p}"
-            };
-        }).ToList();
-
-        if (protocolFilters.Count == 1)
-            filters.Add(protocolFilters[0]);
-        else if (protocolFilters.Count > 1)
-            filters.Add(new PacketFilter
-            {
-                CombinedFilters = protocolFilters,
-                CombineMode = FilterCombineMode.Or,
-                Description = $"Protocol: ({string.Join("|", protocols)})"
-            });
-    }
-
-    private static void AddDirectionFilter(List<PacketFilter> filters, FilterGroup group)
-    {
-        if (group.Directions?.Count == 0) return;
-        if (group.Directions is null) return;
-
-        var directions = group.Directions;
-        filters.Add(new PacketFilter
-        {
-            CustomPredicate = p => MatchesDirection(p, directions),
-            Description = $"Direction: {string.Join("|", directions)}"
-        });
-    }
-
-    private static bool MatchesDirection(PacketInfo p, List<string> directions)
-    {
-        var srcPrivate = NetworkFilterHelper.IsRFC1918(p.SourceIP) || NetworkFilterHelper.IsLoopback(p.SourceIP);
-        var dstPrivate = NetworkFilterHelper.IsRFC1918(p.DestinationIP) || NetworkFilterHelper.IsLoopback(p.DestinationIP);
-
-        foreach (var dir in directions)
-        {
-            var match = dir.ToUpperInvariant() switch
-            {
-                "INBOUND" => !srcPrivate && dstPrivate,
-                "OUTBOUND" => srcPrivate && !dstPrivate,
-                "INTERNAL" => srcPrivate && dstPrivate,
-                _ => false
-            };
-            if (match) return true;
-        }
-        return false;
-    }
-
-    private static void AddQuickFilters(List<PacketFilter> filters, FilterGroup group)
-    {
-        if (group.QuickFilters?.Count == 0) return;
-        if (group.QuickFilters is null) return;
-
-        // Build individual QuickFilter predicates
-        var quickFilterList = new List<PacketFilter>();
-        foreach (var qf in group.QuickFilters)
-        {
-            var pred = BuildQuickFilterPredicate(qf);
-            if (pred is not null)
-            {
-                quickFilterList.Add(new PacketFilter
-                {
-                    CustomPredicate = pred,
-                    Description = qf
-                });
-            }
-        }
-
-        if (quickFilterList.Count == 0) return;
-
-        // ✅ FIX: Combine QuickFilters with OR logic (any can match)
-        // User selecting [SYN] + [RST] expects: "show SYN OR RST packets"
-        // Previously: each added separately → AND'd → 0 packets!
-        if (quickFilterList.Count == 1)
-        {
-            filters.Add(quickFilterList[0]);
-        }
-        else
-        {
-            filters.Add(new PacketFilter
-            {
-                CombinedFilters = quickFilterList,
-                CombineMode = FilterCombineMode.Or,
-                Description = $"QuickFilter: ({string.Join("|", quickFilterList.Select(f => f.Description))})"
-            });
-        }
-    }
-
-    private static PacketFilter? CombineGroupFilters(List<PacketFilter> groupFilters, string? displayLabel)
-    {
-        if (groupFilters.Count == 0)
-            return null;
-
-        if (groupFilters.Count == 1)
-        {
-            groupFilters[0].Description = displayLabel ?? groupFilters[0].Description;
-            return groupFilters[0];
-        }
-
-        return new PacketFilter
-        {
-            CombinedFilters = groupFilters,
-            CombineMode = FilterCombineMode.And,
-            Description = displayLabel ?? string.Join(" AND ", groupFilters.Select(f => f.Description))
-        };
-    }
-
-    private static bool TryParsePortOrRange(string portString, out Func<PacketInfo, bool> predicate)
-    {
-        predicate = null!;
-        if (string.IsNullOrWhiteSpace(portString))
-            return false;
-
-        if (int.TryParse(portString, out var singlePort))
-        {
-            predicate = p => p.SourcePort == singlePort || p.DestinationPort == singlePort;
-            return true;
-        }
-
-        if (portString.Contains('-', StringComparison.Ordinal))
-        {
-            var parts = portString.Split('-');
-            if (parts.Length == 2 && int.TryParse(parts[0], out var start) && int.TryParse(parts[1], out var end))
-            {
-                predicate = p => (p.SourcePort >= start && p.SourcePort <= end) ||
-                                (p.DestinationPort >= start && p.DestinationPort <= end);
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// Builds predicate for QuickFilter strings.
-    /// Delegates to SmartFilterBuilderService.GetQuickFilterPredicate for consistency.
-    /// This ensures all quick filters work identically across all tabs.
-    /// </summary>
-    private static Func<PacketInfo, bool>? BuildQuickFilterPredicate(string quickFilter)
-    {
-        // Delegate to the shared service - SINGLE SOURCE OF TRUTH
-        // Try exact case first (e.g., "SYN"), then uppercase (e.g., "INSECURE")
-        return Services.SmartFilterBuilderService.GetQuickFilterPredicate(quickFilter)
-            ?? Services.SmartFilterBuilderService.GetQuickFilterPredicate(quickFilter.ToUpperInvariant());
-    }
+    // NOTE: Filter building methods (BuildFilterFromGroup, AddIpFilters, AddPortFilter, etc.)
+    // were removed - they duplicated SmartFilterBuilderService functionality.
+    // All filter building now delegates to FilterBuilder.BuildCombinedPacketFilter via BuildPacketFilterFromGlobalState.
 
     private void OnFilteredPacketsChanged(object? sender, int filteredCount)
     {

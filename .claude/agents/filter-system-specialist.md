@@ -1,3 +1,7 @@
+---
+name: filter-system-specialist
+---
+
 # Filter System Specialist Agent
 
 ## When to Use This Agent

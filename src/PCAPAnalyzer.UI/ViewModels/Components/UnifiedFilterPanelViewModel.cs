@@ -22,10 +22,11 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
     // Initialize to -1 so the first real value (even 0) triggers a property change notification
     [ObservableProperty] private int _selectedTabIndex = -1;
 
-    // Global IP/Port inputs (moved from GeneralTab - apply to all tabs)
+    // Global IP/Port/Search inputs (apply to all tabs)
     [ObservableProperty] private string _sourceIPInput = "";
     [ObservableProperty] private string _destinationIPInput = "";
     [ObservableProperty] private string _portRangeInput = "";
+    [ObservableProperty] private string _searchInput = "";
 
     /// <summary>
     /// Indicates that filter application is in progress.
@@ -60,6 +61,12 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
             }
         }
     }
+
+    /// <summary>
+    /// Optional status message during filtering (e.g., "Resolving locations: 500 / 2000 IPs").
+    /// Falls back to "Filtering packets..." when null.
+    /// </summary>
+    public string FilterStatusMessage => _filterState.FilterStatusMessage ?? "Filtering packets...";
 
     /// <summary>
     /// Controls whether the filter panel is expanded or collapsed.
@@ -143,6 +150,8 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
             OnPropertyChanged(nameof(IsApplyingFilter));
         else if (e.PropertyName == nameof(GlobalFilterState.FilterProgress))
             OnPropertyChanged(nameof(FilterProgress));
+        else if (e.PropertyName == nameof(GlobalFilterState.FilterStatusMessage))
+            OnPropertyChanged(nameof(FilterStatusMessage));
     }
 
     [RelayCommand]
@@ -220,10 +229,11 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
         // Build a single FilterGroup with ALL criteria populated
         var group = new Models.FilterGroup
         {
-            // Global IP/Port inputs (from this class, not GeneralTab)
+            // Global IP/Port/Search inputs (from this class, not GeneralTab)
             SourceIP = !string.IsNullOrEmpty(SourceIPInput) ? SourceIPInput.Trim() : null,
             DestinationIP = !string.IsNullOrEmpty(DestinationIPInput) ? DestinationIPInput.Trim() : null,
             PortRange = !string.IsNullOrEmpty(PortRangeInput) ? PortRangeInput.Trim() : null,
+            SearchText = !string.IsNullOrEmpty(SearchInput) ? SearchInput.Trim() : null,
 
             // General tab (protocols/security only - IP/Port handled above)
             Protocol = general.Protocols.Count > 0 ? string.Join(",", general.Protocols) : null,
@@ -272,6 +282,7 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
             SourceIPInput = "";
             DestinationIPInput = "";
             PortRangeInput = "";
+            SearchInput = "";
             GeneralTab.Reset();
             ThreatsTab.Reset();
             AnomaliesTab.Reset();
@@ -293,10 +304,11 @@ public partial class UnifiedFilterPanelViewModel : ObservableObject
     [RelayCommand]
     private void ClearFilters()
     {
-        // Clear global IP/Port inputs
+        // Clear global IP/Port/Search inputs
         SourceIPInput = "";
         DestinationIPInput = "";
         PortRangeInput = "";
+        SearchInput = "";
 
         // Clear pending state in all tabs
         GeneralTab.Reset();

@@ -75,10 +75,11 @@ public partial class AnalysisProgressStage : ObservableObject
 
     partial void OnStateChanged(AnalysisStageState value)
     {
-        // Notify that icon, color, and display detail properties changed when state changes
+        // Notify that icon, color, display detail, and active-with-detail properties changed when state changes
         OnPropertyChanged(nameof(StateIcon));
         OnPropertyChanged(nameof(StateColor));
         OnPropertyChanged(nameof(DisplayDetail));
+        OnPropertyChanged(nameof(IsActiveWithDetail));
     }
 
     /// <summary>
@@ -86,10 +87,20 @@ public partial class AnalysisProgressStage : ObservableObject
     /// </summary>
     public string DisplayDetail => State == AnalysisStageState.Pending ? "Waiting..." : Detail;
 
+    /// <summary>
+    /// Returns true when stage is Active AND has meaningful detail text to show.
+    /// Used to conditionally show subtask detail row in stage pills.
+    /// </summary>
+    public bool IsActiveWithDetail =>
+        State == AnalysisStageState.Active &&
+        !string.IsNullOrWhiteSpace(Detail) &&
+        Detail != Description; // Don't show if detail is just the original description
+
     partial void OnDetailChanged(string value)
     {
-        // Notify DisplayDetail when Detail changes
+        // Notify DisplayDetail and IsActiveWithDetail when Detail changes
         OnPropertyChanged(nameof(DisplayDetail));
+        OnPropertyChanged(nameof(IsActiveWithDetail));
     }
 
     /// <summary>

@@ -71,6 +71,14 @@ namespace PCAPAnalyzer.UI.ViewModels
         public ThreatsFilterViewModel QuickFilters { get; } = new();
         public ThreatsStatisticsViewModel Statistics { get; } = new();
 
+        // StatsBarControl for unified statistics display
+        public StatsBarControlViewModel ThreatsStatsBar { get; } = new()
+        {
+            SectionTitle = "SECURITY RISK ASSESSMENT",
+            AccentColor = ThemeColorHelper.GetColorHex("SlackDanger", "#DA3633"),
+            ColumnCount = 6
+        };
+
         // Chart series - delegated to Charts component but exposed for backward compatibility
         public ObservableCollection<ISeries> ThreatSeveritySeries => Charts.ThreatSeveritySeries;
         public ObservableCollection<ISeries> ThreatTimelineSeries => Charts.ThreatTimelineSeries;
@@ -85,6 +93,37 @@ namespace PCAPAnalyzer.UI.ViewModels
         [ObservableProperty] private double _overallRiskScore;
         [ObservableProperty] private string _riskLevel = "Unknown";
         [ObservableProperty] private string _riskLevelColor = ThemeColorHelper.GetColorHex("TextMuted", "#6B7280");
+
+        // ==================== TOTAL/FILTERED DISPLAY PATTERN ====================
+
+        // Unfiltered totals (stored on initial load, before any global filters)
+        [ObservableProperty] private int _totalThreatsAll;
+        [ObservableProperty] private int _criticalThreatsAll;
+        [ObservableProperty] private int _highThreatsAll;
+        [ObservableProperty] private int _mediumThreatsAll;
+        [ObservableProperty] private int _lowThreatsAll;
+
+        // Global filter state indicator
+        [ObservableProperty] private bool _isGlobalFilterActive;
+
+        // Percentage calculations for Total/Filtered display
+        public double TotalThreatsPercentage => TotalThreatsAll > 0 ? (TotalThreats * 100.0 / TotalThreatsAll) : 0;
+        public double CriticalThreatsPercentage => CriticalThreatsAll > 0 ? (CriticalThreats * 100.0 / CriticalThreatsAll) : 0;
+        public double HighThreatsPercentage => HighThreatsAll > 0 ? (HighThreats * 100.0 / HighThreatsAll) : 0;
+        public double MediumThreatsPercentage => MediumThreatsAll > 0 ? (MediumThreats * 100.0 / MediumThreatsAll) : 0;
+        public double LowThreatsPercentage => LowThreatsAll > 0 ? (LowThreats * 100.0 / LowThreatsAll) : 0;
+
+        /// <summary>
+        /// Notifies UI of percentage property changes (computed properties don't auto-notify).
+        /// </summary>
+        private void NotifyThreatPercentageChanges()
+        {
+            OnPropertyChanged(nameof(TotalThreatsPercentage));
+            OnPropertyChanged(nameof(CriticalThreatsPercentage));
+            OnPropertyChanged(nameof(HighThreatsPercentage));
+            OnPropertyChanged(nameof(MediumThreatsPercentage));
+            OnPropertyChanged(nameof(LowThreatsPercentage));
+        }
 
         // ==================== FILTER DROPDOWN PROPERTIES (Delegated to QuickFilters component) ====================
 
@@ -461,11 +500,24 @@ namespace PCAPAnalyzer.UI.ViewModels
             _lastAnalyzedPacketCount = packets.Count;
             _lastFilterState = false;
 
+            // Reset filter state when loading fresh data
+            IsGlobalFilterActive = false;
+
             // Calculate metrics from cached threats
             _metrics = _insecurePortDetector.CalculateSecurityMetrics(_allThreats);
 
+            // Store unfiltered totals for Total/Filtered display pattern
+            TotalThreatsAll = _metrics.TotalThreats;
+            CriticalThreatsAll = _metrics.CriticalThreats;
+            HighThreatsAll = _metrics.HighThreats;
+            MediumThreatsAll = _metrics.MediumThreats;
+            LowThreatsAll = _metrics.LowThreats;
+
             // Update UI (handles metrics, collections, charts)
             await _dispatcher.InvokeAsync(() => UpdateUI());
+
+            // Store unfiltered totals for Total/Filtered display pattern
+            Statistics.StoreUnfilteredTotals(packets.Count);
 
             IsDataLoaded = true;
             DebugLogger.Log($"[ThreatsViewModel] ✓ SetFromCache complete in <100ms - {_allThreats.Count:N0} threats bound");
@@ -565,6 +617,50 @@ namespace PCAPAnalyzer.UI.ViewModels
                 RiskLevel = "MINIMAL";
                 RiskLevelColor = ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981");
             }
+
+            // Update stats bar after risk level is determined
+            UpdateThreatsStatsBar();
+        }
+
+        /// <summary>
+        /// Updates ThreatsStatsBar with unified Total/Filtered display pattern.
+        /// Call after updating threat counts or when filters change.
+        /// </summary>
+        private void UpdateThreatsStatsBar()
+        {
+            ThreatsStatsBar.ClearStats();
+
+            // Determine filter state
+            var hasFilter = IsGlobalFilterActive ||
+                _globalFilterState?.HasActiveFilters == true;
+
+            // Risk Level (static, no total/filtered)
+            TabStatsHelper.AddSimpleStat(ThreatsStatsBar, "RISK LEVEL", "⚠️",
+                RiskLevel, RiskLevelColor);
+
+            // Risk Score
+            TabStatsHelper.AddSimpleStat(ThreatsStatsBar, "RISK SCORE", "📊",
+                $"{OverallRiskScore:F1}/10", RiskLevelColor);
+
+            // Critical Threats - use severity colors directly
+            TabStatsHelper.AddNumericStat(ThreatsStatsBar, "CRITICAL", "🔴",
+                CriticalThreatsAll, CriticalThreats, hasFilter,
+                ThemeColorHelper.GetColorHex("ColorDanger", "#EF4444"));
+
+            // High Threats
+            TabStatsHelper.AddNumericStat(ThreatsStatsBar, "HIGH", "🟠",
+                HighThreatsAll, HighThreats, hasFilter,
+                ThemeColorHelper.GetColorHex("ColorOrange", "#F97316"));
+
+            // Medium Threats
+            TabStatsHelper.AddNumericStat(ThreatsStatsBar, "MEDIUM", "🟡",
+                MediumThreatsAll, MediumThreats, hasFilter,
+                ThemeColorHelper.GetColorHex("ColorWarning", "#F59E0B"));
+
+            // Low Threats
+            TabStatsHelper.AddNumericStat(ThreatsStatsBar, "LOW", "🟢",
+                LowThreatsAll, LowThreats, hasFilter,
+                ThemeColorHelper.GetColorHex("ColorSuccess", "#10B981"));
         }
         
         private void UpdateThreatTypes()

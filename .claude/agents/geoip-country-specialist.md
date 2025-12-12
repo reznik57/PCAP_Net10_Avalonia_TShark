@@ -1,3 +1,7 @@
+---
+name: geoip-country-specialist
+---
+
 # GeoIP Country Specialist Agent
 
 ## When to Use This Agent

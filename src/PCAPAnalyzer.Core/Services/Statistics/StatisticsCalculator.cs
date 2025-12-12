@@ -20,24 +20,29 @@ namespace PCAPAnalyzer.Core.Services.Statistics
         {
             try
             {
+                // MEMORY FIX: Single-pass O(n) aggregation instead of GroupBy with ToList()
                 var totalPackets = packets.Count;
-                var protocolGroups = packets
-                    .GroupBy(p => p.Protocol)
-                    .Select(g =>
-                    {
-                        var groupList = g.ToList();
-                        var packetCount = groupList.Count;
-                        return new ProtocolStatistics
-                        {
-                            Protocol = g.Key.ToString(),
-                            PacketCount = packetCount,
-                            ByteCount = groupList.Sum(static p => (long)p.Length),
-                            Percentage = totalPackets > 0 ? (double)packetCount / totalPackets * 100 : 0,
-                            Color = protocolColors.TryGetValue(g.Key.ToString(), out var color) ? color : protocolColors.GetValueOrDefault("Other", "#808080")
-                        };
-                    })
-                    .OrderByDescending(p => p.PacketCount)
+                var protocolAgg = new Dictionary<Protocol, (int Count, long Bytes)>();
+
+                foreach (var p in packets)
+                {
+                    if (protocolAgg.TryGetValue(p.Protocol, out var stats))
+                        protocolAgg[p.Protocol] = (stats.Count + 1, stats.Bytes + p.Length);
+                    else
+                        protocolAgg[p.Protocol] = (1, p.Length);
+                }
+
+                var protocolGroups = protocolAgg
+                    .OrderByDescending(kv => kv.Value.Count)
                     .Take(10)
+                    .Select(kv => new ProtocolStatistics
+                    {
+                        Protocol = kv.Key.ToString(),
+                        PacketCount = kv.Value.Count,
+                        ByteCount = kv.Value.Bytes,
+                        Percentage = totalPackets > 0 ? (double)kv.Value.Count / totalPackets * 100 : 0,
+                        Color = protocolColors.TryGetValue(kv.Key.ToString(), out var color) ? color : protocolColors.GetValueOrDefault("Other", "#808080")
+                    })
                     .ToDictionary(p => p.Protocol);
 
                 return protocolGroups;
@@ -51,27 +56,41 @@ namespace PCAPAnalyzer.Core.Services.Statistics
 
         public List<EndpointStatistics> CalculateTopEndpoints(List<PacketInfo> packets, bool isSource)
         {
+            // MEMORY FIX: Single-pass O(n) aggregation with protocol breakdown
             var totalPackets = packets.Count;
-            var endpoints = packets
-                .GroupBy(p => isSource ? p.SourceIP : p.DestinationIP)
-                .Select(g =>
+            var endpointAgg = new Dictionary<string, (int Count, long Bytes, Dictionary<Protocol, int> Protocols)>();
+
+            foreach (var p in packets)
+            {
+                var ip = isSource ? p.SourceIP : p.DestinationIP;
+                if (string.IsNullOrEmpty(ip))
+                    continue;
+
+                if (endpointAgg.TryGetValue(ip, out var stats))
                 {
-                    var groupList = g.ToList();
-                    var packetCount = groupList.Count;
-                    return new EndpointStatistics
-                    {
-                        Address = g.Key,
-                        PacketCount = packetCount,
-                        ByteCount = groupList.Sum(static p => (long)p.Length),
-                        Percentage = totalPackets > 0 ? (double)packetCount / totalPackets * 100 : 0,
-                        ProtocolBreakdown = groupList
-                            .GroupBy(p => p.Protocol)
-                            .ToDictionary(pg => pg.Key.ToString(), pg => (long)pg.Count()),
-                        IsInternal = IsInternalIP(g.Key)
-                    };
-                })
-                .OrderByDescending(e => e.PacketCount)
+                    stats.Protocols.TryGetValue(p.Protocol, out var protoCount);
+                    stats.Protocols[p.Protocol] = protoCount + 1;
+                    endpointAgg[ip] = (stats.Count + 1, stats.Bytes + p.Length, stats.Protocols);
+                }
+                else
+                {
+                    var protocols = new Dictionary<Protocol, int> { { p.Protocol, 1 } };
+                    endpointAgg[ip] = (1, p.Length, protocols);
+                }
+            }
+
+            var endpoints = endpointAgg
+                .OrderByDescending(kv => kv.Value.Count)
                 .Take(30)
+                .Select(kv => new EndpointStatistics
+                {
+                    Address = kv.Key,
+                    PacketCount = kv.Value.Count,
+                    ByteCount = kv.Value.Bytes,
+                    Percentage = totalPackets > 0 ? (double)kv.Value.Count / totalPackets * 100 : 0,
+                    ProtocolBreakdown = kv.Value.Protocols.ToDictionary(p => p.Key.ToString(), p => (long)p.Value),
+                    IsInternal = IsInternalIP(kv.Key)
+                })
                 .ToList();
 
             return endpoints;
@@ -79,37 +98,55 @@ namespace PCAPAnalyzer.Core.Services.Statistics
 
         public (List<ConversationStatistics> TopConversations, int TotalCount) CalculateTopConversations(List<PacketInfo> packets)
         {
-            var allConversations = packets
-                .Where(p => p.SourcePort > 0 && p.DestinationPort > 0)
-                .GroupBy(p => new
-                {
-                    Source = string.Compare(p.SourceIP, p.DestinationIP, StringComparison.Ordinal) < 0 ? p.SourceIP : p.DestinationIP,
-                    Destination = string.Compare(p.SourceIP, p.DestinationIP, StringComparison.Ordinal) < 0 ? p.DestinationIP : p.SourceIP,
-                    SrcPort = string.Compare(p.SourceIP, p.DestinationIP, StringComparison.Ordinal) < 0 ? p.SourcePort : p.DestinationPort,
-                    DstPort = string.Compare(p.SourceIP, p.DestinationIP, StringComparison.Ordinal) < 0 ? p.DestinationPort : p.SourcePort,
-                    p.Protocol
-                })
-                .Select(g =>
-                {
-                    var groupList = g.ToList();
-                    return new ConversationStatistics
-                    {
-                        SourceAddress = g.Key.Source,
-                        DestinationAddress = g.Key.Destination,
-                        SourcePort = g.Key.SrcPort,
-                        DestinationPort = g.Key.DstPort,
-                        Protocol = g.Key.Protocol.ToString(),
-                        PacketCount = groupList.Count,
-                        ByteCount = groupList.Sum(static p => (long)p.Length),
-                        StartTime = groupList.Min(p => p.Timestamp),
-                        EndTime = groupList.Max(p => p.Timestamp)
-                    };
-                })
-                .OrderByDescending(c => c.PacketCount)
-                .ToList();
+            // MEMORY FIX: Single-pass O(n) aggregation instead of GroupBy().Select().ToList()
+            // Old code materialized ALL conversations before Take(30) - caused OOM on 5M+ packets
+            var conversationStats = new Dictionary<(string Src, string Dst, int SrcPort, int DstPort, Protocol Proto), (int Count, long Bytes, DateTime Start, DateTime End)>();
 
-            var totalCount = allConversations.Count;
-            var topConversations = allConversations.Take(30).ToList();
+            foreach (var p in packets)
+            {
+                if (p.SourcePort <= 0 || p.DestinationPort <= 0)
+                    continue;
+
+                // Normalize conversation key (lower IP first for bidirectional matching)
+                var isSourceLower = string.Compare(p.SourceIP, p.DestinationIP, StringComparison.Ordinal) < 0;
+                var key = isSourceLower
+                    ? (p.SourceIP, p.DestinationIP, p.SourcePort, p.DestinationPort, p.Protocol)
+                    : (p.DestinationIP, p.SourceIP, p.DestinationPort, p.SourcePort, p.Protocol);
+
+                if (conversationStats.TryGetValue(key, out var stats))
+                {
+                    conversationStats[key] = (
+                        stats.Count + 1,
+                        stats.Bytes + p.Length,
+                        p.Timestamp < stats.Start ? p.Timestamp : stats.Start,
+                        p.Timestamp > stats.End ? p.Timestamp : stats.End
+                    );
+                }
+                else
+                {
+                    conversationStats[key] = (1, p.Length, p.Timestamp, p.Timestamp);
+                }
+            }
+
+            var totalCount = conversationStats.Count;
+
+            // Only materialize top 30 as full ConversationStatistics objects
+            var topConversations = conversationStats
+                .OrderByDescending(kv => kv.Value.Count)
+                .Take(30)
+                .Select(kv => new ConversationStatistics
+                {
+                    SourceAddress = kv.Key.Src,
+                    DestinationAddress = kv.Key.Dst,
+                    SourcePort = kv.Key.SrcPort,
+                    DestinationPort = kv.Key.DstPort,
+                    Protocol = kv.Key.Proto.ToString(),
+                    PacketCount = kv.Value.Count,
+                    ByteCount = kv.Value.Bytes,
+                    StartTime = kv.Value.Start,
+                    EndTime = kv.Value.End
+                })
+                .ToList();
 
             return (topConversations, totalCount);
         }
@@ -199,32 +236,64 @@ namespace PCAPAnalyzer.Core.Services.Statistics
             List<PacketInfo> packets,
             IReadOnlyDictionary<int, string> wellKnownPorts)
         {
-            var services = new Dictionary<string, ServiceStatistics>();
+            // MEMORY FIX: Single-pass O(n) aggregation instead of O(ports × packets)
+            // Old code scanned ALL packets for EACH well-known port - catastrophic for large files
+            var serviceAgg = new Dictionary<int, (int Count, long Bytes, Protocol Proto, HashSet<string> Hosts)>();
 
-            foreach (var port in wellKnownPorts)
+            foreach (var p in packets)
             {
-                var servicePackets = packets
-                    .Where(p => p.SourcePort == port.Key || p.DestinationPort == port.Key)
-                    .ToList();
-
-                if (servicePackets.Any())
+                // Check source port
+                if (p.SourcePort > 0 && wellKnownPorts.ContainsKey(p.SourcePort))
                 {
-                    var serviceStat = new ServiceStatistics
+                    if (serviceAgg.TryGetValue(p.SourcePort, out var stats))
                     {
-                        ServiceName = port.Value,
-                        Port = port.Key,
-                        Protocol = servicePackets.First().Protocol.ToString(),
-                        PacketCount = servicePackets.Count,
-                        ByteCount = servicePackets.Sum(static p => (long)p.Length),
-                        UniqueHosts = servicePackets
-                            .SelectMany(p => new[] { p.SourceIP, p.DestinationIP })
-                            .Distinct()
-                            .ToList(),
-                        IsEncrypted = port.Key == 443 || port.Key == 22 || port.Key == 8443
-                    };
-
-                    services[port.Value] = serviceStat;
+                        if (!string.IsNullOrEmpty(p.SourceIP)) stats.Hosts.Add(p.SourceIP);
+                        if (!string.IsNullOrEmpty(p.DestinationIP)) stats.Hosts.Add(p.DestinationIP);
+                        serviceAgg[p.SourcePort] = (stats.Count + 1, stats.Bytes + p.Length, stats.Proto, stats.Hosts);
+                    }
+                    else
+                    {
+                        var hosts = new HashSet<string>();
+                        if (!string.IsNullOrEmpty(p.SourceIP)) hosts.Add(p.SourceIP);
+                        if (!string.IsNullOrEmpty(p.DestinationIP)) hosts.Add(p.DestinationIP);
+                        serviceAgg[p.SourcePort] = (1, p.Length, p.Protocol, hosts);
+                    }
                 }
+
+                // Check destination port (avoid double-counting same port)
+                if (p.DestinationPort > 0 && p.DestinationPort != p.SourcePort && wellKnownPorts.ContainsKey(p.DestinationPort))
+                {
+                    if (serviceAgg.TryGetValue(p.DestinationPort, out var stats))
+                    {
+                        if (!string.IsNullOrEmpty(p.SourceIP)) stats.Hosts.Add(p.SourceIP);
+                        if (!string.IsNullOrEmpty(p.DestinationIP)) stats.Hosts.Add(p.DestinationIP);
+                        serviceAgg[p.DestinationPort] = (stats.Count + 1, stats.Bytes + p.Length, stats.Proto, stats.Hosts);
+                    }
+                    else
+                    {
+                        var hosts = new HashSet<string>();
+                        if (!string.IsNullOrEmpty(p.SourceIP)) hosts.Add(p.SourceIP);
+                        if (!string.IsNullOrEmpty(p.DestinationIP)) hosts.Add(p.DestinationIP);
+                        serviceAgg[p.DestinationPort] = (1, p.Length, p.Protocol, hosts);
+                    }
+                }
+            }
+
+            // Convert to ServiceStatistics
+            var services = new Dictionary<string, ServiceStatistics>();
+            foreach (var kv in serviceAgg)
+            {
+                var serviceName = wellKnownPorts[kv.Key];
+                services[serviceName] = new ServiceStatistics
+                {
+                    ServiceName = serviceName,
+                    Port = kv.Key,
+                    Protocol = kv.Value.Proto.ToString(),
+                    PacketCount = kv.Value.Count,
+                    ByteCount = kv.Value.Bytes,
+                    UniqueHosts = kv.Value.Hosts.ToList(),
+                    IsEncrypted = kv.Key == 443 || kv.Key == 22 || kv.Key == 8443
+                };
             }
 
             return services;

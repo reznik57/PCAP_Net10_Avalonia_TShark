@@ -150,6 +150,11 @@ public partial class AnomaliesChartsViewModel : ObservableObject
 
         if (timePoints.Count == 0)
         {
+            // Reset Y-axis max when no data
+            if (TimelineYAxes.Length > 0)
+            {
+                TimelineYAxes[0].MaxLimit = null;
+            }
             OnPropertyChanged(nameof(TimelineSeries));
             return;
         }
@@ -159,12 +164,25 @@ public partial class AnomaliesChartsViewModel : ObservableObject
         var mediumValues = new List<DateTimePoint>();
         var lowValues = new List<DateTimePoint>();
 
+        // Track maximum value across all series for fixed Y-axis height
+        double maxValue = 0;
+
         foreach (var point in timePoints)
         {
             criticalValues.Add(new DateTimePoint(point.Timestamp, point.CriticalCount));
             highValues.Add(new DateTimePoint(point.Timestamp, point.HighCount));
             mediumValues.Add(new DateTimePoint(point.Timestamp, point.MediumCount));
             lowValues.Add(new DateTimePoint(point.Timestamp, point.LowCount));
+
+            // Find the maximum value for Y-axis scaling
+            maxValue = Math.Max(maxValue, Math.Max(point.CriticalCount,
+                Math.Max(point.HighCount, Math.Max(point.MediumCount, point.LowCount))));
+        }
+
+        // Set fixed Y-axis max to prevent resize on hover (top values at 100% height)
+        if (TimelineYAxes.Length > 0)
+        {
+            TimelineYAxes[0].MaxLimit = maxValue > 0 ? maxValue : null;
         }
 
         // Add data series
@@ -292,6 +310,11 @@ public partial class AnomaliesChartsViewModel : ObservableObject
         CategorySeries = [];
         PortsSeries = [];
         ResetZoom();
+        // Reset Y-axis max limit
+        if (TimelineYAxes.Length > 0)
+        {
+            TimelineYAxes[0].MaxLimit = null;
+        }
         OnPropertyChanged(nameof(TimelineSeries));
         OnPropertyChanged(nameof(CategorySeries));
         OnPropertyChanged(nameof(PortsSeries));

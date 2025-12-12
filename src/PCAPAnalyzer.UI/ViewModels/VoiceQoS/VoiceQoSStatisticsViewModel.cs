@@ -25,6 +25,30 @@ public partial class VoiceQoSStatisticsViewModel : ObservableObject
     // Fingerprint for early-exit optimization
     private string? _lastEndpointsFingerprint;
 
+    // ==================== FILTERED STATISTICS (Total/Filtered display pattern) ====================
+
+    /// <summary>
+    /// Filtered packet count (from global filter application)
+    /// </summary>
+    [ObservableProperty] private long _filteredTotalPackets;
+
+    /// <summary>
+    /// Unfiltered packet count (stored on first load)
+    /// </summary>
+    [ObservableProperty] private long _unfilteredTotalPackets;
+
+    /// <summary>
+    /// Indicates if global filter is active
+    /// </summary>
+    [ObservableProperty] private bool _isFilterActive;
+
+    /// <summary>
+    /// Percentage of packets shown after filtering
+    /// </summary>
+    public double FilteredPacketsPercentage => UnfilteredTotalPackets > 0
+        ? (FilteredTotalPackets * 100.0 / UnfilteredTotalPackets)
+        : 100;
+
     // Top sources/destinations (Top 30 each)
     [ObservableProperty] private ObservableCollection<TopEndpointItem> _topQoSSources = [];
     [ObservableProperty] private ObservableCollection<TopEndpointItem> _topQoSDestinations = [];
@@ -217,5 +241,43 @@ public partial class VoiceQoSStatisticsViewModel : ObservableObject
         {
             collection.Add(item);
         }
+    }
+
+    // ==================== FILTERED STATE METHODS ====================
+
+    /// <summary>
+    /// Stores unfiltered totals for Total/Filtered display pattern.
+    /// Call this when data is first loaded, before any filters are applied.
+    /// </summary>
+    public void StoreUnfilteredTotals(long packetCount)
+    {
+        UnfilteredTotalPackets = packetCount;
+        FilteredTotalPackets = packetCount;
+        IsFilterActive = false;
+        DebugLogger.Log($"[VoiceQoSStatisticsViewModel] Stored unfiltered totals: {UnfilteredTotalPackets:N0} packets");
+    }
+
+    /// <summary>
+    /// Sets filtered state for Total/Filtered display pattern.
+    /// Call this when global filters are applied.
+    /// </summary>
+    public void SetFilteredState(long filteredPacketCount, bool isFiltered)
+    {
+        FilteredTotalPackets = filteredPacketCount;
+        IsFilterActive = isFiltered;
+        OnPropertyChanged(nameof(FilteredPacketsPercentage));
+        DebugLogger.Log($"[VoiceQoSStatisticsViewModel] SetFilteredState: {filteredPacketCount:N0} packets (isFiltered={isFiltered}, {FilteredPacketsPercentage:F1}%)");
+    }
+
+    /// <summary>
+    /// Clears filtered state, restoring unfiltered display.
+    /// Call when filters are cleared.
+    /// </summary>
+    public void ClearFilteredState()
+    {
+        FilteredTotalPackets = UnfilteredTotalPackets;
+        IsFilterActive = false;
+        OnPropertyChanged(nameof(FilteredPacketsPercentage));
+        DebugLogger.Log("[VoiceQoSStatisticsViewModel] Cleared filtered state");
     }
 }

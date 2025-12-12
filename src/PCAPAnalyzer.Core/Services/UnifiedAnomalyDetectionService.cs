@@ -68,6 +68,7 @@ public sealed class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionSer
         RegisterDetector(new IoTAnomalyDetector());
         RegisterDetector(new CryptoMiningDetector());
         RegisterDetector(new DataExfiltrationDetector());
+        RegisterDetector(new DnsTunnelDetector());
 
         // Register geo-aware detectors (require GeoIP service for full functionality)
         RegisterDetector(new GeoThreatDetector(geoIPService));
@@ -145,6 +146,7 @@ public sealed class UnifiedAnomalyDetectionService : IUnifiedAnomalyDetectionSer
                 {
                     Phase = "Analyzing Data",
                     SubPhase = "Threat Detection",
+                    Percent = percentComplete, // ✅ FIX: Pass actual progress percentage to UI
                     Detail = $"Analyzing packets ({completedDetectors}/{activeDetectors.Count} detectors), {threatsDetected} threats detected",
                     PacketsAnalyzed = packetsAnalyzed,
                     TotalPackets = totalPackets * activeDetectors.Count,

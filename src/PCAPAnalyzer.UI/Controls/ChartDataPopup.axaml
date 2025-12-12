@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -292,7 +292,51 @@
                             </ItemsControl>
                         </DataTemplate>
                         
-                    </ContentControl.DataTemplates>
+                    
+                        <!-- Template for when Anomalies is selected -->
+                        <DataTemplate DataType="models:ChartPopupViewModel">
+                            <ItemsControl ItemsSource="{Binding DisplayItems}" IsVisible="{Binding SelectedDataType, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Anomalies}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="models:AnomalyDisplayData">
+                                        <Border Classes="data-item">
+                                            <StackPanel Spacing="4">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <StackPanel Grid.Column="0"><TextBlock Text="{Binding Type}" FontSize="{DynamicResource FontSizeMedium}" FontWeight="SemiBold" Foreground="{DynamicResource PopupText}"/><TextBlock Text="{Binding Category}" FontSize="{DynamicResource FontSizeXS}" Foreground="{DynamicResource PopupTextSecondary}"/></StackPanel>
+                                                    <Border Grid.Column="1" CornerRadius="4" Padding="8,2" VerticalAlignment="Center"><Border.Background><SolidColorBrush Color="{Binding SeverityColor}"/></Border.Background><TextBlock Text="{Binding Severity}" FontSize="{DynamicResource FontSizeXS}" FontWeight="SemiBold" Foreground="White"/></Border>
+                                                </Grid>
+                                                <TextBlock Text="{Binding Description}" FontSize="{DynamicResource FontSizeXS}" Foreground="{DynamicResource PopupTextSecondary}" TextWrapping="Wrap" MaxLines="2"/>
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <TextBlock Grid.Column="1" Text="{Binding AffectedFrameCount, StringFormat='{}{0:N0} frames'}" FontSize="{DynamicResource FontSizeXS}" Foreground="{DynamicResource PopupTextSecondary}"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </DataTemplate>
+
+                        <!-- Template for when Threats is selected -->
+                        <DataTemplate DataType="models:ChartPopupViewModel">
+                            <ItemsControl ItemsSource="{Binding DisplayItems}" IsVisible="{Binding SelectedDataType, Converter={StaticResource StringEqualsConverter}, ConverterParameter=Threats}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="models:ThreatDisplayData">
+                                        <Border Classes="data-item">
+                                            <StackPanel Spacing="4">
+                                                <Grid ColumnDefinitions="*,Auto">
+                                                    <TextBlock Grid.Column="0" Text="{Binding Type}" FontSize="{DynamicResource FontSizeMedium}" FontWeight="SemiBold" Foreground="{DynamicResource PopupText}"/>
+                                                    <Border Grid.Column="1" CornerRadius="4" Padding="8,2" VerticalAlignment="Center"><Border.Background><SolidColorBrush Color="{Binding SeverityColor}"/></Border.Background><TextBlock Text="{Binding Severity}" FontSize="{DynamicResource FontSizeXS}" FontWeight="SemiBold" Foreground="White"/></Border>
+                                                </Grid>
+                                                <TextBlock Text="{Binding Description}" FontSize="{DynamicResource FontSizeXS}" Foreground="{DynamicResource PopupTextSecondary}" TextWrapping="Wrap" MaxLines="2"/>
+                                                <Grid ColumnDefinitions="*,Auto,Auto">
+                                                    <TextBlock Grid.Column="1" Text="{Binding ConfidenceDisplay}" FontSize="{DynamicResource FontSizeXS}" Foreground="{DynamicResource PopupTextSecondary}" Margin="8,0"/>
+                                                    <TextBlock Grid.Column="2" Text="{Binding PacketCount, StringFormat='{}{0:N0} pkts'}" FontSize="{DynamicResource FontSizeXS}" Foreground="{DynamicResource PopupTextSecondary}"/>
+                                                </Grid>
+                                            </StackPanel>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </DataTemplate>                    </ContentControl.DataTemplates>
                 </ContentControl>
             </ScrollViewer>
         </Grid>

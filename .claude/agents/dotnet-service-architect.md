@@ -1,3 +1,7 @@
+---
+name: dotnet-service-architect
+---
+
 # .NET Service Architect Agent
 
 ## When to Use This Agent

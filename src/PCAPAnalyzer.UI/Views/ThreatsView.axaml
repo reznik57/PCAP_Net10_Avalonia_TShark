@@ -140,74 +140,8 @@
                 <!-- UnifiedFilterPanelControl with Threats tab auto-selected (index 3) -->
                 <ctrl:UnifiedFilterPanelControl DefaultTabIndex="3" Margin="0,0,0,10" />
 
-                <!-- Security Risk Assessment - 6 Card Layout (Dashboard Pattern) -->
-                <Border Classes="modern-card-unified" Padding="0" Margin="0,0,0,20">
-                    <Grid RowDefinitions="Auto,Auto,Auto">
-                        <!-- Accent Bar -->
-                        <Border Grid.Row="0" Height="3" Background="{DynamicResource SlackDanger}" CornerRadius="8,8,0,0"/>
-
-                        <!-- Header with Export -->
-                        <Border Grid.Row="1" Classes="table-header-unified">
-                            <Grid Margin="20,0" ColumnDefinitions="*,Auto">
-                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                    <TextBlock Text="SECURITY RISK ASSESSMENT" FontSize="{StaticResource FontSizeMedium}" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
-                                </StackPanel>
-                                <Button Grid.Column="1" Command="{Binding ExportThreatsCommand}" Classes="export-button">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <TextBlock Text="📥" FontSize="{StaticResource FontSizeBase}"/>
-                                        <TextBlock Text="Export Report" FontSize="{StaticResource FontSizeSmall}"/>
-                                    </StackPanel>
-                                </Button>
-                            </Grid>
-                        </Border>
-
-                        <!-- 6 Stats Cards Row -->
-                        <Grid Grid.Row="2" ColumnDefinitions="*,*,*,*,*,*" Margin="16,16,16,16">
-                            <Border Grid.Column="0" Classes="stat-card-modern" Margin="0,0,4,0">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="RISK LEVEL" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
-                                    <TextBlock Text="{Binding RiskLevel}" FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" Foreground="{Binding RiskLevelColor}"/>
-                                </StackPanel>
-                            </Border>
-                            <Border Grid.Column="1" Classes="stat-card-modern" Margin="4,0">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="RISK SCORE" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
-                                    <TextBlock FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" Foreground="{Binding RiskLevelColor}">
-                                        <TextBlock.Text>
-                                            <MultiBinding StringFormat="{}{0:F1}/10">
-                                                <Binding Path="OverallRiskScore"/>
-                                            </MultiBinding>
-                                        </TextBlock.Text>
-                                    </TextBlock>
-                                </StackPanel>
-                            </Border>
-                            <Border Grid.Column="2" Classes="stat-card-modern" Margin="4,0">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="CRITICAL" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
-                                    <TextBlock Text="{Binding CriticalThreats}" FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" Foreground="{StaticResource ThreatCriticalBorder}"/>
-                                </StackPanel>
-                            </Border>
-                            <Border Grid.Column="3" Classes="stat-card-modern" Margin="4,0">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="HIGH" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
-                                    <TextBlock Text="{Binding HighThreats}" FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" Foreground="{DynamicResource SlackWarning}"/>
-                                </StackPanel>
-                            </Border>
-                            <Border Grid.Column="4" Classes="stat-card-modern" Margin="4,0">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="MEDIUM" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
-                                    <TextBlock Text="{Binding MediumThreats}" FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" Foreground="{StaticResource FilterWarningText}"/>
-                                </StackPanel>
-                            </Border>
-                            <Border Grid.Column="5" Classes="stat-card-modern" Margin="4,0,0,0">
-                                <StackPanel HorizontalAlignment="Center">
-                                    <TextBlock Text="LOW" FontSize="{StaticResource FontSizeSmall}" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,0,0,8"/>
-                                    <TextBlock Text="{Binding LowThreats}" FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" Foreground="{DynamicResource SlackSuccess}"/>
-                                </StackPanel>
-                            </Border>
-                        </Grid>
-                    </Grid>
-                </Border>
+                <!-- Security Risk Assessment - Using unified StatsBarControl -->
+                <ctrl:StatsBarControl DataContext="{Binding ThreatsStatsBar}" Margin="0,0,0,20"/>
 
                 <!-- Threat Timeline -->
                 <Border Classes="modern-card-unified" MinHeight="400">

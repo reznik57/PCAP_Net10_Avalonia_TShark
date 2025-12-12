@@ -170,11 +170,13 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:AnalysisProgressStage">
+                        <!-- Stage pill with optional subtask detail row -->
                         <Border Margin="0,0,6,6"
                                Background="{DynamicResource BackgroundPanel}"
                                BorderThickness="1"
-                               CornerRadius="4"
-                               Padding="8,4"
+                               CornerRadius="6"
+                               Padding="10,6"
+                               MinWidth="140"
                                BorderBrush="{Binding State, Converter={StaticResource StageStateToBrush}}">
 
                             <ToolTip.Tip>
@@ -196,27 +198,40 @@
                                 </StackPanel>
                             </ToolTip.Tip>
 
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <!-- Compact icon indicator -->
-                                <Viewbox Width="14" Height="14" VerticalAlignment="Center">
-                                    <Path Data="{Binding State, Converter={StaticResource StageStateToIcon}}"
-                                         Fill="{Binding State, Converter={StaticResource StageStateToBrush}}"
-                                         Stretch="Uniform" />
-                                </Viewbox>
+                            <StackPanel Spacing="3">
+                                <!-- Row 1: Icon + Name + Time -->
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <!-- Compact icon indicator -->
+                                    <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                                        <Path Data="{Binding State, Converter={StaticResource StageStateToIcon}}"
+                                             Fill="{Binding State, Converter={StaticResource StageStateToBrush}}"
+                                             Stretch="Uniform" />
+                                    </Viewbox>
 
-                                <!-- Stage name and timing -->
-                                <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding Name}"
-                                             FontSize="{StaticResource FontSizeSmall}"
-                                             FontWeight="Medium"
-                                             Foreground="{Binding State, Converter={StaticResource StageStateToBrush}, ConverterParameter='Text'}"/>
+                                    <!-- Stage name and timing -->
+                                    <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}"
+                                                 FontSize="{StaticResource FontSizeSmall}"
+                                                 FontWeight="Medium"
+                                                 Foreground="{Binding State, Converter={StaticResource StageStateToBrush}, ConverterParameter='Text'}"/>
 
-                                    <TextBlock Text="{Binding ElapsedTime, StringFormat='({0})'}"
-                                             FontSize="{StaticResource FontSizeXS}"
-                                             FontWeight="Normal"
-                                             Foreground="{DynamicResource TextMutedBrush}"
-                                             IsVisible="{Binding ElapsedTime, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                        <TextBlock Text="{Binding ElapsedTime, StringFormat='({0})'}"
+                                                 FontSize="{StaticResource FontSizeXS}"
+                                                 FontWeight="Normal"
+                                                 Foreground="{DynamicResource TextMutedBrush}"
+                                                 IsVisible="{Binding ElapsedTime, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                    </StackPanel>
                                 </StackPanel>
+
+                                <!-- Row 2: Subtask detail (only when active and has detail) -->
+                                <TextBlock Text="{Binding Detail}"
+                                          FontSize="{StaticResource FontSizeXS}"
+                                          Foreground="{DynamicResource TextMutedBrush}"
+                                          TextTrimming="CharacterEllipsis"
+                                          MaxWidth="200"
+                                          Margin="20,0,0,0"
+                                          Opacity="0.8"
+                                          IsVisible="{Binding IsActiveWithDetail}"/>
                             </StackPanel>
                         </Border>
                     </DataTemplate>

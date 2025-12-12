@@ -11,6 +11,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using PCAPAnalyzer.Core.Models;
+using PCAPAnalyzer.Core.Services.MacVendor;
 
 namespace PCAPAnalyzer.Core.Services.OsFingerprinting;
 
@@ -21,20 +22,22 @@ namespace PCAPAnalyzer.Core.Services.OsFingerprinting;
 public sealed class OsFingerprintService : IOsFingerprintService
 {
     private readonly ILogger<OsFingerprintService> _logger;
+    private readonly IMacVendorService _macVendorService;
     private readonly ConcurrentDictionary<string, HostFingerprint> _hosts = [];
 
     // Signature databases (loaded once at startup)
     private List<TcpSignatureEntry>? _tcpSignatures;
     private Dictionary<string, Ja3SignatureEntry>? _ja3Signatures;
-    private Dictionary<string, MacVendorEntry>? _macVendors;
 
     // TCP SYN flag (0x02)
     private const ushort TCP_SYN_FLAG = 0x0002;
 
-    public OsFingerprintService(ILogger<OsFingerprintService> logger)
+    public OsFingerprintService(ILogger<OsFingerprintService> logger, IMacVendorService macVendorService)
     {
         ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(macVendorService);
         _logger = logger;
+        _macVendorService = macVendorService;
         LoadSignatureDatabases();
     }
 
@@ -98,8 +101,10 @@ public sealed class OsFingerprintService : IOsFingerprintService
             // Extract MAC address (first time only)
             if (string.IsNullOrEmpty(host.MacAddress) && !string.IsNullOrEmpty(fields.EthSrc) && isSource)
             {
-                host.MacAddress = NormalizeMacAddress(fields.EthSrc);
-                host.MacVendor = LookupMacVendor(host.MacAddress);
+                var macResult = _macVendorService.LookupVendor(fields.EthSrc);
+                host.MacAddress = MacVendorService.NormalizeMacAddress(fields.EthSrc);
+                host.MacVendor = macResult.DisplayVendor;
+                host.MacAddressType = macResult.AddressType;
             }
 
             // Process TCP SYN for fingerprinting (SYN without ACK = client SYN)
@@ -385,32 +390,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
 
     #endregion
 
-    #region MAC Vendor Lookup
-
-    private static string NormalizeMacAddress(string mac)
-    {
-        // Normalize to XX:XX:XX:XX:XX:XX format
-        return mac.ToUpperInvariant()
-                  .Replace("-", ":", StringComparison.Ordinal)
-                  .Replace(".", ":", StringComparison.Ordinal);
-    }
-
-    private string? LookupMacVendor(string macAddress)
-    {
-        if (_macVendors is null || string.IsNullOrEmpty(macAddress))
-            return null;
-
-        // Extract OUI prefix (first 3 octets)
-        var parts = macAddress.Split(':');
-        if (parts.Length < 3)
-            return null;
-
-        var oui = $"{parts[0]}:{parts[1]}:{parts[2]}".ToUpperInvariant();
-
-        return _macVendors.TryGetValue(oui, out var entry) ? entry.Vendor : null;
-    }
-
-    #endregion
+    // MAC vendor lookup is now handled by IMacVendorService
 
     #region Banner Parsing
 
@@ -521,7 +501,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
         }
 
         // 3. MAC vendor hints
-        if (!string.IsNullOrEmpty(host.MacAddress) && _macVendors is not null)
+        if (!string.IsNullOrEmpty(host.MacAddress))
         {
             var macResult = GetMacVendorOsHint(host.MacAddress);
             if (macResult is not null)
@@ -698,21 +678,28 @@ public sealed class OsFingerprintService : IOsFingerprintService
 
     private OsDetectionResult? GetMacVendorOsHint(string macAddress)
     {
-        if (_macVendors is null)
-            return null;
+        var result = _macVendorService.LookupVendor(macAddress);
 
-        var parts = macAddress.Split(':');
-        if (parts.Length < 3)
-            return null;
-
-        var oui = $"{parts[0]}:{parts[1]}:{parts[2]}".ToUpperInvariant();
-
-        if (_macVendors.TryGetValue(oui, out var entry) && !string.IsNullOrEmpty(entry.OsHint))
+        // Only provide OS hint if we have a valid OS hint from curated database
+        if (!string.IsNullOrEmpty(result.OsHint))
         {
+            // Map device type hint to DeviceType enum
+            var deviceType = result.DeviceTypeHint?.ToLowerInvariant() switch
+            {
+                "desktop" => DeviceType.Desktop,
+                "mobile" => DeviceType.Mobile,
+                "server" => DeviceType.Server,
+                "iot" => DeviceType.IoT,
+                "networkequipment" => DeviceType.NetworkEquipment,
+                "printer" => DeviceType.Printer,
+                "virtual" => DeviceType.Virtual,
+                _ => DeviceType.Unknown
+            };
+
             return new OsDetectionResult
             {
-                OsFamily = entry.OsHint,
-                DeviceType = entry.DeviceTypeHint ?? DeviceType.Unknown,
+                OsFamily = result.OsHint,
+                DeviceType = deviceType,
                 Confidence = OsConfidenceLevel.Low,
                 ConfidenceScore = 0.3,
                 Method = OsDetectionMethod.MacVendor
@@ -758,13 +745,11 @@ public sealed class OsFingerprintService : IOsFingerprintService
         {
             LoadTcpSignatures();
             LoadJa3Signatures();
-            LoadMacVendors();
 
             _logger.LogInformation(
-                "Loaded OS fingerprint databases: {TcpCount} TCP, {Ja3Count} JA3, {MacCount} MAC vendors",
+                "Loaded OS fingerprint databases: {TcpCount} TCP, {Ja3Count} JA3 (MAC vendors via MacVendorService)",
                 _tcpSignatures?.Count ?? 0,
-                _ja3Signatures?.Count ?? 0,
-                _macVendors?.Count ?? 0);
+                _ja3Signatures?.Count ?? 0);
         }
         catch (Exception ex)
         {
@@ -852,49 +837,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
         }
     }
 
-    private void LoadMacVendors()
-    {
-        var assembly = Assembly.GetExecutingAssembly();
-        var resourcePath = "PCAPAnalyzer.Core.Data.OsFingerprinting.MacVendors.json";
-
-        using var stream = assembly.GetManifestResourceStream(resourcePath);
-        if (stream is not null)
-        {
-            using var reader = new StreamReader(stream);
-            var json = reader.ReadToEnd();
-            var data = JsonSerializer.Deserialize<MacVendorDatabase>(json, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-            _macVendors = data?.Vendors?.ToDictionary(
-                v => v.Oui.ToUpperInvariant(),
-                v => v)
-                ?? new Dictionary<string, MacVendorEntry>();
-        }
-        else
-        {
-            var filePath = Path.Combine(
-                AppDomain.CurrentDomain.BaseDirectory,
-                "Data", "OsFingerprinting", "MacVendors.json");
-
-            if (File.Exists(filePath))
-            {
-                var json = File.ReadAllText(filePath);
-                var data = JsonSerializer.Deserialize<MacVendorDatabase>(json, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-                _macVendors = data?.Vendors?.ToDictionary(
-                    v => v.Oui.ToUpperInvariant(),
-                    v => v)
-                    ?? new Dictionary<string, MacVendorEntry>();
-            }
-            else
-            {
-                _macVendors = new Dictionary<string, MacVendorEntry>();
-            }
-        }
-    }
+    // LoadMacVendors removed - MAC vendors now handled by MacVendorService
 
     private void LoadDefaultSignatures()
     {
@@ -907,7 +850,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
         };
 
         _ja3Signatures = new Dictionary<string, Ja3SignatureEntry>();
-        _macVendors = new Dictionary<string, MacVendorEntry>();
+        // MAC vendors are now handled by MacVendorService
     }
 
     #endregion
@@ -924,10 +867,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
         public List<Ja3SignatureEntry>? Signatures { get; set; }
     }
 
-    private class MacVendorDatabase
-    {
-        public List<MacVendorEntry>? Vendors { get; set; }
-    }
+    // MacVendorDatabase removed - MAC vendors now handled by MacVendorService
 
     private class TcpSignatureEntry
     {
@@ -953,13 +893,7 @@ public sealed class OsFingerprintService : IOsFingerprintService
         public bool IsMalware { get; set; }
     }
 
-    private class MacVendorEntry
-    {
-        public string Oui { get; set; } = string.Empty;
-        public string Vendor { get; set; } = string.Empty;
-        public DeviceType? DeviceTypeHint { get; set; }
-        public string? OsHint { get; set; }
-    }
+    // MacVendorEntry removed - MAC vendors now handled by MacVendorService
 
     #endregion
 }

@@ -33,31 +33,32 @@ namespace PCAPAnalyzer.Core.Orchestration
         private DateTime _lastLogTime = DateTime.MinValue;
         private const int MIN_LOG_INTERVAL_MS = 1000; // Log max once per second
 
-        // Phase weights (must sum to 75 for pre-tab phases) - UPDATED FOR CAPINFOS
-        // With capinfos: Count=~2s (5%), Load=50s (50%), Stats=15s (15%), Tabs=25s (25%)
-        // capinfos reads pcap header instantly vs TShark reading all packets
+        // Phase weights (must sum to 75 for pre-tab phases) - UPDATED FOR PARALLEL EXECUTION
+        // Key insight: Stats, Threats, VoiceQoS run IN PARALLEL, so they share a unified range
+        // Actual timings from 3GB file: Loading=97s, Parallel(Stats/Threats/VoiceQoS)=139s, Tabs=50s
         private const int PHASE_COUNTING = 5;      // 0-5% (instant with capinfos)
-        private const int PHASE_LOADING = 50;      // 5-55% (loading packets - now bulk of time)
-        private const int PHASE_STATISTICS = 10;   // 55-65% (statistics calculation)
-        private const int PHASE_THREATS = 5;       // 65-70% (threat detection - parallel)
-        private const int PHASE_VOICEQOS = 3;      // 70-73% (VoIP analysis - parallel)
+        private const int PHASE_LOADING = 50;      // 5-55% (loading packets - bulk of time)
+        private const int PHASE_PARALLEL = 18;     // 55-73% (Stats+Threats+VoiceQoS run in parallel)
         private const int PHASE_FINALIZING = 2;    // 73-75% (finalizing/caching)
         // PHASE_TABS = 25                         // 75-100% (tab population - see StageRanges)
+
+        // Note: Legacy phase weights removed - parallel phases now use weighted progress in ReportParallelTaskProgress()
 
         /// <summary>
         /// Stage ranges for UI progress display. Maps stage keys to (Start%, End%) ranges.
         /// Used by FileAnalysisViewModel to calculate stage-relative percentages.
-        /// UPDATED: capinfos provides instant packet count (~2s) vs TShark (~26-95s)
-        /// New percentages: Count=5% (instant), Load=50%, Stats+GeoIP+Flows=20%, Tabs=25%
+        /// UPDATED FOR PARALLEL EXECUTION: Stats+Threats+VoiceQoS run in parallel (55-73%)
+        /// Progress within parallel phase is based on MINIMUM progress of all tasks
         /// </summary>
         public static readonly IReadOnlyDictionary<string, (int Start, int End)> StageRanges =
             new Dictionary<string, (int, int)>
             {
                 { "count",    (0, 5) },     // Counting Packets: 0-5% (instant with capinfos)
-                { "load",     (5, 55) },    // Loading Packets: 5-55% (50% - now bulk of time)
-                { "stats",    (55, 65) },   // Analyzing Data: 55-65% (10%)
-                { "geoip",    (65, 70) },   // GeoIP Enrichment: 65-70% (5%)
-                { "flows",    (70, 73) },   // Traffic Flow Analysis: 70-73% (3%)
+                { "load",     (5, 55) },    // Loading Packets: 5-55% (50%)
+                { "parallel", (55, 73) },   // Parallel Analysis: 55-73% (Stats+Threats+VoiceQoS)
+                { "stats",    (55, 73) },   // Alias for parallel (backward compat)
+                { "geoip",    (55, 73) },   // Alias for parallel (backward compat)
+                { "flows",    (55, 73) },   // Alias for parallel (backward compat)
                 { "finalize", (73, 75) },   // Finalizing: 73-75% (2%)
                 { "tabs",     (75, 100) }   // Loading Tabs: 75-100% (25%)
             };
@@ -110,9 +111,32 @@ namespace PCAPAnalyzer.Core.Orchestration
         private readonly Dictionary<string, TimeSpan> _phaseDurations = [];
         private string _currentPhase = "";
 
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // PARALLEL PROGRESS TRACKING: Stats, Threats, VoiceQoS run simultaneously
+        // Progress = MIN(statsProgress, threatsProgress, voiceQoSProgress)
+        // This ensures progress only advances when ALL parallel tasks have advanced
+        // ═══════════════════════════════════════════════════════════════════════════════
+        private readonly Dictionary<string, int> _parallelTaskProgress = new()
+        {
+            { "Statistics", 0 },
+            { "Threats", 0 },
+            { "VoiceQoS", 0 }
+        };
+        private readonly Dictionary<string, bool> _parallelTaskComplete = new()
+        {
+            { "Statistics", false },
+            { "Threats", false },
+            { "VoiceQoS", false }
+        };
+        private readonly Lock _parallelLock = new();
+        private bool _parallelPhaseStarted;
+        private string _lastParallelDetail = "";
+
         // Time-based estimation (seconds per phase, scaled by file size)
+        // UPDATED: Based on actual measurements from 3GB file analysis
         private double _estimatedCountingSeconds = 5.0;
         private double _estimatedLoadingSeconds = 20.0;
+        private double _estimatedParallelSeconds = 30.0;  // Stats+Threats+VoiceQoS in parallel
         private double _estimatedStatisticsSeconds = 15.0;
         private double _estimatedThreatsSeconds = 10.0;
         private double _estimatedVoiceQoSSeconds = 5.0;
@@ -141,22 +165,26 @@ namespace PCAPAnalyzer.Core.Orchestration
 
         /// <summary>
         /// Initialize time estimates based on file size for smooth progress
+        /// UPDATED: Based on actual measurements - 3GB file takes ~240s total
         /// </summary>
         public void InitializeTimeEstimates(double fileSizeMB)
         {
-            // Scale estimates based on file size (baseline: 100MB = 1x, min: 0.3x, max: 5x)
-            var scaleFactor = Math.Max(0.3, Math.Min(5.0, fileSizeMB / 100.0));
+            // Scale estimates based on file size
+            // Baseline: 500MB = 1x (more realistic baseline from measurements)
+            // Actual 3GB file: Loading=97s, Parallel=139s, Tabs=50s
+            var scaleFactor = Math.Max(0.5, Math.Min(10.0, fileSizeMB / 500.0));
 
-            _estimatedCountingSeconds = 5.0 * scaleFactor;
-            _estimatedLoadingSeconds = 20.0 * scaleFactor;
-            _estimatedStatisticsSeconds = 15.0 * scaleFactor;
-            _estimatedThreatsSeconds = 10.0 * scaleFactor;
-            _estimatedVoiceQoSSeconds = 5.0 * scaleFactor;
-            _estimatedFinalizingSeconds = 2.0; // Fixed duration
+            _estimatedCountingSeconds = 4.0 * scaleFactor;           // Fast with capinfos
+            _estimatedLoadingSeconds = 30.0 * scaleFactor;           // TShark parsing
+            _estimatedParallelSeconds = 45.0 * scaleFactor;          // Stats+Threats+VoiceQoS parallel
+            _estimatedStatisticsSeconds = 45.0 * scaleFactor;        // Individual estimate (parallel)
+            _estimatedThreatsSeconds = 40.0 * scaleFactor;           // Individual estimate (parallel)
+            _estimatedVoiceQoSSeconds = 5.0 * scaleFactor;           // Usually fast
+            _estimatedFinalizingSeconds = 2.0;                       // Fixed duration
 
             DebugLogger.Log($"[ProgressCoordinator] Time estimates for {fileSizeMB:F1}MB file (scale: {scaleFactor:F2}x):");
-            DebugLogger.Log($"  Counting: {_estimatedCountingSeconds:F1}s, Loading: {_estimatedLoadingSeconds:F1}s, Statistics: {_estimatedStatisticsSeconds:F1}s");
-            DebugLogger.Log($"  Threats: {_estimatedThreatsSeconds:F1}s, VoiceQoS: {_estimatedVoiceQoSSeconds:F1}s, Finalizing: {_estimatedFinalizingSeconds:F1}s");
+            DebugLogger.Log($"  Counting: {_estimatedCountingSeconds:F1}s, Loading: {_estimatedLoadingSeconds:F1}s");
+            DebugLogger.Log($"  Parallel (Stats+Threats+VoiceQoS): {_estimatedParallelSeconds:F1}s, Finalizing: {_estimatedFinalizingSeconds:F1}s");
         }
 
         /// <summary>
@@ -249,71 +277,121 @@ namespace PCAPAnalyzer.Core.Orchestration
         }
 
         // Phase start offsets (calculated from cumulative weights)
-        private const int OFFSET_STATISTICS = PHASE_COUNTING + PHASE_LOADING;                 // 55%
-        private const int OFFSET_THREATS = OFFSET_STATISTICS + PHASE_STATISTICS;              // 65%
-        private const int OFFSET_VOICEQOS = OFFSET_THREATS + PHASE_THREATS;                   // 70%
-        private const int OFFSET_FINALIZING = OFFSET_VOICEQOS + PHASE_VOICEQOS;               // 73%
+        // UPDATED: Parallel phase (Stats+Threats+VoiceQoS) is unified at 55-73%
+        private const int OFFSET_PARALLEL = PHASE_COUNTING + PHASE_LOADING;                   // 55%
+        private const int OFFSET_FINALIZING = OFFSET_PARALLEL + PHASE_PARALLEL;               // 73%
+
+        // ═══════════════════════════════════════════════════════════════════════════════
+        // PARALLEL PROGRESS REPORTING
+        // Stats, Threats, VoiceQoS run simultaneously - progress based on weighted average
+        // ═══════════════════════════════════════════════════════════════════════════════
 
         /// <summary>
-        /// Report progress for statistics/GeoIP phase (55-65%)
-        /// Uses hybrid approach: child percent OR time-based if child is inaccurate
+        /// Report progress for a parallel task. Calculates unified progress across all parallel tasks.
+        /// Progress advances based on weighted completion: Stats=50%, Threats=40%, VoiceQoS=10%
+        /// </summary>
+        private void ReportParallelTaskProgress(string taskName, int taskPercent, string detail, int? threatsFound = null)
+        {
+            if (!_parallelPhaseStarted)
+            {
+                StartPhase("Parallel Analysis");
+                _parallelPhaseStarted = true;
+            }
+
+            // Update threat count if provided
+            if (threatsFound.HasValue && threatsFound.Value > 0)
+                _threatsDetected = threatsFound.Value;
+
+            int overallPercent;
+            string unifiedDetail;
+
+            using (_parallelLock.EnterScope())
+            {
+                // Update this task's progress
+                _parallelTaskProgress[taskName] = taskPercent;
+                if (taskPercent >= 100)
+                    _parallelTaskComplete[taskName] = true;
+
+                // Calculate weighted progress (Stats=50%, Threats=40%, VoiceQoS=10%)
+                // This reflects actual execution time: Stats is slowest, VoiceQoS is fastest
+                var statsProgress = _parallelTaskProgress["Statistics"];
+                var threatsProgress = _parallelTaskProgress["Threats"];
+                var voiceQoSProgress = _parallelTaskProgress["VoiceQoS"];
+
+                // Weighted average based on typical execution time
+                var weightedProgress = (statsProgress * 0.50) + (threatsProgress * 0.40) + (voiceQoSProgress * 0.10);
+                var parallelPercent = Math.Min(99, (int)weightedProgress);
+
+                // Count completed tasks for detail message
+                var completedCount = (_parallelTaskComplete["Statistics"] ? 1 : 0) +
+                                      (_parallelTaskComplete["Threats"] ? 1 : 0) +
+                                      (_parallelTaskComplete["VoiceQoS"] ? 1 : 0);
+
+                // If all complete, set to 100%
+                if (completedCount == 3)
+                    parallelPercent = 100;
+
+                // Map parallel progress (0-100%) to overall range (55-73%)
+                overallPercent = OFFSET_PARALLEL + (parallelPercent * PHASE_PARALLEL / 100);
+
+                // Build unified detail message showing all parallel task status
+                _lastParallelDetail = detail;
+                unifiedDetail = $"{detail} ({completedCount}/3 phases complete)";
+
+                // Log progress periodically
+                if (ShouldLogProgress())
+                {
+                    DebugLogger.Log($"[ProgressCoordinator] 📊 Parallel: Stats={statsProgress}%, Threats={threatsProgress}%, " +
+                                      $"VoiceQoS={voiceQoSProgress}% → weighted={parallelPercent}% → overall={overallPercent}%");
+                }
+            }
+
+            Report(overallPercent, 0, unifiedDetail, "Analyzing Traffic", taskName);
+        }
+
+        /// <summary>
+        /// Report progress for statistics/GeoIP phase (parallel task 1/3)
         /// </summary>
         public void ReportStatistics(int childPercent, string detail, string? subPhase = null)
         {
             if (childPercent == 0) StartPhase("Analyzing Data");
 
-            // Hybrid: use child percent if reasonable, otherwise fall back to time-based
+            // Hybrid: cap progress with time-based estimate to prevent jumps
             var elapsed = GetPhaseElapsed("Analyzing Data");
             var timeBasedPercent = Math.Min(99, (int)((elapsed / _estimatedStatisticsSeconds) * 100));
+            var phasePercent = Math.Max(childPercent, timeBasedPercent); // Use higher for parallel (they run together)
 
-            // Use whichever is more conservative (prevents jumps)
-            var phasePercent = Math.Min(childPercent, timeBasedPercent);
-
-            // Statistics phase: 55-65% (10% range)
-            var overallPercent = OFFSET_STATISTICS + (phasePercent * PHASE_STATISTICS / 100);
-            Report(overallPercent, 0, detail, "Analyzing Data", subPhase);
+            ReportParallelTaskProgress("Statistics", phasePercent, detail);
         }
 
         /// <summary>
-        /// Report progress for threat detection phase (65-70%)
-        /// Uses hybrid approach: child percent OR time-based if child is inaccurate
+        /// Report progress for threat detection phase (parallel task 2/3)
         /// </summary>
         public void ReportThreats(int childPercent, string detail, int threatsFound = 0)
         {
             if (childPercent == 0) StartPhase("Threat Detection");
-            if (threatsFound > 0)
-                _threatsDetected = threatsFound;
 
-            // Hybrid: use child percent if reasonable, otherwise fall back to time-based
+            // Hybrid: use time-based estimate for smoother progress
             var elapsed = GetPhaseElapsed("Threat Detection");
             var timeBasedPercent = Math.Min(99, (int)((elapsed / _estimatedThreatsSeconds) * 100));
+            var phasePercent = Math.Max(childPercent, timeBasedPercent);
 
-            // Use whichever is more conservative (prevents jumps)
-            var phasePercent = Math.Min(childPercent, timeBasedPercent);
-
-            // Threats phase: 65-70% (5% range)
-            var overallPercent = OFFSET_THREATS + (phasePercent * PHASE_THREATS / 100);
-            Report(overallPercent, 0, detail, "Threat Detection");
+            ReportParallelTaskProgress("Threats", phasePercent, detail, threatsFound);
         }
 
         /// <summary>
-        /// Report progress for VoiceQoS analysis phase (70-73%)
-        /// Uses hybrid approach: child percent OR time-based if child is inaccurate
+        /// Report progress for VoiceQoS analysis phase (parallel task 3/3)
         /// </summary>
         public void ReportVoiceQoS(int childPercent, string detail)
         {
             if (childPercent == 0) StartPhase("VoiceQoS Analysis");
 
-            // Hybrid: use child percent if reasonable, otherwise fall back to time-based
+            // Hybrid: use time-based estimate
             var elapsed = GetPhaseElapsed("VoiceQoS Analysis");
             var timeBasedPercent = Math.Min(99, (int)((elapsed / _estimatedVoiceQoSSeconds) * 100));
+            var phasePercent = Math.Max(childPercent, timeBasedPercent);
 
-            // Use whichever is more conservative (prevents jumps)
-            var phasePercent = Math.Min(childPercent, timeBasedPercent);
-
-            // VoiceQoS phase: 70-73% (3% range)
-            var overallPercent = OFFSET_VOICEQOS + (phasePercent * PHASE_VOICEQOS / 100);
-            Report(overallPercent, 0, detail, "VoiceQoS Analysis");
+            ReportParallelTaskProgress("VoiceQoS", phasePercent, detail);
         }
 
         /// <summary>
@@ -367,6 +445,19 @@ namespace PCAPAnalyzer.Core.Orchestration
                 _totalMegabytes = 0;
                 _threatsDetected = 0;
                 _currentPacketsAnalyzed = 0;
+            }
+
+            // Reset parallel progress tracking
+            using (_parallelLock.EnterScope())
+            {
+                _parallelTaskProgress["Statistics"] = 0;
+                _parallelTaskProgress["Threats"] = 0;
+                _parallelTaskProgress["VoiceQoS"] = 0;
+                _parallelTaskComplete["Statistics"] = false;
+                _parallelTaskComplete["Threats"] = false;
+                _parallelTaskComplete["VoiceQoS"] = false;
+                _parallelPhaseStarted = false;
+                _lastParallelDetail = "";
             }
         }
 
